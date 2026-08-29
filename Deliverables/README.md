@@ -5,7 +5,7 @@ the course handout.
 
 | Folder | Deliverable | Due | Status |
 |---|---|---|---|
-| `D0/` | Project Proposal | 2026-08-29 | Not submitted |
+| `D0/` | Project Proposal | 2026-08-29 | Drafted, team-approved; pending submission on Hello IITK |
 | `D1/` | Requirements, Architecture, Jira setup | 2026-09-26 | Not started |
 | `D2/` | Implementation, Agentic AI, Sprint execution | 2026-10-15 | Not started |
 | `D3/` | Testing, Security, Performance, Cost, Deployment, Reliability | 2026-11-06 | Not started |
