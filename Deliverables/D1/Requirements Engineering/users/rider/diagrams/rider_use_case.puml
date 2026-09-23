@@ -1,0 +1,69 @@
+@startuml rider_use_case
+left to right direction
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #1F4E79
+}
+skinparam actorBorderColor #1F4E79
+skinparam rectangle {
+  BorderColor #1F4E79
+}
+
+actor "Rider" as R
+
+rectangle "Campus Ride-Pooling System — Rider" {
+  usecase "UC-RD-01\nRegister and sign in" as UC01
+  usecase "UC-RD-02\nManage profile\nand preferences" as UC02
+  usecase "UC-RD-03\nSearch rides" as UC03
+  usecase "UC-RD-04\nAsk AI to suggest rides" as UC04
+  usecase "UC-RD-05\nChat with AI assistant" as UC05
+  usecase "UC-RD-06\nRequest to join ride" as UC06
+  usecase "UC-RD-17\nReconfirm join request" as UC17
+  usecase "UC-RD-07\nWithdraw request\nor leave ride" as UC07
+  usecase "UC-RD-08\nView fare share" as UC08
+  usecase "UC-RD-09\nChat with pool" as UC09
+  usecase "UC-RD-10\nFollow trip" as UC10
+  usecase "UC-RD-11\nSettle fare" as UC11
+  usecase "UC-RD-12\nRate co-travellers" as UC12
+  usecase "UC-RD-13\nFile complaint" as UC13
+  usecase "UC-RD-14\nView notifications" as UC14
+  usecase "UC-RD-15\nRaise SOS" as UC15
+  usecase "UC-RD-16\nManage history\nand personal data" as UC16
+}
+
+actor "Ride Owner" as RO
+actor "Operations Admin" as AD
+actor "«system»\nLLM Service" as LLM
+actor "«system»\nEmail Service" as EM
+
+R -- UC01
+R -- UC02
+R -- UC03
+R -- UC05
+R -- UC06
+R -- UC07
+R -- UC08
+R -- UC09
+R -- UC10
+R -- UC11
+R -- UC12
+R -- UC13
+R -- UC14
+R -- UC15
+R -- UC16
+
+UC04 .> UC03 : <<extend>>
+UC17 .> UC06 : <<extend>>
+
+UC01 -- EM
+UC04 -- LLM
+UC05 -- LLM
+UC06 -- RO
+UC07 -- RO
+UC09 -- RO
+UC11 -- RO
+UC13 -- AD
+UC15 -- AD
+@enduml
