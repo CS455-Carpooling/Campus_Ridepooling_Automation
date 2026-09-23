@@ -1,0 +1,51 @@
+@startuml join_request_state
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam state {
+  BackgroundColor #FFFFFF
+  BorderColor #1F4E79
+}
+hide empty description
+
+title Join request lifecycle (FR-RD-06, FR-RD-07, T-1, T-3)
+
+state "Pending" as P
+state "Needs Reconfirmation" as NR
+state "Accepted" as A
+state "Rejected" as RJ
+state "Withdrawn" as W
+state "Expired" as EX
+state "Ride Cancelled" as RC
+state "Left" as L
+state "No-show" as NS
+state "Completed" as C
+
+[*] --> P : rider submits\n[validation of FR-RD-06.2 passes]
+
+P --> NR : departure or pickup time moves > 10 min,\nor share rises > 20 %
+NR --> P : rider reconfirms\n/ snapshot replaced
+NR --> W : rider declines
+
+P --> A : owner accepts\n[atomic: open, seat available,\nstill Pending, no conflict]
+P --> RJ : owner rejects,\nor conflicting ride accepted
+P --> W : rider withdraws, auto-withdrawal,\nor rider suspended
+NR --> W : rider withdraws
+
+P --> EX : lock time reached
+NR --> EX : lock time reached
+P --> RC : owner cancels ride
+NR --> RC : owner cancels ride
+
+A --> L : rider leaves before trip start\n/ seat released
+A --> RC : owner cancels ride\n/ share liability released
+A --> NS : owner marks no-show\n[after grace period]
+A --> C : trip completed\n/ share becomes Due
+
+RJ --> [*]
+W --> [*]
+EX --> [*]
+RC --> [*]
+L --> [*]
+NS --> [*]
+C --> [*]
+@enduml

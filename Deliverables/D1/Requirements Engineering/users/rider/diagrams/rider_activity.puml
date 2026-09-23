@@ -1,0 +1,53 @@
+@startuml rider_activity
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam activity {
+  BackgroundColor #FFFFFF
+  BorderColor #1F4E79
+}
+
+title Rider journey (UC-RD-01 to UC-RD-13)
+
+start
+:Sign in with IITK email and one-time code;
+if (First sign-in?) then (yes)
+  :Set up profile, pickup point, tags and consent;
+endif
+repeat
+  :Search rides by destination, date, time and pickup point;
+  if (Ask AI to Suggest?) then (yes)
+    if (AI service responds within 8 s?) then (yes)
+      :View validated AI suggestions with pros and cons;
+    else (no)
+      :View deterministic fallback ranking;
+    endif
+  endif
+  :Select ride and pickup point;
+  :Submit join request (Pending);
+  if (Departure, pickup time or share drifts beyond threshold?) then (yes)
+    if (Reconfirm?) then (yes)
+      :Request returns to Pending;
+    else (no)
+      :Request Withdrawn;
+    endif
+  endif
+repeat while (Request accepted?) is (no: rejected, withdrawn or expired)
+->yes;
+:Upcoming ride; shares recomputed as occupancy changes;
+if (Leave before lock time?) then (yes)
+  :Seat released; request Left;
+  stop
+endif
+:Ride locks: shares fixed, pool chat opens;
+:Coordinate pickup in pool chat;
+:Follow trip; SOS available while in progress;
+:Trip completed; share Due;
+fork
+  :Mark share paid; owner confirms;
+fork again
+  :Rate co-travellers within 72 h;
+fork again
+  :File complaint within 7 days (optional);
+end fork
+stop
+@enduml
