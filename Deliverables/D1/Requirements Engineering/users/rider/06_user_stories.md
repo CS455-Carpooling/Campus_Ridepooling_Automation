@@ -6,7 +6,7 @@ directly into test cases (TC-RD-*nn*, D3). Story points are suggested estimates 
 
 ## Scenario — a typical rider
 
-> Ananya, a third-year student living in Hall 5, has a 06:30 train from Kanpur Central on Friday.
+> Ananya, a third-year student living in Hall 6, has a 06:30 train from Kanpur Central on Friday.
 > On Wednesday she signs in with her IITK email, searches for rides to Kanpur Central on Friday
 > between 04:45 and 05:15, and taps *Ask AI to Suggest*. The assistant ranks three rides; the top one
 > — a ₹350 cab with its owner and one rider already on board — leaves at 05:00, would cost her at most
@@ -15,7 +15,7 @@ directly into test cases (TC-RD-*nn*, D3). Story points are suggested estimates 
 > which moves her pickup to 04:40 — more than ten minutes earlier — so the app asks her to reconfirm
 > before the owner can accept her; she agrees. The owner accepts her, and at 04:00 on Friday the ride
 > locks with four occupants: her share is fixed at ₹87, below the estimate because a fourth person
-> joined, and a pool chat opens, where the group agrees to meet at the Hall 5 gate. After the trip she
+> joined, and a pool chat opens, where the group agrees to meet at the Hall 6 gate. After the trip she
 > pays the owner by UPI, marks her share as paid, and rates her co-travellers.
 
 ---
