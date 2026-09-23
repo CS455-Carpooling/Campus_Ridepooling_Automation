@@ -6,16 +6,16 @@ directly into test cases (TC-RD-*nn*, D3). Story points are suggested estimates 
 
 ## Scenario — a typical rider
 
-> Ananya, a third-year student living in Hall 5, has a 06:30 train from Kanpur Central on Friday.
+> Ananya, a third-year student living in Hall 6, has a 06:30 train from Kanpur Central on Friday.
 > On Wednesday she signs in with her IITK email, searches for rides to Kanpur Central on Friday
 > between 04:45 and 05:15, and taps *Ask AI to Suggest*. The assistant ranks three rides; the top one
 > — a ₹350 cab with its owner and one rider already on board — leaves at 05:00, would cost her at most
-> ₹117, picks her up at Hall 5 at 04:52 and is owned by someone who also chose "quiet ride". She
+> ₹117, picks her up at Hall 6 at 04:52 and is owned by someone who also chose "quiet ride". She
 > requests a seat. That evening another rider is accepted into the same car from the academic area,
 > which moves her pickup to 04:40 — more than ten minutes earlier — so the app asks her to reconfirm
 > before the owner can accept her; she agrees. The owner accepts her, and at 04:00 on Friday the ride
 > locks with four occupants: her share is fixed at ₹87, below the estimate because a fourth person
-> joined, and a pool chat opens, where the group agrees to meet at the Hall 5 gate. After the trip she
+> joined, and a pool chat opens, where the group agrees to meet at the Hall 6 gate. After the trip she
 > pays the owner by UPI, marks her share as paid, and rates her co-travellers.
 
 ---
@@ -272,7 +272,7 @@ directly into test cases (TC-RD-*nn*, D3). Story points are suggested estimates 
 | **Priority** | Must |
 | **Story points** | 5 |
 
-- **US-RD-15-AC1** — *Given* an open ride with a seat, *when* I request it from Hall 5, *then* a Pending request exists with a snapshot of departure time, my pickup time and my estimated share, and the owner is notified.
+- **US-RD-15-AC1** — *Given* an open ride with a seat, *when* I request it from Hall 6, *then* a Pending request exists with a snapshot of departure time, my pickup time and my estimated share, and the owner is notified.
 - **US-RD-15-AC2** — *Given* I already have 3 active requests, *when* I submit a fourth, *then* it is refused with the reason.
 - **US-RD-15-AC3** — *Given* I hold an accepted seat departing at 05:00, *when* I request a ride departing at 06:30 the same day, *then* it is refused as conflicting.
 - **US-RD-15-AC4** — *Given* a slow network, *when* my app sends the same request twice with the same key, *then* only one request exists.
