@@ -147,7 +147,7 @@ Requirements: FR-RD-06.1, FR-RD-06.2, FR-RD-06.9, FR-RD-06.10
 Use case: UC-RD-06
 
 Acceptance criteria:
-- US-RD-15-AC1: Given an open ride with a seat, when I request it from Hall 5, then a Pending request exists with a snapshot of departure time, my pickup time and my estimated share, and the owner is notified.
+- US-RD-15-AC1: Given an open ride with a seat, when I request it from Hall 6, then a Pending request exists with a snapshot of departure time, my pickup time and my estimated share, and the owner is notified.
 - US-RD-15-AC2: Given I already have 3 active requests, when I submit a fourth, then it is refused with the reason.
 - US-RD-15-AC3: Given I hold an accepted seat departing at 05:00, when I request a ride departing at 06:30 the same day, then it is refused as conflicting.
 - US-RD-15-AC4: Given a slow network, when my app sends the same request twice with the same key, then only one request exists."
