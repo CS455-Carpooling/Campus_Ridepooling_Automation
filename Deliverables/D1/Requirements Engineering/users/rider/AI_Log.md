@@ -13,7 +13,7 @@ follows the AI Engineering Log fields of the course handout (§8).
 
 | Model | Role |
 |---|---|
-| Claude (Anthropic), through Claude Code | Drafting assistant for the Rider requirements, diagrams and traceability |
+| Claude (Anthropic) | Drafting assistant for the Rider requirements, diagrams and traceability |
 | Claude Sonnet (Anthropic) | Independent reviewer, run in a separate session with read-only access to the drafts |
 | Gemini 3.6 Flash (Google) | Planned independent reviewer; the service was unavailable (Entry 04) |
 
