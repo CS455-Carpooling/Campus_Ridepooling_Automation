@@ -1,5 +1,11 @@
 # Ride Owner — Use Cases
 
+## Use-case diagram
+
+![Ride Owner use-case diagram](Use_Case_Diagram_Ride_Owner.png)
+
+*Source: `Use_Case_Diagram_Ride_Owner.puml` (PlantUML).*
+
 ## 1. Use Case Descriptions
 
 ### UC-RO-01: Create a Ride
