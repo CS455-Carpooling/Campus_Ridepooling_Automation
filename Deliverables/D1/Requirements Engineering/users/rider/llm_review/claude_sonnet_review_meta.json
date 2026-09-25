@@ -1,5 +1,5 @@
 {
-  "reviewer_model": "Claude Sonnet (run as a separate subagent from Claude Code)",
+  "reviewer_model": "Claude Sonnet (Anthropic), run in a separate session",
   "context": "fresh context; no access to the drafting conversation; read-only (no edit tools used)",
   "requested_on": "2026-09-23",
   "prompt": "llm_review/review_prompt.md (unchanged from the version prepared for Gemini)",
