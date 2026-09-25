@@ -1,0 +1,69 @@
+@startuml
+hide footbox
+skinparam sequenceMessageAlign center
+
+actor "Rider" as RD
+participant "Rider Dashboard" as UI
+participant "Ride Service" as Backend
+participant "DB: Platform-DB" as DB
+participant "Notification Service" as Notify
+
+== 1. Detect Itinerary Drift (FR-RD-06.5) ==
+
+note over Backend: Triggered by occupancy change\nor owner editing ride details
+Backend -> Backend: calculateDrift(RequestSnapshot, CurrentRideState)
+
+alt [Time shift > 10 min (P-09) OR Share increase > 20% (P-10)]
+    note over Backend, DB: FR-RD-06.5: Intercept request and block acceptance until rider consents
+    group #EBF5FF Atomic Transaction
+        Backend -> DB: updateRequestState(RequestID, "Needs Reconfirmation")
+        activate DB
+        DB --> Backend: update OK
+        deactivate DB
+    end
+    
+    Backend -> Notify: notifyRider(RiderID, "Reconfirmation Needed", OldValues, NewValues)
+    activate Notify
+    Notify --> Backend: notify OK
+    deactivate Notify
+end
+
+== 2. Rider Reconfirmation (FR-RD-06.6, UC-RD-17) ==
+
+RD -> UI: Respond to Drift (RequestID, Decision)
+activate UI
+note over RD, UI: Decision is "Reconfirm" or "Decline"
+UI -> Backend: processReconfirmation(RequestID, Decision)
+activate Backend
+
+alt [Decision == "Reconfirm"]
+    note over Backend, DB: FR-RD-06.6: Replace snapshot with current values,\nkeep original submission time for queue ordering
+    group #EBF5FF Atomic Transaction
+        Backend -> DB: updateRequestSnapshot(RequestID, CurrentValues)
+        activate DB
+        Backend -> DB: updateRequestState(RequestID, "Pending")
+        DB --> Backend: transaction OK
+        deactivate DB
+    end
+    Backend --> UI: Message (Reconfirmed)
+    UI --> RD: Display Request State: Pending
+    
+else [Decision == "Decline"]
+    group #EBF5FF Atomic Transaction
+        Backend -> DB: updateRequestState(RequestID, "Withdrawn")
+        activate DB
+        DB --> Backend: update OK
+        deactivate DB
+    end
+    Backend -> Notify: notifyOwner(RideID, "Request Withdrawn")
+    activate Notify
+    Notify --> Backend: notify OK
+    deactivate Notify
+    
+    Backend --> UI: Message (Withdrawn)
+    UI --> RD: Display Request State: Withdrawn
+end
+
+deactivate Backend
+deactivate UI
+@enduml

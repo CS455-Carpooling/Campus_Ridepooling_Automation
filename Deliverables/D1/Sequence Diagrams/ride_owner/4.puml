@@ -1,0 +1,101 @@
+@startuml
+hide footbox
+skinparam sequenceMessageAlign center
+
+actor "Ride Owner" as RO
+participant "Ride Dashboard" as UI
+participant "Post-Ride Service" as Backend
+participant "DB: Platform-DB" as DB
+participant "AS: Authorization" as Auth
+participant "Admin / SOS Gateway" as AdminGate
+
+== 1. Fare Settlement (UC-RO-08) ==
+
+RO -> UI: Mark Rider as Settled (RideID, RiderID)
+activate UI
+UI -> Backend: processSettlement(RideID, RiderID)
+activate Backend
+
+Backend -> Auth: authorize(OwnerID, Role="RideOwner")
+activate Auth
+Auth --> Backend: authorization result
+deactivate Auth
+
+alt authorization OK
+    Backend -> DB: getRiderStatus(RideID, RiderID)
+    activate DB
+    DB --> Backend: RiderStatus (e.g., "Arrived", "No-Show")
+    deactivate DB
+    
+    alt RiderStatus == "No-Show"
+        note over Backend: FR-RO-11.3: Prevent marking No-Show as settled for standard fare
+        Backend --> UI: Error (Invalid Settlement)
+        UI --> RO: Display "Cannot settle standard share for a No-Show rider"
+    else RiderStatus != "No-Show"
+        note over Backend, DB: NFR-RO-DEP-03: Atomic persistence
+        Backend -> DB: updateSettlementStatus(RiderID, "Settled")
+        activate DB
+        DB --> Backend: update OK
+        deactivate DB
+        
+        Backend --> UI: Message (Settlement OK)
+        UI --> RO: Display updated settlement status
+    end
+else authorization fail
+    Backend --> UI: Error (Unauthorized)
+    UI --> RO: Display access denied
+end
+deactivate Backend
+deactivate UI
+
+== 2. Ratings & Feedback (UC-RO-09) ==
+
+RO -> UI: Submit Rating (RideID, RiderID, Rating, Feedback)
+activate UI
+UI -> Backend: processRating(RideID, RiderID, Rating, Feedback)
+activate Backend
+
+Backend -> DB: validateRatingWindow(RideID)
+activate DB
+note over DB: Validates P-04 (72-hour window)
+DB --> Backend: WindowValid (Boolean)
+deactivate DB
+
+alt WindowValid == True
+    Backend -> DB: insertRating(RideID, RiderID, Rating, Feedback)
+    activate DB
+    DB --> Backend: insert OK
+    deactivate DB
+    Backend --> UI: Message (Rating Saved)
+    UI --> RO: Display success confirmation
+else WindowValid == False
+    Backend --> UI: Error (Window Expired)
+    UI --> RO: Display "Rating window has closed"
+end
+deactivate Backend
+deactivate UI
+
+== 3. Confidential Reporting & SOS (UC-RO-09) ==
+
+RO -> UI: Raise SOS / Complaint (RideID, Details, LocationData)
+activate UI
+UI -> Backend: submitIncidentReport(RideID, Details, LocationData)
+activate Backend
+
+note over Backend, AdminGate: NFR-RO-SEC-03, NFR-RO-SEC-06: \nData restricted to authorized Operations Admin only
+Backend -> DB: logConfidentialIncident(RideID, Details, LocationData)
+activate DB
+DB --> Backend: log OK
+deactivate DB
+
+Backend -> AdminGate: routeAlertToAdmin(RideID, Details, LocationData)
+activate AdminGate
+AdminGate --> Backend: alert received
+deactivate AdminGate
+
+Backend --> UI: Message (Alert Sent)
+UI --> RO: Display "Alert sent to Admin safely"
+
+deactivate Backend
+deactivate UI
+@enduml

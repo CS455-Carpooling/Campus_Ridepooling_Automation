@@ -1,0 +1,84 @@
+@startuml
+hide circle
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #1F4E79
+}
+
+title Class Diagram 4: Trust, Safety & Governance Domain
+
+enum ComplaintCategory {
+    SAFETY
+    HARASSMENT
+    TARDINESS
+    PAYMENT
+    NO_SHOW
+    OTHER
+}
+
+enum ComplaintStatus {
+    SUBMITTED
+    UNDER_REVIEW
+    RESOLVED
+}
+
+enum DisciplinaryType {
+    WARNING
+    SUSPENSION
+}
+
+class Rating {
+    - ratingID: UUID
+    - raterID: UUID
+    - rateeID: UUID
+    - tripID: UUID
+    - score: Integer
+    - submittedAt: DateTime
+    + isWithinWindow(completedAt: DateTime): Boolean
+}
+
+class Complaint {
+    - complaintID: UUID
+    - complainantID: UUID
+    - accusedID: UUID
+    - tripID: UUID
+    - category: ComplaintCategory
+    - description: String
+    - status: ComplaintStatus
+    - actionTaken: Boolean
+    - submittedAt: DateTime
+    + updateStatus(newStatus: ComplaintStatus, actionTaken: Boolean): void
+}
+
+class SOSIncident {
+    - incidentID: UUID
+    - raiserID: UUID
+    - rideID: UUID
+    - mobileNumber: String [0..1]
+    - coordinates: String [0..1]
+    - isFalseAlarm: Boolean
+    - raisedAt: DateTime
+    + markAsFalseAlarm(): void
+}
+
+class DisciplinaryAction {
+    - actionID: UUID
+    - targetUserID: UUID
+    - issuedByAdminID: UUID
+    - type: DisciplinaryType
+    - reasonCategory: String
+    - startDate: DateTime
+    - endDate: DateTime [0..1]
+    - isAcknowledged: Boolean
+    + acknowledgeWarning(): void
+    + isSuspensionActive(): Boolean
+}
+
+' Notes for Context
+note top of Complaint : FR-RD-13.3: Strict confidentiality.\nComplainant ID and description never exposed to accused.
+note top of SOSIncident : FR-RD-15.2: Visible to admins < 5s.\nIncludes trip context. Hidden from pool.
+
+@enduml

@@ -1,0 +1,46 @@
+@startuml
+hide footbox
+skinparam sequenceMessageAlign center
+
+actor "Operations Admin" as Admin
+participant "Admin Dashboard" as UI
+participant "Complaint Service" as Backend
+participant "DB: Platform-DB" as DB
+participant "AS: Authorization" as Auth
+
+Admin -> UI: View Complaints (ReportedRiderID)
+activate UI
+UI -> Backend: getComplaintsAndHistory(ReportedRiderID)
+activate Backend
+
+Backend -> Auth: authorize(AdminID, Role="OperationsAdmin")
+activate Auth
+Auth --> Backend: authorization result
+deactivate Auth
+
+alt authorization OK
+    note over Backend, DB: OA-FR-18 / SYS-FR-19: Retrieve current complaints (including SOS)
+    Backend -> DB: queryCurrentComplaints(ReportedRiderID)
+    activate DB
+    DB --> Backend: CurrentComplaints
+    deactivate DB
+    
+    note over Backend, DB: OA-FR-20: Retrieve retained previous complaints for context
+    Backend -> DB: queryRetainedComplaints(ReportedRiderID)
+    activate DB
+    DB --> Backend: RetainedComplaintHistory
+    deactivate DB
+    
+    note over Backend, UI: SYS-NFR-07: Sensitive complaint data returned only to authorized Admin
+    Backend --> UI: Message (CurrentComplaints, RetainedComplaintHistory)
+    UI --> Admin: Display complaints and retained history for review
+    
+else authorization fail
+    note over Backend: SYS-NFR-03: Server-side authorization enforced
+    Backend --> UI: Error (Unauthorized)
+    UI --> Admin: Display access denied
+end
+
+deactivate Backend
+deactivate UI
+@enduml

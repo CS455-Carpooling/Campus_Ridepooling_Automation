@@ -1,0 +1,42 @@
+@startuml
+hide circle
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #1F4E79
+}
+
+title Class Diagram 6: Communication Domain
+
+class PoolChat {
+    - chatID: UUID
+    - rideID: UUID
+    - isReadOnly: Boolean
+    - openedAt: DateTime
+    - readOnlyAt: DateTime [0..1]
+    - scheduledForDeletionAt: DateTime [0..1]
+    + initializeChat(poolMembers: List<UUID>): void
+    + markReadOnly(): void
+    + deleteChatLog(): void
+    + verifyMembership(userID: UUID): Boolean
+}
+
+class ChatMessage {
+    - messageID: UUID
+    - chatID: UUID
+    - senderID: UUID
+    - content: String
+    - sentAt: DateTime
+    + validateLength(): Boolean
+}
+
+' Notes for Context
+note top of PoolChat : FR-RD-09.5: Read-only 24h after completion.\nDeleted after 30 days (P-15).
+note right of ChatMessage : FR-RD-09.4: Max 500 characters.\nMax 20 messages/min/member (P-14).
+
+' Structural Relationships
+PoolChat "1" *-- "*" ChatMessage : contains >
+
+@enduml

@@ -1,0 +1,63 @@
+@startuml
+hide footbox
+skinparam sequenceMessageAlign center
+
+actor "Operations Admin" as Admin
+participant "Admin Dashboard" as UI
+participant "Fare Service" as Backend
+participant "DB: Platform-DB" as DB
+participant "AS: Authorization" as Auth
+participant "Audit Service" as Audit
+
+Admin -> UI: Configure Fare (Hub1, Hub2, VehicleType, FareData, SegmentType)
+activate UI
+UI -> Backend: updateFareConfig(Hub1, Hub2, VehicleType, FareData, SegmentType, LastReadVersion)
+activate Backend
+
+Backend -> Auth: authorize(AdminID, Role="OperationsAdmin")
+activate Auth
+Auth --> Backend: authorization result
+deactivate Auth
+
+alt authorization OK
+    Backend -> DB: readCurrentFare(Hub1, Hub2, VehicleType)
+    activate DB
+    DB --> Backend: CurrentFare (CurrentVersion, OldFareData)
+    deactivate DB
+
+    alt LastReadVersion == CurrentVersion
+        
+        alt SegmentType == "Campus"
+            Backend -> Backend: Validate FareData is Fixed Value
+        else SegmentType == "External"
+            note over Backend: SYS-FR-13: Admin cannot set final exact external fare
+            Backend -> Backend: Validate FareData is Estimate Range
+        end
+
+        note over Backend, Audit: Atomic Transaction Boundary
+        Backend -> DB: saveFareConfig(Hub1, Hub2, VehicleType, FareData, NewVersion)
+        activate DB
+        DB --> Backend: save OK
+        deactivate DB
+
+        Backend -> Audit: logChange(AdminID, "FareConfig", OldFareData, FareData, Timestamp)
+        activate Audit
+        Audit --> Backend: log OK
+        deactivate Audit
+
+        Backend --> UI: Message (Update OK)
+        UI --> Admin: Display success confirmation
+
+    else LastReadVersion != CurrentVersion
+        Backend --> UI: Error (Stale Configuration)
+        UI --> Admin: Display "Configuration changed by another Admin"
+    end
+
+else authorization fail
+    Backend --> UI: Error (Unauthorized)
+    UI --> Admin: Display access denied
+end
+
+deactivate Backend
+deactivate UI
+@enduml

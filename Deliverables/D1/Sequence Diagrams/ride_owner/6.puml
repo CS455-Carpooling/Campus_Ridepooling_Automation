@@ -1,0 +1,49 @@
+@startuml
+hide footbox
+skinparam sequenceMessageAlign center
+
+actor "Ride Owner" as RO
+participant "Ride Dashboard" as UI
+participant "Ride Service" as Backend
+participant "DB: Platform-DB" as DB
+participant "AS: Authorization" as Auth
+participant "Notification Service" as Notify
+
+RO -> UI: Lock Ride (RideID)
+activate UI
+UI -> Backend: lockRide(RideID)
+activate Backend
+
+Backend -> Auth: authorize(OwnerID, Role="RideOwner")
+activate Auth
+Auth --> Backend: authorization result
+deactivate Auth
+
+alt authorization OK
+    group #EBF5FF Atomic Transaction
+        Backend -> DB: updateLockStatus(RideID, "Locked")
+        activate DB
+        DB --> Backend: update OK
+        deactivate DB
+    end
+    
+    note over Backend, Notify: FR-RO-14.2: Notify affected Riders of pool locking
+    Backend -> DB: getAcceptedRiders(RideID)
+    activate DB
+    DB --> Backend: AcceptedRidersList
+    deactivate DB
+    
+    Backend -> Notify: notifyRiders(AcceptedRidersList, "Ride Locked - Chat Opened")
+    activate Notify
+    Notify --> Backend: notify OK
+    deactivate Notify
+    
+    Backend --> UI: Message (Lock OK)
+    UI --> RO: Display "Ride Pool Locked. Chat is now available."
+else authorization fail
+    Backend --> UI: Error (Unauthorized)
+    UI --> RO: Display access denied
+end
+deactivate Backend
+deactivate UI
+@enduml

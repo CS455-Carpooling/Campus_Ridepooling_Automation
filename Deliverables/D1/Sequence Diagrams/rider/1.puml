@@ -1,0 +1,72 @@
+@startuml
+hide footbox
+skinparam sequenceMessageAlign center
+
+actor "Rider" as RD
+participant "Rider Dashboard" as UI
+participant "Search Service" as Backend
+participant "DB: Platform-DB" as DB
+participant "LLM Service" as AI
+
+RD -> UI: Search Rides (Dest, Date, TimeWindow, Pickup)
+activate UI
+UI -> Backend: findRides(Dest, Date, TimeWindow, Pickup)
+activate Backend
+
+Backend -> DB: queryOpenRides(Dest, Date)
+activate DB
+note over DB: FR-RD-03.2: Must be open, future lock time,\nnot suspended, >= 1 seat
+DB --> Backend: CandidateRidesList
+deactivate DB
+
+alt [Ask AI to Suggest == True]
+    note over Backend, AI: AI-RD-10: Send only permitted fields (no private data)
+    Backend -> AI: requestSuggestions(CandidateRidesList, RiderTags)
+    activate AI
+    
+    alt [AI Responds within 8s (P-12)]
+        AI --> Backend: AIRanking (Pros, Cons)
+        deactivate AI
+        
+        note over Backend: FR-RD-04.3 / AI-RD-06: Validate rides exist\nand stated figures match computed values
+        Backend -> Backend: validateAISuggestions(AIRanking)
+        
+        alt [Validation == Passed]
+            Backend --> UI: Message (AI Suggestions)
+            UI --> RD: Display top 5 AI ranked rides with factors
+        else [Validation == Failed]
+            note over Backend: AI-RD-13: Fallback to deterministic ranking
+            Backend -> Backend: computeDeterministicRanking()
+            Backend --> UI: Message (Fallback Ranking)
+            UI --> RD: Display deterministic ranking (Labelled Non-AI)
+        end
+        
+    else [AI Timeout / Error]
+        note over Backend: NFR-RD-04: Fallback shown <= 1s after timeout
+        Backend -> Backend: computeDeterministicRanking()
+        Backend --> UI: Message (Fallback Ranking)
+        UI --> RD: Display deterministic ranking (Labelled Non-AI)
+    end
+    
+    note over Backend, DB: AI-RD-12: Record AI Trace for 90 days (P-28)
+    Backend -> DB: logAITrace(PseudonymousID, ToolCalls, ValidationOutcome)
+    activate DB
+    DB --> Backend: log OK
+    deactivate DB
+
+else [Ask AI to Suggest == False]
+    Backend -> Backend: sortRides(CandidateRidesList, "Departure Time")
+    Backend --> UI: Message (Search Results)
+    UI --> RD: Display open rides
+end
+
+== Live Availability Updates (FR-RD-03.5) ==
+note over Backend, UI: NFR-RD-03: State changes pushed within 2s
+Backend -> UI: pushUpdate(RideID, NewAvailableSeats)
+alt [AvailableSeats == 0]
+    UI --> RD: Disable "Join" action for RideID
+end
+
+deactivate Backend
+deactivate UI
+@enduml

@@ -1,0 +1,84 @@
+@startuml
+hide footbox
+skinparam sequenceMessageAlign center
+
+actor "Ride Owner" as RO
+participant "Ride Dashboard" as UI
+participant "Ride Service" as Backend
+participant "DB: Platform-DB" as DB
+participant "AS: Authorization" as Auth
+participant "Notification Service" as Notify
+
+RO -> UI: Submit Ride Modification (RideID, Action, NewDetails)
+activate UI
+note over RO, UI: Action can be "Edit" or "Cancel"
+UI -> Backend: modifyRide(RideID, Action, NewDetails)
+activate Backend
+
+Backend -> Auth: authorize(OwnerID, Role="RideOwner")
+activate Auth
+Auth --> Backend: authorization result
+deactivate Auth
+
+alt authorization OK
+    Backend -> DB: readRideState(RideID)
+    activate DB
+    DB --> Backend: RideState (LockStatus, AcceptedRiders)
+    deactivate DB
+    
+    alt LockStatus == "Locked"
+        note over Backend: FR-RO-04.5 / P-06: Prevent edit/cancel if ride is locked
+        Backend --> UI: Error (Ride Locked)
+        UI --> RO: Display "Locked rides cannot be modified"
+        
+    else LockStatus == "Unlocked"
+        alt Action == "Cancel"
+            note over Backend: FR-RO-04.4: Cancel ride and notify accepted Riders
+            group #EBF5FF Atomic Transaction
+                Backend -> DB: updateRideState(RideID, "Cancelled")
+                activate DB
+                DB --> Backend: update OK
+                deactivate DB
+            end
+            Backend -> Notify: notifyRiders(AcceptedRiders, "Ride Cancelled")
+            activate Notify
+            Notify --> Backend: notify OK
+            deactivate Notify
+            Backend --> UI: Message (Cancel OK)
+            UI --> RO: Display cancellation confirmation
+            
+        else Action == "Edit"
+            note over Backend: FR-RO-04.3: Check if accepted Riders are affected
+            Backend -> Backend: checkImpact(NewDetails, AcceptedRiders)
+            
+            alt Riders Affected == True
+                Backend --> UI: Prompt (Confirm Impact)
+                UI --> RO: Display "Edit affects accepted Riders. Confirm?"
+                RO -> UI: Submit Confirmation
+                UI -> Backend: confirmModification(RideID, NewDetails)
+            end
+            
+            group #EBF5FF Atomic Transaction
+                Backend -> DB: updateRideDetails(RideID, NewDetails)
+                activate DB
+                DB --> Backend: update OK
+                deactivate DB
+            end
+            
+            note over Backend: FR-RO-04.2: Notify affected accepted Riders
+            Backend -> Notify: notifyRiders(AcceptedRiders, "Ride Edited")
+            activate Notify
+            Notify --> Backend: notify OK
+            deactivate Notify
+            
+            Backend --> UI: Message (Edit OK)
+            UI --> RO: Display success confirmation
+        end
+    end
+else authorization fail
+    Backend --> UI: Error (Unauthorized)
+    UI --> RO: Display access denied
+end
+deactivate Backend
+deactivate UI
+@enduml

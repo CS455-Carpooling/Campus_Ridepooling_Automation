@@ -1,0 +1,72 @@
+@startuml
+hide footbox
+skinparam sequenceMessageAlign center
+
+actor "Operations Admin" as Admin
+participant "Admin Dashboard" as UI
+participant "Config Service" as Backend
+participant "DB: Platform-DB" as DB
+participant "AS: Authorization" as Auth
+participant "Audit Service" as Audit
+
+Admin -> UI: Manage Vehicle Type (Action, VehicleType, Data)
+activate UI
+note over Admin, UI: Action can be "Add" or "Deactivate"
+UI -> Backend: updateVehicleType(Action, VehicleType, Data, LastReadVersion)
+activate Backend
+
+Backend -> Auth: authorize(AdminID, Role="OperationsAdmin")
+activate Auth
+Auth --> Backend: authorization result
+deactivate Auth
+
+alt authorization OK
+    
+    alt Action == "Deactivate"
+        Backend -> DB: readCurrentVehicleType(VehicleType)
+        activate DB
+        DB --> Backend: CurrentConfig (CurrentVersion, OldData)
+        deactivate DB
+    else Action == "Add"
+        note over Backend: For new vehicle types, CurrentVersion is effectively null
+    end
+
+    alt LastReadVersion == CurrentVersion OR Action == "Add"
+        note over Backend, Audit: Atomic Transaction Boundary (SYS-FR-48)
+        
+        alt Action == "Add"
+            note over Backend: OA-FR-01: Add a new active vehicle type
+            Backend -> DB: insertVehicleType(VehicleType, Data, NewVersion)
+            activate DB
+        else Action == "Deactivate"
+            note over Backend: OA-FR-02 / SYS-NFR-11: Deactivate vehicle type.\nHistorical ride references remain valid.
+            Backend -> DB: updateVehicleStatus(VehicleType, "Inactive", NewVersion)
+        end
+        
+        DB --> Backend: transaction OK
+        deactivate DB
+        
+        note over Backend, Audit: SYS-FR-45 / SYS-NFR-01: Log identity, action, and prev/new values
+        Backend -> Audit: logChange(AdminID, "VehicleTypeConfig", Action, OldData, Data, Timestamp)
+        activate Audit
+        Audit --> Backend: log OK
+        deactivate Audit
+        
+        Backend --> UI: Message (Update OK)
+        UI --> Admin: Display success confirmation
+        
+    else LastReadVersion != CurrentVersion
+        note over Backend: SYS-NFR-04 / SYS-NFR-05: Reject stale updates
+        Backend --> UI: Error (Stale Configuration)
+        UI --> Admin: Display "Configuration changed by another Admin"
+    end
+
+else authorization fail
+    note over Backend: SYS-NFR-03: Server-side authorization enforced
+    Backend --> UI: Error (Unauthorized)
+    UI --> Admin: Display access denied
+end
+
+deactivate Backend
+deactivate UI
+@enduml

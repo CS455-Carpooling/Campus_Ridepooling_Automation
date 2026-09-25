@@ -1,0 +1,58 @@
+@startuml
+hide footbox
+skinparam sequenceMessageAlign center
+
+actor "Operations Admin" as Admin
+participant "Admin Dashboard" as UI
+participant "Config Service" as Backend
+participant "DB: Platform-DB" as DB
+participant "AS: Authorization" as Auth
+participant "Audit Service" as Audit
+
+Admin -> UI: Update vehicle capacity (VehicleType, NewCap)
+activate UI
+note over Admin, UI: Admin submits change based on previously read config
+
+UI -> Backend: updateCapacity(VehicleType, NewCap, LastReadVersion)
+activate Backend
+
+Backend -> Auth: authorize(AdminID, Role="OperationsAdmin")
+activate Auth
+Auth --> Backend: authorization result
+deactivate Auth
+
+alt authorization OK
+    Backend -> DB: readCurrentConfig(VehicleType)
+    activate DB
+    DB --> Backend: CurrentConfig (CurrentVersion, CurrentCap)
+    deactivate DB
+
+    alt LastReadVersion == CurrentVersion
+        note over Backend, Audit: Atomic Transaction Boundary
+        
+        Backend -> DB: updateConfig(VehicleType, NewCap, NewVersion)
+        activate DB
+        DB --> Backend: update OK
+        deactivate DB
+        
+        Backend -> Audit: logChange(AdminID, "Capacity", CurrentCap, NewCap, Timestamp)
+        activate Audit
+        Audit --> Backend: log OK
+        deactivate Audit
+        
+        Backend --> UI: Message (Update OK)
+        UI --> Admin: Display success confirmation
+        
+    else LastReadVersion != CurrentVersion
+        Backend --> UI: Error (Stale Configuration)
+        UI --> Admin: Display "Configuration changed by another Admin"
+    end
+
+else authorization fail
+    Backend --> UI: Error (Unauthorized)
+    UI --> Admin: Display access denied
+end
+
+deactivate Backend
+deactivate UI
+@enduml
