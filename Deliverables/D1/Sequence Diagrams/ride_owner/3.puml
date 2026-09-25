@@ -1,0 +1,111 @@
+@startuml
+hide footbox
+skinparam sequenceMessageAlign center
+
+actor "Ride Owner" as RO
+participant "Ride Dashboard" as UI
+participant "Trip Service" as Backend
+participant "DB: Platform-DB" as DB
+participant "AS: Authorization" as Auth
+participant "Notification Service" as Notify
+
+== 1. Start Pickup (UC-RO-06) ==
+
+RO -> UI: Start Pickup (RideID)
+activate UI
+UI -> Backend: startPickup(RideID)
+activate Backend
+
+Backend -> Auth: authorize(OwnerID, Role="RideOwner")
+activate Auth
+Auth --> Backend: authorization result
+deactivate Auth
+
+alt authorization OK
+    Backend -> DB: readRideState(RideID)
+    activate DB
+    DB --> Backend: State="Scheduled", LockStatus="Locked"
+    deactivate DB
+
+    note over Backend, DB: NFR-RO-DEP-03: Atomic persistence\nFR-RO-09.1: Transition to Pickup in Progress
+    Backend -> DB: updateRideState(RideID, "Pickup in Progress")
+    activate DB
+    DB --> Backend: update OK
+    deactivate DB
+
+    Backend -> Notify: notifyPool(RideID, "Pickup Started")
+    activate Notify
+    Notify --> Backend: notify OK
+    deactivate Notify
+
+    note over Backend, UI: NFR-RO-PERF-04: State change reflected within 1 second
+    Backend --> UI: Message (Pickup Started)
+    UI --> RO: Display Arrival Controls
+
+    == 2. Track Arrivals & No-Shows (UC-RO-06, UC-RO-07) ==
+    
+    RO -> UI: Mark Rider Status (RideID, RiderID, StatusType)
+    UI -> Backend: updateArrivalStatus(RideID, RiderID, StatusType)
+    
+    alt StatusType == "Arrived"
+        note over Backend: FR-RO-09.3: Mark Rider as Arrived
+        Backend -> DB: updateRiderStatus(RiderID, "Arrived")
+        activate DB
+        DB --> Backend: update OK
+        deactivate DB
+        Backend --> UI: Message (Arrived OK)
+        UI --> RO: Display Arrived Status
+        
+    else StatusType == "No-Show"
+        note over Backend: FR-RO-10.1: Validate Grace Period (P-03)
+        Backend -> DB: checkGracePeriod(RideID, RiderID)
+        activate DB
+        DB --> Backend: GracePeriodElapsed (Boolean)
+        deactivate DB
+        
+        alt GracePeriodElapsed == True
+            note over Backend, DB: NFR-RO-PERF-05: Recalculate within 500ms
+            
+            group #EBF5FF Atomic Transaction
+                Backend -> DB: updateRiderStatus(RiderID, "No-Show")
+                activate DB
+                Backend -> DB: removeFromActivePool(RiderID)
+                Backend -> DB: recalculateFareShares(RideID)
+                note over DB: FR-RO-10.3: Record for Admin Review
+                Backend -> DB: logNoShowForAdmin(RiderID)
+                DB --> Backend: transaction OK (New Fares)
+                deactivate DB
+            end
+            
+            Backend --> UI: Message (No-Show Recorded, New Fares)
+            UI --> RO: Display updated pool and new fare breakdown
+            
+        else GracePeriodElapsed == False
+            Backend --> UI: Error (Grace Period Active)
+            UI --> RO: Display "Wait for 5-minute grace period"
+        end
+    end
+
+    == 3. Complete Ride (UC-RO-07) ==
+    
+    RO -> UI: Complete Ride (RideID)
+    UI -> Backend: completeRide(RideID)
+    
+    note over Backend, DB: FR-RO-09.4: Store final active pool and fares
+    Backend -> DB: updateRideState(RideID, "Completed")
+    activate DB
+    Backend -> DB: saveFinalPoolAndFares(RideID)
+    DB --> Backend: update OK
+    deactivate DB
+    
+    Backend --> UI: Message (Ride Completed)
+    UI --> RO: Enable Settlement and Rating Options
+
+else authorization fail
+    Backend --> UI: Error (Unauthorized)
+    UI --> RO: Display access denied
+end
+
+deactivate Backend
+deactivate UI
+@enduml

@@ -1,0 +1,93 @@
+@startuml
+hide footbox
+skinparam sequenceMessageAlign center
+
+actor "Ride Owner" as RO
+participant "Ride Dashboard" as UI
+participant "Ride Service" as Backend
+participant "DB: Platform-DB" as DB
+participant "AS: Authorization" as Auth
+participant "Notification Service" as Notify
+
+== UC-RO-03: Review and Decide Join Requests ==
+
+RO -> UI: Submit Decision (RideID, RequestID, Decision)
+activate UI
+note over RO, UI: Decision can be "Accept" or "Reject"
+UI -> Backend: processJoinDecision(RideID, RequestID, Decision)
+activate Backend
+
+Backend -> Auth: authorize(OwnerID, Role="RideOwner")
+activate Auth
+Auth --> Backend: authorization result
+deactivate Auth
+
+alt authorization OK
+    alt Decision == "Accept"
+        Backend -> DB: readRideStateAndCapacity(RideID)
+        activate DB
+        DB --> Backend: RideState (LockStatus, AvailableSeats)
+        deactivate DB
+
+        alt LockStatus == "Locked"
+            note over Backend: FR-RO-06.4: Prevent new request acceptances after a ride is locked
+            Backend --> UI: Error (Ride Locked)
+            UI --> RO: Display "Cannot accept requests for a locked pool"
+            
+        else LockStatus == "Unlocked"
+            alt AvailableSeats > 0
+                note over Backend: FR-RO-05.2: Accept pending request only when capacity is available
+                
+                group #EBF5FF Atomic Transaction
+                    note over Backend, DB: NFR-RO-DEP-03: Atomic persistence\nFR-RO-05.3: Add to pool and update seats\nFR-RO-07.2: Recalculate fare shares
+                    Backend -> DB: updateRequestStatus(RequestID, "Accepted")
+                    activate DB
+                    Backend -> DB: addRiderToConfirmedPool(RideID, RiderID)
+                    Backend -> DB: updateAvailableSeats(RideID, -1)
+                    Backend -> DB: recalculateFareShares(RideID)
+                    DB --> Backend: transaction OK (New Fares)
+                    deactivate DB
+                end
+                
+                note over Backend, Notify: FR-RO-05.3 / FR-RO-14.2: Notify Rider of acceptance
+                Backend -> Notify: notifyRider(RiderID, "Request Accepted")
+                activate Notify
+                Notify --> Backend: notify OK
+                deactivate Notify
+                
+                Backend --> UI: Message (Accept OK, New Fares)
+                UI --> RO: Display updated pool, seats, and new fare breakdown
+                
+            else AvailableSeats == 0
+                Backend --> UI: Error (Capacity Reached)
+                UI --> RO: Display "No seats available to accept this request"
+            end
+        end
+        
+    else Decision == "Reject"
+        note over Backend: FR-RO-05.4: Reject request without adding Rider to pool
+        
+        group #EBF5FF Atomic Transaction
+            Backend -> DB: updateRequestStatus(RequestID, "Rejected")
+            activate DB
+            DB --> Backend: transaction OK
+            deactivate DB
+        end
+        
+        Backend -> Notify: notifyRider(RiderID, "Request Rejected")
+        activate Notify
+        Notify --> Backend: notify OK
+        deactivate Notify
+        
+        Backend --> UI: Message (Reject OK)
+        UI --> RO: Display request removed (capacity and fares unchanged)
+    end
+    
+else authorization fail
+    Backend --> UI: Error (Unauthorized)
+    UI --> RO: Display access denied
+end
+
+deactivate Backend
+deactivate UI
+@enduml

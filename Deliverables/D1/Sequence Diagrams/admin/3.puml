@@ -1,0 +1,76 @@
+@startuml
+hide footbox
+skinparam sequenceMessageAlign center
+
+actor "Operations Admin" as Admin
+participant "Admin Dashboard" as UI
+participant "Complaint Service" as Backend
+participant "AI Service" as AI
+participant "DB: Platform-DB" as DB
+participant "Audit Service" as Audit
+
+== 1. AI Analysis & Graceful Degradation ==
+
+Admin -> UI: Open Complaint (ComplaintID)
+activate UI
+UI -> Backend: getComplaintData(ComplaintID)
+activate Backend
+
+Backend -> DB: readComplaint(ComplaintID)
+activate DB
+DB --> Backend: OriginalComplaint
+deactivate DB
+
+Backend -> AI: generateSummaryAndRecommendation(OriginalComplaint)
+activate AI
+
+alt AI Timeout / Invalid Output
+    AI --> Backend: Error (Failure)
+    
+    note over Backend: SYS-FR-46: Route to Manual Review\nSYS-FR-47: Preserve Original Complaint
+    Backend --> UI: OriginalComplaint + ManualReviewFlag
+    
+else AI Success
+    AI --> Backend: AIResult (Summary, Tags, Recommendation)
+    deactivate AI
+    
+    Backend --> UI: OriginalComplaint + AIResult
+end
+
+UI --> Admin: Display Data for Review
+deactivate Backend
+deactivate UI
+
+== 2. Human-in-the-Loop Decision Gate ==
+
+Admin -> UI: Submit Decision (DecisionType, Reason)
+activate UI
+UI -> Backend: processEnforcement(ComplaintID, AdminID, DecisionType, Reason)
+activate Backend
+
+alt DecisionType == "Reject"
+    note over Backend: OA-FR-36: Admin rejects AI recommendation
+    Backend -> Backend: Validate Reason is provided
+    Backend -> DB: updateComplaintStatus(ComplaintID, "Rejected")
+    
+else DecisionType == "Approve"
+    note over Backend: OA-FR-34: Admin approves enforcement
+    Backend -> DB: executeDisciplinaryAction(TargetRider, Action)
+end
+
+activate DB
+DB --> Backend: update OK
+deactivate DB
+
+note over Backend, Audit: SYS-FR-38: Log AI Recommendation vs Final Decision
+Backend -> Audit: logAIDecision(AdminID, ComplaintID, AIRecommendation, DecisionType, Timestamp)
+activate Audit
+Audit --> Backend: log OK
+deactivate Audit
+
+Backend --> UI: Message (Review Complete)
+UI --> Admin: Display success confirmation
+
+deactivate Backend
+deactivate UI
+@enduml

@@ -1,0 +1,59 @@
+@startuml
+hide footbox
+skinparam sequenceMessageAlign center
+
+actor "Operations Admin" as Admin
+participant "Admin Dashboard" as UI
+participant "Account Service" as Backend
+participant "DB: Platform-DB" as DB
+participant "AS: Authorization" as Auth
+participant "Audit Service" as Audit
+
+Admin -> UI: Submit Disciplinary Action (TargetRider, ActionType, Details)
+activate UI
+note over Admin, UI: 'Details' contains the Reason for Warning/Reactivation\nor the Duration/Indefinite flag for Suspension.
+
+UI -> Backend: processDisciplinaryAction(TargetRider, ActionType, Details)
+activate Backend
+
+Backend -> Auth: authorize(AdminID, Role="OperationsAdmin")
+activate Auth
+Auth --> Backend: authorization result
+deactivate Auth
+
+alt authorization OK
+    
+    alt ActionType == "Warning"
+        note over Backend: OA-FR-21: Warning requires a reason
+        Backend -> Backend: Validate Reason is provided
+    else ActionType == "Suspend"
+        note over Backend: OA-FR-23: Suspension requires duration or indefinite flag
+        Backend -> Backend: Validate Duration or Indefinite flag
+    else ActionType == "Reactivate"
+        note over Backend: OA-FR-28: Manual reactivation requires a reason
+        Backend -> Backend: Validate Reason is provided
+    end
+
+    note over Backend, Audit: Atomic Transaction Boundary (SYS-FR-48)
+    Backend -> DB: updateAccountState(TargetRider, ActionType, Details)
+    activate DB
+    DB --> Backend: update OK
+    deactivate DB
+    
+    note over Backend, Audit: SYS-FR-45: Log identity, action, entity, and reason
+    Backend -> Audit: logAction(AdminID, ActionType, TargetRider, Details, Timestamp)
+    activate Audit
+    Audit --> Backend: log OK
+    deactivate Audit
+    
+    Backend --> UI: Message (Action Successful)
+    UI --> Admin: Display success confirmation
+
+else authorization fail
+    Backend --> UI: Error (Unauthorized)
+    UI --> Admin: Display access denied
+end
+
+deactivate Backend
+deactivate UI
+@enduml

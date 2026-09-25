@@ -1,0 +1,89 @@
+@startuml
+hide footbox
+skinparam sequenceMessageAlign center
+
+actor "Rider" as RD
+participant "Rider Dashboard" as UI
+participant "Join Service" as Backend
+participant "DB: Platform-DB" as DB
+participant "Notification Service" as Notify
+actor "Ride Owner" as RO
+
+== 1. Submit Join Request (FR-RD-06.1, FR-RD-06.2) ==
+
+RD -> UI: Submit Request (RideID, PickupPoint, IdemKey)
+activate UI
+UI -> Backend: submitJoinRequest(RiderID, RideID, PickupPoint, IdemKey)
+activate Backend
+
+Backend -> DB: validateConditions(RiderID, RideID)
+activate DB
+note over DB: FR-RD-06.2: Open ride, >=1 seat, <3 active requests,\nno conflicting accepted seat, not suspended
+DB --> Backend: ValidationResult (Pass/Fail)
+deactivate DB
+
+alt [Validation == Pass]
+    note over Backend, DB: FR-RD-06.1: Store snapshot of departure time,\npickup time, and estimated share
+    Backend -> DB: insertRequest(RideID, RiderID, State="Pending", Snapshot)
+    activate DB
+    DB --> Backend: RequestID
+    deactivate DB
+    
+    Backend -> Notify: notifyOwner(RideID, "New Request")
+    activate Notify
+    Notify --> Backend: notify OK
+    deactivate Notify
+    
+    Backend --> UI: Message (Request Pending)
+    UI --> RD: Display Request State: Pending
+    
+else [Validation == Fail]
+    Backend --> UI: Error (Rejection Reason)
+    UI --> RD: Display rejection reason (e.g., "Ride full")
+end
+
+deactivate Backend
+deactivate UI
+
+== 2. Atomic Acceptance & Overbooking Prevention (FR-RD-06.3, NFR-RD-05) ==
+
+RO -> Backend: Accept Request (RequestID)
+activate Backend
+
+group #EBF5FF Atomic Transaction
+    Backend -> DB: lockAndReadRideState(RideID, RequestID, RiderID)
+    activate DB
+    DB --> Backend: RideState, RequestState, RiderConflicts
+    
+    alt [Ride Open AND Seats > 0 AND Request==Pending AND No Conflict]
+        note over DB: NFR-RD-05: Guarantee 0 over-allocations
+        Backend -> DB: updateRequestState(RequestID, "Accepted")
+        Backend -> DB: decrementAvailableSeats(RideID)
+        DB --> Backend: transaction OK
+        
+        note over Backend, DB: FR-RD-06.8: Withdraw conflicting requests (P-08 Window)
+        Backend -> DB: withdrawConflictingActiveRequests(RiderID)
+        DB --> Backend: withdrawn OK
+        deactivate DB
+        
+        Backend -> Notify: notifyRider(RiderID, "Accepted")
+        activate Notify
+        Notify --> Backend: notify OK
+        deactivate Notify
+        
+        Backend -> Notify: notifyAffectedOwners(WithdrawnRequests)
+        activate Notify
+        Notify --> Backend: notify OK
+        deactivate Notify
+        
+    else [Seat Capacity Reached / Validation Fails]
+        note over DB: FR-RD-06.3 / Table T-1: Prevent overallocation
+        activate DB
+        DB --> Backend: transaction abort
+        deactivate DB
+        Backend --> RO: Error (Ride Full / Conflict)
+    end
+end
+
+deactivate Backend
+@enduml

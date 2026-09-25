@@ -1,0 +1,81 @@
+@startuml
+hide circle
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #1F4E79
+}
+
+title Class Diagram 2: Ride & Vehicle Management Domain
+
+enum TripState {
+    SCHEDULED
+    PICKUP_IN_PROGRESS
+    IN_TRANSIT
+    COMPLETED
+    CANCELLED
+}
+
+enum LockStatus {
+    UNLOCKED
+    LOCKED
+}
+
+enum VehicleType {
+    CAB
+    AUTO
+}
+
+class Ride {
+    - rideID: UUID
+    - ownerID: UUID
+    - departureDate: Date
+    - departureTime: DateTime
+    - lockTime: DateTime
+    - totalFare: Float
+    - availableSeats: Integer
+    - lockStatus: LockStatus
+    - tripState: TripState
+    + lockRideManually(): void
+    + updateTripState(newState: TripState): void
+    + decrementAvailableSeats(): Boolean
+    + incrementAvailableSeats(): void
+    + cancelRide(): void
+}
+
+class Vehicle {
+    - vehicleID: UUID
+    - type: VehicleType
+    - registrationPlate: String
+    - totalSeatCapacity: Integer
+    - isActive: Boolean
+    + updateCapacity(newCapacity: Integer): void
+}
+
+class Location {
+    - locationID: UUID
+    - name: String
+    - isDestinationHub: Boolean
+    - isPickupPoint: Boolean
+    - isActive: Boolean
+    + toggleActiveStatus(status: Boolean): void
+}
+
+class FareBand {
+    - fareBandID: UUID
+    - vehicleType: VehicleType
+    - currentFareAmount: Float [0..1]
+    - minEstimatedFare: Float [0..1]
+    - maxEstimatedFare: Float [0..1]
+    - effectiveFrom: DateTime
+    + updateFixedFare(newFare: Float): void
+    + updateExternalRange(minFare: Float, maxFare: Float): void
+}
+
+' Structural Relationships
+Ride "1" o-- "1" Vehicle : utilizes >
+Ride "*" --> "1" Location : travels to destination >
+FareBand "*" --> "1" Location : applies to >
+@enduml

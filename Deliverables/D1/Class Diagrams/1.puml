@@ -1,0 +1,87 @@
+@startuml
+hide circle
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #1F4E79
+}
+
+title Class Diagram 1: User Identity & Profile Domain
+
+enum AccountStatus {
+    UNVERIFIED
+    ACTIVE
+    WARNED
+    SUSPENDED
+}
+
+abstract class User {
+    - userID: UUID
+    - emailAddress: String
+    - status: AccountStatus
+    - lastActive: DateTime
+    - warningAcknowledged: Boolean
+    + verifyEmailDomain(): Boolean
+    + authenticateWithOTP(otpCode: String): Boolean
+    + logout(): void
+    + isSessionExpired(): Boolean
+}
+
+class Rider {
+    - activeRequestsCount: Integer
+    + canSubmitNewRequest(): Boolean
+    + blockUser(targetUserID: UUID): void
+}
+
+class RideOwner {
+    - totalRidesHosted: Integer
+    + lockRide(rideID: UUID): Boolean
+    + markNoShow(riderID: UUID, rideID: UUID): void
+}
+
+class OperationsAdmin {
+    - adminRoleLevel: String
+    + issueWarning(targetUserID: UUID, reasonCategory: String): void
+    + suspendAccount(targetUserID: UUID, reason: String, until: DateTime): void
+    + resolveComplaint(complaintID: UUID): void
+}
+
+class Profile {
+    - profileID: UUID
+    - displayName: String
+    - defaultPickupPointID: UUID
+    - mobileNumber: String [0..1]
+    - completedTrips: Integer
+    - aggregateRating: Float
+    - ratingCount: Integer
+    + updateDisplayName(name: String): void
+    + updateDefaultPickup(pickupID: UUID): void
+    + getPublicProfile(): PublicProfileDTO
+}
+
+class Preferences {
+    - preferredVehicleType: String
+    - maxAcceptableFare: Float
+    - aiTagConsent: Boolean
+    + updateDefaults(vehicle: String, maxFare: Float): void
+    + toggleAIConsent(hasConsent: Boolean): void
+}
+
+class InterestTag {
+    - tagID: String
+    - tagName: String
+    - isVisibleToOthers: Boolean
+    + setVisibility(visible: Boolean): void
+}
+
+' Structural Relationships
+User <|-- Rider : <<Generalization>>
+User <|-- RideOwner : <<Generalization>>
+User <|-- OperationsAdmin : <<Generalization>>
+
+User "1" *-- "1" Profile : possesses >
+Profile "1" *-- "1" Preferences : contains >
+Profile "1" o-- "0..10" InterestTag : selects >
+@enduml

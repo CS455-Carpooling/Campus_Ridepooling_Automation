@@ -1,0 +1,54 @@
+@startuml
+hide footbox
+skinparam sequenceMessageAlign center
+
+actor "Ride Owner" as RO
+participant "Chat UI" as UI
+participant "WebSocket Gateway" as WS
+participant "Chat Service" as Backend
+participant "DB: Platform-DB" as DB
+participant "AS: Authorization" as Auth
+
+RO -> UI: Open Pool Chat (RideID)
+activate UI
+UI -> WS: connect(RideID, AuthToken)
+activate WS
+
+WS -> Auth: authorizeToken(AuthToken)
+activate Auth
+Auth --> WS: OwnerID
+deactivate Auth
+
+WS -> Backend: verifyPoolMembership(RideID, OwnerID)
+activate Backend
+Backend -> DB: checkMembership(RideID, OwnerID)
+activate DB
+DB --> Backend: MembershipValid (True)
+deactivate DB
+Backend --> WS: Verification OK
+deactivate Backend
+
+WS --> UI: Connection Established (Room Joined)
+
+== Real-Time Messaging ==
+RO -> UI: Send Message (Text)
+UI -> WS: emit("chat_message", RideID, OwnerID, Text)
+
+WS -> Backend: processMessage(RideID, OwnerID, Text)
+activate Backend
+
+note over Backend: NFR-RO-SEC-04: Persist messages for 30 days
+Backend -> DB: saveMessage(RideID, OwnerID, Text, Timestamp)
+activate DB
+DB --> Backend: save OK
+deactivate DB
+
+Backend --> WS: broadcastToRoom(RideID, MessagePayload)
+deactivate Backend
+
+WS --> UI: receiveMessage(MessagePayload)
+UI --> RO: Display Message in Thread
+
+deactivate WS
+deactivate UI
+@enduml

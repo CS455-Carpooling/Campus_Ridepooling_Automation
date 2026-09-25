@@ -1,0 +1,72 @@
+@startuml
+hide footbox
+skinparam sequenceMessageAlign center
+
+actor "Rider" as RD
+participant "Rider Dashboard" as UI
+participant "Ride Service" as Backend
+participant "DB: Platform-DB" as DB
+participant "Notification Service" as Notify
+
+RD -> UI: Leave Ride (RequestID, RideID)
+activate UI
+UI -> Backend: leaveRide(RequestID, RideID)
+activate Backend
+
+Backend -> DB: readRideState(RideID)
+activate DB
+DB --> Backend: RideState (LockStatus, TripState)
+deactivate DB
+
+alt [LockStatus == "Unlocked"]
+    note over Backend, DB: FR-RD-07.2: Atomic release and recompute before lock time
+    group #EBF5FF Atomic Transaction
+        Backend -> DB: updateRequestState(RequestID, "Left")
+        activate DB
+        Backend -> DB: incrementAvailableSeats(RideID)
+        
+        note over Backend: FR-RD-08.4 / Table T-2: Recompute exact whole-rupee shares
+        Backend -> DB: recomputeShares(RideID)
+        DB --> Backend: transaction OK (New Shares)
+        deactivate DB
+    end
+    
+    note over Backend, Notify: FR-RD-08.2: Notify remaining occupants of share changes
+    Backend -> Notify: notifyOccupants(RideID, "Share Changed", Old/New Amounts)
+    activate Notify
+    Notify --> Backend: notify OK
+    deactivate Notify
+    
+    note over Backend, UI: NFR-RD-03: Freed seat visible to searchers within 2s
+    Backend --> UI: Message (Left Successfully)
+    UI --> RD: Display confirmation
+    
+else [LockStatus == "Locked" AND TripState == "Scheduled"]
+    note over Backend, UI: FR-RD-07.3: Require explicit confirmation for late leaving
+    Backend --> UI: Prompt (Confirm Late Cancellation)
+    UI --> RD: Display "Late cancellation: Locked share stays payable"
+    
+    RD -> UI: Confirm Leave
+    UI -> Backend: confirmLeave(RequestID, RideID)
+    
+    group #EBF5FF Atomic Transaction
+        Backend -> DB: updateRequestState(RequestID, "Left")
+        activate DB
+        note over DB: Shares stay fixed; rider retains fare liability
+        Backend -> DB: recordLateCancellation(RiderID)
+        DB --> Backend: transaction OK
+        deactivate DB
+    end
+    
+    Backend --> UI: Message (Left with Penalty)
+    UI --> RD: Display confirmation
+    
+else [TripState >= "Pickup in Progress"]
+    note over Backend: FR-RD-07.5: Cannot leave after trip starts
+    Backend --> UI: Error (Cannot Leave)
+    UI --> RD: Display "Cannot leave active trip (SOS available)"
+end
+
+deactivate Backend
+deactivate UI
+@enduml

@@ -1,0 +1,63 @@
+@startuml
+hide circle
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #1F4E79
+}
+
+title Class Diagram 5: AI Agent & System Audit Domain
+
+enum ProposalStatus {
+    PENDING
+    EXECUTED
+    LAPSED_OR_DECLINED
+}
+
+class AIChatSession {
+    - sessionID: UUID
+    - riderID: UUID
+    - browserTabID: String
+    - contextMessages: List<String>
+    - startedAt: DateTime
+    + processNaturalLanguageQuery(query: String): String
+    + clearTransientContext(): void
+}
+
+class PreferenceProposal {
+    - proposalID: UUID
+    - riderID: UUID
+    - proposedTags: List<String> [0..10]
+    - proposedVehicleType: String [0..1]
+    - status: ProposalStatus
+    - expiresAt: DateTime
+    + confirmProposal(): Boolean
+    + markAsLapsed(): void
+}
+
+class AIAuditRecord {
+    - recordID: UUID
+    - pseudonymousRiderID: String
+    - modelVersion: String
+    - promptTemplateVersion: String
+    - toolsCalled: List<String>
+    - tokenCount: Integer
+    - responseLatencyMs: Integer
+    - validationPassed: Boolean
+    - fallbackTriggered: Boolean
+    - recordedAt: DateTime
+    + getRedactedTrace(): String
+}
+
+' Notes for Context
+note top of AIChatSession : FR-RD-05.6: Transient scope.\nContext destroyed on tab close.
+note top of PreferenceProposal : AI-RD-04 / FR-RD-05.3: Explicit consent required.\nExpires 10 minutes after generation.
+note top of AIAuditRecord : AI-RD-12: Immutable trace.\nRetained for 90 days (P-28).
+
+' Relationships
+AIChatSession ..> PreferenceProposal : <<creates>>
+AIChatSession ..> AIAuditRecord : <<audits>>
+
+@enduml

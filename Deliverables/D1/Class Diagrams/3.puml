@@ -1,0 +1,72 @@
+@startuml
+hide circle
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #1F4E79
+}
+
+title Class Diagram 3: Booking & Fare Settlement Domain
+
+enum RequestState {
+    PENDING
+    NEEDS_RECONFIRMATION
+    ACCEPTED
+    REJECTED
+    WITHDRAWN
+    EXPIRED
+    RIDE_CANCELLED
+    LEFT
+    NO_SHOW
+    COMPLETED
+}
+
+enum SettlementStatus {
+    DUE
+    MARKED_PAID
+    CONFIRMED
+    DISPUTED
+}
+
+class JoinRequest {
+    - requestID: UUID
+    - riderID: UUID
+    - rideID: UUID
+    - pickupPointID: UUID
+    - state: RequestState
+    - submissionTime: DateTime
+    - idempotencyKey: String
+    + updateState(newState: RequestState): void
+    + reconfirm(): void
+    + withdraw(): void
+    + leaveRide(): void
+}
+
+class RequestSnapshot {
+    - snapshotID: UUID
+    - rideDepartureTime: DateTime
+    - riderPickupTime: DateTime
+    - estimatedShare: Float
+    + calculateDrift(currentDeparture: DateTime, currentPickup: DateTime, currentShare: Float): Boolean
+    + updateSnapshot(newDeparture: DateTime, newPickup: DateTime, newShare: Float): void
+}
+
+class FareShare {
+    - shareID: UUID
+    - amount: Integer
+    - status: SettlementStatus
+    - paymentMethod: String [0..1]
+    - paymentReference: String [0..1]
+    - dueDate: DateTime
+    + computeExactShare(totalFare: Float, numOccupants: Integer, rank: Integer): Integer
+    + markAsPaid(method: String, reference: String): void
+    + confirmSettlement(): void
+    + disputeSettlement(): void
+}
+
+' Structural Relationships
+JoinRequest "1" *-- "1" RequestSnapshot : retains >
+JoinRequest "1" -- "0..1" FareShare : resolves into >
+@enduml

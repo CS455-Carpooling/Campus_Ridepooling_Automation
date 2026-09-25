@@ -1,0 +1,51 @@
+@startuml
+hide footbox
+skinparam sequenceMessageAlign center
+
+actor "Operations Admin" as Admin
+participant "Admin Dashboard" as UI
+participant "Account Service" as Backend
+participant "DB: Platform-DB" as DB
+participant "AS: Authorization" as Auth
+
+Admin -> UI: View Rider History (RiderID)
+activate UI
+UI -> Backend: getRiderAccountAndHistory(RiderID)
+activate Backend
+
+Backend -> Auth: authorize(AdminID, Role="OperationsAdmin")
+activate Auth
+Auth --> Backend: authorization result
+deactivate Auth
+
+alt authorization OK
+    note over Backend, DB: OA-FR-42: Retrieve identity, status, and ride history
+    Backend -> DB: queryRiderProfileAndStatus(RiderID)
+    activate DB
+    DB --> Backend: RiderProfileData
+    deactivate DB
+
+    Backend -> DB: queryRideHistory(RiderID)
+    activate DB
+    DB --> Backend: RideHistory
+    deactivate DB
+    
+    note over Backend, DB: SYS-FR-43 / SYS-NFR-07: Retrieve sensitive disciplinary history
+    Backend -> DB: queryDisciplinaryHistory(RiderID)
+    activate DB
+    DB --> Backend: DisciplinaryHistory (Warnings, Suspensions)
+    deactivate DB
+    
+    note over Backend, UI: SYS-FR-44: Admin has view-only access to personal profile data
+    Backend --> UI: Message (RiderProfileData, RideHistory, DisciplinaryHistory)
+    UI --> Admin: Display account and disciplinary history
+    
+else authorization fail
+    note over Backend: SYS-NFR-03: Server-side authorization enforced
+    Backend --> UI: Error (Unauthorized)
+    UI --> Admin: Display access denied
+end
+
+deactivate Backend
+deactivate UI
+@enduml

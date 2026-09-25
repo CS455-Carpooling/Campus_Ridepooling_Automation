@@ -1,0 +1,119 @@
+@startuml
+hide footbox
+skinparam sequenceMessageAlign center
+
+actor "Ride Owner" as RO
+participant "Ride Dashboard" as UI
+participant "Trip & Post-Ride Service" as Backend
+participant "DB: Platform-DB" as DB
+participant "AS: Authorization" as Auth
+participant "Admin / SOS Gateway" as AdminGate
+
+== 1. Confidential Reporting & SOS (During Active Ride) ==
+
+RO -> UI: Raise SOS (RideID, Details, LocationData)
+activate UI
+UI -> Backend: submitIncidentReport(RideID, Details, LocationData)
+activate Backend
+
+Backend -> Auth: authorize(OwnerID, Role="RideOwner")
+activate Auth
+Auth --> Backend: authorization result
+deactivate Auth
+
+alt authorization OK
+    note over Backend, AdminGate: Data restricted to authorized Operations Admin only
+    Backend -> DB: logConfidentialIncident(RideID, Details, LocationData)
+    activate DB
+    DB --> Backend: log OK
+    deactivate DB
+
+    Backend -> AdminGate: routeAlertToAdmin(RideID, Details, LocationData)
+    activate AdminGate
+    AdminGate --> Backend: alert received
+    deactivate AdminGate
+
+    Backend --> UI: Message (Alert Sent)
+    UI --> RO: Display "Alert sent to Admin safely"
+else authorization fail
+    Backend --> UI: Error (Unauthorized)
+    UI --> RO: Display access denied
+end
+deactivate Backend
+deactivate UI
+
+== 2. Fare Settlement (Post-Ride) ==
+
+RO -> UI: Mark Rider as Settled (RideID, RiderID)
+activate UI
+UI -> Backend: processSettlement(RideID, RiderID)
+activate Backend
+
+Backend -> Auth: authorize(OwnerID, Role="RideOwner")
+activate Auth
+Auth --> Backend: authorization result
+deactivate Auth
+
+alt authorization OK
+    Backend -> DB: getRiderStatus(RideID, RiderID)
+    activate DB
+    DB --> Backend: RiderStatus
+    deactivate DB
+    
+    alt RiderStatus == "No-Show"
+        Backend --> UI: Error (Invalid Settlement)
+        UI --> RO: Display "Cannot settle standard share for a No-Show rider"
+    else RiderStatus != "No-Show"
+        Backend -> DB: updateSettlementStatus(RiderID, "Settled")
+        activate DB
+        DB --> Backend: update OK
+        deactivate DB
+        Backend --> UI: Message (Settlement OK)
+        UI --> RO: Display updated settlement status
+    end
+else authorization fail
+    Backend --> UI: Error (Unauthorized)
+    UI --> RO: Display access denied
+end
+deactivate Backend
+deactivate UI
+
+== 3. Ratings & Feedback (Post-Ride) ==
+
+RO -> UI: Submit Rating (RideID, RiderID, Rating, Feedback)
+activate UI
+UI -> Backend: processRating(RideID, RiderID, Rating, Feedback)
+activate Backend
+
+Backend -> Auth: authorize(OwnerID, Role="RideOwner")
+activate Auth
+Auth --> Backend: authorization result
+deactivate Auth
+
+alt authorization OK
+    Backend -> DB: getRiderStatusAndWindow(RideID, RiderID)
+    activate DB
+    DB --> Backend: RiderStatus, WindowValid
+    deactivate DB
+
+    alt WindowValid == True AND RiderStatus != "No-Show"
+        Backend -> DB: insertRating(RideID, RiderID, Rating, Feedback)
+        activate DB
+        DB --> Backend: insert OK
+        deactivate DB
+        Backend --> UI: Message (Rating Saved)
+        UI --> RO: Display success confirmation
+    else WindowValid == False
+        Backend --> UI: Error (Window Expired)
+        UI --> RO: Display "Rating window has closed"
+    else RiderStatus == "No-Show"
+        Backend --> UI: Error (Invalid Target)
+        UI --> RO: Display "Cannot rate a No-Show rider"
+    end
+else authorization fail
+    Backend --> UI: Error (Unauthorized)
+    UI --> RO: Display access denied
+end
+deactivate Backend
+deactivate UI
+@enduml

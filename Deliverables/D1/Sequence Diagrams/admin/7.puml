@@ -1,0 +1,40 @@
+@startuml
+hide footbox
+skinparam sequenceMessageAlign center
+
+actor "Operations Admin" as Admin
+participant "Admin Dashboard" as UI
+participant "Ride Service" as Backend
+participant "DB: Platform-DB" as DB
+participant "AS: Authorization" as Auth
+
+Admin -> UI: View Rides (FilterCriteria)
+activate UI
+UI -> Backend: getRides(FilterCriteria)
+activate Backend
+
+Backend -> Auth: authorize(AdminID, Role="OperationsAdmin")
+activate Auth
+Auth --> Backend: authorization result
+deactivate Auth
+
+alt authorization OK
+    note over Backend: OA-FR-16: Admin can view permitted ride information
+    Backend -> DB: queryRides(FilterCriteria)
+    activate DB
+    DB --> Backend: RideList
+    deactivate DB
+    
+    note over Backend, UI: SYS-FR-17: View-only access. Modification actions are disabled or rejected.
+    Backend --> UI: Message (Ride Data)
+    UI --> Admin: Display rides for operational oversight
+    
+else authorization fail
+    note over Backend: SYS-NFR-03: Server-side authorization enforced
+    Backend --> UI: Error (Unauthorized)
+    UI --> Admin: Display access denied
+end
+
+deactivate Backend
+deactivate UI
+@enduml

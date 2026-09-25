@@ -1,0 +1,47 @@
+@startuml
+hide footbox
+skinparam sequenceMessageAlign center
+
+actor "User" as User
+participant "Admin Dashboard" as UI
+participant "API Gateway" as Backend
+participant "Identity Provider\n(IITK OAuth)" as IdP
+participant "DB: Platform-DB" as DB
+
+User -> UI: Access Admin Dashboard
+activate UI
+UI -> Backend: requestAdminAccess(SessionToken)
+activate Backend
+
+note over Backend, IdP: SYS-FR-39: Authenticate user before granting access
+Backend -> IdP: validateToken(SessionToken)
+activate IdP
+IdP --> Backend: AuthResult (UserID, IsAuthenticated)
+deactivate IdP
+
+alt IsAuthenticated == True
+    Backend -> DB: getUserRole(UserID)
+    activate DB
+    DB --> Backend: UserRole
+    deactivate DB
+    
+    alt UserRole == "OperationsAdmin"
+        note over Backend: SYS-FR-40: Apply the single Operations Admin permission set
+        Backend -> Backend: establishAdminSession()
+        Backend --> UI: Message (Access Granted)
+        UI --> User: Display Admin Dashboard
+        
+    else UserRole == "Rider" OR UserRole == "Unknown"
+        note over Backend, UI: SYS-FR-41: Reject unauthorized access.\nRider cannot self-assign Admin role.
+        Backend --> UI: Error (Forbidden 403)
+        UI --> User: Display "Access Denied. Operations Admin privileges required."
+    end
+    
+else IsAuthenticated == False
+    Backend --> UI: Error (Unauthenticated 401)
+    UI --> User: Redirect to IITK Login
+end
+
+deactivate Backend
+deactivate UI
+@enduml

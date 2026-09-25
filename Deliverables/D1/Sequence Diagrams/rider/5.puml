@@ -1,0 +1,84 @@
+@startuml
+hide footbox
+skinparam sequenceMessageAlign center
+
+actor "Rider" as RD
+participant "Browser Tab" as UI
+participant "AI Chat Service" as Backend
+participant "DB: Platform-DB" as DB
+participant "LLM Service" as AI
+
+== Transient Session & Context (FR-RD-05.6, AI-RD-09) ==
+
+note over UI, Backend: FR-RD-05.6: Conversation history is maintained\nonly in the active browser tab.
+RD -> UI: Send Message ("Change my preferred vehicle to Auto")
+activate UI
+UI -> Backend: processChatMessage(SessionHistory, Message)
+activate Backend
+
+Backend -> DB: getRiderPreferences(RiderID)
+activate DB
+DB --> Backend: CurrentPreferences
+deactivate DB
+
+note over Backend, AI: AI-RD-02, AI-RD-10: Only allowlisted tools exposed.\nOnly public/permitted data sent.
+Backend -> AI: generateResponse(Message, ToolsList, CurrentPreferences)
+activate AI
+
+== Tool Execution & Guardrails (FR-RD-05.3, AI-RD-05) ==
+
+alt [AI attempts Prohibited Action (e.g., Join Ride)]
+    note over AI, Backend: AI-RD-05: No transactional tools exist. AI must reply with UI link.
+    AI --> Backend: TextReply ("I cannot join rides. Click here to view ride.")
+    Backend --> UI: Message (TextReply)
+    UI --> RD: Display message with link
+    
+else [AI calls propose_preference_update tool]
+    AI --> Backend: ToolCall(propose_preference_update, "vehicle=auto")
+    deactivate AI
+    
+    note over Backend, DB: FR-RD-05.3 / AI-RD-04: Proposal requires explicit Rider confirmation
+    Backend -> DB: storeProposal(RiderID, "vehicle=auto", Expiry="10 minutes")
+    activate DB
+    DB --> Backend: ProposalID
+    deactivate DB
+    
+    Backend --> UI: Message (Proposal Pending)
+    UI --> RD: Prompt "Confirm changing preferred vehicle to Auto?"
+    
+    alt [Rider Confirms within 10 minutes]
+        RD -> UI: Confirm Proposal
+        UI -> Backend: confirmProposal(ProposalID)
+        
+        group #EBF5FF Atomic Transaction
+            Backend -> DB: updatePreferences(RiderID, "vehicle=auto")
+            activate DB
+            Backend -> DB: markProposalExecuted(ProposalID)
+            DB --> Backend: transaction OK
+            deactivate DB
+        end
+        
+        Backend --> UI: Message (Preferences Updated)
+        UI --> RD: Display "Preferences updated successfully"
+        
+    else [Rider Declines OR 10 minutes elapse]
+        note over UI, Backend: FR-RD-05.3: Unconfirmed proposal lapses after 10 minutes
+        RD -> UI: Decline or Ignore
+        UI -> Backend: discardProposal(ProposalID)
+        
+        Backend -> DB: deleteProposal(ProposalID)
+        activate DB
+        DB --> Backend: delete OK
+        deactivate DB
+    end
+end
+
+note over Backend, DB: AI-RD-12: Record AI Trace (Model, Tokens, Tools) for 90 days (P-28)
+Backend -> DB: logAITrace(PseudonymousID, ToolCalls, Tokens)
+activate DB
+DB --> Backend: log OK
+deactivate DB
+
+deactivate Backend
+deactivate UI
+@enduml

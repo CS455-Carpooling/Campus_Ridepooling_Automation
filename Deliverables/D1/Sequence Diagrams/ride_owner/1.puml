@@ -1,0 +1,56 @@
+@startuml
+hide footbox
+skinparam sequenceMessageAlign center
+
+actor "Ride Owner" as RO
+participant "Ride Dashboard" as UI
+participant "Ride Service" as Backend
+participant "DB: Platform-DB" as DB
+participant "AS: Authorization" as Auth
+
+RO -> UI: Create Ride (Dest, DepTime, Capacity, TotalFare)
+activate UI
+UI -> Backend: createRide(OwnerID, Dest, DepTime, Capacity, TotalFare)
+activate Backend
+
+Backend -> Auth: authorize(OwnerID, Role="RideOwner")
+activate Auth
+Auth --> Backend: authorization result
+deactivate Auth
+
+alt authorization OK
+    
+    note over Backend: FR-RO-03.2: Validate inputs (future time, positive capacity/fare)
+    alt Valid Inputs
+        Backend -> DB: checkActiveRides(OwnerID)
+        activate DB
+        DB --> Backend: ActiveRidesList
+        deactivate DB
+        
+        alt No overlapping active rides
+            note over Backend, DB: NFR-RO-PERF-01: Create and display within 2s\nNFR-RO-DEP-03: Atomic persistence
+            Backend -> DB: insertRide(OwnerID, Dest, DepTime, Capacity, TotalFare, State="Scheduled")
+            activate DB
+            DB --> Backend: insert OK
+            deactivate DB
+            
+            Backend --> UI: Message (Ride Created)
+            UI --> RO: Display Ride Details
+        else Overlapping active ride exists
+            Backend --> UI: Error (Conflict)
+            UI --> RO: Display "Conflicting active ride exists"
+        end
+        
+    else Invalid Inputs
+        Backend --> UI: Error (Validation Failed)
+        UI --> RO: Display validation error
+    end
+    
+else authorization fail
+    Backend --> UI: Error (Unauthorized)
+    UI --> RO: Display access denied
+end
+
+deactivate Backend
+deactivate UI
+@enduml
