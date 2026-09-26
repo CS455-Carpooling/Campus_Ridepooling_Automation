@@ -1,0 +1,42 @@
+@startuml
+title Architecture 3: Human-in-the-Loop & Fallback Pattern
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #1F4E79
+}
+
+actor "Rider" as Complainant
+actor "Operations Admin" as Admin
+
+rectangle "Complaint Ingestion Service" as Ingest
+database "Platform DB" as DB
+
+package "AI Orchestration Layer" {
+  rectangle "Complaint Analyzer LLM\n(Summary, Severity, Tags)" as Analyzer
+  rectangle "Confidence Gate\n(Threshold Monitor)" as ConfGate
+}
+
+package "Human-in-the-Loop Governance" {
+  rectangle "Admin Review Dashboard" as Dashboard
+  rectangle "Disciplinary Execution Engine" as Exec
+  database "Audit Service\n(SYS-FR-38)" as Audit
+}
+
+Complainant --> Ingest : Submit Complaint
+Ingest --> DB : Persist Original Text
+Ingest --> Analyzer : Trigger Async Analysis
+
+Analyzer --> ConfGate : AI Result & Recommendation
+
+ConfGate --> Dashboard : [Success & High Confidence]\nPresent AI Analysis + Original
+ConfGate --> Dashboard : [Timeout / Low Confidence]\nFallback: Present Original Only
+
+Dashboard --> Admin : Display for Decision
+Admin --> Exec : Approve / Reject / Override (Requires Reason)
+
+Exec --> DB : Update Account State (Warning/Suspension)
+Exec --> Audit : Log AI Rec vs. Final Human Decision
+@enduml

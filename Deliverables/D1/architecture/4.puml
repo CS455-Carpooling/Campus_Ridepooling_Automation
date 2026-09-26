@@ -1,0 +1,41 @@
+@startuml
+title Architecture 4: Concurrency & Atomicity Controller
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #1F4E79
+}
+
+actor "Ride Owner" as RO
+actor "Rider A" as RA
+actor "Rider B" as RB
+
+package "Concurrency & Synchronization Layer" {
+  rectangle "Join Service" as JoinSvc
+  rectangle "Concurrency Controller\n(Row-Level Lock Manager)" as LockMgr
+}
+
+database "Platform Repository\n(PostgreSQL)" as DB {
+    rectangle "Ride Table"
+    rectangle "JoinRequest Table"
+}
+
+RA --> JoinSvc : Submit Join Request
+RB --> JoinSvc : Submit Join Request
+JoinSvc --> DB : Insert Pending Requests + Snapshot
+
+RO --> JoinSvc : Accept Rider A
+JoinSvc --> LockMgr : Initiate Atomic Transaction
+
+LockMgr --> DB : 1. SELECT FOR UPDATE (Lock Ride Row)
+LockMgr --> DB : 2. Validate Seats > 0, Request = Pending
+
+' Corrected Boundary: Includes conflicting request withdrawal
+LockMgr --> DB : [Validation Passed] 3a. Decrement Seats,\nUpdate Status, Recalculate Fares,\nWithdraw Conflicting Requests (FR-RD-06.8), COMMIT
+LockMgr --> DB : [Validation Failed] 3b. ROLLBACK (e.g. Seats = 0)
+
+JoinSvc --> RA : Notify Acceptance
+JoinSvc --> RB : Notify Drift / Needs Reconfirmation (If affected)
+@enduml
