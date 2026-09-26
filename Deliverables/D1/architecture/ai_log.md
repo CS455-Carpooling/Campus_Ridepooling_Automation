@@ -1,125 +1,143 @@
-# AI Log: CS455 Architectural Patterns & System Design
+# AI Log: CS455 Architecture & UML Modeling
 
-## Phase 1: Lecture Theory & Deliverable Mapping
+## Phase 1: Tool Setup & Project Ingestion
 
-### Entry 01 — Architectural Patterns & Deliverables
-*   **User Prompt:** Instructed the AI to go through two lectures on architectural patterns in full depth, line by line.[cite: 68, 69]
-*   **AI Response:** Summarized the Campus-Centric Carpooling System proposal and CS455 guidelines, and explicitly broke down how the lectures support the Architecture and Design Document, Design-Pattern Mapping, and Architecture Alternatives deliverables.[cite: 68, 69]
+### Entry 01 — Tool Selection & AI Diagramming
+*   **User Prompt:** Asked if there was an AI tool capable of making sequence diagrams, provided they supplied user stories and few-shot examples.
+*   **AI Response:** Proposed dedicated tools like Eraser.io and Cloudairy, and provided a compiler-style LLM prompt structure to generate diagram-as-code syntax.
 
-### Entry 02 — Design vs. Architecture Distinction
-*   **User Prompt:** Asked for the difference between design and architecture.[cite: 68, 69]
-*   **AI Response:** Provided a comparative table explaining that architecture addresses high-level system organization and non-functional requirements, while software design handles granular, low-level implementation details and specific algorithms.[cite: 68, 69]
+### Entry 02 — Project Specification Ingestion
+*   **User Prompt:** Instructed the AI to review the project details carefully without assumptions or hallucinations, noting the assignment to the component and sequence diagram tasks.
+*   **AI Response:** Acknowledged the CS455 constraints, the Deliverable 1 deadline, and the requirements to model security, concurrency, failure handling, and AI boundaries.
 
-### Entry 03 — GoF Design Patterns
-*   **User Prompt:** Deduced the slides focused on macro architecture and asked what micro-level patterns like the Observer pattern were.[cite: 68, 69]
-*   **AI Response:** Explained Behavioral, Structural, and Creational patterns, providing contextual examples for the ride-pooling system (e.g., using Strategy for dynamic fare splitting and Singleton for the database connection manager).[cite: 68, 69]
+### Entry 03 — System Architecture Proposal Ingestion
+*   **User Prompt:** Instructed the AI to go through the provided "Campus Ride-Pooling and Split-Fare System" proposal in full detail.
+*   **AI Response:** Ingested the architecture tiers and drafted initial sequence diagrams illustrating transactional workflows and concurrency locking.
 
-### Entry 04 — Utilizing Lecture Slides for Deliverables
-*   **User Prompt:** Asked which of the remaining tasks could be completed using the shared lecture slides.[cite: 69]
-*   **AI Response:** Confirmed the slides provide the exact frameworks needed to draft the Architecture Document, the Design-Pattern Mapping, and the Architecture Alternatives.[cite: 69]
+### Entry 04 — Operations Admin Documentation Ingestion
+*   **User Prompt:** Instructed the AI to pause generation and iteratively ingest all files related to the Operations Admin role.
+*   **AI Response:** Confirmed ingestion and summarized constraints such as view-only ride access, configuration concurrency controls, and mandatory explicit human-in-the-loop AI oversight.
 
-### Entry 05 — Architecture Alternatives Justification
-*   **User Prompt:** Deduced that all tasks except design pattern mapping could use the slide content.[cite: 69]
-*   **AI Response:** Agreed and demonstrated how to leverage the explicit "disadvantages" listed in the lectures to justify the Architecture Alternatives and Rejected Decisions section (e.g., rejecting the Multi-Agent architecture due to overhead).[cite: 69]
+### Entry 05 — UML Standard Formatting Guidelines Ingestion
+*   **User Prompt:** Provided images of sequence and class diagrams from class slides, instructing the AI to learn the strict formatting rules without hallucinating.
+*   **AI Response:** Processed the UML conventions, acknowledging the requirements for explicit multiplicities, generalization/aggregation notation, synchronous messages, and conditional `alt` blocks.
 
-### Entry 06 — PlantUML for Architecture Diagrams
-*   **User Prompt:** Asked if PlantUML could be used to make the architecture diagrams too.[cite: 69]
-*   **AI Response:** Confirmed PlantUML's capability for Component and Deployment diagrams and provided a foundational template mapping the Client, Application, AI, and Data tiers.[cite: 69]
+## Phase 2: Operations Admin Diagram Generation & Gap Analysis
 
-## Phase 2: Project Specifications & Requirements Ingestion
+### Entry 06 — Admin Sequence Diagram Initialization
+*   **User Prompt:** Instructed the AI to act as system architect and begin creating sequence diagrams solely for the Admin, covering all scenarios based on the ingested files.
+*   **AI Response:** Generated Sequence Diagram 1: Vehicle Configuration & Concurrency Management using Mermaid.js.
 
-### Entry 07 — Project Proposal & Guidelines Ingestion
-*   **User Prompt:** Instructed the AI to hold on and ingest the project proposal and CS455 files in detail.[cite: 69]
-*   **AI Response:** Ingested the files, summarizing core workflows, concurrency challenges (stale availability), agentic AI boundaries, and the strict traceability chain required for Deliverable 1.[cite: 69]
+### Entry 07 — Strict UML Format Correction
+*   **User Prompt:** Pointed out that the initial diagram lacked the correct `alt` block conditional placement and improperly included footboxes.
+*   **AI Response:** Switched to strict PlantUML syntax, implementing `hide footbox` and proper lifelines, then regenerated the first diagram.
 
-### Entry 08 — Operations Admin Requirements Ingestion
-*   **User Prompt:** Instructed the AI to exhaustively ingest the requirement files for the Operations Admin.[cite: 68, 69]
-*   **AI Response:** Detailed the Admin's view-only boundaries, Optimistic Concurrency Control (OCC), atomic persistence, and Human-in-the-Loop AI oversight, generating a cross-artifact traceability matrix.[cite: 68, 69]
+### Entry 08 — Admin Fare Configuration
+*   **User Prompt:** Verified the corrected formatting of the first diagram and authorized the next one.
+*   **AI Response:** Generated Sequence Diagram 2: Destination Hubs & Fare Configuration, mapping nested validation to prevent exact external fares.
 
-### Entry 09 — Ride Owner Requirements Ingestion
-*   **User Prompt:** Instructed the AI to completely ingest the requirement files for the Ride Owner without missing details.[cite: 68, 69]
-*   **AI Response:** Detailed the Ride Owner's external payment logistics and state transitions, while identifying a critical contradiction in the README regarding manual vs. automatic join requests.[cite: 68, 69]
+### Entry 09 — AI Governance & Human-in-the-Loop
+*   **User Prompt:** Verified the fare diagram and authorized the next step in the sequence.
+*   **AI Response:** Generated Sequence Diagram 3: Human-in-the-Loop AI Enforcement & Fallback, modeling graceful degradation and manual policy gates.
 
-### Entry 10 — Ride Owner README Update
-*   **User Prompt:** Directed the AI to review an updated README file for the Ride Owner.[cite: 69]
-*   **AI Response:** Confirmed the updated file resolved the documentation contradiction, establishing that join requests strictly require manual accept/reject decisions by the Owner.[cite: 69]
+### Entry 10 — Manual Disciplinary Actions
+*   **User Prompt:** Verified the AI governance diagram, authorized the next diagram, and uploaded the 4 generated Admin files for thorough verification.
+*   **AI Response:** Generated Sequence Diagram 4: Issuing Manual Warnings & Suspensions, and successfully verified all 4 diagrams against the grading rubric.
 
-### Entry 11 — Rider Requirements Ingestion
-*   **User Prompt:** Instructed the AI to ingest the Rider requirement files in full detail without hallucinating.[cite: 68, 69]
-*   **AI Response:** Comprehensively summarized exact whole-rupee fare splitting math, itinerary drift reconfirmation, strict read-only AI tool boundaries, 28 system parameters, and privacy limits.[cite: 68, 69]
+### Entry 11 — Admin Sequence Diagram External Verification
+*   **User Prompt:** Uploaded additional reference images for the Admin sequence diagrams and asked the AI to verify correctness.
+*   **AI Response:** Verified the architectural accuracy but flagged a missing diagram for Managing Destination Hubs (UC-OA-03).
 
-## Phase 3: UML Diagram Verification (Behavioral, Class, & Sequence)
+### Entry 12 — Admin Exhaustive Gap Analysis
+*   **User Prompt:** Instructed the AI to iteratively loop through the Operations Admin files to decipher everything, then ordered it to exhaustively list all missing sequence diagrams.
+*   **AI Response:** Filtered the gap analysis to focus solely on sequence diagrams, detailing the exact 6 full use cases and 1 partial use case that remained missing.
 
-### Entry 12 — Rider Behavioral Diagram Review Initial
-*   **User Prompt:** Asked the AI to go through the diagrams for the Rider.[cite: 69]
-*   **AI Response:** Noted no images were attached but confirmed secure retention of the existing behavioral models in memory.[cite: 69]
+### Entry 13 — Sequential Admin Diagram Code Generation
+*   **User Prompt:** Instructed the AI to generate PlantUML for all missing files one by one, authorizing each sequentially with separate "yes" prompts.
+*   **AI Response:** Sequentially generated the code for Manage Destination Hubs, Add/Deactivate Vehicle Types, View Rides, Review Complaints/SOS, Review Rider Account History, Review AI Decision History, and Access Admin Functions.
 
-### Entry 13 — Rider Behavioral Diagram Verification
-*   **User Prompt:** Provided the Rider diagrams and instructed the AI to view them properly without missing detail.[cite: 68, 69]
-*   **AI Response:** Verified the accuracy of the Join Request Lifecycle (State), Rider Journey (Activity), and Rider Use Case diagrams against drift triggers and AI safety guardrails.[cite: 68, 69]
+### Entry 14 — Admin Gap Closure via Screenshot
+*   **User Prompt:** Shared a gap analysis screenshot indicating missing Admin transactional and read-only flows, instructing the AI to generate them.
+*   **AI Response:** Generated the final missing sequence diagrams to bring behavioral coverage to 100%.
 
-### Entry 14 — System Class Diagram Verification
-*   **User Prompt:** Instructed the AI to thoroughly view the class diagram outputs.[cite: 68, 69]
-*   **AI Response:** Provided a detailed structural breakdown of the 6 domain class diagrams, confirming Generalization hierarchies, aggregation, and AI audit logging attributes.[cite: 68, 69]
+### Entry 15 — Teammate's AI Log Ingestion
+*   **User Prompt:** Provided a teammate's `AI_Log.md` for context on the Admin elicitation phase.
+*   **AI Response:** Ingested the document and verified that all previously generated diagrams successfully accounted for the defined business rules.
 
-### Entry 15 — Operations Admin Sequence Diagram Verification
-*   **User Prompt:** Instructed the AI to thoroughly view the Operations Admin sequence diagrams in full depth.[cite: 68, 69]
-*   **AI Response:** Verified the 10 sequence diagrams, validating the mapping of Optimistic Concurrency Control, atomic DB logging, and AI graceful degradation logic.[cite: 68, 69]
+## Phase 3: Ride Owner Diagram Generation & Verification
 
-### Entry 16 — Admin Auth & Ride Owner Sequence Verification
-*   **User Prompt:** Added a missing `11.puml` file for the Admin and 8 sequence diagrams for the Ride Owner for in-depth ingestion.[cite: 68, 69]
-*   **AI Response:** Verified the Admin authorization gateway (enforcing RBAC) and the Ride Owner lifecycles covering ride creation, locking, and atomic acceptance.[cite: 68, 69]
+### Entry 16 — Ride Owner Documentation Ingestion
+*   **User Prompt:** Instructed the AI to transition to the Ride Owner role, iteratively ingest its files without hallucinating, and wait for instructions.
+*   **AI Response:** Processed the ride creation rules, 60-minute lock, exact fare recalculation, and flagged a documentation contradiction regarding automatic vs. manual join requests.
 
-### Entry 17 — Rider Sequence Diagram Verification
-*   **User Prompt:** Instructed the AI to go through the Rider sequence diagrams in depth without assuming.[cite: 68, 69]
-*   **AI Response:** Verified the 5 sequence diagrams detailing the 8-second AI timeout fallback, deterministic validation, and itinerary drift interception.[cite: 68, 69]
+### Entry 17 — Ride Owner Diagram Generation
+*   **User Prompt:** Instructed the AI to generate Ride Owner sequence diagrams one by one, providing explicit "yes" prompts for each step.
+*   **AI Response:** Sequentially generated and verified four diagrams covering Ride Creation, Join Requests, Trip Execution, and Fare Settlement.
 
-### Entry 18 — Complete File Audit
-*   **User Prompt:** Asked the AI to list all relevant files it had ingested and held in memory.[cite: 68, 69]
-*   **AI Response:** Exhaustively listed all 60 files across the Project Guidelines, Admin, Ride Owner, Rider, and Architecture domains.[cite: 68, 69]
+### Entry 18 — Ride Owner Gap Analysis
+*   **User Prompt:** Requested a thorough audit to ensure no Ride Owner scenarios were missed.
+*   **AI Response:** Identified missing use cases for Editing/Canceling an Open Ride and Manual Pool Lock, and generated a combined diagram.
 
-## Phase 4: Architectural Pattern Synthesis & Diagram Generation
+### Entry 19 — Splitting Ride Owner Diagrams
+*   **User Prompt:** Instructed the AI to split the combined edit/lock diagram into two distinct workflows.
+*   **AI Response:** Separated the logic and generated two distinct sequence diagrams.
 
-### Entry 19 — Architecture Lecture Analysis
-*   **User Prompt:** Instructed the AI to retain its knowledge and analyze Lecture 8 and Lecture 9 as examples for architectural patterns.[cite: 68, 69]
-*   **AI Response:** Synthesized the core patterns (MVC, Layered, Client-Server) and AI-specific patterns (RAG, Tool-Using Agent, Context Assembly) applicable to the project.[cite: 68, 69]
+### Entry 20 — Ride Owner Visual File Verification
+*   **User Prompt:** Requested a correctness and completeness verification of the Ride Owner sequence diagrams based on memory and images.
+*   **AI Response:** Verified overall coverage but identified a critical Time-of-Check to Time-of-Use (TOCTOU) concurrency flaw in Join Requests, missing authorization checks, an absent Pool Chat diagram, and missing behavioral diagrams.
 
-### Entry 20 — Exhaustive Pattern Identification
-*   **User Prompt:** Pointed out that the AI missed a few patterns and requested a page-by-page, exhaustive review of both lectures.[cite: 68, 69]
-*   **AI Response:** Exhaustively detailed all patterns, including Repository, Pipe and Filter, Edge-Cloud, Federated AI, Event-Driven AI, and Model Routing.[cite: 68, 69]
+### Entry 21 — Ride Owner Source Code Verification & Generation
+*   **User Prompt:** Provided the specific `.puml` files used for the Ride Owner diagrams, requested a thorough review, and asked for the PlantUML code for the missing join request diagram.
+*   **AI Response:** Verified the submitted files and generated the code for UC-RO-03 (Review and Decide Join Requests), accurately mapping the atomic capacity decrement.
 
-### Entry 21 — Visual Topology Recognition
-*   **User Prompt:** Asked if the AI learned how the patterns were depicted visually from the lectures.[cite: 68, 69]
-*   **AI Response:** Confirmed understanding of visual idioms, mapping them to structural templates such as vertical stacks, centralized hubs, directed pipelines, and decision forks.[cite: 68, 69]
+### Entry 22 — Ride Owner Join Request Code Verification
+*   **User Prompt:** Stated "i see this verify correctness" regarding the newly generated code.
+*   **AI Response:** Formally verified the newly generated join request diagram against the system capacity and notification constraints.
 
-### Entry 22 — Initial Architecture Modeling
-*   **User Prompt:** Requested the AI to design the architectural patterns for the system based on all contextual files.[cite: 69]
-*   **AI Response:** Generated 4 initial PlantUML architectural diagrams (Macro System, Rider AI, Admin AI, Concurrency) mapping the core system structures.[cite: 69]
+### Entry 23 — Ride Owner Comprehensive Output & Gap Fixes
+*   **User Prompt:** Clarified that the automatic join contradiction was a mistake and ordered the AI to give all corrected outputs in one go.
+*   **AI Response:** Generated fully corrected PlantUML code for Join Requests, Trip Services, and Lock Ride, plus new Activity Flow and Trip State Machine diagrams.
 
-### Entry 23 — UML Formatting: Component Icons
-*   **User Prompt:** Asked why a strange icon appeared on the top right of each rectangle in the diagrams.[cite: 69]
-*   **AI Response:** Explained that it was the standard UML 2.0 component badge triggered by the `componentStyle uml2` parameter.[cite: 69]
+## Phase 4: Rider Diagram Generation & Verification
 
-### Entry 24 — UML Formatting: Removing Icons
-*   **User Prompt:** Asked how to remove the rectangle icon from the top.[cite: 69]
-*   **AI Response:** Provided the `skinparam componentStyle rectangle` parameter solution to render clean, plain shapes.[cite: 69]
+### Entry 24 — Rider Documentation Ingestion
+*   **User Prompt:** Instructed the AI to transition to the Rider role, ingest the attached files perfectly, and wait for instructions.
+*   **AI Response:** Processed the complex state machine, capturing concurrency challenges like Itinerary Drift, exact fare splitting, and restricted read-only AI permissions.
 
-### Entry 25 — Syntax Correction (puml2)
-*   **User Prompt:** Entered "puml2" to indicate a syntax or formatting issue.[cite: 69]
-*   **AI Response:** Identified that `alt/else` branching is invalid in Component Diagrams and fixed the conditional logic to use labeled directional arrows instead.[cite: 69]
+### Entry 25 — Rider Diagram Generation & Refinement
+*   **User Prompt:** Instructed the AI to generate Rider sequence diagrams, requested a split diagram, then reversed the decision to stick with a comprehensive flow.
+*   **AI Response:** Generated and verified four core diagrams covering Search, Join Requests, Itinerary Drift, and Dynamic Fare Recomputation.
 
-### Entry 26 — Output Initial Corrected Formats
-*   **User Prompt:** Requested all architectural diagram PlantUML codes in the corrected format.[cite: 69]
-*   **AI Response:** Outputted the 4 finalized, properly formatted PlantUML architecture diagrams.[cite: 69]
+### Entry 26 — Rider Guardrail Gap Analysis
+*   **User Prompt:** Requested a final verification of Rider scenario coverage.
+*   **AI Response:** Identified a missing critical workflow for Chat with AI Assistant (UC-RD-05) and generated the sequence diagram to explicitly model session isolation.
 
-### Entry 27 — Architecture Verification & Gap Analysis
-*   **User Prompt:** Instructed the AI to verify the correctness and completeness of the generated architecture diagrams.[cite: 68]
-*   **AI Response:** Verified the 4 diagrams, but successfully identified one architectural boundary violation (the AI directly writing to the database) and one concurrency gap (missing conflict withdrawal step).[cite: 68]
+### Entry 27 — Rider Behavioral Diagram Review
+*   **User Prompt:** Uploaded the Rider state, activity, and use case diagram images for accurate review.
+*   **AI Response:** Confirmed flawless mapping of drift triggers and AI safety guardrails, but noted Sequence Diagrams were still required.
 
-### Entry 28 — Finalizing 6 Comprehensive Architectural Diagrams
-*   **User Prompt:** Instructed the AI to give corrected code for the previously evaluated patterns and generate the missing ones, covering everything in depth.[cite: 68]
-*   **AI Response:** Provided corrected PlantUML for the initial 4 diagrams and generated 2 new diagrams (Event-Driven Notification Pipeline and Centralized AI Gateway & Telemetry), bringing the total to **6 exhaustive architectural diagrams**.[cite: 68]
+### Entry 28 — Rider Sequence Diagram Review & Verification
+*   **User Prompt:** Uploaded five Rider sequence diagrams for an in-depth correctness check to ensure exhaustive coverage.
+*   **AI Response:** Confirmed the diagrams successfully resolved stale availability via explicit row locking, implemented drift logic, and strictly enforced AI guardrails.
 
-### Entry 29 — Exhaustive Coverage Confirmation
-*   **User Prompt:** Asked for final confirmation that everything was covered correctly without missing anything.[cite: 68, 69]
-*   **AI Response:** Confirmed exhaustive coverage, listing the 7 actively applied patterns and providing explicit engineering justifications for the 4 patterns (Federated AI, Pipe and Filter, etc.) that were deliberately excluded.[cite: 68, 69]
+## Phase 5: System-Wide Class Diagrams
+
+### Entry 29 — Transition to Structural Modeling
+*   **User Prompt:** Asked to verify all generated sequence diagrams and transition to class diagrams.
+*   **AI Response:** Confirmed 100% behavioral coverage across all roles and prepared for structural modeling.
+
+### Entry 30 — Class Diagram Planning
+*   **User Prompt:** Asked how many class diagrams needed to be made utilizing the context from all shared files.
+*   **AI Response:** Segmented the system into four modular domains to avoid visual clutter and generated the first domain utilizing generalization inheritance.
+
+### Entry 31 — Class Diagram Formatting Polish
+*   **User Prompt:** Verified class diagram completeness and uploaded the professor's reference slides to question the visual styling.
+*   **AI Response:** Provided the `hide circle` configuration fix and explained how to remove association labels for minimalist aesthetic compliance.
+
+### Entry 32 — Class Diagram Generation & Verification
+*   **User Prompt:** Uploaded the generated class diagram images for a correctness verification.
+*   **AI Response:** Verified the models but identified two omissions, providing updated code to add external fare ranges to `FareBand` and modeling a missing Communication Domain for Private Pool Chat.
+
+### Entry 33 — Class Diagram Source Verification
+*   **User Prompt:** Confirmed they generated the class diagrams using the provided `.puml` files.
+*   **AI Response:** Verified the PlantUML files perfectly matched the images and integrated the required updates.

@@ -1,0 +1,32 @@
+@startuml
+hide empty members
+hide circle
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #1F4E79
+}
+
+class "JoinRequest\n(Originator)" as Originator {
+    + createSnapshot(): RequestSnapshot
+    + restoreFromSnapshot(memento: RequestSnapshot): void
+}
+
+class "RequestSnapshot\n(Memento)" as Memento {
+    - rideDepartureTime: DateTime
+    - riderPickupTime: DateTime
+    - estimatedShare: Float
+    + calculateDrift(): Boolean
+}
+
+class "Join Service\n(Caretaker)" as Caretaker {
+    + submitJoinRequest()
+    + calculateDrift()
+}
+
+Originator *-- "1" Memento : retains >
+Caretaker --> Memento : compares state against >
+Caretaker --> Originator : manages >
+@enduml

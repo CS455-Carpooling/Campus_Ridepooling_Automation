@@ -1,0 +1,34 @@
+@startuml
+hide empty members
+hide circle
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #1F4E79
+}
+
+class "Audit Service\n(Log Manager)" as AuditSvc {
+    + logChange(actorID, action, prevData, newData): void
+    + logAIDecision(metadata): void
+}
+
+class "AIAuditRecord\n(Immutable Event)" as AIAudit {
+    - recordID: UUID
+    - toolsCalled: List<String>
+    - tokenCount: Integer
+    - responseLatencyMs: Integer
+}
+
+class "Platform Services\n(Event Sources)" as Sources {
+    + processDisciplinaryAction()
+    + executeAIRequest()
+}
+
+database "Immutable Audit Log\n(90-Day Retention DB)" as LogDB
+
+Sources --> AuditSvc : dispatches audit events >
+AuditSvc ..> AIAudit : creates >
+AuditSvc --> LogDB : appends sequentially >
+@enduml

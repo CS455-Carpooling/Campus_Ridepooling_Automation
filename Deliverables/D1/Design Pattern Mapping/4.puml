@@ -1,0 +1,27 @@
+@startuml
+hide empty members
+hide circle
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #1F4E79
+}
+
+abstract class "AIPolicyHandler\n(Handler)" as Handler {
+    + setNext(handler: AIPolicyHandler): void
+    + handleRequest(query: String): Result
+}
+
+class "Input Guard & Rate Limiter" as InputGuard
+class "Context Broker" as ContextBroker
+class "LLM Invocation" as LLM
+class "Output Guard / Validator" as OutputGuard
+
+Handler o--> "0..1" Handler : next >
+Handler <|-- InputGuard
+Handler <|-- ContextBroker
+Handler <|-- LLM
+Handler <|-- OutputGuard
+@enduml

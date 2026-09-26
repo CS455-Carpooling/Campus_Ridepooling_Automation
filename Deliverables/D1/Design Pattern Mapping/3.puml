@@ -1,0 +1,37 @@
+@startuml
+hide empty members
+hide circle
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #1F4E79
+}
+
+class "JoinRequest\n(Context)" as Context {
+    + setState(state: RequestState): void
+    + accept(): void
+    + reconfirm(): void
+}
+
+interface "RequestState\n(State)" as State {
+    + accept(context: JoinRequest): void
+    + reconfirm(context: JoinRequest): void
+}
+
+class "PendingState" as Pending {
+    + accept(context: JoinRequest): void
+}
+
+class "NeedsReconfirmationState" as Reconfirm {
+    + reconfirm(context: JoinRequest): void
+}
+
+class "AcceptedState" as Accepted
+
+Context o--> "1" State : delegates behavior to >
+State <|.. Pending
+State <|.. Reconfirm
+State <|.. Accepted
+@enduml
