@@ -1,0 +1,61 @@
+@startuml
+title Architecture 1: Layered & Client-Server Pattern
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #1F4E79
+}
+
+package "Presentation Layer (Client-Server Pattern)" {
+  rectangle "Rider App\n(React/Next.js)" as RiderApp
+  rectangle "Ride Owner App\n(React/Next.js)" as OwnerApp
+  rectangle "Admin Dashboard\n(React/Next.js)" as AdminApp
+}
+
+package "Application Layer (Node.js / GCP Cloud Run)" {
+  rectangle "API Gateway / Auth Controller" as APIGateway
+  
+  package "Core Micro-Services (MVC Controllers)" {
+    rectangle "Ride & Pool Service" as RideSvc
+    rectangle "Fare Splitting Engine" as FareSvc
+    rectangle "Real-Time Chat (Socket.IO)" as ChatSvc
+    rectangle "Disciplinary & Account Service" as AcctSvc
+  }
+}
+
+package "AI System Stack" {
+  rectangle "AI Gateway\n(Rate Limits & Budgets)" as AIGW
+  rectangle "Rider Agent\n(Tool-Using)" as RiderAI
+  rectangle "Complaint Analyzer\n(RAG / Classification)" as AdminAI
+}
+
+package "Data Layer (PostgreSQL / Cloud SQL)" {
+  database "Platform Repository\n(ACID Transactions)" as DB
+  database "Immutable Audit Log\n(90-Day Retention)" as AuditDB
+}
+
+RiderApp --> APIGateway : HTTPS
+OwnerApp --> APIGateway : HTTPS
+AdminApp --> APIGateway : HTTPS
+RiderApp <--> ChatSvc : WSS
+OwnerApp <--> ChatSvc : WSS
+
+APIGateway --> RideSvc
+APIGateway --> FareSvc
+APIGateway --> AcctSvc
+APIGateway --> AIGW
+
+AIGW --> RiderAI
+AIGW --> AdminAI
+
+RideSvc --> DB
+FareSvc --> DB
+AcctSvc --> DB
+
+' Corrected Boundary: AI models do not write to DB directly.
+' AI results pass back to the Application Layer for validation and logging.
+AdminAI --> AcctSvc : Returns AI Result
+AcctSvc --> AuditDB : Logs Human Decision vs AI Rec (SYS-FR-38)
+@enduml

@@ -1,0 +1,45 @@
+@startuml
+title Architecture 2: AI Policy Gateway & Tool-Using Agent
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #1F4E79
+}
+
+node "Rider Client" {
+  rectangle "Search / Chatbot UI" as UI
+}
+
+package "AI Policy Gateway & Context Assembly" {
+  rectangle "Input Guard & Rate Limiter\n(Max 20/hr, 8k Tokens)" as InputGuard
+  rectangle "Context Broker\n(Filters Unconsented Tags & PII)" as ContextBroker
+}
+
+package "Agent Core (ReAct Loop)" {
+  rectangle "LLM Invocation\n(Max 8s Timeout)" as LLM
+  rectangle "Allowed Tool Registry\n(Read-Only + Proposals)" as Tools
+}
+
+package "Evaluation & Safety Layer" {
+  rectangle "Output Guard / Validator\n(Verifies Fares, Seats & Existence)" as OutputGuard
+  rectangle "Deterministic Fallback\n(Time/Fare Ranking)" as Fallback
+  rectangle "AI Trace Observability\n(Logs Tokens, Tools, Latency)" as TraceLog
+}
+
+UI --> InputGuard : Natural Language Query
+InputGuard --> ContextBroker : Cleaned Input & Limits OK
+ContextBroker --> LLM : Context-Enriched Prompt
+
+LLM <--> Tools : Execute Bounded Tools (Max 5)
+LLM --> OutputGuard : Raw AI Recommendation
+LLM --> Fallback : Timeout (>8s) / Service Failure
+
+OutputGuard --> TraceLog : Log Token Usage & Validation Metrics
+Fallback --> TraceLog : Log Degradation Event
+
+OutputGuard --> UI : [Pass] Validated AI Suggestions
+OutputGuard --> Fallback : [Fail] Mathematical Mismatch
+Fallback --> UI : Deterministic Ranking (Non-AI Fallback)
+@enduml

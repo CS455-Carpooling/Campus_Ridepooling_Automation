@@ -1,0 +1,37 @@
+@startuml
+title Architecture 5: Event-Driven Notification Pipeline
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #1F4E79
+}
+
+package "Event Producers" {
+  rectangle "Ride & Pool Service" as RideSvc
+  rectangle "Join Service" as JoinSvc
+  rectangle "Chat Service" as ChatSvc
+}
+
+rectangle "Event Bus / PubSub Stream" as EventBus
+
+package "Notification Consumers" {
+  rectangle "Live Push Controller\n(WebSocket Manager)" as PushCtrl
+  rectangle "Email Fallback Service\n(For Offline Users)" as EmailSvc
+}
+
+node "Rider / Owner Client" {
+  rectangle "Notification Center UI" as UI
+}
+
+RideSvc --> EventBus : Publish (Trip State Change, Seat Change)
+JoinSvc --> EventBus : Publish (Request Accepted/Rejected/Drift)
+ChatSvc --> EventBus : Publish (New Message)
+
+EventBus --> PushCtrl : Consume Event
+EventBus --> EmailSvc : Consume Critical Event (e.g., Ride Cancelled)
+
+PushCtrl --> UI : Push Update (< 2s SLA)
+EmailSvc --> UI : Email Delivery (If Client Disconnected)
+@enduml

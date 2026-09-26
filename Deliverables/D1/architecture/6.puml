@@ -1,0 +1,39 @@
+@startuml
+title Architecture 6: AI Gateway & Telemetry
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #1F4E79
+}
+
+actor "Application Services" as Apps
+
+package "AI Gateway (Cross-Cutting Controls)" {
+  rectangle "Auth & Token Budgeting\n(Max 8k Tokens / Request)" as Budget
+  rectangle "Rate Limiter\n(Max 20/hr per Rider)" as RateLimit
+  rectangle "Model Router" as Router
+}
+
+package "External Models" {
+  cloud "Free-Tier LLM API" as ExternalLLM
+}
+
+package "Observability & Audit Layer" {
+  database "AI Trace DB (90-Day Retention)" as TraceDB
+  rectangle "Trace Assembler\n(Context, Latency, Tools)" as TraceSvc
+}
+
+Apps --> RateLimit : AI Request
+RateLimit --> Budget : Pass if < 20/hr
+Budget --> Router : Allocate Tokens
+
+Router --> ExternalLLM : Model Invocation
+
+ExternalLLM --> TraceSvc : Raw Response & Metadata
+Router --> TraceSvc : Routing & Timeout Metrics
+
+TraceSvc --> TraceDB : Log: Pseudonymous ID, Latency, Tools, Outcome
+TraceSvc --> Apps : Validated Response
+@enduml
