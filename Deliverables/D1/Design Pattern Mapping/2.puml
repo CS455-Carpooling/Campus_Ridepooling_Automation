@@ -1,0 +1,32 @@
+@startuml
+hide empty members
+hide circle
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #1F4E79
+}
+
+class "Search Service\n(Context)" as Context {
+    + setStrategy(strategy: RankingStrategy): void
+    + findRides(criteria: Criteria): List<Ride>
+}
+
+interface "RankingStrategy\n(Strategy)" as Strategy {
+    + rankRides(candidates: List<Ride>): List<Ride>
+}
+
+class "AI Recommendation Engine" as AIStrategy {
+    + rankRides(candidates: List<Ride>): List<Ride>
+}
+
+class "Deterministic Fallback" as FallbackStrategy {
+    + rankRides(candidates: List<Ride>): List<Ride>
+}
+
+Context o--> "1" Strategy : delegates ranking to >
+Strategy <|.. AIStrategy
+Strategy <|.. FallbackStrategy
+@enduml

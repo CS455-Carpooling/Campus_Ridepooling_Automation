@@ -1,0 +1,37 @@
+@startuml
+hide empty members
+hide circle
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #1F4E79
+}
+
+interface "EventPublisher\n(Subject)" as Subject {
+    + publish(event: Event): void
+}
+
+interface "NotificationConsumer\n(Observer)" as Observer {
+    + onEvent(event: Event): void
+}
+
+class "Event Bus / PubSub Stream" as EventBus {
+    + subscribe(consumer: NotificationConsumer): void
+    + publish(event: Event): void
+}
+
+class "Ride & Pool Service" as RideSvc
+class "Join Service" as JoinSvc
+class "Live Push Controller" as PushCtrl {
+    + onEvent(event: Event): void
+}
+
+Subject <|.. EventBus
+Observer <|.. PushCtrl
+
+RideSvc --> Subject : publishes >
+JoinSvc --> Subject : publishes >
+EventBus o--> "*" Observer : notifies >
+@enduml

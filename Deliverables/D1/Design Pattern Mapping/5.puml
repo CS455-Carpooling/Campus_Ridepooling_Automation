@@ -1,0 +1,32 @@
+@startuml
+hide empty members
+hide circle
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #1F4E79
+}
+
+class "Application Services\n(Client)" as Client
+
+class "AI Gateway\n(Facade)" as Facade {
+    + executeAIRequest(context: Object): AIResponse
+}
+
+package "Subsystems" {
+    class "Rate Limiter" as RateLimit
+    class "Auth & Token Budgeting" as Budget
+    class "Model Router" as Router
+    class "External LLM API" as ExternalLLM
+    class "Trace Assembler" as TraceSvc
+}
+
+Client --> Facade : invokes >
+Facade --> RateLimit : routes to >
+Facade --> Budget : routes to >
+Facade --> Router : routes to >
+Router --> ExternalLLM : calls >
+ExternalLLM --> TraceSvc : response to >
+@enduml
