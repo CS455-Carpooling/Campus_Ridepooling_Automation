@@ -1,0 +1,77 @@
+@startuml Use_Case_Diagram_Ride_Owner
+left to right direction
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #1F4E79
+}
+skinparam actorBorderColor #1F4E79
+skinparam rectangle {
+  BorderColor #1F4E79
+}
+
+actor "Ride Owner" as RO
+
+rectangle "Campus Ride-Pooling System — Ride Owner" {
+  rectangle "Account" {
+    usecase "Register / Sign In\n(UR-RO-01, shared)" as SIGNIN
+    usecase "Manage Profile\n(UR-RO-02, shared)" as PROFILE
+    usecase "Receive Ride Notifications\n(UR-RO-14)" as NOTIFY
+  }
+  rectangle "Ride and pool" {
+    usecase "UC-RO-01\nCreate Ride" as CREATE
+    usecase "UC-RO-02\nEdit or Cancel\nOpen Ride" as EDIT
+    usecase "UC-RO-03\nReview Join Requests" as REVIEW
+    usecase "UC-RO-03\nAccept Join Request" as ACCEPT
+    usecase "UC-RO-03\nReject Join Request" as REJECT
+    usecase "UC-RO-04\nView Pool Capacity\nand Fare Breakdown" as VIEWPOOL
+    usecase "UC-RO-04\nLock Ride Pool" as LOCK
+    usecase "Recalculate\nFare Shares" as RECALC
+  }
+  rectangle "Trip" {
+    usecase "UC-RO-05\nAccess Private\nPool Chat" as CHAT
+    usecase "UC-RO-06\nStart Pickup" as PICKUP
+    usecase "UC-RO-06\nTrack Rider\nArrival Status" as ARRIVAL
+    usecase "UC-RO-07\nMark Rider as No-Show" as NOSHOW
+    usecase "UC-RO-07\nComplete Ride" as COMPLETE
+  }
+  rectangle "After the trip and safety" {
+    usecase "UC-RO-08\nRecord Fare Settlement" as SETTLE
+    usecase "UC-RO-09\nRate Riders" as RATE
+    usecase "UC-RO-09\nReport Misconduct" as REPORT
+    usecase "UC-RO-09\nRaise SOS Alert" as SOS
+  }
+}
+
+actor "Rider" as RD
+actor "Operations Admin" as AD
+
+RO -- SIGNIN
+RO -- PROFILE
+RO -- NOTIFY
+RO -- CREATE
+RO -- EDIT
+RO -- REVIEW
+RO -- VIEWPOOL
+RO -- CHAT
+RO -- PICKUP
+RO -- ARRIVAL
+RO -- COMPLETE
+RO -- SETTLE
+RO -- RATE
+RO -- REPORT
+RO -- SOS
+
+ACCEPT .> REVIEW : <<extend>>
+REJECT .> REVIEW : <<extend>>
+ACCEPT .> RECALC : <<include>>
+LOCK .> VIEWPOOL : <<extend>>
+NOSHOW .> ARRIVAL : <<extend>>\n[grace period elapsed]
+NOSHOW .> RECALC : <<include>>
+
+REVIEW -- RD
+CHAT -- RD
+REPORT -- AD
+SOS -- AD
+@enduml

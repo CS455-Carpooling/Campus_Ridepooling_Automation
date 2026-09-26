@@ -22,14 +22,14 @@ log is still pending (see below).
 | `05_use_cases.md` | Rider use-case diagram, activity and state diagrams, use-case descriptions | Draft complete |
 | `06_user_stories.md` | User stories with acceptance criteria | Draft complete |
 | `07_traceability_matrix.md` | Requirement → use case → user story → Jira → verification | Draft complete; Jira column pending |
-| `08_llm_review_log.md` | AI Engineering Log entries for this section | **Pending author review — not yet published** |
+| `AI_Log.md` | AI Engineering Log: prompts, LLM output, errors found, LLM review and resulting changes | Published |
+| `llm_review/` | Review prompt and raw reviewer output referenced by `AI_Log.md` | Published |
 | `diagrams/` | PlantUML sources and rendered images | Draft complete |
 | `jira/rider_backlog_import.csv` | Rider epic, stories and NFR tasks for Jira import | Ready for import |
 
 ## Pending
 
-- [ ] **AI Engineering Log** (`08_llm_review_log.md`, with the review prompt and raw reviewer
-      output): being reviewed by the author, to be added in a later commit.
+- [x] **AI log** (`AI_Log.md`, with the review prompt and raw reviewer output in `llm_review/`).
 - [ ] **Jira keys:** issues to be imported from `jira/rider_backlog_import.csv`; the matrix's Jira
       column reads `pending` until then.
 - [ ] **Reconciliation** of shared features with the Ride Owner and Admin sections; the open items
