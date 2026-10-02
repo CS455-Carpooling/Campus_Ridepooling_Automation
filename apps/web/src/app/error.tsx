@@ -15,7 +15,7 @@ export default function ErrorPage({
   }, [error]);
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-16">
+    <main id="main" className="mx-auto max-w-2xl px-4 py-16">
       <h1 className="text-2xl font-semibold">Something went wrong</h1>
       <p className="mt-4 text-ink-muted">
         This page could not be shown. Try again, and if the problem continues, come back later.
@@ -23,6 +23,6 @@ export default function ErrorPage({
       <Button className="mt-6" onClick={() => retry()}>
         Try again
       </Button>
-    </div>
+    </main>
   );
 }
