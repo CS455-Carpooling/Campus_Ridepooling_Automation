@@ -26,23 +26,47 @@ the root: `npm run format`.
 
 ```
 src/
-  app/               routes: layout, pages, loading, error and not-found files
-  components/ui/     shared building blocks: Button, Field, Skeleton, LoadingRegion
+  app/               routes: layouts, pages, loading, error and not-found files
+  app/(app)/         signed-in pages; its layout adds the header, main landmark and footer
+  components/ui/     shared building blocks: Button, ButtonLink, Field, Skeleton, LoadingRegion
+  components/shell/  header, main navigation and footer of the signed-in app
+  components/home/   the student and admin home screens
   components/icons/  hand-written inline SVG icons, only where text will not do (none yet)
-  lib/               small helpers
+  lib/               session, roles, route map, page data and small helpers
 test/                test setup, the design-rule checker and the contrast test
 ```
 
-## Planned routes
+## Routes
 
-| Route       | Page                                      | Jira          |
-| ----------- | ----------------------------------------- | ------------- |
-| `/`         | Landing page (public)                     | CS455-16      |
-| `/home`     | Homepage for the signed-in user's role    | CS455-15      |
-| `/login`    | Sign in with a code sent by email         | CS455-17      |
-| `/register` | Registration, iitk.ac.in addresses only   | CS455-18      |
-| `/terms`    | Terms of service                          | to be created |
-| `/privacy`  | Privacy policy                            | to be created |
+Every route the app links to is defined once, in `src/lib/routes.ts`. A link to a page that does not
+exist yet shows the 404 page until the page is built.
+
+| Route | Page | Status |
+| --- | --- | --- |
+| `/` | Landing page (public) | CS455-16 |
+| `/home` | Home: one screen for students, another for admins | Built (CS455-15) |
+| `/login` | Sign in with a code sent by email | CS455-17 |
+| `/register` | Registration, iitk.ac.in addresses only | CS455-18 |
+| `/terms` | Terms of service | To be created |
+| `/privacy` | Privacy policy | To be created |
+| `/rides`, `/rides/new`, `/rides/[id]` | Find a ride, offer a ride, ride details | Not started |
+| `/notifications` | Notifications | Not started |
+| `/admin/incidents`, `/admin/complaints`, `/admin/recommendations` | Admin queues | Not started |
+| `/admin/configuration/...` | Vehicle types, hubs and pickup points, fares | Not started |
+
+## Signed-in pages and roles
+
+- **Roles** (`src/lib/roles.ts`): `student` finds rides and offers rides with the same account, as in
+  the D0 proposal; `admin` is for operations admins, whose accounts are given the role rather than
+  registered.
+- **Access:** every page under `src/app/(app)/` first calls `verifySession()` from
+  `src/lib/session.ts`, which redirects to `/login` when nobody is signed in. The layout only displays
+  the session; it does not protect pages, because layouts are not re-rendered on navigation.
+- **Development sign-in:** until sign-in exists (CS455-17), `getSession()` returns a development
+  user. Copy `.env.example` to `.env.local` in this folder, set `DEV_SESSION_ROLE` to `student` or
+  `admin`, and restart `npm run dev`. Production builds and tests ignore it.
+- **Page data** comes from server-only modules in `src/lib`, such as `home-data.ts`. Until the APIs
+  exist they return empty lists, or null counts that the page shows as "Not available yet".
 
 ## Conventions
 
@@ -51,6 +75,8 @@ test/                test setup, the design-rule checker and the contrast test
 - A route that loads data has a `loading.tsx` made of `Skeleton` blocks in the shape of the final
   content, wrapped in a `LoadingRegion`.
 - Use `next/link` for links inside the app and the `@/` alias for imports from `src/`.
+- Every page has exactly one `<main id="main">`, which the skip link targets. Signed-in pages get it
+  from the `(app)` layout.
 
 ## Design rules
 
@@ -82,8 +108,12 @@ The Tailwind theme removes the default colour palette, shadows, blur, large radi
 animations. `test/design-rules.ts` fails the test run if `src/` contains:
 
 - an em dash or an emoji;
+- a checkmark or sparkle character;
+- the "It's not X, it's Y" phrasing;
 - an import of an icon kit (Lucide, react-icons, Heroicons) or an animation library (Framer Motion);
-- a gradient, shadow, blur or glass effect;
+- a gradient, including radial orbs and dot grids written as CSS gradients;
+- an arbitrary colour such as `text-[#ff00ff]`, so only the tokens above can be used;
+- a shadow, blur or glass effect;
 - a corner radius above 2px;
 - a transition or animation other than the skeleton pulse;
 - a hover effect that moves or scales an element;
@@ -97,8 +127,8 @@ animations. `test/design-rules.ts` fails the test run if `src/` contains:
 Code cannot catch these, so the reviewer of every UI pull request checks them:
 
 - No row of three feature cards, bento grid, terminal-window mock-up, pricing tiers or testimonials.
-- No checkmark bullets, sparkle icons or animated arrows, and no "It's not X, it's Y" copy.
-- No neon, pastel, rainbow or purple-and-black colouring: only the tokens above.
-- The site has a terms of service page and a privacy policy.
-- Loading states use skeletons.
+- No checkmark bullets or sparkle icons drawn as SVG or CSS, and no copy that contrasts what the
+  product is not with what it is (the code check only catches the plain characters and phrasing).
+- The site has a terms of service page and a privacy policy, linked from the footer.
+- Loading states use skeletons in the shape of the content.
 - The landing page shows real screens of the product, not mock-ups.
