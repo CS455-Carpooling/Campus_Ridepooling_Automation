@@ -26,7 +26,12 @@ describe('HomePage', () => {
   });
 
   it('shows students their rides', async () => {
-    mocks.verifySession.mockResolvedValue({ userId: 'u1', displayName: 'Ananya', role: 'student' });
+    mocks.verifySession.mockResolvedValue({
+      userId: 'u1',
+      email: 'ananya@example.org',
+      displayName: 'Ananya',
+      role: 'student',
+    });
     render(await HomePage());
     expect(screen.getByRole('heading', { level: 1, name: 'Your rides' })).toBeInTheDocument();
     expect(mocks.getStudentHome).toHaveBeenCalledWith('u1');
@@ -34,7 +39,12 @@ describe('HomePage', () => {
   });
 
   it('shows operations admins their queues', async () => {
-    mocks.verifySession.mockResolvedValue({ userId: 'a1', displayName: 'Khushi', role: 'admin' });
+    mocks.verifySession.mockResolvedValue({
+      userId: 'a1',
+      email: 'khushi@example.org',
+      displayName: 'Khushi',
+      role: 'admin',
+    });
     render(await HomePage());
     expect(screen.getByRole('heading', { level: 1, name: 'Operations' })).toBeInTheDocument();
     expect(mocks.getStudentHome).not.toHaveBeenCalled();

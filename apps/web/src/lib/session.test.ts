@@ -17,8 +17,10 @@ describe('getSession (development stub until sign-in exists)', () => {
   it('signs in a test student under next dev', async () => {
     vi.stubEnv('NODE_ENV', 'development');
     vi.stubEnv('DEV_SESSION_ROLE', 'student');
+    vi.stubEnv('DEV_SESSION_EMAIL', '');
     await expect(getSession()).resolves.toEqual({
       userId: 'dev-student',
+      email: 'test-student@iitk.ac.in',
       displayName: 'Test student',
       role: 'student',
     });
@@ -27,7 +29,33 @@ describe('getSession (development stub until sign-in exists)', () => {
   it('signs in a test admin under next dev', async () => {
     vi.stubEnv('NODE_ENV', 'development');
     vi.stubEnv('DEV_SESSION_ROLE', 'admin');
-    await expect(getSession()).resolves.toMatchObject({ role: 'admin' });
+    vi.stubEnv('DEV_SESSION_EMAIL', '');
+    await expect(getSession()).resolves.toMatchObject({
+      email: 'test-admin@iitk.ac.in',
+      displayName: 'Test admin',
+      role: 'admin',
+    });
+  });
+
+  it('uses DEV_SESSION_EMAIL as the account and names the user after it', async () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    vi.stubEnv('DEV_SESSION_ROLE', 'student');
+    vi.stubEnv('DEV_SESSION_EMAIL', '  Test.Student@Example.ORG ');
+    await expect(getSession()).resolves.toMatchObject({
+      email: 'test.student@example.org',
+      displayName: 'test.student',
+      role: 'student',
+    });
+  });
+
+  it('ignores a DEV_SESSION_EMAIL that is not an email address', async () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    vi.stubEnv('DEV_SESSION_ROLE', 'admin');
+    vi.stubEnv('DEV_SESSION_EMAIL', 'not-an-email');
+    await expect(getSession()).resolves.toMatchObject({
+      email: 'test-admin@iitk.ac.in',
+      displayName: 'Test admin',
+    });
   });
 
   it('is signed out when DEV_SESSION_ROLE is empty or unknown', async () => {

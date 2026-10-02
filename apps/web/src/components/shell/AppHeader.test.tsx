@@ -15,7 +15,12 @@ describe('AppHeader', () => {
   });
 
   it('shows the student navigation and who is signed in', async () => {
-    getSession.mockResolvedValue({ userId: 'u1', displayName: 'Ananya', role: 'student' });
+    getSession.mockResolvedValue({
+      userId: 'u1',
+      email: 'ananya@example.org',
+      displayName: 'Ananya',
+      role: 'student',
+    });
     render(await AppHeader());
 
     const nav = screen.getByRole('navigation', { name: 'Main' });
@@ -30,7 +35,12 @@ describe('AppHeader', () => {
   });
 
   it('shows the admin navigation to operations admins', async () => {
-    getSession.mockResolvedValue({ userId: 'a1', displayName: 'Khushi', role: 'admin' });
+    getSession.mockResolvedValue({
+      userId: 'a1',
+      email: 'khushi@example.org',
+      displayName: 'Khushi',
+      role: 'admin',
+    });
     render(await AppHeader());
 
     const nav = screen.getByRole('navigation', { name: 'Main' });

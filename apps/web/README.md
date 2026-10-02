@@ -64,7 +64,9 @@ exist yet shows the 404 page until the page is built.
   the session; it does not protect pages, because layouts are not re-rendered on navigation.
 - **Development sign-in:** until sign-in exists (CS455-17), `getSession()` returns a development
   user. Copy `.env.example` to `.env.local` in this folder, set `DEV_SESSION_ROLE` to `student` or
-  `admin`, and restart `npm run dev`. Production builds and tests ignore it.
+  `admin`, optionally set `DEV_SESSION_EMAIL` to your own iitk.ac.in address, and restart
+  `npm run dev`. Production builds and tests ignore both. No password is involved: keep
+  passwords and personal addresses out of the repository.
 - **Page data** comes from server-only modules in `src/lib`, such as `home-data.ts`. Until the APIs
   exist they return empty lists, or null counts that the page shows as "Not available yet".
 
