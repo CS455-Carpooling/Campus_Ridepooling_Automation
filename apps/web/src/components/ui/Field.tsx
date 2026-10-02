@@ -20,7 +20,7 @@ export function Field({ label, hint, error, id, className, ...inputProps }: Fiel
 
   return (
     <div className={cx('flex flex-col gap-1', className)}>
-      <label htmlFor={inputId} className="font-medium">
+      <label htmlFor={inputId} className="text-sm font-semibold">
         {label}
       </label>
       {hint && (
@@ -34,7 +34,7 @@ export function Field({ label, hint, error, id, className, ...inputProps }: Fiel
         aria-describedby={describedBy}
         aria-invalid={error ? true : undefined}
         className={cx(
-          'min-h-11 rounded-sm border bg-paper px-3 text-base text-ink',
+          'min-h-12 rounded-control border bg-surface px-3 text-base text-ink',
           error ? 'border-danger' : 'border-line-strong',
         )}
       />

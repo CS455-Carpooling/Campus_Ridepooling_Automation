@@ -10,7 +10,7 @@ export function Skeleton({ className, ...props }: ComponentProps<'div'>) {
   return (
     <div
       aria-hidden="true"
-      className={cx('animate-skeleton rounded-sm bg-line', className)}
+      className={cx('animate-skeleton rounded-control bg-line', className)}
       {...props}
     />
   );

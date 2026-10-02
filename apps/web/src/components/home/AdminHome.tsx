@@ -19,11 +19,11 @@ export function AdminHome({ data }: { data: AdminHomeData }) {
   ];
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
-      <h1 className="text-2xl font-semibold">Operations</h1>
+    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+      <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Operations</h1>
 
       <section aria-labelledby="attention-heading" className="mt-8">
-        <h2 id="attention-heading" className="text-lg font-semibold">
+        <h2 id="attention-heading" className="text-xl font-bold tracking-tight">
           Needs attention
         </h2>
         <div className="mt-3 overflow-x-auto">
@@ -59,7 +59,7 @@ export function AdminHome({ data }: { data: AdminHomeData }) {
       </section>
 
       <section aria-labelledby="configuration-heading" className="mt-10">
-        <h2 id="configuration-heading" className="text-lg font-semibold">
+        <h2 id="configuration-heading" className="text-xl font-bold tracking-tight">
           Configuration
         </h2>
         <ul className="mt-3 space-y-2">

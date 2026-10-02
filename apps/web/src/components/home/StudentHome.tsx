@@ -7,9 +7,9 @@ import { routes } from '@/lib/routes';
 /** Home page of a student: the entry points for riding and offering rides, then their rides. */
 export function StudentHome({ data }: { data: StudentHomeData }) {
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
-      <h1 className="text-2xl font-semibold">Your rides</h1>
-      <div className="mt-5 flex flex-wrap gap-3">
+    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+      <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Your rides</h1>
+      <div className="mt-6 flex flex-wrap gap-3">
         <ButtonLink href={routes.findRide}>Find a ride</ButtonLink>
         <ButtonLink href={routes.offerRide} variant="secondary">
           Offer a ride
@@ -24,7 +24,7 @@ export function StudentHome({ data }: { data: StudentHomeData }) {
 function UpcomingRides({ rides }: { rides: UpcomingRide[] }) {
   return (
     <section aria-labelledby="upcoming-heading" className="mt-10">
-      <h2 id="upcoming-heading" className="text-lg font-semibold">
+      <h2 id="upcoming-heading" className="text-xl font-bold tracking-tight">
         Upcoming
       </h2>
       {rides.length === 0 ? (
@@ -74,7 +74,7 @@ function UpcomingRides({ rides }: { rides: UpcomingRide[] }) {
 function WaitingRequests({ requests }: { requests: WaitingRequest[] }) {
   return (
     <section aria-labelledby="waiting-heading" className="mt-10">
-      <h2 id="waiting-heading" className="text-lg font-semibold">
+      <h2 id="waiting-heading" className="text-xl font-bold tracking-tight">
         Waiting for a decision
       </h2>
       {requests.length === 0 ? (

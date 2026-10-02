@@ -15,14 +15,14 @@ export default function ErrorPage({
   }, [error]);
 
   return (
-    <main id="main" className="mx-auto max-w-2xl px-4 py-16">
-      <h1 className="text-2xl font-semibold">Something went wrong</h1>
-      <p className="mt-4 text-ink-muted">
+    <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+      <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">Something went wrong</h1>
+      <p className="mt-5 max-w-xl text-lg text-ink-muted">
         This page could not be shown. Try again, and if the problem continues, come back later.
       </p>
-      <Button className="mt-6" onClick={() => retry()}>
+      <Button className="mt-8" onClick={() => retry()}>
         Try again
       </Button>
-    </main>
+    </div>
   );
 }

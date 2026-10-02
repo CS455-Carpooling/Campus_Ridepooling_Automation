@@ -1,20 +1,32 @@
 // @vitest-environment node
 /**
- * WCAG 2.1 AA contrast of the Timetable colour tokens (NFR-RD-15).
- * Reads the hex values straight from globals.css, so a token change that
- * breaks contrast fails here.
+ * WCAG 2.1 AA contrast of the colour tokens, in the light and the dark colour
+ * scheme (NFR-RD-15). Reads the hex values straight from globals.css, so a
+ * token change that breaks contrast fails here.
  */
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 const css = readFileSync(fileURLToPath(new URL('../src/app/globals.css', import.meta.url)), 'utf8');
-const tokens: Record<string, string> = Object.fromEntries(
-  [...css.matchAll(/--color-([a-z-]+):\s*(#[0-9a-f]{6})\s*;/gi)].map((m) => [
-    m[1],
-    m[2].toLowerCase(),
-  ]),
-);
+const DARK_SCHEME = '@media (prefers-color-scheme: dark)';
+const [lightCss, darkCss = ''] = css.split(DARK_SCHEME);
+
+function readTokens(text: string): Record<string, string> {
+  return Object.fromEntries(
+    [...text.matchAll(/--color-([a-z-]+):\s*(#[0-9a-f]{6})\s*;/gi)].map((m) => [
+      m[1],
+      m[2].toLowerCase(),
+    ]),
+  );
+}
+
+const lightTokens = readTokens(lightCss);
+const darkOverrides = readTokens(darkCss);
+const schemes: Record<string, Record<string, string>> = {
+  light: lightTokens,
+  dark: { ...lightTokens, ...darkOverrides },
+};
 
 function channel(value: number): number {
   const c = value / 255;
@@ -32,52 +44,90 @@ function contrast(a: string, b: string): number {
 }
 
 const TEXT = 4.5; // WCAG 1.4.3, normal-size text
-const NON_TEXT = 3; // WCAG 1.4.11, borders of controls
+const LARGE = 3; // WCAG 1.4.3 large text, and 1.4.11 borders and markers
 
-describe('colour contrast (WCAG 2.1 AA, NFR-RD-15)', () => {
+const TOKENS = [
+  'paper',
+  'surface',
+  'panel',
+  'ink',
+  'ink-muted',
+  'line',
+  'line-strong',
+  'brand',
+  'on-brand',
+  'on-brand-muted',
+  'primary',
+  'primary-strong',
+  'on-primary',
+  'accent',
+  'accent-strong',
+  'on-accent',
+  'accent-text',
+  'danger',
+  'warning',
+];
+
+describe('contrast helper', () => {
   it('matches known reference ratios', () => {
     expect(contrast('#000000', '#ffffff')).toBeCloseTo(21, 5);
     expect(contrast('#777777', '#ffffff')).toBeCloseTo(4.48, 2);
   });
+});
 
-  it('defines every token the checks use', () => {
-    for (const name of [
-      'paper',
-      'panel',
-      'ink',
-      'ink-muted',
-      'line-strong',
-      'accent',
-      'accent-strong',
-      'on-accent',
-      'danger',
-      'warning',
-    ]) {
-      expect(tokens[name], name).toMatch(/^#[0-9a-f]{6}$/);
-    }
+describe('the dark colour scheme', () => {
+  it('overrides every colour token, so no light value leaks into it', () => {
+    expect(Object.keys(darkOverrides).sort()).toEqual(Object.keys(lightTokens).sort());
   });
 
-  it.each(['ink', 'ink-muted', 'accent', 'accent-strong', 'danger', 'warning'])(
-    '%s text on paper is at least 4.5:1',
+  it('really is darker', () => {
+    expect(luminance(schemes.dark.paper)).toBeLessThan(luminance(schemes.light.paper));
+  });
+});
+
+describe.each(Object.entries(schemes))('colour contrast, %s scheme (NFR-RD-15)', (_, t) => {
+  it('defines every token the checks use', () => {
+    for (const name of TOKENS) expect(t[name], name).toMatch(/^#[0-9a-f]{6}$/);
+  });
+
+  it.each(['ink', 'ink-muted', 'accent-text', 'danger', 'warning'])(
+    '%s text is at least 4.5:1 on paper, surface and panel',
     (name) => {
-      expect(contrast(tokens[name], tokens.paper)).toBeGreaterThanOrEqual(TEXT);
+      for (const background of ['paper', 'surface', 'panel']) {
+        expect(contrast(t[name], t[background]), background).toBeGreaterThanOrEqual(TEXT);
+      }
     },
   );
 
-  it.each(['ink', 'ink-muted', 'danger'])('%s text on panel is at least 4.5:1', (name) => {
-    expect(contrast(tokens[name], tokens.panel)).toBeGreaterThanOrEqual(TEXT);
+  it('button text is at least 4.5:1, at rest and on hover', () => {
+    for (const fill of ['primary', 'primary-strong']) {
+      expect(contrast(t['on-primary'], t[fill]), fill).toBeGreaterThanOrEqual(TEXT);
+    }
+    for (const fill of ['accent', 'accent-strong']) {
+      expect(contrast(t['on-accent'], t[fill]), fill).toBeGreaterThanOrEqual(TEXT);
+    }
   });
 
-  it.each(['accent', 'accent-strong'])('on-accent text on %s is at least 4.5:1', (name) => {
-    expect(contrast(tokens['on-accent'], tokens[name])).toBeGreaterThanOrEqual(TEXT);
+  it('text on brand panels is at least 4.5:1, and the accent at least 3:1', () => {
+    expect(contrast(t['on-brand'], t.brand)).toBeGreaterThanOrEqual(TEXT);
+    expect(contrast(t['on-brand-muted'], t.brand)).toBeGreaterThanOrEqual(TEXT);
+    expect(contrast(t.accent, t.brand)).toBeGreaterThanOrEqual(LARGE);
   });
 
-  it('input and button borders are at least 3:1 against paper and panel', () => {
-    expect(contrast(tokens['line-strong'], tokens.paper)).toBeGreaterThanOrEqual(NON_TEXT);
-    expect(contrast(tokens['line-strong'], tokens.panel)).toBeGreaterThanOrEqual(NON_TEXT);
+  it('input and button borders are at least 3:1 against paper, surface and panel', () => {
+    for (const background of ['paper', 'surface', 'panel']) {
+      expect(contrast(t['line-strong'], t[background]), background).toBeGreaterThanOrEqual(LARGE);
+    }
   });
 
-  it('the page background is not pure white', () => {
-    expect(tokens.paper).not.toBe('#ffffff');
+  it('focus rings are at least 3:1 where they are drawn', () => {
+    expect(contrast(t.ink, t.paper)).toBeGreaterThanOrEqual(LARGE);
+    expect(contrast(t.ink, t.surface)).toBeGreaterThanOrEqual(LARGE);
+    expect(contrast(t['on-brand'], t.brand)).toBeGreaterThanOrEqual(LARGE);
+  });
+
+  it('never uses pure white for the page or for surfaces', () => {
+    expect(t.paper).not.toBe('#ffffff');
+    expect(t.surface).not.toBe('#ffffff');
   });
 });

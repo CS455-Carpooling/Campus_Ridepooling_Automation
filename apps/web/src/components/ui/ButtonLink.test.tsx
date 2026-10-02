@@ -7,7 +7,7 @@ describe('ButtonLink', () => {
     render(<ButtonLink href="/rides">Find a ride</ButtonLink>);
     const link = screen.getByRole('link', { name: 'Find a ride' });
     expect(link).toHaveAttribute('href', '/rides');
-    expect(link).toHaveClass('bg-accent', 'min-h-11', 'no-underline');
+    expect(link).toHaveClass('bg-primary', 'min-h-11', 'no-underline');
   });
 
   it('supports the secondary variant and extra classes', () => {

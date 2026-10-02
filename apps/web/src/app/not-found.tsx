@@ -1,15 +1,15 @@
-import Link from 'next/link';
+import { ButtonLink } from '@/components/ui/ButtonLink';
 
 export default function NotFound() {
   return (
-    <main id="main" className="mx-auto max-w-2xl px-4 py-16">
-      <h1 className="text-2xl font-semibold">Page not found</h1>
-      <p className="mt-4 text-ink-muted">
+    <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+      <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">Page not found</h1>
+      <p className="mt-5 max-w-xl text-lg text-ink-muted">
         There is no page at this address. The link may be wrong, or the page may have moved.
       </p>
-      <p className="mt-6">
-        <Link href="/">Go to the home page</Link>
-      </p>
-    </main>
+      <ButtonLink href="/" className="mt-8">
+        Go to the home page
+      </ButtonLink>
+    </div>
   );
 }

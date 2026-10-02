@@ -8,7 +8,7 @@ describe('Button', () => {
     render(<Button>Request seat</Button>);
     const button = screen.getByRole('button', { name: 'Request seat' });
     expect(button).toHaveAttribute('type', 'button');
-    expect(button).toHaveClass('bg-accent', 'text-on-accent', 'min-h-11');
+    expect(button).toHaveClass('bg-primary', 'text-on-primary', 'min-h-11', 'rounded-control');
   });
 
   it('can submit a form when asked to', () => {
@@ -16,14 +16,19 @@ describe('Button', () => {
     expect(screen.getByRole('button', { name: 'Send code' })).toHaveAttribute('type', 'submit');
   });
 
-  it('applies the secondary and quiet variants', () => {
+  it('applies the secondary, accent and quiet variants', () => {
     render(
       <>
         <Button variant="secondary">Cancel</Button>
+        <Button variant="accent">Register</Button>
         <Button variant="quiet">Details</Button>
       </>,
     );
     expect(screen.getByRole('button', { name: 'Cancel' })).toHaveClass('border-line-strong');
+    expect(screen.getByRole('button', { name: 'Register' })).toHaveClass(
+      'bg-accent',
+      'text-on-accent',
+    );
     expect(screen.getByRole('button', { name: 'Details' })).toHaveClass('underline');
   });
 
