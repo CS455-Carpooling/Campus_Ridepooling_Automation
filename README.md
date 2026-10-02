@@ -35,6 +35,7 @@ Requirements: Node.js 24 (see `.nvmrc`; 20.9 or later works) and npm.
 
 ```sh
 npm install          # installs every workspace
+cp apps/web/.env.example apps/web/.env.local   # development sign-in, see apps/web/README.md
 npm run dev          # web app at http://localhost:3000
 npm run test         # tests with coverage
 npm run lint

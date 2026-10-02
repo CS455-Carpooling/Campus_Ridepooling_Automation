@@ -33,7 +33,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
         >
           Skip to content
         </a>
-        <main id="main">{children}</main>
+        {children}
       </body>
     </html>
   );

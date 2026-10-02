@@ -7,5 +7,6 @@ describe('NotFound', () => {
     render(<NotFound />);
     expect(screen.getByRole('heading', { level: 1, name: 'Page not found' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Go to the home page' })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('main')).toHaveAttribute('id', 'main');
   });
 });

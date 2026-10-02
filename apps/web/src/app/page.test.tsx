@@ -9,5 +9,6 @@ describe('Home (placeholder)', () => {
       screen.getByRole('heading', { level: 1, name: 'Campus Ride-Pooling' }),
     ).toBeInTheDocument();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    expect(screen.getByRole('main')).toHaveAttribute('id', 'main');
   });
 });

@@ -26,12 +26,25 @@ const REST = String.raw`[^\s'"\x60]`;
 
 const ALL: FileKind[] = ['code', 'css', 'other'];
 
+// Checkmarks and sparkles (used as bullets and decoration), from their code points.
+const DECORATIVE_GLYPHS = String.fromCodePoint(
+  0x2713, // check mark
+  0x2714, // heavy check mark
+  0x2705, // white heavy check mark
+  0x2611, // ballot box with check
+  0x2726, // black four-pointed star
+  0x2727, // white four-pointed star
+  0x2728, // sparkles
+  0x2734, // eight-pointed black star
+  0x2747, // sparkle
+);
+
 export const rules: Rule[] = [
   {
     id: 'em-dash',
     message: 'Em dash: use a comma, a colon or a full stop instead.',
     kinds: ALL,
-    pattern: /—/,
+    pattern: /\u2014/,
     includeComments: true,
   },
   {
@@ -49,10 +62,32 @@ export const rules: Rule[] = [
       /from\s+['"](?:lucide(?:-react)?|react-icons|@heroicons\/react|framer-motion|motion)(?:\/[^'"]*)?['"]/,
   },
   {
-    id: 'gradient',
-    message: 'Gradients are not used.',
+    id: 'decorative-glyph',
+    message: 'Checkmark and sparkle characters are not used as bullets or decoration.',
+    kinds: ALL,
+    pattern: new RegExp(`[${DECORATIVE_GLYPHS}]`, 'u'),
+    includeComments: true,
+  },
+  {
+    id: 'not-x-its-y',
+    message: 'Avoid the "It\'s not X, it\'s Y" phrasing; say what it is.',
     kinds: ['code'],
-    pattern: new RegExp(`${START}bg-(?:linear|radial|conic|gradient)-`),
+    pattern:
+      /\b(?:it|this|that)(?:'s| is)(?: not|n't)\b[^.!?\n]{0,80}?[,;:]\s*(?:it|this|that)(?:'s| is)\b/i,
+  },
+  {
+    id: 'gradient',
+    message: 'Gradients (including radial orbs and dot grids) are not used.',
+    kinds: ['code'],
+    pattern: new RegExp(
+      `${START}bg-(?:linear|radial|conic|gradient)-|(?:linear|radial|conic)-gradient[(]`,
+    ),
+  },
+  {
+    id: 'arbitrary-colour',
+    message: 'Use the colour tokens; arbitrary colours (neon, pastel, purple) are not used.',
+    kinds: ['code'],
+    pattern: /-[[](?:#|rgba?[(]|hsla?[(]|ok(?:lch|lab)[(]|l(?:ab|ch)[(]|hwb[(]|color[(])/,
   },
   {
     id: 'shadow',
