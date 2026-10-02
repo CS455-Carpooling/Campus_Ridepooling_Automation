@@ -10,7 +10,7 @@ export function NavLinks({ items }: { items: NavItem[] }) {
   const current = currentHref(usePathname(), items);
 
   return (
-    <ul className="flex flex-wrap gap-x-5 gap-y-1">
+    <ul className="flex flex-wrap gap-1">
       {items.map((item) => {
         const isCurrent = item.href === current;
         return (
@@ -19,9 +19,10 @@ export function NavLinks({ items }: { items: NavItem[] }) {
               href={item.href}
               aria-current={isCurrent ? 'page' : undefined}
               className={cx(
+                'inline-flex min-h-11 items-center rounded-control px-3 no-underline',
                 isCurrent
-                  ? 'font-semibold text-ink underline'
-                  : 'text-ink-muted no-underline hover:text-ink hover:underline',
+                  ? 'bg-panel font-semibold text-ink'
+                  : 'text-ink-muted hover:bg-panel hover:text-ink',
               )}
             >
               {item.label}

@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Session } from '@/lib/session';
-import { AppHeader, AppHeaderSkeleton } from './AppHeader';
+import { SiteHeader, SiteHeaderSkeleton } from './SiteHeader';
 
 const { getSession } = vi.hoisted(() => ({
   getSession: vi.fn<() => Promise<Session | null>>(),
@@ -9,7 +9,7 @@ const { getSession } = vi.hoisted(() => ({
 vi.mock('@/lib/session', () => ({ getSession }));
 vi.mock('next/navigation', () => ({ usePathname: () => '/home' }));
 
-describe('AppHeader', () => {
+describe('SiteHeader', () => {
   beforeEach(() => {
     getSession.mockReset();
   });
@@ -21,7 +21,7 @@ describe('AppHeader', () => {
       displayName: 'Ananya',
       role: 'student',
     });
-    render(await AppHeader());
+    render(await SiteHeader());
 
     const nav = screen.getByRole('navigation', { name: 'Main' });
     expect(within(nav).getByRole('link', { name: 'Offer a ride' })).toBeInTheDocument();
@@ -41,7 +41,7 @@ describe('AppHeader', () => {
       displayName: 'Khushi',
       role: 'admin',
     });
-    render(await AppHeader());
+    render(await SiteHeader());
 
     const nav = screen.getByRole('navigation', { name: 'Main' });
     expect(within(nav).getByRole('link', { name: 'Incidents' })).toBeInTheDocument();
@@ -49,18 +49,27 @@ describe('AppHeader', () => {
     expect(screen.getByText(/\(Operations admin\)/)).toBeInTheDocument();
   });
 
-  it('shows only the product name when nobody is signed in', async () => {
+  it('offers sign-in and registration when nobody is signed in', async () => {
     getSession.mockResolvedValue(null);
-    render(await AppHeader());
+    render(await SiteHeader());
 
-    expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Main' })).not.toBeInTheDocument();
+    const account = screen.getByRole('navigation', { name: 'Account' });
+    expect(within(account).getByRole('link', { name: 'Sign in' })).toHaveAttribute(
+      'href',
+      '/login',
+    );
+    expect(within(account).getByRole('link', { name: 'Register' })).toHaveAttribute(
+      'href',
+      '/register',
+    );
     expect(screen.getByRole('link', { name: 'Campus Ride-Pooling' })).toHaveAttribute('href', '/');
   });
 });
 
-describe('AppHeaderSkeleton', () => {
+describe('SiteHeaderSkeleton', () => {
   it('announces that the navigation is loading', () => {
-    render(<AppHeaderSkeleton />);
+    render(<SiteHeaderSkeleton />);
     expect(screen.getByRole('status')).toHaveTextContent('Loading navigation');
     expect(screen.getByText('Campus Ride-Pooling')).toBeInTheDocument();
   });

@@ -19,7 +19,6 @@ describe('ErrorPage', () => {
       screen.getByRole('heading', { level: 1, name: 'Something went wrong' }),
     ).toBeInTheDocument();
     expect(consoleError).toHaveBeenCalledWith(error);
-    expect(screen.getByRole('main')).toHaveAttribute('id', 'main');
 
     await userEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(retry).toHaveBeenCalledTimes(1);

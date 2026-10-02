@@ -103,10 +103,12 @@ export const rules: Rule[] = [
   },
   {
     id: 'radius',
-    message: 'Only rounded-sm (2px), rounded-none and rounded-full are allowed.',
+    message:
+      'Corners are rounded-control (8px) or rounded-panel (16px); rounded-none and rounded-full are also allowed.',
     kinds: ['code'],
+    // Any rounded-* utility except the allowed sizes, with or without a side (rounded-t-panel).
     pattern: new RegExp(
-      `${START}rounded(?:-[a-z]{1,2})?-(?:xs|md|lg|xl|[2-4]xl|\\[[^\\]]*\\])${END}`,
+      `${START}(?!rounded(?:-(?:[setrbl]|ss|se|es|ee|tl|tr|br|bl))?-(?:none|full|control|panel)${END})rounded-${REST}+${END}`,
     ),
   },
   {

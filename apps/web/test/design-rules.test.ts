@@ -30,6 +30,8 @@ describe('design rules: the checker', () => {
     ['glass', '<div className="backdrop-blur-md" />'],
     ['radius', '<div className="rounded-xl" />'],
     ['radius', '<div className="rounded-t-lg" />'],
+    ['radius', '<div className="rounded-sm" />'],
+    ['radius', '<div className="rounded-[12px]" />'],
     ['motion', '<a className="transition-colors duration-200" />'],
     ['motion', '<span className="animate-spin" />'],
     ['hover-transform', '<a className="hover:scale-105" />'],
@@ -59,7 +61,10 @@ describe('design rules: the checker', () => {
   });
 
   it.each([
-    '<div className="rounded-sm border border-line-strong bg-paper text-ink" />',
+    '<div className="rounded-control border border-line-strong bg-surface text-ink" />',
+    '<section className="rounded-panel bg-brand md:rounded-t-panel" />',
+    '<span className="size-3 rounded-full focus:rounded-control" />',
+    '// Shares are rounded up to the next rupee.',
     '<div className="animate-skeleton bg-line" />',
     '<a className="underline hover:text-accent" />',
     '<p>Pickup between 04:45\u201305:15</p>',
