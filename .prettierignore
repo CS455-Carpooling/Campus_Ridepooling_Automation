@@ -1,0 +1,12 @@
+# Documents and generated files are not formatted by Prettier.
+Deliverables/
+docs/
+_local/
+**/*.md
+package-lock.json
+node_modules/
+coverage/
+dist/
+build/
+.next/
+**/next-env.d.ts
