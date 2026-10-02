@@ -16,3 +16,15 @@ export function formatDeparture(iso: string): string {
   );
   return `${parts.weekday} ${parts.day} ${parts.month}, ${parts.hour}:${parts.minute}`;
 }
+
+const rupeeFormat = new Intl.NumberFormat('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+});
+
+/** Formats whole rupees with Indian digit grouping, for example 117 or 1,00,000 after the rupee sign. */
+export function formatRupees(amount: number): string {
+  return rupeeFormat.format(amount);
+}
