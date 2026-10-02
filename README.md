@@ -1,42 +1,66 @@
-# Campus Ride-Pooling & Split-Fare Platform
+# Campus Ride-Pooling and Split-Fare System
 
-CS455 — Software Engineering Course Project, IIT Kanpur, Fall 2026.
+CS455 Software Engineering course project, IIT Kanpur, Fall 2026.
 
-A platform that matches students travelling from campus to shared destinations (Kanpur Central
-railway station, CCS Airport Lucknow) within overlapping departure windows, allocates them seats in a
-shared vehicle, splits the fare, and coordinates pickup.
+A web platform for IIT Kanpur students travelling between the campus and the railway station, bus
+station or airport. A ride owner offers a ride and riders request a seat; the owner accepts or
+rejects each request. The fare is split between the occupants and fixed when the ride locks, and
+the group coordinates in a private chat. After the trip, riders settle their share, rate each other
+and can report misconduct. An AI assistant helps riders find suitable rides, and AI complaint
+analysis helps administrators, who make every decision themselves.
 
 ## Status
 
-**Deliverable 0 — proposal stage.** The proposal has not yet been submitted or approved, and per the
-course handout implementation does not begin until it is. No application code exists yet.
+| Deliverable | Due | Status |
+|---|---|---|
+| D0: Project proposal | 2026-08-29 | Submitted |
+| D1: Requirements, architecture, Jira setup | 2026-09-26 | Submitted |
+| D2: Implementation, agentic AI, sprint execution | 2026-10-15 | In progress: web app scaffold in `apps/web` |
+| D3: Testing, security, performance, cost, deployment | 2026-11-06 | Not started |
 
 ## Repository contents
 
 | Path | What it is |
 |---|---|
-| `docs/project-management/CS455_Software_Engineering_Project.pdf` | The governing course handout. Authoritative — if anything here conflicts with it, the handout wins |
-| `docs/BUILD_CHECKLIST.md` | The handout turned into a tickable checklist: per-deliverable requirements, acceptance criteria, gates, invariants |
+| `apps/web/` | Next.js web app; see its [README](apps/web/README.md), including the design rules |
+| `.github/workflows/ci.yml` | CI: formatting, lint, type-check, tests with an 80 % coverage gate, build |
+| `Deliverables/` | Submitted deliverables, mirrored here as the handout requires |
+| `docs/project-management/` | The course handout. If anything here conflicts with it, the handout wins |
+| `docs/BUILD_CHECKLIST.md` | The handout's requirements as a checklist per deliverable |
 | `Phases.md` | Deliverable schedule and sprint plan |
-| `Deliverables/` | Submitted deliverables, mirrored here as required (`D0/`–`D3/`) |
 
-## Deliverable schedule
+## Getting started
+
+Requirements: Node.js 24 (see `.nvmrc`; 20.9 or later works) and npm.
+
+```sh
+npm install          # installs every workspace
+npm run dev          # web app at http://localhost:3000
+npm run test         # tests with coverage
+npm run lint
+npm run typecheck
+npm run format       # Prettier
+```
+
+## Marks
 
 | Deliverable | Due | Marks |
 |---|---|---|
-| D0 — Project Proposal | 2026-08-29 | gate (approval required before D1) |
-| D1 — Requirements, Architecture, Jira setup | 2026-09-26 | 20 |
-| D2 — Implementation, Agentic AI, Sprint execution | 2026-10-15 | 25 |
-| D3 — Testing, Security, Performance, Deployment | 2026-11-06 | 25 |
-| Final scenario-based demo | 2026-11-08 → 11-13 | 10 |
-| Individual viva | with demo | 10 |
-| Retrospective + final documentation | with D3 | 10 |
+| D0: Project proposal | 2026-08-29 | Gate (approval required before D1) |
+| D1: Requirements, architecture | 2026-09-26 | 20 |
+| D2: Implementation | 2026-10-15 | 25 |
+| D3: Testing and deployment | 2026-11-06 | 25 |
+| Final scenario-based demo | 2026-11-08 to 11-13 | 10 |
+| Individual viva | With the demo | 10 |
+| Retrospective and final documentation | With D3 | 10 |
 
 ## Working agreements
 
-- Every significant change goes on a branch named with its Jira issue ID, merged via a pull request
-  with a real description, testing notes, the Jira link, and a review from another team member.
-- A feature is done when its acceptance criterion in `docs/BUILD_CHECKLIST.md` has a passing test —
-  not when the code runs.
-- Requirements, Jira, code, tests, and documentation must stay consistent with each other.
-- All team members contribute from their own GitHub and Jira accounts.
+- Every change starts from a Jira issue (project key `CS455`) and goes on a branch named
+  `CS455-<n>-short-description`, with commit messages that start with the key.
+- Changes reach `master` through a pull request with the Jira link, the requirement IDs and testing
+  notes, reviewed and approved by another team member, with CI passing.
+- A feature is done when the acceptance criteria of its user story (the `US-...-ACk` items in the
+  D1 requirements) have passing automated tests.
+- Requirements, Jira, code, tests and documentation must stay consistent with each other.
+- Every member works from their own GitHub and Jira accounts.
