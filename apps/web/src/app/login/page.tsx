@@ -27,7 +27,14 @@ export default function LoginPage() {
         <div className="mt-12 hidden md:block">
           <div className="flex items-center gap-4 rounded-panel border border-line bg-panel p-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-on-brand">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                 <circle cx="12" cy="10" r="3" />
               </svg>
@@ -38,13 +45,20 @@ export default function LoginPage() {
             </div>
             <div className="flex-1 border-t border-dashed border-line"></div>
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control border border-line bg-panel text-on-brand">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
             </div>
           </div>
-          
+
           <div className="mt-8 flex gap-4 text-xs font-semibold text-on-brand-muted">
             <span>Verified</span>
             <span>•</span>
@@ -99,26 +113,35 @@ export default function LoginPage() {
 
             <Button type="submit" className="mt-2 w-full justify-between">
               Log in to Campus Ride-Pooling
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
             </Button>
-
-
           </form>
 
           <p className="mt-8 text-center text-sm text-ink-muted">
             New to Campus Ride-Pooling?{' '}
-            <Link
-              href={routes.register}
-              className="font-bold text-accent-text hover:underline"
-            >
+            <Link href={routes.register} className="font-bold text-accent-text hover:underline">
               Create an account
             </Link>
           </p>
 
           <div className="mt-8 flex items-center justify-center gap-2 text-xs text-ink-muted">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               <path d="M9 12l2 2 4-4" />
             </svg>
