@@ -9,3 +9,4 @@ coverage/
 dist/
 build/
 .next/
+**/next-env.d.ts

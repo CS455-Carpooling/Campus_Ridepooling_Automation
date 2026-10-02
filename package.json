@@ -10,6 +10,7 @@
     "node": ">=20.9"
   },
   "scripts": {
+    "dev": "npm run dev -w @ridepool/web",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "npm run lint --workspaces --if-present",
