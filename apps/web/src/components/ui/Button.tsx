@@ -16,21 +16,20 @@ export type ButtonProps = ComponentProps<'button'> & {
   variant?: ButtonVariant;
 };
 
+/** Classes for a button-styled control; shared by Button and ButtonLink. */
+export function buttonClassName(variant: ButtonVariant, className?: string): string {
+  return cx(
+    'inline-flex min-h-11 items-center justify-center rounded-sm border px-4 text-base font-medium',
+    'disabled:cursor-not-allowed disabled:opacity-60',
+    variantClasses[variant],
+    className,
+  );
+}
+
 /**
  * Button with a 44 px minimum height (NFR-RO-USE-01). Defaults to type="button"
  * so it never submits a form by accident.
  */
 export function Button({ variant = 'primary', type = 'button', className, ...props }: ButtonProps) {
-  return (
-    <button
-      type={type}
-      className={cx(
-        'inline-flex min-h-11 items-center justify-center rounded-sm border px-4 text-base font-medium',
-        'disabled:cursor-not-allowed disabled:opacity-60',
-        variantClasses[variant],
-        className,
-      )}
-      {...props}
-    />
-  );
+  return <button type={type} className={buttonClassName(variant, className)} {...props} />;
 }
