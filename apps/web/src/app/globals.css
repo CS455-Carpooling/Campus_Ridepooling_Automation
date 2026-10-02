@@ -20,11 +20,11 @@
 
   /* Page background: warm off-white, never pure white. */
   --color-paper: #f5f3ee;
-  /* Filled areas such as table headers and skeleton blocks. */
+  /* Filled areas such as table headers and hovered secondary buttons. */
   --color-panel: #edeae3;
   --color-ink: #1b1f24;
   --color-ink-muted: #5c5850;
-  /* Decorative dividers only. */
+  /* Decorative dividers and skeleton blocks only, never text. */
   --color-line: #cfcac0;
   /* Borders of inputs and buttons (at least 3:1 against paper). */
   --color-line-strong: #77736a;
