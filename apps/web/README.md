@@ -32,6 +32,7 @@ src/
   components/shell/  header, navigation, footer and the product mark
   components/home/   the student and admin home screens
   components/landing/ the landing page's fare card and live fare calculator
+  components/rides/  ride forms: route and vehicle pickers (create ride)
   lib/               session, roles, route map, fares, formatting, page data and small helpers
 test/                test setup, the design-rule checker and the contrast test
 ```
@@ -51,7 +52,8 @@ exist yet shows the 404 page until the page is built.
 | `/api/auth/*` | Register, verify, log in, log out, forgot, reset | Built (CS455-19), see `setup.md` |
 | `/terms` | Community guidelines | Placeholder |
 | `/privacy` | Privacy policy | Placeholder |
-| `/rides`, `/rides/new`, `/rides/[id]` | Find a ride, offer a ride, ride details | Not started |
+| `/rides/new` | Offer a ride: route, vehicle, departure window, fare | In progress (CS455-24, 25) |
+| `/rides`, `/rides/[id]` | Find a ride, ride details | Not started |
 | `/notifications` | Notifications | Not started |
 | `/admin/incidents`, `/admin/complaints`, `/admin/recommendations` | Admin queues | Not started |
 | `/admin/configuration/...` | Vehicle types, hubs and pickup points, fares | Not started |
@@ -74,6 +76,8 @@ exist yet shows the 404 page until the page is built.
   `DEV_SESSION_EMAIL`, and restart `npm run dev`. It takes priority over real sign-in under
   `npm run dev`; production builds and tests ignore it. Keep passwords and personal addresses out
   of the repository.
+- **Ride rules** (`src/lib/ride-rules.ts`) hold the create-ride validation shared by the form and
+  `POST /api/rides`; `src/lib/ride-options.ts` lists the fixed places and vehicle types.
 - **Page data** comes from server-only modules in `src/lib`, such as `home-data.ts`. Until the APIs
   exist they return empty lists, or null counts that the page shows as "Not available yet".
 
