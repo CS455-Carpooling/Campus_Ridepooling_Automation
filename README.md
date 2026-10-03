@@ -43,6 +43,30 @@ npm run typecheck
 npm run format       # Prettier
 ```
 
+## Hosting locally with Docker
+
+Runs PostgreSQL and the production build of the web app on one machine. Requires Docker Desktop
+(running).
+
+```sh
+cp .env.example .env              # then set POSTGRES_PASSWORD (letters and digits)
+docker compose up -d --build      # first build takes a few minutes
+```
+
+Open http://localhost:3000. The database schema is applied each time the app starts, and the data
+survives restarts (`docker compose down -v` deletes it).
+
+- **Email:** without `MAIL_SCRIPT_URL` and `MAIL_SCRIPT_SECRET` in `.env` (see
+  `apps/web/setup.md`) no email is sent, so verify a new account by hand:
+  `docker compose exec db psql -U crp -d crp -c "UPDATE users SET email_verified_at = now() WHERE email = 'name@iitk.ac.in';"`
+- **Other devices:** sign-in cookies are marked secure in production. Browsers keep them on
+  `http://localhost`, but not on a plain-HTTP network address such as `http://192.168.x.x:3000`.
+  To let others sign in from their own devices, serve the app over HTTPS (for example through a
+  tunnel) and set `APP_URL` to that address.
+- **Development against this database:** it listens on `127.0.0.1:5433`, so `npm run dev` can use
+  `DATABASE_URL=postgres://crp:<password>@localhost:5433/crp` in `apps/web/.env.local`.
+- CI builds and starts this setup whenever the Docker files change (`.github/workflows/docker.yml`).
+
 ## Marks
 
 | Deliverable | Due | Marks |
