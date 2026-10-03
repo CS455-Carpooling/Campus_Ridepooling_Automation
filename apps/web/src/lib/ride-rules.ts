@@ -165,13 +165,33 @@ export function minDepartureLocal(now: Date): string {
 }
 
 /**
- * The most anyone pays when the ride is full (Table T-2: the owner and the
- * earliest riders pay the extra rupee). Null until the fare and capacity are valid.
+ * A datetime-local value moved by some minutes, for the inputs' min and max.
+ * Plain clock arithmetic: IST has no daylight saving. Empty if the value is incomplete.
  */
-export function fullRideShare(totalFare: number, capacity: number): number | null {
+export function addMinutesLocal(localDateTime: string, minutes: number): string {
+  if (!LOCAL_DATE_TIME.test(localDateTime)) return '';
+  const time = new Date(`${localDateTime}:00Z`).getTime();
+  if (Number.isNaN(time)) return '';
+  return new Date(time + minutes * MINUTE).toISOString().slice(0, 16);
+}
+
+/** The fare as typed in the form, if it is whole rupees within the limits; otherwise null. */
+export function fareFromText(text: string): number | null {
+  const trimmed = text.trim();
+  if (!/^\d{1,9}$/.test(trimmed)) return null;
+  const fare = Number(trimmed);
+  return fare >= RIDE_RULES.minFare && fare <= RIDE_RULES.maxFare ? fare : null;
+}
+
+/**
+ * The most anyone pays when `people` share the fare, the owner included
+ * (Table T-2: the owner and the earliest riders pay the extra rupee). Null
+ * until the fare and the number of people are usable.
+ */
+export function largestShare(totalFare: number, people: number): number | null {
   if (!Number.isSafeInteger(totalFare) || totalFare < RIDE_RULES.minFare) return null;
-  if (!Number.isSafeInteger(capacity) || capacity < 1) return null;
-  return splitFare(totalFare, capacity)[0];
+  if (!Number.isSafeInteger(people) || people < 1) return null;
+  return splitFare(totalFare, people)[0];
 }
 
 /** What the form holds: every value as typed or chosen, possibly empty. */

@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { getRideFormOptions } from './ride-options';
 import {
+  addMinutesLocal,
   emptyRideDraft,
-  fullRideShare,
+  fareFromText,
+  largestShare,
   knownRideIds,
   minDepartureLocal,
   requestFromDraft,
@@ -148,18 +150,37 @@ describe('time helpers', () => {
   });
 });
 
-describe('fullRideShare', () => {
-  it('is the largest share when every seat is taken (Table T-2)', () => {
-    expect(fullRideShare(460, 4)).toBe(115);
-    expect(fullRideShare(463, 4)).toBe(116);
-    expect(fullRideShare(700, 7)).toBe(100);
+describe('largestShare', () => {
+  it('is the largest share when that many people ride (Table T-2)', () => {
+    expect(largestShare(460, 4)).toBe(115);
+    expect(largestShare(463, 4)).toBe(116);
+    expect(largestShare(700, 7)).toBe(100);
+    expect(largestShare(460, 2)).toBe(230);
   });
 
-  it('is null until the fare and the capacity are usable', () => {
-    expect(fullRideShare(0, 4)).toBeNull();
-    expect(fullRideShare(12.5, 4)).toBeNull();
-    expect(fullRideShare(460, 0)).toBeNull();
-    expect(fullRideShare(460, 2.5)).toBeNull();
+  it('is null until the fare and the number of people are usable', () => {
+    expect(largestShare(0, 4)).toBeNull();
+    expect(largestShare(12.5, 4)).toBeNull();
+    expect(largestShare(460, 0)).toBeNull();
+    expect(largestShare(460, 2.5)).toBeNull();
+  });
+});
+
+describe('form value helpers', () => {
+  it('moves a datetime-local value by minutes, across midnight too', () => {
+    expect(addMinutesLocal('2026-10-10T06:30', 180)).toBe('2026-10-10T09:30');
+    expect(addMinutesLocal('2026-10-10T23:30', 90)).toBe('2026-10-11T01:00');
+    expect(addMinutesLocal('2026-10-10', 60)).toBe('');
+    expect(addMinutesLocal('2026-13-10T06:30', 60)).toBe('');
+  });
+
+  it('reads a typed fare only when it is whole rupees within the limits', () => {
+    expect(fareFromText(' 460 ')).toBe(460);
+    expect(fareFromText('1')).toBe(1);
+    expect(fareFromText('50000')).toBe(50_000);
+    for (const text of ['', '0', '12.5', '4,600', 'abc', '50001']) {
+      expect(fareFromText(text)).toBeNull();
+    }
   });
 });
 

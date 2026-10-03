@@ -32,7 +32,7 @@ src/
   components/shell/  header, navigation, footer and the product mark
   components/home/   the student and admin home screens
   components/landing/ the landing page's fare card and live fare calculator
-  components/rides/  ride forms: route and vehicle pickers (create ride)
+  components/rides/  create-ride inputs: route, vehicle, departure window and fare
   lib/               session, roles, route map, fares, formatting, page data and small helpers
 test/                test setup, the design-rule checker and the contrast test
 ```
