@@ -19,8 +19,8 @@ services:
           name: crp-db
           property: connectionString
       - key: APP_URL
-        sync: false        # e.g. https://campus-ride-pooling.onrender.com
+        sync: false # e.g. https://campus-ride-pooling.onrender.com
       - key: RESEND_API_KEY
         sync: false
       - key: MAIL_FROM
-        sync: false        # e.g. "Campus Ride Pooling <noreply@yourdomain.com>"
+        sync: false # e.g. "Campus Ride Pooling <noreply@yourdomain.com>"

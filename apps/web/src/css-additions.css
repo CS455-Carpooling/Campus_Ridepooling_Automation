@@ -1,5 +1,0 @@
-/* Append to index.css. You can also delete the unused .divider, .google-button and .google-g rules. */
-.form-banner { margin: 0 0 18px; padding: 11px 13px; border-radius: 11px; font-size: 12px; line-height: 1.5; border: 1px solid; }
-.form-banner.bad { background: color-mix(in srgb, var(--coral) 12%, var(--surface)); border-color: color-mix(in srgb, var(--coral) 45%, var(--line)); }
-.form-banner.ok { background: color-mix(in srgb, var(--accent) 18%, var(--surface)); border-color: color-mix(in srgb, #829b29 40%, var(--line)); }
-.form-submit:disabled { opacity: .6; cursor: not-allowed; }

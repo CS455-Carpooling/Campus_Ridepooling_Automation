@@ -28,6 +28,9 @@ describe('SiteHeader', () => {
     expect(within(nav).getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByText('Ananya')).toBeInTheDocument();
     expect(screen.getByText(/\(Student\)/)).toBeInTheDocument();
+    const signOut = screen.getByRole('button', { name: 'Sign out' });
+    expect(signOut.closest('form')).toHaveAttribute('action', '/api/auth/logout');
+    expect(signOut.closest('form')).toHaveAttribute('method', 'post');
     expect(screen.getByRole('link', { name: 'Campus Ride-Pooling' })).toHaveAttribute(
       'href',
       '/home',
@@ -54,6 +57,7 @@ describe('SiteHeader', () => {
     render(await SiteHeader());
 
     expect(screen.queryByRole('navigation', { name: 'Main' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Sign out' })).not.toBeInTheDocument();
     const account = screen.getByRole('navigation', { name: 'Account' });
     expect(within(account).getByRole('link', { name: 'Sign in' })).toHaveAttribute(
       'href',
