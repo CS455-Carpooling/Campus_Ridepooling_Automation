@@ -1,19 +1,60 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getSession, verifySession } from './session';
 
-const { redirect } = vi.hoisted(() => ({
+type Account = { id: string; email: string; full_name: string; roll_number: string };
+
+const { getCurrentUser, redirect } = vi.hoisted(() => ({
+  getCurrentUser: vi.fn<() => Promise<Account | null>>(),
   redirect: vi.fn((url: string) => {
     throw new Error(`NEXT_REDIRECT ${url}`);
   }),
 }));
+vi.mock('./auth', () => ({ getCurrentUser }));
 vi.mock('next/navigation', () => ({ redirect }));
+
+const account: Account = {
+  id: '6f1c2a5e-0000-4000-8000-000000000001',
+  email: 'ananya@iitk.ac.in',
+  full_name: 'Ananya Rao',
+  roll_number: '220123',
+};
+
+beforeEach(() => {
+  getCurrentUser.mockResolvedValue(null);
+});
 
 afterEach(() => {
   vi.unstubAllEnvs();
   redirect.mockClear();
+  getCurrentUser.mockReset();
 });
 
-describe('getSession (development stub until sign-in exists)', () => {
+describe('getSession with an account signed in through /login', () => {
+  it('is that account, as a student', async () => {
+    getCurrentUser.mockResolvedValue(account);
+    await expect(getSession()).resolves.toEqual({
+      userId: account.id,
+      email: 'ananya@iitk.ac.in',
+      displayName: 'Ananya Rao',
+      role: 'student',
+    });
+  });
+
+  it('comes before the development user', async () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    vi.stubEnv('DEV_SESSION_ROLE', 'admin');
+    getCurrentUser.mockResolvedValue(account);
+    await expect(getSession()).resolves.toMatchObject({ userId: account.id, role: 'student' });
+  });
+
+  it('works in a production build', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    getCurrentUser.mockResolvedValue(account);
+    await expect(getSession()).resolves.toMatchObject({ email: 'ananya@iitk.ac.in' });
+  });
+});
+
+describe('getSession without a signed-in account (development user)', () => {
   it('signs in a test student under next dev', async () => {
     vi.stubEnv('NODE_ENV', 'development');
     vi.stubEnv('DEV_SESSION_ROLE', 'student');
@@ -80,7 +121,14 @@ describe('getSession (development stub until sign-in exists)', () => {
 });
 
 describe('verifySession', () => {
-  it('returns the session when someone is signed in', async () => {
+  it('returns the signed-in account', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    getCurrentUser.mockResolvedValue(account);
+    await expect(verifySession()).resolves.toMatchObject({ userId: account.id });
+    expect(redirect).not.toHaveBeenCalled();
+  });
+
+  it('returns the development user under next dev', async () => {
     vi.stubEnv('NODE_ENV', 'development');
     vi.stubEnv('DEV_SESSION_ROLE', 'student');
     await expect(verifySession()).resolves.toMatchObject({ role: 'student' });

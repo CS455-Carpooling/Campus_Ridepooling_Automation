@@ -26,7 +26,7 @@ the root: `npm run format`.
 
 ```
 src/
-  app/               routes; the root layout adds the header, main landmark and footer to every page
+  app/               routes; the root layout only loads the site styles (src/index.css)
   app/(app)/         signed-in pages (each one checks the session itself)
   components/ui/     shared building blocks: Button, ButtonLink, Field, Skeleton, LoadingRegion
   components/shell/  header, navigation, footer and the product mark
@@ -44,13 +44,15 @@ exist yet shows the 404 page until the page is built.
 
 | Route | Page | Status |
 | --- | --- | --- |
-| `/` | Landing page (public) | Built (CS455-16) |
+| `/` | Landing page (public); signed-in users get a link to their rides | Built |
 | `/home` | Home: one screen for students, another for admins | Built (CS455-15) |
-| `/login` | Sign in with a code sent by email | CS455-17 |
-| `/register` | Registration, iitk.ac.in addresses only | CS455-18 |
-| `/terms` | Terms of service | To be created |
-| `/privacy` | Privacy policy | To be created |
-| `/rides/new` | Offer a ride: route, vehicle, departure window, fare | In progress (CS455-24, 25) |
+| `/login` | Sign in with an iitk.ac.in email and password | Built (CS455-19) |
+| `/register` | Registration with email verification, iitk.ac.in addresses only | Built (CS455-19) |
+| `/forgot-password`, `/reset-password` | Password reset by email | Built (CS455-19) |
+| `/dashboard` | Where sign-in lands: links to offering a ride and to the home page | Built (CS455-19, 26) |
+| `/terms` | Terms of service (community guidelines) | Built |
+| `/privacy` | Privacy policy | Built |
+| `/rides/new` | Offer a ride: route, vehicle, departure window, fare | Built (CS455-22 to 25) |
 | `/rides`, `/rides/[id]` | Find a ride, ride details | Not started |
 | `/notifications` | Notifications | Not started |
 | `/admin/incidents`, `/admin/complaints`, `/admin/recommendations` | Admin queues | Not started |
@@ -61,15 +63,17 @@ exist yet shows the 404 page until the page is built.
 - **Roles** (`src/lib/roles.ts`): `student` finds rides and offers rides with the same account, as in
   the D0 proposal; `admin` is for operations admins, whose accounts are given the role rather than
   registered.
-- **Access:** every page under `src/app/(app)/` first calls `verifySession()` from
-  `src/lib/session.ts`, which redirects to `/login` when nobody is signed in. The header only
-  displays the session; the root layout does not protect pages, because layouts are not re-rendered
-  on navigation.
-- **Development sign-in:** until sign-in exists (CS455-17), `getSession()` returns a development
-  user. Copy `.env.example` to `.env.local` in this folder, set `DEV_SESSION_ROLE` to `student` or
-  `admin`, optionally set `DEV_SESSION_EMAIL` to your own iitk.ac.in address, and restart
-  `npm run dev`. Production builds and tests ignore both. No password is involved: keep
-  passwords and personal addresses out of the repository.
+- **Access:** every signed-in page checks the sign-in itself and redirects to `/login` when nobody
+  is signed in. `getCurrentUser()` in `src/lib/auth.ts` reads the session cookie that `/login`
+  sets; `getSession()` and `verifySession()` in `src/lib/session.ts` build on it for pages that
+  need a role, such as `/home`. The root layout does not protect pages, because layouts are not
+  re-rendered on navigation.
+- **Sign-in:** `getSession()` returns the account signed in through `/login`. Accounts have no
+  roles yet, so every account is a student. Under `npm run dev` only, when nobody is signed in,
+  `DEV_SESSION_ROLE` (`student` or `admin`) in `apps/web/.env.local` still gives a test user, and
+  the optional `DEV_SESSION_EMAIL` sets its address; until admin accounts exist, it is the only way
+  to see the admin home. Production builds and tests ignore both. Keep passwords and personal
+  addresses out of the repository.
 - **Ride rules** (`src/lib/ride-rules.ts`) hold the create-ride validation shared by the form and
   `POST /api/rides`; `src/lib/ride-options.ts` loads active places and vehicle types from PostgreSQL.
 - **Page data** comes from server-only modules in `src/lib`, such as `home-data.ts`. Until the APIs

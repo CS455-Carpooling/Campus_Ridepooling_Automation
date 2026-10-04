@@ -1,6 +1,7 @@
 import 'server-only';
 import { redirect } from 'next/navigation';
 import { cache } from 'react';
+import { getCurrentUser } from './auth';
 import type { Role } from './roles';
 import { routes } from './routes';
 
@@ -14,13 +15,22 @@ export type Session = {
 /**
  * The signed-in user, or null.
  *
- * Sign-in does not exist yet (CS455-17), so for now this only knows a
- * development user: under `next dev`, DEV_SESSION_ROLE=student or admin in
- * apps/web/.env.local signs you in with that role, and the optional
- * DEV_SESSION_EMAIL sets the account's email address. In every other
- * environment, including every production build, nobody is signed in.
+ * This is the account signed in through /login: getCurrentUser() in auth.ts
+ * reads it from the session cookie. Accounts have no roles yet, so every
+ * account is a student.
+ *
+ * Under `next dev` only, when nobody is signed in, DEV_SESSION_ROLE=student or
+ * admin in apps/web/.env.local still gives a test user with that role (the
+ * optional DEV_SESSION_EMAIL sets its address). Until admin accounts exist, it
+ * is the only way to see the admin screens. Production builds ignore it.
  */
-export const getSession = cache(async (): Promise<Session | null> => developmentSession());
+export const getSession = cache(async (): Promise<Session | null> => {
+  const user = await getCurrentUser();
+  if (user) {
+    return { userId: user.id, email: user.email, displayName: user.full_name, role: 'student' };
+  }
+  return developmentSession();
+});
 
 /** For pages and server actions: the signed-in user, or a redirect to the sign-in page. */
 export async function verifySession(): Promise<Session> {
