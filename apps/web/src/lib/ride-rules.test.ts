@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { getRideFormOptions } from './ride-options';
 import {
   addMinutesLocal,
   emptyRideDraft,
@@ -226,8 +225,19 @@ describe('the form draft', () => {
 });
 
 describe('knownRideIds', () => {
-  it('lists the ids the form offers', async () => {
-    const ids = knownRideIds(await getRideFormOptions());
+  it('maps the database-backed form option shape into validator ids', () => {
+    const ids = knownRideIds({
+      hubs: [
+        { id: 'kanpur-central', name: 'Kanpur Central' },
+        { id: 'metro-station', name: 'Metro station' },
+      ],
+      campusPlaces: [{ id: 'main-gate', name: 'Main Gate' }],
+      vehicleTypes: [
+        { id: 'car', name: 'Car', capacity: 4 },
+        { id: 'auto', name: 'Auto', capacity: 3 },
+        { id: 'vikram', name: 'Vikram', capacity: 7 },
+      ],
+    });
     expect(ids.hubIds).toContain('metro-station');
     expect(ids.campusLocationIds).toContain('main-gate');
     expect(ids.vehicleTypeIds).toEqual(['car', 'auto', 'vikram']);
