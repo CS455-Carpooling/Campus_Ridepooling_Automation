@@ -114,6 +114,67 @@ describe('validateRideRequest', () => {
         departureEnd: rideMessages.endMissing,
       });
     });
+
+    it('rejects dates and clock times that do not exist, instead of rolling them over', () => {
+      // JavaScript reads 31 November as 1 December; PostgreSQL refuses it, so the insert failed.
+      expect(
+        errorsFor({
+          departureStart: '2026-11-31T06:30:00+05:30',
+          departureEnd: '2026-11-31T07:30:00+05:30',
+        }),
+      ).toEqual({
+        departureStart: rideMessages.startMissing,
+        departureEnd: rideMessages.endMissing,
+      });
+      for (const impossible of [
+        '2026-02-29T06:30:00+05:30',
+        '2100-02-29T06:30:00+05:30',
+        '2026-04-31T06:30:00+05:30',
+        '2026-10-00T06:30:00+05:30',
+        '2026-00-10T06:30:00+05:30',
+        '2026-10-10T24:00:00+05:30',
+        '2026-10-10T06:60:00+05:30',
+        '2026-10-10T06:30:60+05:30',
+      ]) {
+        expect(errorsFor({ departureStart: impossible }), impossible).toEqual({
+          departureStart: rideMessages.startMissing,
+        });
+      }
+    });
+
+    it('accepts 29 February in a leap year', () => {
+      for (const year of [2028, 2400]) {
+        expect(
+          errorsFor({
+            departureStart: `${year}-02-29T06:30:00+05:30`,
+            departureEnd: `${year}-02-29T07:30:00+05:30`,
+          }),
+          String(year),
+        ).toEqual({});
+      }
+    });
+
+    it('accepts only the offsets real time zones use, from -12:00 to +14:00', () => {
+      // 15:30 at +14:00 and 06:30 at -12:00 are both well over an hour after `now`.
+      expect(
+        errorsFor({
+          departureStart: '2026-10-10T15:30:00+14:00',
+          departureEnd: '2026-10-10T16:30:00+14:00',
+        }),
+      ).toEqual({});
+      expect(
+        errorsFor({
+          departureStart: '2026-10-10T06:30:00-12:00',
+          departureEnd: '2026-10-10T07:30:00-12:00',
+        }),
+      ).toEqual({});
+      // JavaScript accepts these, but PostgreSQL rejects offsets this large.
+      for (const offset of ['+14:30', '+18:00', '-15:00', '+05:60']) {
+        expect(errorsFor({ departureStart: `2026-10-10T06:30:00${offset}` }), offset).toEqual({
+          departureStart: rideMessages.startMissing,
+        });
+      }
+    });
   });
 
   it.each([0, 1.5, 'abc', '460', 50_001, -10, Number.NaN])('rejects a fare of %o', (fare) => {

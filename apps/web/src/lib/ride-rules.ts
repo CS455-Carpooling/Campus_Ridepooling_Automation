@@ -59,14 +59,38 @@ export const rideMessages = {
 } as const;
 
 const MINUTE = 60_000;
+// Year, month, day, hour, minute, optional second, and the offset's hours and minutes (none for Z).
 const ISO_WITH_OFFSET =
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})$/;
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,3})?)?(?:Z|[+-](\d{2}):(\d{2}))$/;
 const LOCAL_DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 // Indian Standard Time has no daylight saving: always UTC+05:30.
 const IST_OFFSET_MINUTES = 330;
+// Real time zones run from UTC-12:00 to UTC+14:00.
+const MAX_OFFSET_MINUTES = 14 * 60;
+const DAYS_IN_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
+function daysInMonth(year: number, month: number): number {
+  const leapYear = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+  return month === 2 && leapYear ? 29 : DAYS_IN_MONTH[month - 1];
+}
+
+/**
+ * An ISO 8601 time with an offset, or null. Every part is range-checked first:
+ * JavaScript rolls a date that does not exist over (31 November becomes
+ * 1 December) and accepts offsets up to 23:59, but PostgreSQL rejects both, so
+ * such a time would fail the insert instead of being reported here.
+ */
 function parseTime(value: unknown): Date | null {
-  if (typeof value !== 'string' || !ISO_WITH_OFFSET.test(value)) return null;
+  if (typeof value !== 'string') return null;
+  const match = ISO_WITH_OFFSET.exec(value);
+  if (!match) return null;
+  const [year, month, day, hour, minute, second, offsetHours, offsetMinutes] = match
+    .slice(1)
+    .map((part) => Number(part ?? 0));
+  const realDate = month >= 1 && month <= 12 && day >= 1 && day <= daysInMonth(year, month);
+  const realClock = hour <= 23 && minute <= 59 && second <= 59;
+  const realOffset = offsetMinutes <= 59 && offsetHours * 60 + offsetMinutes <= MAX_OFFSET_MINUTES;
+  if (!realDate || !realClock || !realOffset) return null;
   const time = new Date(value);
   return Number.isNaN(time.getTime()) ? null : time;
 }
