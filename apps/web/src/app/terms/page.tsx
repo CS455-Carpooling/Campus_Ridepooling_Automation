@@ -1,11 +1,12 @@
 import { routes } from '@/lib/routes';
 import Link from 'next/link';
+import { DesignSystem } from '@/components/ui/DesignSystem';
 
 export const metadata = { title: 'Community Guidelines' };
 
 export default function TermsPage() {
   return (
-    <div className="mx-auto max-w-3xl px-6 py-16 md:py-24">
+    <DesignSystem className="mx-auto max-w-3xl px-6 py-16 md:py-24">
       <p className="mb-2 text-xs font-bold uppercase tracking-widest text-accent-text">Legal</p>
       <h1 className="mb-8 text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">
         Community Guidelines
@@ -60,6 +61,6 @@ export default function TermsPage() {
           </Link>
         </div>
       </div>
-    </div>
+    </DesignSystem>
   );
 }

@@ -1,142 +1,169 @@
-@import 'tailwindcss';
-
 /*
- * Design tokens: forest green with one coral accent.
+ * Design-system tokens: forest green with one coral accent (CS455-14, 16, 25).
  *
- * Whole Tailwind namespaces are reset so that the default colour palette,
- * shadows, blur (glass effects), stock corner radii and stock animations do
- * not exist in this project. Only the tokens below can be used. See "Design
- * rules" in apps/web/README.md. Every text and border pairing is checked
- * against WCAG 2.1 AA, in both colour schemes, by test/contrast.test.ts
- * (NFR-RD-15).
+ * Imported once by src/index.css, which styles the rest of the site. The token
+ * values live on the .ds class, so the design-system classes (bg-paper,
+ * text-ink, rounded-control, ...) take effect only inside pages wrapped in
+ * <DesignSystem> (src/components/ui/DesignSystem.tsx): the create-ride UI,
+ * terms, privacy, home, 404 and error pages. Everything outside .ds keeps
+ * index.css's look unchanged. Dark values follow the .dark class that the
+ * theme toggle puts on <html> (ThemeSync applies the saved choice on the
+ * pages that have no toggle). Every text and border pairing is checked
+ * against WCAG 2.1 AA, in both schemes, by test/contrast.test.ts (NFR-RD-15).
  */
-@theme {
-  --color-*: initial;
-  --radius-*: initial;
-  --shadow-*: initial;
-  --inset-shadow-*: initial;
-  --drop-shadow-*: initial;
-  --blur-*: initial;
-  --animate-*: initial;
+@theme inline {
+  --color-paper: var(--ds-paper);
+  --color-surface: var(--ds-surface);
+  --color-panel: var(--ds-panel);
+  --color-ink: var(--ds-ink);
+  --color-ink-muted: var(--ds-ink-muted);
+  --color-line: var(--ds-line);
+  --color-line-strong: var(--ds-line-strong);
+  --color-brand: var(--ds-brand);
+  --color-on-brand: var(--ds-on-brand);
+  --color-on-brand-muted: var(--ds-on-brand-muted);
+  --color-primary: var(--ds-primary);
+  --color-primary-strong: var(--ds-primary-strong);
+  --color-on-primary: var(--ds-on-primary);
+  --color-accent: var(--ds-accent);
+  --color-accent-strong: var(--ds-accent-strong);
+  --color-on-accent: var(--ds-on-accent);
+  --color-accent-text: var(--ds-accent-text);
+  --color-danger: var(--ds-danger);
+  --color-warning: var(--ds-warning);
+
+  /* Two corner sizes: controls (buttons, inputs, anything inside a panel) and panels. */
+  --radius-control: var(--ds-radius-control);
+  --radius-panel: var(--ds-radius-panel);
+
+  /* IBM Plex Mono inside .ds; outside it, Tailwind's default monospace stack. */
+  --font-mono:
+    var(--ds-font-mono, ui-monospace), SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
+
+  /* The only animation: a slow pulse for skeleton loaders. */
+  --animate-skeleton: var(--ds-animate-skeleton);
+}
+
+@keyframes skeleton-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.ds {
+  --ds-radius-control: 8px;
+  --ds-radius-panel: 16px;
+  --ds-animate-skeleton: skeleton-pulse 1.6s ease-in-out infinite;
 
   /* Page background: green-tinted off-white, never pure white. */
-  --color-paper: #f4f5ef;
+  --ds-paper: #f4f5ef;
   /* Inputs and the cards inside a brand panel. */
-  --color-surface: #fafbf7;
+  --ds-surface: #fafbf7;
   /* Filled areas: table headers, hovered secondary buttons, grouped lists. */
-  --color-panel: #e8ebe2;
-  --color-ink: #14231f;
-  --color-ink-muted: #4e5b55;
+  --ds-panel: #e8ebe2;
+  --ds-ink: #14231f;
+  --ds-ink-muted: #4e5b55;
   /* Decorative dividers and skeleton blocks only, never text. */
-  --color-line: #d3d8cd;
+  --ds-line: #d3d8cd;
   /* Borders of inputs and buttons (at least 3:1 against paper, surface and panel). */
-  --color-line-strong: #78837c;
-  /* Forest panels: the hero fare card and the closing call to action. */
-  --color-brand: #143029;
-  --color-on-brand: #edf1e8;
-  --color-on-brand-muted: #a7b8af;
+  --ds-line-strong: #78837c;
+  /* Forest panels. */
+  --ds-brand: #143029;
+  --ds-on-brand: #edf1e8;
+  --ds-on-brand-muted: #a7b8af;
   /* Primary buttons. */
-  --color-primary: #143029;
-  --color-primary-strong: #0b1f1a;
-  --color-on-primary: #f4f5ef;
+  --ds-primary: #143029;
+  --ds-primary-strong: #0b1f1a;
+  --ds-on-primary: #f4f5ef;
   /*
    * The one accent, coral. accent is for fills and markers (and large text on
    * brand panels); accent-text is the darker tone for coral text on the page.
    */
-  --color-accent: #ee7a50;
-  --color-accent-strong: #f39270;
-  --color-on-accent: #14231f;
-  --color-accent-text: #b8431f;
-  --color-danger: #b3261e;
-  --color-warning: #7a5200;
+  --ds-accent: #ee7a50;
+  --ds-accent-strong: #f39270;
+  --ds-on-accent: #14231f;
+  --ds-accent-text: #b8431f;
+  --ds-danger: #b3261e;
+  --ds-warning: #7a5200;
 
-  /* Two corner sizes: controls (buttons, inputs, anything inside a panel) and panels. */
-  --radius-control: 8px;
-  --radius-panel: 16px;
+  /* Both fonts come from the stylesheet that <DesignSystem> links. */
+  --ds-font-mono: 'IBM Plex Mono';
 
-  /* The only animation: a slow pulse for skeleton loaders. */
-  --animate-skeleton: skeleton-pulse 1.6s ease-in-out infinite;
+  color: var(--ds-ink);
+  font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+}
 
-  @keyframes skeleton-pulse {
-    50% {
-      opacity: 0.55;
-    }
-  }
+/* Dark scheme, switched by the theme toggle (.dark on <html>). */
+.dark .ds {
+  --ds-paper: #0e1714;
+  --ds-surface: #14201c;
+  --ds-panel: #1b2a25;
+  --ds-ink: #e7ede4;
+  --ds-ink-muted: #a2b0a9;
+  --ds-line: #2a3a34;
+  --ds-line-strong: #6c7d75;
+  --ds-brand: #1e463b;
+  --ds-on-brand: #edf1e8;
+  --ds-on-brand-muted: #a9bbb1;
+  --ds-primary: #e7ede4;
+  --ds-primary-strong: #f4f7f1;
+  --ds-on-primary: #0e1714;
+  --ds-accent: #ee7a50;
+  --ds-accent-strong: #f39270;
+  --ds-on-accent: #14231f;
+  --ds-accent-text: #ef7a52;
+  --ds-danger: #f28b78;
+  --ds-warning: #e0b04a;
 }
 
 /*
- * Dark colour scheme, following the device setting. Same token names, so
- * components need no dark: variants. The brand panel is lifted above the page
- * so that it still reads as a panel.
+ * index.css styles bare links, buttons and inputs outside any cascade layer,
+ * which would override the design-system classes. Inside .ds, hand those
+ * properties back to the layered styles (Tailwind's base and utilities).
  */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-paper: #0e1714;
-    --color-surface: #14201c;
-    --color-panel: #1b2a25;
-    --color-ink: #e7ede4;
-    --color-ink-muted: #a2b0a9;
-    --color-line: #2a3a34;
-    --color-line-strong: #6c7d75;
-    --color-brand: #1e463b;
-    --color-on-brand: #edf1e8;
-    --color-on-brand-muted: #a9bbb1;
-    --color-primary: #e7ede4;
-    --color-primary-strong: #f4f7f1;
-    --color-on-primary: #0e1714;
-    --color-accent: #ee7a50;
-    --color-accent-strong: #f39270;
-    --color-on-accent: #14231f;
-    --color-accent-text: #ef7a52;
-    --color-danger: #f28b78;
-    --color-warning: #e0b04a;
-  }
+.ds :where(a) {
+  color: revert-layer;
+  text-decoration: revert-layer;
 }
 
-/* Font families come from next/font in layout.tsx. */
-@theme inline {
-  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+.ds :where(button, input, select, textarea) {
+  font: revert-layer;
 }
 
 @layer base {
-  :root {
-    color-scheme: light dark;
-  }
-
-  body {
-    background-color: var(--color-paper);
-    color: var(--color-ink);
-    font-family: var(--font-sans);
-  }
-
-  h1,
-  h2,
-  h3 {
+  .ds :where(h1, h2, h3) {
     text-wrap: balance;
   }
 
-  p {
+  .ds :where(p) {
     text-wrap: pretty;
   }
 
-  a {
+  /* Tailwind resolves its code font on :root, outside .ds, so set IBM Plex Mono here. */
+  .ds :where(code, kbd, samp, pre) {
+    font-family:
+      var(--ds-font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+      'Courier New', monospace;
+  }
+
+  .ds :where(a) {
     text-decoration-line: underline;
     text-underline-offset: 0.2em;
   }
 
-  :focus-visible {
-    outline: 2px solid var(--color-ink);
+  .ds :focus-visible {
+    outline: 2px solid var(--ds-ink);
     outline-offset: 2px;
   }
 
-  /* Mark brand panels, and light cards inside them, so focus rings stay visible. */
-  [data-surface='brand'] :focus-visible {
-    outline-color: var(--color-on-brand);
+  /* Brand panels, and light cards inside them, keep their focus rings visible. */
+  .ds [data-surface='brand'] :focus-visible {
+    outline-color: var(--ds-on-brand);
   }
 
-  [data-surface='light'] :focus-visible {
-    outline-color: var(--color-ink);
+  .ds [data-surface='light'] :focus-visible {
+    outline-color: var(--ds-ink);
   }
 }
 

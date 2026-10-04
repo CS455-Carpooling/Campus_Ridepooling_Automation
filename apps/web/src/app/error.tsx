@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
+import { DesignSystem } from '@/components/ui/DesignSystem';
 
 export default function ErrorPage({
   error,
@@ -15,7 +16,7 @@ export default function ErrorPage({
   }, [error]);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+    <DesignSystem className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
       <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">Something went wrong</h1>
       <p className="mt-5 max-w-xl text-lg text-ink-muted">
         This page could not be shown. Try again, and if the problem continues, come back later.
@@ -23,6 +24,6 @@ export default function ErrorPage({
       <Button className="mt-8" onClick={() => retry()}>
         Try again
       </Button>
-    </div>
+    </DesignSystem>
   );
 }
