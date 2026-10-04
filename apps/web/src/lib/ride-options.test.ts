@@ -13,7 +13,12 @@ describe('getRideFormOptions', () => {
       .mockResolvedValueOnce({
         rows: [
           { id: 'hall-1', name: 'Hall 1', detail: null, type: 'campus' },
-          { id: 'kanpur-central', name: 'Kanpur Central', detail: 'Railway station', type: 'transport_hub' },
+          {
+            id: 'kanpur-central',
+            name: 'Kanpur Central',
+            detail: 'Railway station',
+            type: 'transport_hub',
+          },
         ],
       })
       .mockResolvedValueOnce({ rows: [{ id: 'car', name: 'Car', capacity: 4 }] });
@@ -26,9 +31,7 @@ describe('getRideFormOptions', () => {
   });
 
   it('does not include inactive rows because the SQL filters them', async () => {
-    query
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [] });
+    query.mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [] });
 
     await expect(getRideFormOptions()).resolves.toEqual({
       campusPlaces: [],

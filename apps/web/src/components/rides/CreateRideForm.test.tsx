@@ -12,7 +12,6 @@ const options = {
   vehicleTypes: [{ id: 'car', name: 'Car', capacity: 4 }],
 };
 
-
 async function fillValidRide() {
   await userEvent.click(screen.getByRole('radio', { name: 'Leaving campus' }));
   await userEvent.click(screen.getByRole('radio', { name: 'Kanpur Central' }));
@@ -28,9 +27,14 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.stubGlobal(
     'fetch',
-    vi.fn().mockResolvedValue(
-      new Response(JSON.stringify(options), { status: 200, headers: { 'Content-Type': 'application/json' } }),
-    ),
+    vi
+      .fn()
+      .mockResolvedValue(
+        new Response(JSON.stringify(options), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      ),
   );
 });
 
@@ -116,6 +120,8 @@ describe('CreateRideForm', () => {
     await fillValidRide();
     await userEvent.click(screen.getByRole('button', { name: 'Create ride' }));
 
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Ride created successfully'));
+    await waitFor(() =>
+      expect(screen.getByRole('status')).toHaveTextContent('Ride created successfully'),
+    );
   });
 });

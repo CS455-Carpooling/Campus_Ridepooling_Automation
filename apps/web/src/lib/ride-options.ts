@@ -24,7 +24,12 @@ export type RideFormOptions = {
   vehicleTypes: VehicleType[];
 };
 
-type LocationRow = { id: string; name: string; detail: string | null; type: 'campus' | 'transport_hub' };
+type LocationRow = {
+  id: string;
+  name: string;
+  detail: string | null;
+  type: 'campus' | 'transport_hub';
+};
 type VehicleTypeRow = { id: string; name: string; capacity: number };
 
 /**

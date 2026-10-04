@@ -147,7 +147,9 @@ export function CreateRideForm() {
   if (loadingOptions) {
     return (
       <DesignSystem className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-        <p className="text-sm text-ink-muted" role="status">Loading ride options…</p>
+        <p className="text-sm text-ink-muted" role="status">
+          Loading ride options…
+        </p>
       </DesignSystem>
     );
   }
@@ -155,7 +157,9 @@ export function CreateRideForm() {
   return (
     <DesignSystem className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <header>
-        <p className="text-sm font-semibold uppercase tracking-wide text-accent-text">Offer a ride</p>
+        <p className="text-sm font-semibold uppercase tracking-wide text-accent-text">
+          Offer a ride
+        </p>
         <h1 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Create a ride</h1>
         <p className="mt-3 text-ink-muted">
           Tell other IITK students where you are going, when you will leave, and what the whole
@@ -164,12 +168,18 @@ export function CreateRideForm() {
       </header>
 
       {formError && (
-        <div className="mt-6 rounded-control border border-line-strong bg-panel px-4 py-3" role="alert">
+        <div
+          className="mt-6 rounded-control border border-line-strong bg-panel px-4 py-3"
+          role="alert"
+        >
           {formError}
         </div>
       )}
       {createdRideId && (
-        <div className="mt-6 rounded-control border border-line-strong bg-panel px-4 py-3" role="status">
+        <div
+          className="mt-6 rounded-control border border-line-strong bg-panel px-4 py-3"
+          role="status"
+        >
           Ride created successfully. Your ride is scheduled.
           <span className="sr-only"> Ride ID: {createdRideId}</span>
         </div>
@@ -179,11 +189,13 @@ export function CreateRideForm() {
         <RoutePicker
           campusPlaces={options?.campusPlaces ?? []}
           hubs={options?.hubs ?? []}
-          value={{
-            direction: draft.direction,
-            hubId: draft.hubId,
-            campusLocationId: draft.campusLocationId,
-          } satisfies RouteValue}
+          value={
+            {
+              direction: draft.direction,
+              hubId: draft.hubId,
+              campusLocationId: draft.campusLocationId,
+            } satisfies RouteValue
+          }
           onChange={(change) => update(change)}
           errors={{
             direction: errors.direction,
@@ -220,7 +232,9 @@ export function CreateRideForm() {
           <Button type="submit" disabled={submitting || !options}>
             {submitting ? 'Creating ride…' : 'Create ride'}
           </Button>
-          {createdRideId && <span className="text-sm text-ink-muted">Ride ID: {createdRideId}</span>}
+          {createdRideId && (
+            <span className="text-sm text-ink-muted">Ride ID: {createdRideId}</span>
+          )}
         </div>
       </form>
     </DesignSystem>

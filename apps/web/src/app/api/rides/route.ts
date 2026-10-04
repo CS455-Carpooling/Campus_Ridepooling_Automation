@@ -99,12 +99,7 @@ async function createRide(
        AND departure_start < $3
        AND departure_end > $2
      LIMIT 1`,
-    [
-      userId,
-      request.departureStart,
-      request.departureEnd,
-      [...ACTIVE_RIDE_STATES],
-    ],
+    [userId, request.departureStart, request.departureEnd, [...ACTIVE_RIDE_STATES]],
   );
 
   if (conflict.rows.length > 0) return { kind: 'conflict' as const };
@@ -184,7 +179,9 @@ export async function POST(req: Request) {
     if (result.kind === 'conflict') {
       await client.query('ROLLBACK');
       return json(
-        { error: 'You already have a scheduled or active ride that overlaps this departure window.' },
+        {
+          error: 'You already have a scheduled or active ride that overlaps this departure window.',
+        },
         409,
       );
     }

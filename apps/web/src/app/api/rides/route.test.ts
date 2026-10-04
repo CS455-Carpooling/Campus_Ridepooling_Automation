@@ -55,17 +55,26 @@ beforeEach(() => {
   });
   h.connect.mockResolvedValue(client());
   h.clientQuery.mockImplementation((sql: string) => {
-    if (sql === 'SELECT id FROM users WHERE id=$1 FOR UPDATE') return Promise.resolve({ rows: [{ id: 'user-1' }] });
+    if (sql === 'SELECT id FROM users WHERE id=$1 FOR UPDATE')
+      return Promise.resolve({ rows: [{ id: 'user-1' }] });
     if (sql.includes('SELECT 1 FROM rides')) return Promise.resolve({ rows: [] });
     if (sql.includes('INSERT INTO rides')) {
       return Promise.resolve({
-        rows: [{
-          id: 'ride-1', owner_id: 'user-1', direction: 'to_hub', hub_id: 'kanpur-central',
-          vehicle_type_id: 'car', capacity_snapshot: 4,
-          departure_start: new Date('2026-10-10T01:00:00.000Z'),
-          departure_end: new Date('2026-10-10T02:00:00.000Z'), expected_total_fare: 460,
-          state: 'scheduled', created_at: new Date('2026-10-04T12:00:00.000Z'),
-        }],
+        rows: [
+          {
+            id: 'ride-1',
+            owner_id: 'user-1',
+            direction: 'to_hub',
+            hub_id: 'kanpur-central',
+            vehicle_type_id: 'car',
+            capacity_snapshot: 4,
+            departure_start: new Date('2026-10-10T01:00:00.000Z'),
+            departure_end: new Date('2026-10-10T02:00:00.000Z'),
+            expected_total_fare: 460,
+            state: 'scheduled',
+            created_at: new Date('2026-10-04T12:00:00.000Z'),
+          },
+        ],
       });
     }
     return Promise.resolve({ rows: [] });
@@ -103,15 +112,21 @@ describe('POST /api/rides', () => {
     expect(body.ride.capacity).toBe(4);
     expect(h.clientQuery).toHaveBeenCalledWith('BEGIN');
     expect(h.clientQuery).toHaveBeenCalledWith('COMMIT');
-    expect(h.clientQuery.mock.calls.some(([sql]) => String(sql).includes('INSERT INTO riders'))).toBe(true);
-    const rideInsert = h.clientQuery.mock.calls.find(([sql]) => String(sql).includes('INSERT INTO rides'));
+    expect(
+      h.clientQuery.mock.calls.some(([sql]) => String(sql).includes('INSERT INTO riders')),
+    ).toBe(true);
+    const rideInsert = h.clientQuery.mock.calls.find(([sql]) =>
+      String(sql).includes('INSERT INTO rides'),
+    );
     expect(rideInsert?.[1][4]).toBe(4);
   });
 
   it('rejects overlapping active rides', async () => {
     h.clientQuery.mockImplementation((sql: string) => {
-      if (sql === 'SELECT id FROM users WHERE id=$1 FOR UPDATE') return Promise.resolve({ rows: [{ id: 'user-1' }] });
-      if (sql.includes('SELECT 1 FROM rides')) return Promise.resolve({ rows: [{ '?column?': 1 }] });
+      if (sql === 'SELECT id FROM users WHERE id=$1 FOR UPDATE')
+        return Promise.resolve({ rows: [{ id: 'user-1' }] });
+      if (sql.includes('SELECT 1 FROM rides'))
+        return Promise.resolve({ rows: [{ '?column?': 1 }] });
       return Promise.resolve({ rows: [] });
     });
     const response = await POST(new Request('http://localhost/api/rides', { method: 'POST' }));
@@ -124,7 +139,8 @@ describe('POST /api/rides', () => {
 
   it('rolls back and returns 500 when persistence fails', async () => {
     h.clientQuery.mockImplementation((sql: string) => {
-      if (sql === 'SELECT id FROM users WHERE id=$1 FOR UPDATE') return Promise.resolve({ rows: [{ id: 'user-1' }] });
+      if (sql === 'SELECT id FROM users WHERE id=$1 FOR UPDATE')
+        return Promise.resolve({ rows: [{ id: 'user-1' }] });
       if (sql.includes('SELECT 1 FROM rides')) return Promise.resolve({ rows: [] });
       if (sql.includes('INSERT INTO rides')) return Promise.reject(new Error('db failure'));
       return Promise.resolve({ rows: [] });
