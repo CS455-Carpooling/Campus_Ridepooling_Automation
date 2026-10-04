@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { FareCalculator } from '@/components/landing/FareCalculator';
+import { FareSplitCard } from '@/components/landing/FareSplitCard';
 import { ThemeToggle } from '@/components/landing/ThemeToggle';
 import { Icon } from '@/components/PageShells';
 import { getSession } from '@/lib/session';
@@ -53,6 +53,12 @@ const SAFETY = [
     title: 'Rate every ride',
     text: 'Ratings after each trip keep the community accountable.',
   },
+];
+
+const FARE_POINTS = [
+  'Whole-rupee totals with no hidden fee',
+  'Clear estimate before a rider joins',
+  'Owner and every rider see the same split',
 ];
 
 function Brand() {
@@ -231,18 +237,60 @@ export default async function LandingPage() {
           </ol>
         </section>
 
-        <section className="block shell" aria-labelledby="fare-title">
-          <div className="section-heading">
-            <span className="section-label">FAIR BY DEFAULT</span>
-            <h2 id="fare-title">Try the fare split</h2>
-            <p>Enter a fare and a group size to see what each person pays, in whole rupees.</p>
+        <div className="fs-demo shell">
+          <div className="fs-copy">
+            <span className="section-label">FAIR FARES, NO AWKWARD MATH</span>
+            <h2>
+              Split the journey. <em>Not the friendship.</em>
+            </h2>
+            <p>
+              Enter the trip total and number of people. We split every rupee transparently, with
+              any remainder assigned in a predictable order.
+            </p>
+            <ul>
+              {FARE_POINTS.map((point) => (
+                <li key={point}>
+                  <Icon name="check" size={16} /> {point}
+                </li>
+              ))}
+            </ul>
           </div>
-          <div className="fare-card">
-            <p className="card-kicker">Example ride</p>
-            <p className="fare-route">From Hall 6 to Kanpur Central, shared by three people.</p>
-            <FareCalculator />
-          </div>
-        </section>
+
+          <section className="fs-card" aria-labelledby="fare-title">
+            <div className="fs-top">
+              <div>
+                <span className="fs-kicker">LIVE EXAMPLE</span>
+                <h3 id="fare-title">Try the fare split</h3>
+              </div>
+              <span className="fs-pill">Example ride</span>
+            </div>
+            <p className="sr-only">From Hall 6 to Kanpur Central, shared by three people.</p>
+            <div className="fs-trip" aria-hidden="true">
+              <div className="fs-line">
+                <span />
+                <i />
+                <b />
+              </div>
+              <div className="fs-stops">
+                <div>
+                  <strong>Hall 6</strong>
+                  <small>IITK pickup</small>
+                </div>
+                <div>
+                  <strong>Kanpur Central</strong>
+                  <small>Railway station</small>
+                </div>
+              </div>
+              <div className="fs-time">
+                <span>Saturday</span>
+                <strong>06:40 AM</strong>
+              </div>
+            </div>
+            <div className="fs-inner">
+              <FareSplitCard />
+            </div>
+          </section>
+        </div>
 
         <section className="block shell" id="destinations" aria-labelledby="hubs-title">
           <div className="section-heading">
