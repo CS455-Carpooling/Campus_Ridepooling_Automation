@@ -434,3 +434,31 @@ The authoritative vehicle capacity now has a single source of truth in `vehicle_
 - No PostgreSQL-backed browser integration test was run because the environment does not provide the project's configured live database.
 
 No `join_requests`, rider joining, or rider fare-splitting code was added.
+
+
+## 2026-10-04 — Address Mainak's Create Ride review
+
+### User request
+Address Mainak's requested Create Ride review changes on PR #24, make one additional commit on the existing branch, reply to the reviewer, and explicitly skip the separate date/offset validation bug.
+
+### Changes made
+- Added explicit `sort_order` values for locations and vehicle types and changed the server-side option queries to use those values.
+- Changed the Create Ride page to authenticate and load `getRideFormOptions()` on the server, then pass options into the client form.
+- Removed the client-side Ride Options API dependency and its tests because no remaining consumer needs it.
+- Moved active location and vehicle lookups into the Create Ride transaction and used transaction-scoped shared locks for the selected configuration rows.
+- Moved `pool.connect()` inside protected error handling and release handling.
+- Changed the owner-row lock from `FOR UPDATE` to `FOR NO KEY UPDATE`.
+- Reused `knownRideIds()`, `CreateRideRequest`, `rideMessages`, and `routes.login` where applicable.
+- Removed the redundant `riders_ride_idx` index.
+- Simplified Create Ride form tests so they receive server-provided options directly and clean up the fetch stub.
+- Updated the stale web README description of ride options.
+- Moved this AI log to `Deliverables/D2/AI_LOG.md`.
+
+### Intentionally not changed
+- The invalid-calendar-date / invalid-offset validation issue called out in review was intentionally skipped.
+- The broader IP-based rate-limit design was not changed.
+- Future joined-ride clash checking was not added; Create Ride only checks rides owned by the creator.
+
+### Verification
+- The user ran `npm run format` locally; formatting commit `63dcee9` is the parent of this implementation commit.
+- No local test result is claimed from this environment.

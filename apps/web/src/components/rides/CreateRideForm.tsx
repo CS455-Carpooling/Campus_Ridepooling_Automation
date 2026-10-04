@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { DesignSystem } from '@/components/ui/DesignSystem';
@@ -9,9 +9,11 @@ import { FareInput } from './FareInput';
 import { RoutePicker, type RouteValue } from './RoutePicker';
 import { VehiclePicker } from './VehiclePicker';
 import type { RideFormOptions } from '@/lib/ride-options';
+import { routes } from '@/lib/routes';
 import {
   emptyRideDraft,
   minDepartureLocal,
+  knownRideIds,
   requestFromDraft,
   validateRideRequest,
   type RideDraft,
@@ -25,9 +27,8 @@ type ApiError = {
 
 const emptyErrors: RideErrors = {};
 
-export function CreateRideForm() {
+export function CreateRideForm({ options }: { options: RideFormOptions }) {
   const router = useRouter();
-  const [options, setOptions] = useState<RideFormOptions | null>(null);
   const [draft, setDraft] = useState<RideDraft>(emptyRideDraft);
   const [errors, setErrors] = useState<RideErrors>(emptyErrors);
   const [formError, setFormError] = useState('');
@@ -35,42 +36,9 @@ export function CreateRideForm() {
   const [submitting, setSubmitting] = useState(false);
   const [createdRideId, setCreatedRideId] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadOptions() {
-      try {
-        const response = await fetch('/api/rides/options', { cache: 'no-store' });
-        const data = (await response.json().catch(() => ({}))) as RideFormOptions & ApiError;
-        if (!response.ok) {
-          if (response.status === 401) {
-            router.push('/login');
-            return;
-          }
-          throw new Error(data.error ?? 'Unable to load ride options right now.');
-        }
-        if (!cancelled) setOptions(data);
-      } catch (error) {
-        if (!cancelled) {
-          setFormError(
-            error instanceof Error ? error.message : 'Unable to load ride options right now.',
-          );
-        }
-      } finally {
-        if (!cancelled) setLoadingOptions(false);
-      }
-    }
-
-    void loadOptions();
-    return () => {
-      cancelled = true;
-    };
-  }, [router]);
-
-  const capacity = useMemo(
-    () => options?.vehicleTypes.find((vehicle) => vehicle.id === draft.vehicleTypeId)?.capacity,
-    [draft.vehicleTypeId, options],
-  );
+  const capacity = options.vehicleTypes.find(
+    (vehicle) => vehicle.id === draft.vehicleTypeId,
+  )?.capacity;
 
   const update = (change: Partial<RideDraft>) => {
     setDraft((current) => ({ ...current, ...change }));
@@ -88,19 +56,10 @@ export function CreateRideForm() {
     setFormError('');
     setCreatedRideId(null);
 
-    if (!options) {
-      setFormError('Ride options are still loading. Please try again.');
-      return;
-    }
-
     const request = requestFromDraft(draft);
     const validation = validateRideRequest(
       request,
-      {
-        hubIds: options.hubs.map((place) => place.id),
-        campusLocationIds: options.campusPlaces.map((place) => place.id),
-        vehicleTypeIds: options.vehicleTypes.map((vehicle) => vehicle.id),
-      },
+      knownRideIds(options),
       new Date(),
     );
     if (!validation.ok) {
@@ -121,7 +80,7 @@ export function CreateRideForm() {
       };
 
       if (response.status === 401) {
-        router.push('/login');
+        router.push(routes.login);
         return;
       }
       if (!response.ok) {
@@ -144,8 +103,7 @@ export function CreateRideForm() {
     }
   }
 
-  if (loadingOptions) {
-    return (
+  return (
       <DesignSystem className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
         <p className="text-sm text-ink-muted" role="status">
           Loading ride options…
@@ -187,8 +145,8 @@ export function CreateRideForm() {
 
       <form className="mt-8 flex flex-col gap-10" onSubmit={submit} noValidate>
         <RoutePicker
-          campusPlaces={options?.campusPlaces ?? []}
-          hubs={options?.hubs ?? []}
+          campusPlaces={options.campusPlaces}
+          hubs={options.hubs}
           value={
             {
               direction: draft.direction,
@@ -205,7 +163,7 @@ export function CreateRideForm() {
         />
 
         <VehiclePicker
-          vehicleTypes={options?.vehicleTypes ?? []}
+          vehicleTypes={options.vehicleTypes}
           value={draft.vehicleTypeId}
           onChange={(vehicleTypeId) => update({ vehicleTypeId })}
           error={errors.vehicleTypeId}
@@ -229,7 +187,7 @@ export function CreateRideForm() {
         />
 
         <div className="flex flex-wrap items-center gap-4 border-t border-line pt-6">
-          <Button type="submit" disabled={submitting || !options}>
+          <Button type="submit" disabled={submitting}>
             {submitting ? 'Creating ride…' : 'Create ride'}
           </Button>
           {createdRideId && (

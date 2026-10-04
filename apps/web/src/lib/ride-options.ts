@@ -29,8 +29,9 @@ type LocationRow = {
   name: string;
   detail: string | null;
   type: 'campus' | 'transport_hub';
+  sort_order: number;
 };
-type VehicleTypeRow = { id: string; name: string; capacity: number };
+type VehicleTypeRow = { id: string; name: string; capacity: number; sort_order: number };
 
 /**
  * The Create Ride form's authoritative options. Configuration is read from the
@@ -39,16 +40,16 @@ type VehicleTypeRow = { id: string; name: string; capacity: number };
 export async function getRideFormOptions(): Promise<RideFormOptions> {
   const [locations, vehicleTypes] = await Promise.all([
     pool.query<LocationRow>(
-      `SELECT id,name,detail,type
+      `SELECT id,name,detail,type,sort_order
        FROM locations
        WHERE is_active=true
-       ORDER BY type, id`,
+       ORDER BY type, sort_order`,
     ),
     pool.query<VehicleTypeRow>(
-      `SELECT id,name,capacity
+      `SELECT id,name,capacity,sort_order
        FROM vehicle_types
        WHERE is_active=true
-       ORDER BY id`,
+       ORDER BY sort_order`,
     ),
   ]);
 

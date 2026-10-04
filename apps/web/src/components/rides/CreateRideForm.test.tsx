@@ -1,6 +1,6 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CreateRideForm } from './CreateRideForm';
 
 const push = vi.hoisted(() => vi.fn());
@@ -24,69 +24,32 @@ async function fillValidRide() {
 
 beforeEach(() => {
   push.mockReset();
-  vi.clearAllMocks();
-  vi.stubGlobal(
-    'fetch',
-    vi
-      .fn()
-      .mockResolvedValue(
-        new Response(JSON.stringify(options), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }),
-      ),
-  );
+  vi.stubGlobal('fetch', vi.fn());
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
 describe('CreateRideForm', () => {
-  it('loads options from the API and displays database-provided capacity', async () => {
-    const fetchMock = vi.mocked(fetch);
-
-    fetchMock.mockImplementation(() =>
-      Promise.resolve(
-        new Response(JSON.stringify(options), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }),
-      ),
-    );
-
-    render(<CreateRideForm />);
-
-    expect(await screen.findByText('Car')).toBeInTheDocument();
+  it('displays database-provided vehicle capacity', () => {
+    render(<CreateRideForm options={options} />);
+    expect(screen.getByText('Car')).toBeInTheDocument();
     expect(screen.getByText('4 people, you included')).toBeInTheDocument();
-    expect(fetchMock).toHaveBeenCalledWith('/api/rides/options', { cache: 'no-store' });
   });
 
   it('shows backend validation errors after submission', async () => {
-    const fetchMock = vi.mocked(fetch);
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          error: 'Validation failed.',
+          errors: { expectedTotalFare: 'Expected total fare is invalid.' },
+        }),
+        { status: 400 },
+      ),
+    );
 
-    fetchMock.mockImplementation((input) => {
-      if (input === '/api/rides/options') {
-        return Promise.resolve(
-          new Response(JSON.stringify(options), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-          }),
-        );
-      }
-
-      return Promise.resolve(
-        new Response(
-          JSON.stringify({
-            error: 'Validation failed.',
-            errors: { expectedTotalFare: 'Expected total fare is invalid.' },
-          }),
-          {
-            status: 400,
-            headers: { 'Content-Type': 'application/json' },
-          },
-        ),
-      );
-    });
-
-    render(<CreateRideForm />);
-    await screen.findByText('Car');
+    render(<CreateRideForm options={options} />);
     await fillValidRide();
     await userEvent.click(screen.getByRole('button', { name: 'Create ride' }));
 
@@ -95,28 +58,11 @@ describe('CreateRideForm', () => {
   });
 
   it('shows a successful creation response', async () => {
-    const fetchMock = vi.mocked(fetch);
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify({ ride: { id: 'ride-1' } }), { status: 201 }),
+    );
 
-    fetchMock.mockImplementation((input) => {
-      if (input === '/api/rides/options') {
-        return Promise.resolve(
-          new Response(JSON.stringify(options), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-          }),
-        );
-      }
-
-      return Promise.resolve(
-        new Response(JSON.stringify({ ride: { id: 'ride-1' } }), {
-          status: 201,
-          headers: { 'Content-Type': 'application/json' },
-        }),
-      );
-    });
-
-    render(<CreateRideForm />);
-    await screen.findByText('Car');
+    render(<CreateRideForm options={options} />);
     await fillValidRide();
     await userEvent.click(screen.getByRole('button', { name: 'Create ride' }));
 

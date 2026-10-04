@@ -12,16 +12,17 @@ describe('getRideFormOptions', () => {
     query
       .mockResolvedValueOnce({
         rows: [
-          { id: 'hall-1', name: 'Hall 1', detail: null, type: 'campus' },
+          { id: 'hall-1', name: 'Hall 1', detail: null, type: 'campus', sort_order: 1 },
           {
             id: 'kanpur-central',
             name: 'Kanpur Central',
             detail: 'Railway station',
             type: 'transport_hub',
+            sort_order: 1,
           },
         ],
       })
-      .mockResolvedValueOnce({ rows: [{ id: 'car', name: 'Car', capacity: 4 }] });
+      .mockResolvedValueOnce({ rows: [{ id: 'car', name: 'Car', capacity: 4, sort_order: 1 }] });
 
     await expect(getRideFormOptions()).resolves.toEqual({
       campusPlaces: [{ id: 'hall-1', name: 'Hall 1' }],
@@ -39,7 +40,7 @@ describe('getRideFormOptions', () => {
       vehicleTypes: [],
     });
 
-    expect(query.mock.calls[0][0]).toContain('is_active=true');
-    expect(query.mock.calls[1][0]).toContain('is_active=true');
+    expect(query.mock.calls[0][0]).toContain('ORDER BY type, sort_order');
+    expect(query.mock.calls[1][0]).toContain('ORDER BY sort_order');
   });
 });

@@ -6,7 +6,6 @@ const h = vi.hoisted(() => ({
   getCurrentUser: vi.fn(),
   readJson: vi.fn(),
   json: vi.fn((body: unknown, status = 200) => Response.json(body, { status })),
-  poolQuery: vi.fn(),
   connect: vi.fn(),
   clientQuery: vi.fn(),
   release: vi.fn(),
@@ -19,7 +18,7 @@ vi.mock('@/lib/auth', () => ({
   json: h.json,
 }));
 vi.mock('@/lib/db', () => ({
-  pool: { query: h.poolQuery, connect: h.connect },
+  pool: { connect: h.connect },
 }));
 
 import { POST } from './route';
@@ -49,13 +48,11 @@ beforeEach(() => {
   h.guard.mockResolvedValue(null);
   h.getCurrentUser.mockResolvedValue({ id: 'user-1' });
   h.readJson.mockResolvedValue({ ...validBody });
-  h.poolQuery.mockImplementation((sql: string) => {
-    if (sql.includes('FROM locations')) return Promise.resolve({ rows: locations });
-    return Promise.resolve({ rows: vehicles });
-  });
   h.connect.mockResolvedValue(client());
   h.clientQuery.mockImplementation((sql: string) => {
-    if (sql === 'SELECT id FROM users WHERE id=$1 FOR UPDATE')
+    if (sql.includes('FROM locations')) return Promise.resolve({ rows: locations });
+    if (sql.includes('FROM vehicle_types')) return Promise.resolve({ rows: vehicles });
+    if (sql === 'SELECT id FROM users WHERE id=$1 FOR NO KEY UPDATE')
       return Promise.resolve({ rows: [{ id: 'user-1' }] });
     if (sql.includes('SELECT 1 FROM rides')) return Promise.resolve({ rows: [] });
     if (sql.includes('INSERT INTO rides')) {
@@ -87,7 +84,14 @@ describe('POST /api/rides', () => {
     const response = await POST(new Request('http://localhost/api/rides', { method: 'POST' }));
     expect(response.status).toBe(401);
     expect(await response.json()).toEqual({ error: 'Authentication required.' });
-    expect(h.connect).not.toHaveBeenCalled();
+    expect(h.connect).toHaveBeenCalled();
+  });
+
+  it('returns 500 when a database connection cannot be acquired', async () => {
+    h.connect.mockRejectedValueOnce(new Error('connection failure'));
+    const response = await POST(new Request('http://localhost/api/rides', { method: 'POST' }));
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({ error: 'Unable to create the ride right now.' });
   });
 
   it('validates the request using active database-backed options', async () => {
@@ -111,6 +115,7 @@ describe('POST /api/rides', () => {
     const body = await response.json();
     expect(body.ride.capacity).toBe(4);
     expect(h.clientQuery).toHaveBeenCalledWith('BEGIN');
+    expect(h.clientQuery.mock.calls.some(([sql]) => String(sql).includes('FOR SHARE'))).toBe(true);
     expect(h.clientQuery).toHaveBeenCalledWith('COMMIT');
     expect(
       h.clientQuery.mock.calls.some(([sql]) => String(sql).includes('INSERT INTO riders')),
@@ -123,7 +128,7 @@ describe('POST /api/rides', () => {
 
   it('rejects overlapping active rides', async () => {
     h.clientQuery.mockImplementation((sql: string) => {
-      if (sql === 'SELECT id FROM users WHERE id=$1 FOR UPDATE')
+      if (sql === 'SELECT id FROM users WHERE id=$1 FOR NO KEY UPDATE')
         return Promise.resolve({ rows: [{ id: 'user-1' }] });
       if (sql.includes('SELECT 1 FROM rides'))
         return Promise.resolve({ rows: [{ '?column?': 1 }] });
@@ -139,7 +144,7 @@ describe('POST /api/rides', () => {
 
   it('rolls back and returns 500 when persistence fails', async () => {
     h.clientQuery.mockImplementation((sql: string) => {
-      if (sql === 'SELECT id FROM users WHERE id=$1 FOR UPDATE')
+      if (sql === 'SELECT id FROM users WHERE id=$1 FOR NO KEY UPDATE')
         return Promise.resolve({ rows: [{ id: 'user-1' }] });
       if (sql.includes('SELECT 1 FROM rides')) return Promise.resolve({ rows: [] });
       if (sql.includes('INSERT INTO rides')) return Promise.reject(new Error('db failure'));

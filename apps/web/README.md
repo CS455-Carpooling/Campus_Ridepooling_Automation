@@ -71,7 +71,7 @@ exist yet shows the 404 page until the page is built.
   `npm run dev`. Production builds and tests ignore both. No password is involved: keep
   passwords and personal addresses out of the repository.
 - **Ride rules** (`src/lib/ride-rules.ts`) hold the create-ride validation shared by the form and
-  `POST /api/rides`; `src/lib/ride-options.ts` lists the fixed places and vehicle types.
+  `POST /api/rides`; `src/lib/ride-options.ts` loads active places and vehicle types from PostgreSQL.
 - **Page data** comes from server-only modules in `src/lib`, such as `home-data.ts`. Until the APIs
   exist they return empty lists, or null counts that the page shows as "Not available yet".
 
