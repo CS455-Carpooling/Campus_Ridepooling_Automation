@@ -89,8 +89,11 @@ forest-green palette with one coral accent, large tightly set headings, and real
 
 ### Tokens
 
-Every colour is a token in `src/app/globals.css`. The dark values apply when the device is set to a
-dark colour scheme; components need no `dark:` classes.
+Every colour is a token in `src/app/globals.css`. The tokens are defined on the `.ds` class, so they
+work only inside `<DesignSystem>` (`src/components/ui/DesignSystem.tsx`), which also loads the two
+fonts: wrap the outermost element of a page in it. Pages outside it keep the site styles of
+`src/index.css`. The dark values apply when the theme toggle switches the site to dark (the `.dark`
+class on `<html>`); components need no `dark:` classes.
 
 | Token            | Light     | Dark      | Use                                              |
 | ---------------- | --------- | --------- | ------------------------------------------------ |
@@ -122,8 +125,9 @@ Brand panels carry `data-surface="brand"` so that focus rings inside them switch
 
 ### Enforced by code
 
-The Tailwind theme removes the default colour palette, shadows, blur, stock radii and stock
-animations. `test/design-rules.ts` fails the test run if `src/` contains:
+Inside `<DesignSystem>`, use only the tokens above: no Tailwind default colours, shadows, blur, stock
+radii or stock animations (they still exist for the pages styled by `src/index.css`).
+`test/design-rules.ts` fails the test run if `src/` contains:
 
 - an em dash or an emoji;
 - a checkmark or sparkle character;
