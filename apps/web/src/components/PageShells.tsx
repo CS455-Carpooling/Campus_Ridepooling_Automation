@@ -1,25 +1,26 @@
-"use client";
+'use client';
 
-import { FormEvent, ReactNode, useState } from "react";
+import { FormEvent, ReactNode, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-export type Page = "home" | "register" | "login" | "forgot" | "reset";
+export type Page = 'home' | 'register' | 'login' | 'forgot' | 'reset';
 type IconName =
-  | "arrow"
-  | "calendar"
-  | "car"
-  | "check"
-  | "chevron"
-  | "clock"
-  | "eye"
-  | "mail"
-  | "moon"
-  | "people"
-  | "pin"
-  | "route"
-  | "shield"
-  | "spark"
-  | "sun"
-  | "user";
+  | 'arrow'
+  | 'calendar'
+  | 'car'
+  | 'check'
+  | 'chevron'
+  | 'clock'
+  | 'eye'
+  | 'mail'
+  | 'moon'
+  | 'people'
+  | 'pin'
+  | 'route'
+  | 'shield'
+  | 'spark'
+  | 'sun'
+  | 'user';
 
 const iconPaths: Record<IconName, ReactNode> = {
   arrow: <path d="M5 12h14m-5-5 5 5-5 5" />,
@@ -78,7 +79,9 @@ const iconPaths: Record<IconName, ReactNode> = {
     </>
   ),
   shield: <path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10Zm-3-10 2 2 4-4" />,
-  spark: <path d="m12 3 1.4 4.1L17.5 8.5l-4.1 1.4L12 14l-1.4-4.1-4.1-1.4 4.1-1.4L12 3Zm6 11 .8 2.2L21 17l-2.2.8L18 20l-.8-2.2L15 17l2.2-.8L18 14Z" />,
+  spark: (
+    <path d="m12 3 1.4 4.1L17.5 8.5l-4.1 1.4L12 14l-1.4-4.1-4.1-1.4 4.1-1.4L12 3Zm6 11 .8 2.2L21 17l-2.2.8L18 20l-.8-2.2L15 17l2.2-.8L18 14Z" />
+  ),
   sun: (
     <>
       <circle cx="12" cy="12" r="4" />
@@ -93,7 +96,7 @@ const iconPaths: Record<IconName, ReactNode> = {
   ),
 };
 
-function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
+export function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
   return (
     <svg
       aria-hidden="true"
@@ -117,26 +120,22 @@ function Logo({ onClick }: { onClick?: () => void }) {
       <span className="logo-mark">
         <Icon name="route" size={21} />
       </span>
-      <span>Campus Ride <span>Pooling</span></span>
+      <span>
+        Campus Ride <span>Pooling</span>
+      </span>
     </button>
   );
 }
 
-function ThemeToggle({
-  dark,
-  setDark,
-}: {
-  dark: boolean;
-  setDark: (dark: boolean) => void;
-}) {
+function ThemeToggle({ dark, setDark }: { dark: boolean; setDark: (dark: boolean) => void }) {
   return (
     <button
       className="theme-toggle"
       onClick={() => setDark(!dark)}
-      aria-label={`Switch to ${dark ? "light" : "dark"} mode`}
-      title={`Switch to ${dark ? "light" : "dark"} mode`}
+      aria-label={`Switch to ${dark ? 'light' : 'dark'} mode`}
+      title={`Switch to ${dark ? 'light' : 'dark'} mode`}
     >
-      <Icon name={dark ? "sun" : "moon"} size={18} />
+      <Icon name={dark ? 'sun' : 'moon'} size={18} />
     </button>
   );
 }
@@ -151,22 +150,24 @@ export function Landing({
   go: (page: Page) => void;
 }) {
   const scrollToSection = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
     <div className="landing">
       <header className="nav shell">
-        <Logo onClick={() => go("home")} />
+        <Logo onClick={() => go('home')} />
         <nav className="nav-links" aria-label="Main navigation">
-          <button onClick={() => scrollToSection("how-it-works")}>How it works</button>
-          <button onClick={() => scrollToSection("safety")}>Safety</button>
-          <button onClick={() => scrollToSection("community")}>Campus points</button>
+          <button onClick={() => scrollToSection('how-it-works')}>How it works</button>
+          <button onClick={() => scrollToSection('safety')}>Safety</button>
+          <button onClick={() => scrollToSection('community')}>Campus points</button>
         </nav>
         <div className="nav-actions">
           <ThemeToggle dark={dark} setDark={setDark} />
-          <button className="text-button" onClick={() => go("login")}>Log in</button>
-          <button className="button button-sm" onClick={() => go("register")}>
+          <button className="text-button" onClick={() => go('login')}>
+            Log in
+          </button>
+          <button className="button button-sm" onClick={() => go('register')}>
             Join the ride <Icon name="arrow" size={17} />
           </button>
         </div>
@@ -176,24 +177,37 @@ export function Landing({
         <section className="hero shell">
           <div className="hero-copy">
             <div className="eyebrow">
-              <span><Icon name="spark" size={15} /></span>
+              <span>
+                <Icon name="spark" size={15} />
+              </span>
               Built for the IITK community
             </div>
-            <h1>Share the ride.<br /><em>Own the journey.</em></h1>
+            <h1>
+              Share the ride.
+              <br />
+              <em>Own the journey.</em>
+            </h1>
             <p>
-              The trusted carpool network for IIT Kanpur. Find your people,
-              split the fare, and make every trip beyond campus better.
+              The trusted carpool network for IIT Kanpur. Find your people, split the fare, and make
+              every trip beyond campus better.
             </p>
             <div className="hero-actions">
-              <button className="button button-lg" onClick={() => go("register")}>
+              <button className="button button-lg" onClick={() => go('register')}>
                 Find your next ride <Icon name="arrow" size={19} />
               </button>
-              <button className="play-link" onClick={() => scrollToSection("how-it-works")}>
-                <span className="play">▶</span> See how it works
+              <button className="play-link" onClick={() => scrollToSection('how-it-works')}>
+                <span className="play">
+                  <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+                    <path d="M2 1l7 4-7 4z" fill="currentColor" />
+                  </svg>{' '}
+                </span>{' '}
+                See how it works
               </button>
             </div>
             <div className="course-project">
-              <span><Icon name="shield" size={17} /></span>
+              <span>
+                <Icon name="shield" size={17} />
+              </span>
               <div>
                 <strong>CS455 · Software Engineering</strong>
                 <small>A course project at IIT Kanpur</small>
@@ -205,8 +219,13 @@ export function Landing({
             <div className="orbit orbit-one" />
             <div className="orbit orbit-two" />
             <div className="floating-note note-top">
-              <span className="note-icon"><Icon name="shield" size={18} /></span>
-              <span><b>IITK verified</b><small>Safe campus community</small></span>
+              <span className="note-icon">
+                <Icon name="shield" size={18} />
+              </span>
+              <span>
+                <b>IITK verified</b>
+                <small>Safe campus community</small>
+              </span>
             </div>
             <div className="ride-card">
               <div className="ride-card-head">
@@ -218,7 +237,11 @@ export function Landing({
               </div>
               <div className="route">
                 <div className="route-dots">
-                  <span /><i /><i /><i /><b />
+                  <span />
+                  <i />
+                  <i />
+                  <i />
+                  <b />
                 </div>
                 <div className="route-details">
                   <div>
@@ -232,19 +255,37 @@ export function Landing({
                 </div>
               </div>
               <div className="trip-meta">
-                <span><Icon name="calendar" size={17} /> Sat, 24 Aug</span>
-                <span><Icon name="clock" size={17} /> 6:30 AM</span>
+                <span>
+                  <Icon name="calendar" size={17} /> Sat, 24 Aug
+                </span>
+                <span>
+                  <Icon name="clock" size={17} /> 6:30 AM
+                </span>
               </div>
               <div className="driver">
                 <div className="driver-avatar">AV</div>
-                <div><strong>Arjun Verma</strong><span>Y22 · Computer Science</span></div>
-                <div className="price"><strong>₹320</strong><span>/ seat</span></div>
+                <div>
+                  <strong>Arjun Verma</strong>
+                  <span>Y22 · Computer Science</span>
+                </div>
+                <div className="price">
+                  <strong>₹320</strong>
+                  <span>/ seat</span>
+                </div>
               </div>
-              <button className="card-button">View ride details <Icon name="chevron" size={17} /></button>
+              <button className="card-button">
+                View ride details <Icon name="chevron" size={17} />
+              </button>
             </div>
             <div className="floating-note note-bottom">
-              <span className="tiny-avatars"><i>MP</i><i>RS</i></span>
-              <span><b>2 joined</b><small>Going your way</small></span>
+              <span className="tiny-avatars">
+                <i>MP</i>
+                <i>RS</i>
+              </span>
+              <span>
+                <b>2 joined</b>
+                <small>Going your way</small>
+              </span>
             </div>
           </div>
         </section>
@@ -252,32 +293,47 @@ export function Landing({
         <section className="how shell" id="how-it-works">
           <div className="section-heading">
             <span className="section-label">SIMPLE BY DESIGN</span>
-            <h2>From campus to anywhere,<br />in three easy steps.</h2>
-            <p>Less planning, more going. Campus Ride Pooling connects you with verified students headed in the same direction.</p>
+            <h2>
+              From campus to anywhere,
+              <br />
+              in three easy steps.
+            </h2>
+            <p>
+              Less planning, more going. Campus Ride Pooling connects you with verified students
+              headed in the same direction.
+            </p>
           </div>
           <div className="feature-grid">
             <article>
               <span className="feature-number">01</span>
-              <div className="feature-icon coral"><Icon name="pin" size={25} /></div>
+              <div className="feature-icon coral">
+                <Icon name="pin" size={25} />
+              </div>
               <h3>Tell us where</h3>
               <p>Post a trip or search rides by destination, date, and time.</p>
             </article>
             <article>
               <span className="feature-number">02</span>
-              <div className="feature-icon lime"><Icon name="people" size={25} /></div>
+              <div className="feature-icon lime">
+                <Icon name="people" size={25} />
+              </div>
               <h3>Match with IITK</h3>
               <p>Connect only with verified members of our campus community.</p>
             </article>
             <article id="safety">
               <span className="feature-number">03</span>
-              <div className="feature-icon blue"><Icon name="car" size={25} /></div>
+              <div className="feature-icon blue">
+                <Icon name="car" size={25} />
+              </div>
               <h3>Ride & save</h3>
               <p>Share the route, split costs fairly, and arrive together.</p>
             </article>
           </div>
           <div className="campus-points" id="community">
             <div className="campus-points-copy">
-              <span className="campus-pin"><Icon name="pin" size={20} /></span>
+              <span className="campus-pin">
+                <Icon name="pin" size={20} />
+              </span>
               <div>
                 <strong>Meet where campus knows you</strong>
                 <small>Choose familiar, easy-to-find IITK pickup points.</small>
@@ -295,16 +351,28 @@ export function Landing({
         <section className="cta shell">
           <div className="cta-copy">
             <span className="section-label">YOUR NEXT TRIP STARTS HERE</span>
-            <h2>Going somewhere?<br /><em>Don't go alone.</em></h2>
+            <h2>
+              Going somewhere?
+              <br />
+              <em>Don&apos;t go alone.</em>
+            </h2>
             <p>Find a ride or offer your empty seats to someone from IITK heading the same way.</p>
           </div>
           <div className="cta-action">
             <div className="cta-route-art" aria-hidden="true">
-              <span className="cta-point"><Icon name="pin" size={16} /></span>
-              <span className="cta-track"><i /><i /><i /></span>
-              <span className="cta-car"><Icon name="car" size={21} /></span>
+              <span className="cta-point">
+                <Icon name="pin" size={16} />
+              </span>
+              <span className="cta-track">
+                <i />
+                <i />
+                <i />
+              </span>
+              <span className="cta-car">
+                <Icon name="car" size={21} />
+              </span>
             </div>
-            <button className="button button-light button-lg" onClick={() => go("register")}>
+            <button className="button button-light button-lg" onClick={() => go('register')}>
               Join Campus Ride Pooling <Icon name="arrow" size={19} />
             </button>
           </div>
@@ -312,11 +380,11 @@ export function Landing({
       </main>
 
       <footer className="footer shell">
-        <Logo onClick={() => go("home")} />
+        <Logo onClick={() => go('home')} />
         <p>A CS455 Software Engineering course project at IIT Kanpur.</p>
         <div>
-          <button onClick={() => scrollToSection("safety")}>Safety</button>
-          <button onClick={() => scrollToSection("community")}>Campus points</button>
+          <button onClick={() => scrollToSection('safety')}>Safety</button>
+          <button onClick={() => scrollToSection('community')}>Campus points</button>
           <a href="mailto:campusridepooling@iitk.ac.in">Contact</a>
         </div>
       </footer>
@@ -329,7 +397,7 @@ function Field({
   label,
   name,
   placeholder,
-  type = "text",
+  type = 'text',
   autoComplete,
   minLength,
 }: {
@@ -349,18 +417,22 @@ function Field({
         <Icon name={icon} size={19} />
         <input
           name={name}
-          type={show ? "text" : type}
+          type={show ? 'text' : type}
           placeholder={placeholder}
           autoComplete={autoComplete}
           minLength={minLength}
-          maxLength={type === "password" ? 128 : type === "email" ? 254 : 80}
+          maxLength={type === 'password' ? 128 : type === 'email' ? 254 : 80}
           // "\\-" keeps the pattern valid under the browser's unicode-sets (v) mode
-          pattern={type === "email" ? "[A-Za-z0-9._%+\\-]+@iitk\\.ac\\.in" : undefined}
-          title={type === "email" ? "Please use your @iitk.ac.in email address" : undefined}
+          pattern={type === 'email' ? '[A-Za-z0-9._%+\\-]+@iitk\\.ac\\.in' : undefined}
+          title={type === 'email' ? 'Please use your @iitk.ac.in email address' : undefined}
           required
         />
-        {type === "password" && (
-          <button type="button" onClick={() => setShow(!show)} aria-label="Toggle password visibility">
+        {type === 'password' && (
+          <button
+            type="button"
+            onClick={() => setShow(!show)}
+            aria-label="Toggle password visibility"
+          >
             <Icon name="eye" size={18} />
           </button>
         )}
@@ -371,10 +443,13 @@ function Field({
 
 function noticeFor(key?: string): { ok: boolean; text: string } | null {
   switch (key) {
-    case "verified":
-      return { ok: true, text: "Email verified. You can log in now." };
-    case "verify_failed":
-      return { ok: false, text: "That verification link is invalid or expired. Register again with the same email to get a new one." };
+    case 'verified':
+      return { ok: true, text: 'Email verified. You can log in now.' };
+    case 'verify_failed':
+      return {
+        ok: false,
+        text: 'That verification link is invalid or expired. Register again with the same email to get a new one.',
+      };
     default:
       return null;
   }
@@ -388,15 +463,16 @@ export function AuthPage({
   notice,
   token,
 }: {
-  page: Exclude<Page, "home">;
+  page: Exclude<Page, 'home'>;
   dark: boolean;
   setDark: (value: boolean) => void;
   go: (page: Page) => void;
   notice?: string;
   token?: string;
 }) {
+  const router = useRouter();
   const [done, setDone] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -404,28 +480,32 @@ export function AuthPage({
     if (loading) return;
     const form = new FormData(event.currentTarget);
     const payload: Record<string, unknown> = Object.fromEntries(form.entries());
-    payload.remember = form.get("remember") === "on";
-    payload.terms = form.get("terms") === "on";
-    if (page === "reset") {
-      if (payload.password !== payload.confirm) return setError("Passwords do not match.");
+    payload.remember = form.get('remember') === 'on';
+    payload.terms = form.get('terms') === 'on';
+    if (page === 'reset') {
+      if (payload.password !== payload.confirm) return setError('Passwords do not match.');
       payload.token = token;
       delete payload.confirm;
     }
 
-    setError("");
+    setError('');
     setLoading(true);
     try {
       const res = await fetch(`/api/auth/${page}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) return setError(data.error ?? "Something went wrong. Please try again.");
-      if (page === "login") window.location.assign("/dashboard");
-      else setDone(true);
+      if (!res.ok) return setError(data.error ?? 'Something went wrong. Please try again.');
+      if (page === 'login') {
+        router.replace('/dashboard');
+        router.refresh();
+      } else {
+        setDone(true);
+      }
     } catch {
-      setError("Network error. Please check your connection and try again.");
+      setError('Network error. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -433,60 +513,87 @@ export function AuthPage({
 
   const content = {
     login: {
-      eyebrow: "WELCOME BACK",
-      title: "Ready for your next trip?",
-      subtitle: "Sign in to find rides, manage bookings, and see where your friends are headed.",
+      eyebrow: 'WELCOME BACK',
+      title: 'Ready for your next trip?',
+      subtitle: 'Sign in to find rides, manage bookings, and see where your friends are headed.',
     },
     register: {
-      eyebrow: "JOIN THE COMMUNITY",
-      title: "Your campus. Your people. Your ride.",
-      subtitle: "Create your verified Campus Ride Pooling account and make every journey beyond IITK count.",
+      eyebrow: 'JOIN THE COMMUNITY',
+      title: 'Your campus. Your people. Your ride.',
+      subtitle:
+        'Create your verified Campus Ride Pooling account and make every journey beyond IITK count.',
     },
     forgot: {
-      eyebrow: "RESET PASSWORD",
+      eyebrow: 'RESET PASSWORD',
       title: "Let's get you back on the road.",
       subtitle: "Enter your registered IITK email and we'll send you a secure reset link.",
     },
     reset: {
-      eyebrow: "NEW PASSWORD",
-      title: "Choose a new password.",
+      eyebrow: 'NEW PASSWORD',
+      title: 'Choose a new password.',
       subtitle: "Pick something strong that you don't use anywhere else.",
     },
   }[page];
 
   const success = {
-    login: { title: "", text: "" },
-    register: { title: "Verify your email", text: "We've sent a verification link to your IITK email. Open it to activate your account (valid for 24 hours)." },
-    forgot: { title: "Check your inbox", text: "If an account exists for that email, we've sent a reset link. It expires in 30 minutes." },
-    reset: { title: "Password updated", text: "Your password has been changed and all other sessions were signed out." },
+    login: { title: '', text: '' },
+    register: {
+      title: 'Verify your email',
+      text: "We've sent a verification link to your IITK email. Open it to activate your account (valid for 24 hours).",
+    },
+    forgot: {
+      title: 'Check your inbox',
+      text: "If an account exists for that email, we've sent a reset link. It expires in 30 minutes.",
+    },
+    reset: {
+      title: 'Password updated',
+      text: 'Your password has been changed and all other sessions were signed out.',
+    },
   }[page];
 
-  const banner = error ? { ok: false, text: error } : page === "login" ? noticeFor(notice) : null;
+  const banner = error ? { ok: false, text: error } : page === 'login' ? noticeFor(notice) : null;
 
   return (
     <div className="auth-layout">
       <aside className="auth-aside">
-        <Logo onClick={() => go("home")} />
+        <Logo onClick={() => go('home')} />
         <div className="aside-content">
-          <div className="aside-badge"><Icon name="spark" size={16} /> ONLY AT IIT KANPUR</div>
+          <div className="aside-badge">
+            <Icon name="spark" size={16} /> ONLY AT IIT KANPUR
+          </div>
           <blockquote>“Some of the best campus stories begin with a shared ride.”</blockquote>
           <div className="mini-route">
-            <span className="mini-pin"><Icon name="pin" size={19} /></span>
-            <div><b>IIT Kanpur</b><small>Starting point</small></div>
+            <span className="mini-pin">
+              <Icon name="pin" size={19} />
+            </span>
+            <div>
+              <b>IIT Kanpur</b>
+              <small>Starting point</small>
+            </div>
             <span className="dash" />
-            <span className="mini-car"><Icon name="car" size={21} /></span>
+            <span className="mini-car">
+              <Icon name="car" size={21} />
+            </span>
             <span className="dash" />
-            <div><b>Anywhere</b><small>Go together</small></div>
+            <div>
+              <b>Anywhere</b>
+              <small>Go together</small>
+            </div>
           </div>
         </div>
-        <p className="aside-footer">Verified community <span>•</span> Safer rides <span>•</span> Better journeys</p>
+        <p className="aside-footer">
+          Verified community <span>•</span> Safer rides <span>•</span> Better journeys
+        </p>
         <div className="road-line one" />
         <div className="road-line two" />
       </aside>
 
       <main className="auth-main">
         <div className="auth-top">
-          <button className="back-button" onClick={() => go(page === "forgot" || page === "reset" ? "login" : "home")}>
+          <button
+            className="back-button"
+            onClick={() => go(page === 'forgot' || page === 'reset' ? 'login' : 'home')}
+          >
             <span>←</span> Back
           </button>
           <ThemeToggle dark={dark} setDark={setDark} />
@@ -497,9 +604,11 @@ export function AuthPage({
             <h1>{content.title}</h1>
             <p>{content.subtitle}</p>
           </div>
-          {page === "register" && !done && (
+          {page === 'register' && !done && (
             <div className="iitk-only">
-              <span><Icon name="shield" size={18} /></span>
+              <span>
+                <Icon name="shield" size={18} />
+              </span>
               <div>
                 <strong>IITK accounts only</strong>
                 <small>Registration requires an active @iitk.ac.in email address.</small>
@@ -509,78 +618,121 @@ export function AuthPage({
 
           {done ? (
             <div className="success-card">
-              <span><Icon name="check" size={28} /></span>
+              <span>
+                <Icon name="check" size={28} />
+              </span>
               <h2>{success.title}</h2>
               <p>{success.text}</p>
-              <button className="button form-submit" onClick={() => go("login")}>
+              <button className="button form-submit" onClick={() => go('login')}>
                 Return to login <Icon name="arrow" size={18} />
               </button>
             </div>
           ) : (
             <form onSubmit={submit}>
               {banner && (
-                <p role="alert" className={`form-banner ${banner.ok ? "ok" : "bad"}`}>{banner.text}</p>
+                <p role="alert" className={`form-banner ${banner.ok ? 'ok' : 'bad'}`}>
+                  {banner.text}
+                </p>
               )}
-              {page === "register" && (
+              {page === 'register' && (
                 <div className="field-row">
-                  <Field icon="user" label="Full name" name="name" placeholder="Aarav Sharma" autoComplete="name" />
-                  <Field icon="people" label="Roll number" name="roll" placeholder="220123" autoComplete="off" />
+                  <Field
+                    icon="user"
+                    label="Full name"
+                    name="name"
+                    placeholder="Aarav Sharma"
+                    autoComplete="name"
+                  />
+                  <Field
+                    icon="people"
+                    label="Roll number"
+                    name="roll"
+                    placeholder="220123"
+                    autoComplete="off"
+                  />
                 </div>
               )}
-              {page !== "reset" && (
-                <Field icon="mail" label="IITK email address" name="email" placeholder="username@iitk.ac.in" type="email" autoComplete="email" />
+              {page !== 'reset' && (
+                <Field
+                  icon="mail"
+                  label="IITK email address"
+                  name="email"
+                  placeholder="username@iitk.ac.in"
+                  type="email"
+                  autoComplete="email"
+                />
               )}
-              {page !== "forgot" && (
+              {page !== 'forgot' && (
                 <Field
                   icon="shield"
-                  label={page === "reset" ? "New password" : "Password"}
+                  label={page === 'reset' ? 'New password' : 'Password'}
                   name="password"
                   placeholder="At least 8 characters"
                   type="password"
-                  autoComplete={page === "login" ? "current-password" : "new-password"}
-                  minLength={page === "login" ? undefined : 8}
+                  autoComplete={page === 'login' ? 'current-password' : 'new-password'}
+                  minLength={page === 'login' ? undefined : 8}
                 />
               )}
-              {page === "reset" && (
-                <Field icon="shield" label="Confirm new password" name="confirm" placeholder="Repeat your password" type="password" autoComplete="new-password" minLength={8} />
+              {page === 'reset' && (
+                <Field
+                  icon="shield"
+                  label="Confirm new password"
+                  name="confirm"
+                  placeholder="Repeat your password"
+                  type="password"
+                  autoComplete="new-password"
+                  minLength={8}
+                />
               )}
-              {page === "login" && (
+              {page === 'login' && (
                 <div className="form-options">
-                  <label><input type="checkbox" name="remember" /> <span>Keep me signed in</span></label>
-                  <button type="button" onClick={() => go("forgot")}>Forgot password?</button>
+                  <label>
+                    <input type="checkbox" name="remember" /> <span>Keep me signed in</span>
+                  </label>
+                  <button type="button" onClick={() => go('forgot')}>
+                    Forgot password?
+                  </button>
                 </div>
               )}
-              {page === "register" && (
+              {page === 'register' && (
                 <label className="terms">
                   <input type="checkbox" name="terms" required />
-                  <span>I agree to the <button type="button">community guidelines</button> and <button type="button">privacy policy</button>.</span>
+                  <span>
+                    I agree to the <button type="button">community guidelines</button> and{' '}
+                    <button type="button">privacy policy</button>.
+                  </span>
                 </label>
               )}
               <button className="button form-submit" type="submit" disabled={loading}>
                 {loading
-                  ? "Please wait…"
-                  : page === "login"
-                  ? "Log in to Campus Ride Pooling"
-                  : page === "register"
-                  ? "Create my account"
-                  : page === "forgot"
-                  ? "Send reset link"
-                  : "Update password"}
+                  ? 'Please wait…'
+                  : page === 'login'
+                    ? 'Log in to Campus Ride Pooling'
+                    : page === 'register'
+                      ? 'Create my account'
+                      : page === 'forgot'
+                        ? 'Send reset link'
+                        : 'Update password'}
                 {!loading && <Icon name="arrow" size={18} />}
               </button>
             </form>
           )}
 
-          {!done && page !== "reset" && (
+          {!done && page !== 'reset' && (
             <p className="auth-switch">
-              {page === "login" ? "New to Campus Ride Pooling?" : page === "register" ? "Already have an account?" : "Remember your password?"}
-              {" "}
-              <button onClick={() => go(page === "login" ? "register" : "login")}>
-                {page === "login" ? "Create an account" : "Log in"}
+              {page === 'login'
+                ? 'New to Campus Ride Pooling?'
+                : page === 'register'
+                  ? 'Already have an account?'
+                  : 'Remember your password?'}{' '}
+              <button onClick={() => go(page === 'login' ? 'register' : 'login')}>
+                {page === 'login' ? 'Create an account' : 'Log in'}
               </button>
             </p>
           )}
-          <p className="secure-note"><Icon name="shield" size={14} /> Secured with IITK email verification</p>
+          <p className="secure-note">
+            <Icon name="shield" size={14} /> Secured with IITK email verification
+          </p>
         </div>
       </main>
     </div>
