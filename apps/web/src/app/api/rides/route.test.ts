@@ -28,8 +28,8 @@ const validBody = {
   hubId: 'kanpur-central',
   campusLocationId: 'hall-6',
   vehicleTypeId: 'car',
-  departureStart: '2026-10-10T06:30:00+05:30',
-  departureEnd: '2026-10-10T07:30:00+05:30',
+  departureStart: '2099-10-10T06:30:00+05:30',
+  departureEnd: '2099-10-10T07:30:00+05:30',
   expectedTotalFare: 460,
 };
 
@@ -52,8 +52,9 @@ beforeEach(() => {
   h.clientQuery.mockImplementation((sql: string) => {
     if (sql.includes('FROM locations')) return Promise.resolve({ rows: locations });
     if (sql.includes('FROM vehicle_types')) return Promise.resolve({ rows: vehicles });
-    if (sql === 'SELECT id FROM users WHERE id=$1 FOR NO KEY UPDATE')
+    if (sql === 'SELECT id FROM users WHERE id=$1 FOR NO KEY UPDATE') {
       return Promise.resolve({ rows: [{ id: 'user-1' }] });
+    }
     if (sql.includes('SELECT 1 FROM rides')) return Promise.resolve({ rows: [] });
     if (sql.includes('INSERT INTO rides')) {
       return Promise.resolve({
@@ -65,8 +66,8 @@ beforeEach(() => {
             hub_id: 'kanpur-central',
             vehicle_type_id: 'car',
             capacity_snapshot: 4,
-            departure_start: new Date('2026-10-10T01:00:00.000Z'),
-            departure_end: new Date('2026-10-10T02:00:00.000Z'),
+            departure_start: new Date('2099-10-10T01:00:00.000Z'),
+            departure_end: new Date('2099-10-10T02:00:00.000Z'),
             expected_total_fare: 460,
             state: 'scheduled',
             created_at: new Date('2026-10-04T12:00:00.000Z'),
@@ -84,7 +85,7 @@ describe('POST /api/rides', () => {
     const response = await POST(new Request('http://localhost/api/rides', { method: 'POST' }));
     expect(response.status).toBe(401);
     expect(await response.json()).toEqual({ error: 'Authentication required.' });
-    expect(h.connect).toHaveBeenCalled();
+    expect(h.connect).not.toHaveBeenCalled();
   });
 
   it('returns 500 when a database connection cannot be acquired', async () => {
@@ -99,7 +100,8 @@ describe('POST /api/rides', () => {
     const response = await POST(new Request('http://localhost/api/rides', { method: 'POST' }));
     expect(response.status).toBe(400);
     expect((await response.json()).errors.vehicleTypeId).toBeTruthy();
-    expect(h.connect).not.toHaveBeenCalled();
+    expect(h.connect).toHaveBeenCalled();
+    expect(h.clientQuery).toHaveBeenCalledWith('ROLLBACK');
   });
 
   it('rejects a location with the wrong category', async () => {
@@ -107,6 +109,7 @@ describe('POST /api/rides', () => {
     const response = await POST(new Request('http://localhost/api/rides', { method: 'POST' }));
     expect(response.status).toBe(400);
     expect((await response.json()).errors.hubId).toBe('Choose an active transport hub.');
+    expect(h.clientQuery).toHaveBeenCalledWith('ROLLBACK');
   });
 
   it('uses database capacity and creates the owner rider in one transaction', async () => {
@@ -128,10 +131,14 @@ describe('POST /api/rides', () => {
 
   it('rejects overlapping active rides', async () => {
     h.clientQuery.mockImplementation((sql: string) => {
-      if (sql === 'SELECT id FROM users WHERE id=$1 FOR NO KEY UPDATE')
+      if (sql.includes('FROM locations')) return Promise.resolve({ rows: locations });
+      if (sql.includes('FROM vehicle_types')) return Promise.resolve({ rows: vehicles });
+      if (sql === 'SELECT id FROM users WHERE id=$1 FOR NO KEY UPDATE') {
         return Promise.resolve({ rows: [{ id: 'user-1' }] });
-      if (sql.includes('SELECT 1 FROM rides'))
+      }
+      if (sql.includes('SELECT 1 FROM rides')) {
         return Promise.resolve({ rows: [{ '?column?': 1 }] });
+      }
       return Promise.resolve({ rows: [] });
     });
     const response = await POST(new Request('http://localhost/api/rides', { method: 'POST' }));
@@ -144,8 +151,11 @@ describe('POST /api/rides', () => {
 
   it('rolls back and returns 500 when persistence fails', async () => {
     h.clientQuery.mockImplementation((sql: string) => {
-      if (sql === 'SELECT id FROM users WHERE id=$1 FOR NO KEY UPDATE')
+      if (sql.includes('FROM locations')) return Promise.resolve({ rows: locations });
+      if (sql.includes('FROM vehicle_types')) return Promise.resolve({ rows: vehicles });
+      if (sql === 'SELECT id FROM users WHERE id=$1 FOR NO KEY UPDATE') {
         return Promise.resolve({ rows: [{ id: 'user-1' }] });
+      }
       if (sql.includes('SELECT 1 FROM rides')) return Promise.resolve({ rows: [] });
       if (sql.includes('INSERT INTO rides')) return Promise.reject(new Error('db failure'));
       return Promise.resolve({ rows: [] });

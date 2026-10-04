@@ -104,15 +104,6 @@ export function CreateRideForm({ options }: { options: RideFormOptions }) {
   }
 
   return (
-      <DesignSystem className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-        <p className="text-sm text-ink-muted" role="status">
-          Loading ride options…
-        </p>
-      </DesignSystem>
-    );
-  }
-
-  return (
     <DesignSystem className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <header>
         <p className="text-sm font-semibold uppercase tracking-wide text-accent-text">
