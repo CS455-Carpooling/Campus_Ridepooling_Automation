@@ -1,6 +1,11 @@
 import { pool } from '@/lib/db';
 import { getCurrentUser, guard, json, readJson } from '@/lib/auth';
-import { knownRideIds, rideMessages, validateRideRequest, type CreateRideRequest } from '@/lib/ride-rules';
+import {
+  knownRideIds,
+  rideMessages,
+  validateRideRequest,
+  type CreateRideRequest,
+} from '@/lib/ride-rules';
 import type { PoolClient } from 'pg';
 
 const ACTIVE_RIDE_STATES = ['scheduled', 'pickup_in_progress', 'in_transit'] as const;
@@ -81,9 +86,10 @@ async function createRide(
   request: CreateRideRequest,
   capacity: number,
 ) {
-  const owner = await client.query<{ id: string }>('SELECT id FROM users WHERE id=$1 FOR NO KEY UPDATE', [
-    userId,
-  ]);
+  const owner = await client.query<{ id: string }>(
+    'SELECT id FROM users WHERE id=$1 FOR NO KEY UPDATE',
+    [userId],
+  );
   if (owner.rows.length === 0) return { kind: 'unauthenticated' as const };
 
   const conflict = await client.query(
@@ -141,8 +147,12 @@ export async function POST(req: Request) {
 
     const { locations, vehicles } = await lookupActiveOptions(client, body);
     const known = knownRideIds({
-      hubs: locations.filter((row) => row.type === 'transport_hub').map((row) => ({ id: row.id, name: row.id })),
-      campusPlaces: locations.filter((row) => row.type === 'campus').map((row) => ({ id: row.id, name: row.id })),
+      hubs: locations
+        .filter((row) => row.type === 'transport_hub')
+        .map((row) => ({ id: row.id, name: row.id })),
+      campusPlaces: locations
+        .filter((row) => row.type === 'campus')
+        .map((row) => ({ id: row.id, name: row.id })),
       vehicleTypes: vehicles.map((row) => ({ id: row.id, name: row.id, capacity: row.capacity })),
     });
 
@@ -171,28 +181,33 @@ export async function POST(req: Request) {
     if (result.kind === 'conflict') {
       await client.query('ROLLBACK');
       return json(
-        { error: 'You already have a scheduled or active ride that overlaps this departure window.' },
+        {
+          error: 'You already have a scheduled or active ride that overlaps this departure window.',
+        },
         409,
       );
     }
 
     await client.query('COMMIT');
     const ride = result.ride;
-    return json({
-      ride: {
-        id: ride.id,
-        ownerId: ride.owner_id,
-        direction: ride.direction,
-        hubId: ride.hub_id,
-        vehicleTypeId: ride.vehicle_type_id,
-        capacity: ride.capacity_snapshot,
-        departureStart: ride.departure_start,
-        departureEnd: ride.departure_end,
-        expectedTotalFare: ride.expected_total_fare,
-        state: ride.state,
-        createdAt: ride.created_at,
+    return json(
+      {
+        ride: {
+          id: ride.id,
+          ownerId: ride.owner_id,
+          direction: ride.direction,
+          hubId: ride.hub_id,
+          vehicleTypeId: ride.vehicle_type_id,
+          capacity: ride.capacity_snapshot,
+          departureStart: ride.departure_start,
+          departureEnd: ride.departure_end,
+          expectedTotalFare: ride.expected_total_fare,
+          state: ride.state,
+          createdAt: ride.created_at,
+        },
       },
-    }, 201);
+      201,
+    );
   } catch (error) {
     if (client) await client.query('ROLLBACK').catch(() => undefined);
     console.error('Create ride failed:', error);

@@ -57,11 +57,7 @@ export function CreateRideForm({ options }: { options: RideFormOptions }) {
     setCreatedRideId(null);
 
     const request = requestFromDraft(draft);
-    const validation = validateRideRequest(
-      request,
-      knownRideIds(options),
-      new Date(),
-    );
+    const validation = validateRideRequest(request, knownRideIds(options), new Date());
     if (!validation.ok) {
       setErrors(validation.errors);
       setFormError('Please fix the highlighted fields.');
