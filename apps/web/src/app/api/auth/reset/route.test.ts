@@ -20,7 +20,9 @@ vi.mock('@/lib/auth', () => ({
 import { POST } from './route';
 
 const post = (body: Record<string, unknown>) =>
-  POST(new Request('http://localhost/api/auth/reset', { method: 'POST', body: JSON.stringify(body) }));
+  POST(
+    new Request('http://localhost/api/auth/reset', { method: 'POST', body: JSON.stringify(body) }),
+  );
 
 beforeEach(() => {
   Object.values(m).forEach((f) => f.mockReset());
@@ -34,10 +36,13 @@ describe('POST /api/auth/reset', () => {
     expect((await post({ token: 't', password: 'password123' })).status).toBe(403);
   });
 
-  it.each([['short'], ['p'.repeat(129)]])('rejects a bad password length with 400', async (password) => {
-    expect((await post({ token: 't', password })).status).toBe(400);
-    expect(m.consumeToken).not.toHaveBeenCalled();
-  });
+  it.each([['short'], ['p'.repeat(129)]])(
+    'rejects a bad password length with 400',
+    async (password) => {
+      expect((await post({ token: 't', password })).status).toBe(400);
+      expect(m.consumeToken).not.toHaveBeenCalled();
+    },
+  );
 
   it('rejects a missing token without consuming anything', async () => {
     const res = await post({ password: 'password123' });

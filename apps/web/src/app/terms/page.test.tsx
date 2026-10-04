@@ -8,7 +8,9 @@ describe('TermsPage', () => {
     render(<TermsPage />);
     expect(metadata.title).toBe('Community Guidelines');
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
-    expect(screen.getByRole('heading', { level: 1, name: 'Community Guidelines' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Community Guidelines' }),
+    ).toBeInTheDocument();
   });
 
   it('is marked as a placeholder and links back to registration', () => {

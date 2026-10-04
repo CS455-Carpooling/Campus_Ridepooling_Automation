@@ -52,7 +52,9 @@ describe.each([
   it('redirects signed-in users to the dashboard', async () => {
     getCurrentUser.mockResolvedValue(user);
     const { default: Page } = await load();
-    await expect(Page({ searchParams: Promise.resolve({}) })).rejects.toThrow('REDIRECT:/dashboard');
+    await expect(Page({ searchParams: Promise.resolve({}) })).rejects.toThrow(
+      'REDIRECT:/dashboard',
+    );
   });
 });
 
@@ -66,7 +68,9 @@ describe('reset-password page', () => {
 
   it('redirects to forgot-password when there is no token', async () => {
     const { default: Page } = await import('./reset-password/page');
-    await expect(Page({ searchParams: Promise.resolve({}) })).rejects.toThrow('REDIRECT:/forgot-password');
+    await expect(Page({ searchParams: Promise.resolve({}) })).rejects.toThrow(
+      'REDIRECT:/forgot-password',
+    );
   });
 });
 

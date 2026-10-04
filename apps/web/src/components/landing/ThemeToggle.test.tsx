@@ -17,7 +17,10 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 const media = (matches: boolean) =>
-  vi.stubGlobal('matchMedia', vi.fn().mockImplementation(() => ({ matches })));
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn().mockImplementation(() => ({ matches })),
+  );
 
 describe('ThemeToggle', () => {
   it('starts light when matchMedia is unavailable and nothing is saved', () => {

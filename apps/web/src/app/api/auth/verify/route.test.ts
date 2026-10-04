@@ -37,7 +37,10 @@ describe('GET /api/auth/verify', () => {
     expect(m.rateLimit).toHaveBeenCalledWith('verify:ip:1.2.3.4', 30, 3600);
   });
 
-  it.each([['', 'no token'], ['?token=short', 'a short token']])('fails for %s', async (qs) => {
+  it.each([
+    ['', 'no token'],
+    ['?token=short', 'a short token'],
+  ])('fails for %s', async (qs) => {
     const res = await get(qs);
     expect(location(res)).toMatch(/verify_failed$/);
     expect(m.consumeToken).not.toHaveBeenCalled();

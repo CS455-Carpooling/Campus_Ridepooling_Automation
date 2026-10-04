@@ -89,7 +89,9 @@ describe('AuthPage', () => {
   const setup = (page: Exclude<Page, 'home'>, extra: { notice?: string; token?: string } = {}) => {
     const go = vi.fn();
     const setDark = vi.fn();
-    const utils = render(<AuthPage page={page} dark={false} setDark={setDark} go={go} {...extra} />);
+    const utils = render(
+      <AuthPage page={page} dark={false} setDark={setDark} go={go} {...extra} />,
+    );
     return { go, setDark, user: userEvent.setup(), ...utils };
   };
   const body = () => JSON.parse(fetchMock.mock.calls[0][1].body);

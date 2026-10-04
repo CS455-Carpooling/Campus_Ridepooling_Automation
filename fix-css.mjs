@@ -10,10 +10,7 @@ css = css.replace(
 );
 
 // Remove all remaining shadows, transitions and blur
-css = css.replace(
-  /\s*(?<![\w-])(?:box-shadow|transition|backdrop-filter)\s*:[^;{}]*;/g,
-  '',
-);
+css = css.replace(/\s*(?<![\w-])(?:box-shadow|transition|backdrop-filter)\s*:[^;{}]*;/g, '');
 
 // Pure white -> off-white
 css = css.replace(/#(?:fff|ffffff)\b/gi, '#fdfdfb');

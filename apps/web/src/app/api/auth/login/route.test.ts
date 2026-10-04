@@ -27,7 +27,9 @@ vi.mock('@/lib/auth', () => ({
 import { POST } from './route';
 
 const post = (body: Record<string, unknown>) =>
-  POST(new Request('http://localhost/api/auth/login', { method: 'POST', body: JSON.stringify(body) }));
+  POST(
+    new Request('http://localhost/api/auth/login', { method: 'POST', body: JSON.stringify(body) }),
+  );
 const creds = { email: 'A@iitk.ac.in', password: 'password123' };
 
 beforeEach(() => {
@@ -69,14 +71,18 @@ describe('POST /api/auth/login', () => {
   });
 
   it('returns 401 for a wrong password', async () => {
-    m.query.mockResolvedValueOnce({ rows: [{ id: 'u1', password_hash: 'h', email_verified_at: new Date() }] });
+    m.query.mockResolvedValueOnce({
+      rows: [{ id: 'u1', password_hash: 'h', email_verified_at: new Date() }],
+    });
     m.verifyPassword.mockResolvedValue(false);
     expect((await post(creds)).status).toBe(401);
     expect(m.createSession).not.toHaveBeenCalled();
   });
 
   it('returns 403 when the email is not verified yet', async () => {
-    m.query.mockResolvedValueOnce({ rows: [{ id: 'u1', password_hash: 'h', email_verified_at: null }] });
+    m.query.mockResolvedValueOnce({
+      rows: [{ id: 'u1', password_hash: 'h', email_verified_at: null }],
+    });
     m.verifyPassword.mockResolvedValue(true);
     const res = await post(creds);
     expect(res.status).toBe(403);
@@ -84,7 +90,9 @@ describe('POST /api/auth/login', () => {
   });
 
   it('creates a session on success and honours "remember"', async () => {
-    m.query.mockResolvedValue({ rows: [{ id: 'u1', password_hash: 'h', email_verified_at: new Date() }] });
+    m.query.mockResolvedValue({
+      rows: [{ id: 'u1', password_hash: 'h', email_verified_at: new Date() }],
+    });
     m.verifyPassword.mockResolvedValue(true);
     expect(await (await post({ ...creds, remember: true })).json()).toEqual({ ok: true });
     expect(m.createSession).toHaveBeenLastCalledWith('u1', true);
@@ -94,7 +102,9 @@ describe('POST /api/auth/login', () => {
   });
 
   it('occasionally runs cleanup, and ignores its failures', async () => {
-    m.query.mockResolvedValue({ rows: [{ id: 'u1', password_hash: 'h', email_verified_at: new Date() }] });
+    m.query.mockResolvedValue({
+      rows: [{ id: 'u1', password_hash: 'h', email_verified_at: new Date() }],
+    });
     m.verifyPassword.mockResolvedValue(true);
     vi.spyOn(Math, 'random').mockReturnValue(0.01);
     m.cleanup.mockRejectedValue(new Error('db down'));
@@ -103,7 +113,9 @@ describe('POST /api/auth/login', () => {
   });
 
   it('truncates very long passwords to 128 characters', async () => {
-    m.query.mockResolvedValue({ rows: [{ id: 'u1', password_hash: 'h', email_verified_at: new Date() }] });
+    m.query.mockResolvedValue({
+      rows: [{ id: 'u1', password_hash: 'h', email_verified_at: new Date() }],
+    });
     m.verifyPassword.mockResolvedValue(true);
     await post({ ...creds, password: 'p'.repeat(500) });
     expect(m.verifyPassword.mock.calls[0][0]).toHaveLength(128);

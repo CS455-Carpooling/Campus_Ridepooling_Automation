@@ -34,7 +34,12 @@ const valid = {
   terms: true,
 };
 const post = (body: Record<string, unknown>) =>
-  POST(new Request('http://localhost/api/auth/register', { method: 'POST', body: JSON.stringify(body) }));
+  POST(
+    new Request('http://localhost/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+  );
 
 beforeEach(() => {
   Object.values(m).forEach((f) => f.mockReset());

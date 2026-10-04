@@ -22,7 +22,9 @@ vi.mock('@/lib/auth', () => ({
 import { POST } from './route';
 
 const post = (body: Record<string, unknown>) =>
-  POST(new Request('http://localhost/api/auth/forgot', { method: 'POST', body: JSON.stringify(body) }));
+  POST(
+    new Request('http://localhost/api/auth/forgot', { method: 'POST', body: JSON.stringify(body) }),
+  );
 
 beforeEach(() => {
   Object.values(m).forEach((f) => f.mockReset());

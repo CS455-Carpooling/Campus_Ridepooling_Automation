@@ -267,7 +267,9 @@ describe('sendMail', () => {
 
   it('posts an escaped, linkified HTML body to the mail script', async () => {
     useScript();
-    const fetchMock = vi.fn().mockResolvedValue({ status: 200, json: async () => ({ success: true }) });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ status: 200, json: async () => ({ success: true }) });
     vi.stubGlobal('fetch', fetchMock);
     const err = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -288,7 +290,10 @@ describe('sendMail', () => {
     useScript();
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue({ status: 200, json: async () => ({ success: false, error: 'unauthorized' }) }),
+      vi.fn().mockResolvedValue({
+        status: 200,
+        json: async () => ({ success: false, error: 'unauthorized' }),
+      }),
     );
     const err = vi.spyOn(console, 'error').mockImplementation(() => {});
     await auth.sendMail('a@iitk.ac.in', 'S', 'B');
@@ -299,7 +304,9 @@ describe('sendMail', () => {
     useScript();
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue({ status: 502, json: async () => Promise.reject(new Error('bad')) }),
+      vi
+        .fn()
+        .mockResolvedValue({ status: 502, json: async () => Promise.reject(new Error('bad')) }),
     );
     const err = vi.spyOn(console, 'error').mockImplementation(() => {});
     await auth.sendMail('a@iitk.ac.in', 'S', 'B');
