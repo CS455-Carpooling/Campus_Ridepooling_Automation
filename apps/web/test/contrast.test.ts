@@ -1,25 +1,34 @@
 // @vitest-environment node
 /**
- * WCAG 2.1 AA contrast of the colour tokens, in the light and the dark colour
- * scheme (NFR-RD-15). Reads the hex values straight from globals.css, so a
- * token change that breaks contrast fails here.
+ * WCAG 2.1 AA contrast of the design-system colour tokens, in the light and the
+ * dark scheme (NFR-RD-15). Reads the hex values straight from globals.css (the
+ * .ds block and the .dark .ds block), so a token change that breaks contrast
+ * fails here.
  */
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 const css = readFileSync(fileURLToPath(new URL('../src/app/globals.css', import.meta.url)), 'utf8');
-const DARK_SCHEME = '@media (prefers-color-scheme: dark)';
-const [lightCss, darkCss = ''] = css.split(DARK_SCHEME);
+
+/** The declarations of the rule that starts a line with exactly `selector {`. */
+function block(selector: string): string {
+  const start = css.indexOf(`\n${selector} {`);
+  if (start < 0) throw new Error(`globals.css has no "${selector} {" rule`);
+  return css.slice(start, css.indexOf('}', start));
+}
 
 function readTokens(text: string): Record<string, string> {
   return Object.fromEntries(
-    [...text.matchAll(/--color-([a-z-]+):\s*(#[0-9a-f]{6})\s*;/gi)].map((m) => [
+    [...text.matchAll(/--ds-([a-z-]+):\s*(#[0-9a-f]{6})\s*;/gi)].map((m) => [
       m[1],
       m[2].toLowerCase(),
     ]),
   );
 }
+
+const lightCss = block('.ds');
+const darkCss = block('.dark .ds');
 
 const lightTokens = readTokens(lightCss);
 const darkOverrides = readTokens(darkCss);

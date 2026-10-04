@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { AdminHomeData } from '@/lib/home-data';
 import { routes } from '@/lib/routes';
+import { DesignSystem } from '@/components/ui/DesignSystem';
 
 /** Home page of an operations admin: the queues that need attention, then configuration. */
 export function AdminHome({ data }: { data: AdminHomeData }) {
@@ -19,7 +20,7 @@ export function AdminHome({ data }: { data: AdminHomeData }) {
   ];
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+    <DesignSystem className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Operations</h1>
 
       <section aria-labelledby="attention-heading" className="mt-8">
@@ -74,6 +75,6 @@ export function AdminHome({ data }: { data: AdminHomeData }) {
           </li>
         </ul>
       </section>
-    </div>
+    </DesignSystem>
   );
 }

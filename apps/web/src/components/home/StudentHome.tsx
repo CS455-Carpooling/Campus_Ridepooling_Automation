@@ -3,11 +3,12 @@ import { ButtonLink } from '@/components/ui/ButtonLink';
 import { formatDeparture } from '@/lib/format';
 import type { StudentHomeData, UpcomingRide, WaitingRequest } from '@/lib/home-data';
 import { routes } from '@/lib/routes';
+import { DesignSystem } from '@/components/ui/DesignSystem';
 
 /** Home page of a student: the entry points for riding and offering rides, then their rides. */
 export function StudentHome({ data }: { data: StudentHomeData }) {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+    <DesignSystem className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Your rides</h1>
       <div className="mt-6 flex flex-wrap gap-3">
         <ButtonLink href={routes.findRide}>Find a ride</ButtonLink>
@@ -17,7 +18,7 @@ export function StudentHome({ data }: { data: StudentHomeData }) {
       </div>
       <UpcomingRides rides={data.upcoming} />
       <WaitingRequests requests={data.waiting} />
-    </div>
+    </DesignSystem>
   );
 }
 
