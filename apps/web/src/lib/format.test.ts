@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDeparture, formatRupees } from './format';
+import { formatDeparture, formatDepartureWindow, formatRupees } from './format';
 
 describe('formatDeparture', () => {
   it('shows a UTC time in Indian Standard Time', () => {
@@ -26,5 +26,19 @@ describe('formatRupees', () => {
   it('groups digits the Indian way', () => {
     expect(formatRupees(50000)).toBe(`${rupee}50,000`);
     expect(formatRupees(100000)).toBe(`${rupee}1,00,000`);
+  });
+});
+
+describe('formatDepartureWindow', () => {
+  it('shows the day once for a window within one day', () => {
+    expect(formatDepartureWindow('2026-10-10T06:30:00+05:30', '2026-10-10T07:30:00+05:30')).toBe(
+      'Sat 10 Oct, 06:30 to 07:30',
+    );
+  });
+
+  it('repeats the day when the window crosses midnight in IST', () => {
+    expect(formatDepartureWindow('2026-10-10T23:30:00+05:30', '2026-10-11T01:00:00+05:30')).toBe(
+      'Sat 10 Oct, 23:30 to Sun 11 Oct, 01:00',
+    );
   });
 });
