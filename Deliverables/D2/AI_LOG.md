@@ -462,3 +462,28 @@ Address Mainak's requested Create Ride review changes on PR #24, make one additi
 ### Verification
 - The user ran `npm run format` locally; formatting commit `63dcee9` is the parent of this implementation commit.
 - No local test result is claimed from this environment.
+
+
+## 2026-10-04 — CI failure investigation and correctness review
+
+### User request
+Investigate why the PR CI check was failing and review the updated Create Ride code for correctness.
+
+### Findings
+- CI run 26 failed during `format:check` because `CreateRideForm.tsx` still contained a stale JSX loading block after the client-side options-loading effect had been removed.
+- The Docker workflow failed for the same underlying parse error during the Next.js build; it was not an independent Docker problem.
+- The Create Ride API tests also needed their transaction-scoped option-query mocks updated after moving the lookups into the transaction.
+
+### Changes made
+- Removed the stale loading JSX block from `CreateRideForm.tsx`.
+- Corrected Create Ride API test mocks so overlapping-ride and persistence-failure cases still provide the location and vehicle rows required by the refactored transaction flow.
+- Corrected the authentication test to assert that no DB connection is acquired when authentication fails.
+- Triggered a fresh CI run on commit `ceca80c` and confirmed both CI and Docker workflows started successfully.
+
+### Correctness review
+- Rechecked the Create Ride page/server option-loading flow, database-backed capacity, transaction ordering, owner locking, overlap check, owner-rider insertion, rollback/release behavior, and schema changes.
+- The separate invalid-calendar-date / invalid-offset issue remains intentionally deferred as requested.
+
+### Verification
+- Previous CI run `37214971024` and Docker run `37214970956` were inspected through their job logs.
+- Fresh CI run `37215256934` and Docker run `37215256879` were started from `ceca80c`; final results were still pending when this log entry was written.
