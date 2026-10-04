@@ -1,50 +1,63 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { db, resetAuthMocks } from '../../../../../test/auth-mocks';
+
+const m = vi.hoisted(() => ({
+  query: vi.fn(),
+  rateLimit: vi.fn(),
+  consumeToken: vi.fn(),
+  clientIp: vi.fn(),
+}));
+
+vi.mock('@/lib/db', () => ({ pool: { query: m.query } }));
+vi.mock('@/lib/auth', () => ({
+  appUrl: () => 'http://localhost:3000',
+  rateLimit: m.rateLimit,
+  consumeToken: m.consumeToken,
+  clientIp: m.clientIp,
+}));
+
 import { GET } from './route';
 
-vi.mock('@/lib/db', async () => (await import('../../../../../test/auth-mocks')).dbModule);
-vi.mock('next/headers', async () => (await import('../../../../../test/auth-mocks')).headersModule);
+const LONG = 'a'.repeat(32);
+const get = (qs: string) => GET(new Request(`http://localhost/api/auth/verify${qs}`));
+const location = (res: Response) => res.headers.get('location');
 
 beforeEach(() => {
-  resetAuthMocks();
+  Object.values(m).forEach((f) => f.mockReset());
+  m.clientIp.mockResolvedValue('1.2.3.4');
+  m.rateLimit.mockResolvedValue(true);
 });
 
-const verify = (token?: string) =>
-  GET(
-    new Request(
-      `http://localhost:3000/api/auth/verify${token === undefined ? '' : `?token=${token}`}`,
-    ),
-  );
-const longToken = 'x'.repeat(43);
-
 describe('GET /api/auth/verify', () => {
-  it('verifies the account and sends the user to sign in', async () => {
-    db.on('DELETE FROM auth_tokens', [{ user_id: 'u1' }]);
-    const response = await verify(longToken);
-    expect(response.status).toBe(303);
-    expect(response.headers.get('location')).toBe('http://localhost:3000/login?notice=verified');
-    expect(db.calls('UPDATE users SET email_verified_at')[0]).toEqual(['u1']);
+  it('redirects to a failure notice when rate limited', async () => {
+    m.rateLimit.mockResolvedValue(false);
+    const res = await get(`?token=${LONG}`);
+    expect(res.status).toBe(303);
+    expect(location(res)).toBe('http://localhost:3000/login?notice=verify_failed');
+    expect(m.rateLimit).toHaveBeenCalledWith('verify:ip:1.2.3.4', 30, 3600);
   });
 
-  it('reports an unknown, used or expired link', async () => {
-    const response = await verify(longToken);
-    expect(response.headers.get('location')).toContain('notice=verify_failed');
+  it.each([
+    ['', 'no token'],
+    ['?token=short', 'a short token'],
+  ])('fails for %s', async (qs) => {
+    const res = await get(qs);
+    expect(location(res)).toMatch(/verify_failed$/);
+    expect(m.consumeToken).not.toHaveBeenCalled();
   });
 
-  it('does not look up missing or short tokens', async () => {
-    for (const token of [undefined, 'short']) {
-      const response = await verify(token);
-      expect(response.headers.get('location')).toContain('notice=verify_failed');
-    }
-    expect(db.calls('DELETE FROM auth_tokens')).toHaveLength(0);
+  it('fails for an unknown or expired token', async () => {
+    m.consumeToken.mockResolvedValue(null);
+    expect(location(await get(`?token=${LONG}`))).toMatch(/verify_failed$/);
+    expect(m.query).not.toHaveBeenCalled();
   });
 
-  it('stops after too many attempts from one address', async () => {
-    db.on('rate_limits', [{ count: 31 }]);
-    db.on('DELETE FROM auth_tokens', [{ user_id: 'u1' }]);
-    const response = await verify(longToken);
-    expect(response.headers.get('location')).toContain('notice=verify_failed');
-    expect(db.calls('UPDATE users')).toHaveLength(0);
+  it('marks the email verified and redirects with a success notice', async () => {
+    m.consumeToken.mockResolvedValue('u1');
+    m.query.mockResolvedValue({ rows: [] });
+    const res = await get(`?token=${LONG}`);
+    expect(m.consumeToken).toHaveBeenCalledWith(LONG, 'verify');
+    expect(m.query.mock.calls[0][1]).toEqual(['u1']);
+    expect(location(res)).toBe('http://localhost:3000/login?notice=verified');
   });
 });

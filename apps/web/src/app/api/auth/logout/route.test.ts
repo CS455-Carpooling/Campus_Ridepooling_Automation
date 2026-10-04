@@ -1,27 +1,32 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { cookieJar, db, request, resetAuthMocks } from '../../../../../test/auth-mocks';
+
+const m = vi.hoisted(() => ({ sameOrigin: vi.fn(), destroySession: vi.fn() }));
+
+vi.mock('@/lib/auth', () => ({
+  appUrl: () => 'http://localhost:3000',
+  json: (body: object, status = 200) => Response.json(body, { status }),
+  sameOrigin: m.sameOrigin,
+  destroySession: m.destroySession,
+}));
+
 import { POST } from './route';
 
-vi.mock('@/lib/db', async () => (await import('../../../../../test/auth-mocks')).dbModule);
-vi.mock('next/headers', async () => (await import('../../../../../test/auth-mocks')).headersModule);
-
-beforeEach(() => {
-  resetAuthMocks();
-});
+beforeEach(() => Object.values(m).forEach((f) => f.mockReset()));
 
 describe('POST /api/auth/logout', () => {
-  it('ends the session and sends the user to the sign-in page', async () => {
-    cookieJar.store.set('crp_session', 'token-1');
-    const response = await POST();
-    expect(response.status).toBe(303);
-    expect(response.headers.get('location')).toBe('http://localhost:3000/login');
-    expect(db.calls('DELETE FROM sessions WHERE token_hash')).toHaveLength(1);
-    expect(cookieJar.store.has('crp_session')).toBe(false);
+  it('rejects a foreign origin without touching the session', async () => {
+    m.sameOrigin.mockResolvedValue(false);
+    const res = await POST();
+    expect(res.status).toBe(403);
+    expect(m.destroySession).not.toHaveBeenCalled();
   });
 
-  it('refuses requests from other sites', async () => {
-    request.headers = new Headers({ origin: 'https://evil.example', host: 'localhost:3000' });
-    expect((await POST()).status).toBe(403);
+  it('destroys the session and redirects to /login', async () => {
+    m.sameOrigin.mockResolvedValue(true);
+    const res = await POST();
+    expect(m.destroySession).toHaveBeenCalledTimes(1);
+    expect(res.status).toBe(303);
+    expect(res.headers.get('location')).toBe('http://localhost:3000/login');
   });
 });

@@ -1,38 +1,65 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { db, jsonPost, request, resetAuthMocks } from '../../../../../test/auth-mocks';
+
+const m = vi.hoisted(() => ({
+  query: vi.fn(),
+  guard: vi.fn(),
+  rateLimit: vi.fn(),
+  sendResetEmail: vi.fn(),
+}));
+
+vi.mock('@/lib/db', () => ({ pool: { query: m.query } }));
+vi.mock('@/lib/auth', () => ({
+  EMAIL_RE: /^[a-z0-9._%+-]+@iitk\.ac\.in$/,
+  normalizeEmail: (v: unknown) => (typeof v === 'string' ? v.trim().toLowerCase() : ''),
+  readJson: async (req: Request) => req.json(),
+  json: (body: object, status = 200) => Response.json(body, { status }),
+  guard: m.guard,
+  rateLimit: m.rateLimit,
+  sendResetEmail: m.sendResetEmail,
+}));
+
 import { POST } from './route';
 
-vi.mock('@/lib/db', async () => (await import('../../../../../test/auth-mocks')).dbModule);
-vi.mock('next/headers', async () => (await import('../../../../../test/auth-mocks')).headersModule);
+const post = (body: Record<string, unknown>) =>
+  POST(
+    new Request('http://localhost/api/auth/forgot', { method: 'POST', body: JSON.stringify(body) }),
+  );
 
-let mailLog: ReturnType<typeof vi.spyOn>;
 beforeEach(() => {
-  resetAuthMocks();
-  mailLog = vi.spyOn(console, 'log').mockImplementation(() => {});
+  Object.values(m).forEach((f) => f.mockReset());
+  m.guard.mockResolvedValue(null);
+  m.rateLimit.mockResolvedValue(true);
 });
 
-async function forgot(email: unknown) {
-  const response = await POST(jsonPost({ email }));
-  return { status: response.status, body: await response.json() };
-}
-
 describe('POST /api/auth/forgot', () => {
-  it('emails a reset link to a verified account', async () => {
-    db.on('FROM users WHERE email', [{ id: 'u1' }]);
-    await expect(forgot('Ananya@iitk.ac.in')).resolves.toEqual({ status: 200, body: { ok: true } });
-    await vi.waitFor(() => expect(mailLog.mock.calls[0][0]).toContain('/reset-password?token='));
+  it('returns the guard response when blocked', async () => {
+    m.guard.mockResolvedValue(new Response('no', { status: 429 }));
+    expect((await post({ email: 'a@iitk.ac.in' })).status).toBe(429);
   });
 
-  it('answers the same way when there is no such account, and sends nothing', async () => {
-    await expect(forgot('nobody@iitk.ac.in')).resolves.toEqual({ status: 200, body: { ok: true } });
-    await expect(forgot('someone@gmail.com')).resolves.toEqual({ status: 200, body: { ok: true } });
-    expect(db.calls('INSERT INTO auth_tokens')).toHaveLength(0);
-    expect(mailLog).not.toHaveBeenCalled();
+  it('answers ok without a lookup for a non-IITK email', async () => {
+    const res = await post({ email: 'a@gmail.com' });
+    expect(await res.json()).toEqual({ ok: true });
+    expect(m.query).not.toHaveBeenCalled();
   });
 
-  it('refuses requests from other sites', async () => {
-    request.headers = new Headers({ origin: 'https://evil.example', host: 'localhost:3000' });
-    await expect(forgot('ananya@iitk.ac.in')).resolves.toMatchObject({ status: 403 });
+  it('answers ok without a lookup when the per-email limit is hit', async () => {
+    m.rateLimit.mockResolvedValue(false);
+    expect((await post({ email: 'a@iitk.ac.in' })).status).toBe(200);
+    expect(m.rateLimit).toHaveBeenCalledWith('forgot:a@iitk.ac.in', 3, 3600);
+    expect(m.query).not.toHaveBeenCalled();
+  });
+
+  it('sends a reset email for a verified account', async () => {
+    m.query.mockResolvedValue({ rows: [{ id: 'u1' }] });
+    expect(await (await post({ email: 'A@iitk.ac.in' })).json()).toEqual({ ok: true });
+    expect(m.sendResetEmail).toHaveBeenCalledWith('u1', 'a@iitk.ac.in');
+  });
+
+  it('gives the same answer but sends nothing for an unknown account', async () => {
+    m.query.mockResolvedValue({ rows: [] });
+    expect(await (await post({ email: 'a@iitk.ac.in' })).json()).toEqual({ ok: true });
+    expect(m.sendResetEmail).not.toHaveBeenCalled();
   });
 });

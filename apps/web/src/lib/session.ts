@@ -1,8 +1,6 @@
 import 'server-only';
 import { redirect } from 'next/navigation';
-import { connection } from 'next/server';
 import { cache } from 'react';
-import { getCurrentUser } from './auth';
 import type { Role } from './roles';
 import { routes } from './routes';
 
@@ -16,15 +14,13 @@ export type Session = {
 /**
  * The signed-in user, or null.
  *
- * Under `next dev`, DEV_SESSION_ROLE=student or admin in apps/web/.env.local
- * signs you in as a development user with that role (the optional
- * DEV_SESSION_EMAIL sets its address), so pages can be built without a
- * database. Otherwise the user comes from the session cookie set by
- * /api/auth/login (CS455-19), when a database is configured.
+ * Sign-in does not exist yet (CS455-17), so for now this only knows a
+ * development user: under `next dev`, DEV_SESSION_ROLE=student or admin in
+ * apps/web/.env.local signs you in with that role, and the optional
+ * DEV_SESSION_EMAIL sets the account's email address. In every other
+ * environment, including every production build, nobody is signed in.
  */
-export const getSession = cache(
-  async (): Promise<Session | null> => developmentSession() ?? (await accountSession()),
-);
+export const getSession = cache(async (): Promise<Session | null> => developmentSession());
 
 /** For pages and server actions: the signed-in user, or a redirect to the sign-in page. */
 export async function verifySession(): Promise<Session> {
@@ -47,26 +43,6 @@ function developmentSession(): Session | null {
     displayName: email ? email.split('@')[0] : defaultName,
     role,
   };
-}
-
-/**
- * The user behind the session cookie. Every registered account is a student;
- * operations admins are given their role separately (not built yet).
- */
-async function accountSession(): Promise<Session | null> {
-  // The answer depends on the request's cookie, so never prerender it at build time
-  // (that would bake "signed out" into every page that shows the session).
-  await connection();
-  if (!process.env.DATABASE_URL) return null;
-  try {
-    const user = await getCurrentUser();
-    if (!user) return null;
-    return { userId: user.id, email: user.email, displayName: user.full_name, role: 'student' };
-  } catch (error) {
-    // A database outage must not take every page down; treat it as signed out.
-    console.error('Could not read the session', error);
-    return null;
-  }
 }
 
 /** DEV_SESSION_EMAIL in lower case, if it looks like an email address. */

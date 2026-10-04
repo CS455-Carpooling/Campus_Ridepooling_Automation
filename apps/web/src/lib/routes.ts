@@ -9,8 +9,6 @@ export const routes = {
   home: '/home',
   login: '/login',
   register: '/register',
-  forgotPassword: '/forgot-password',
-  resetPassword: '/reset-password',
   terms: '/terms',
   privacy: '/privacy',
   findRide: '/rides',

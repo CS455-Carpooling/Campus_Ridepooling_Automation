@@ -1,96 +1,92 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Session } from '@/lib/session';
-import DashboardPage from './dashboard/page';
-import ForgotPasswordPage from './forgot-password/page';
-import LoginPage from './login/page';
-import RegisterPage from './register/page';
-import ResetPasswordPage from './reset-password/page';
 
-const { getSession, redirect } = vi.hoisted(() => ({
-  getSession: vi.fn<() => Promise<Session | null>>(),
+const { getCurrentUser, redirect } = vi.hoisted(() => ({
+  getCurrentUser: vi.fn(),
   redirect: vi.fn((url: string) => {
-    throw new Error(`NEXT_REDIRECT ${url}`);
+    throw new Error(`REDIRECT:${url}`);
   }),
 }));
-vi.mock('@/lib/session', () => ({ getSession }));
-vi.mock('next/navigation', () => ({
-  redirect,
-  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+
+vi.mock('@/lib/auth', () => ({ getCurrentUser }));
+vi.mock('next/navigation', () => ({ redirect }));
+vi.mock('@/components/NextPage', () => ({
+  default: (props: { page: string; notice?: string; token?: string }) => (
+    <div
+      data-testid="next-page"
+      data-page={props.page}
+      data-notice={props.notice ?? ''}
+      data-token={props.token ?? ''}
+    />
+  ),
 }));
 
-const params = <T extends Record<string, string>>(value: T) => Promise.resolve(value);
+const user = { full_name: 'Ananya Rao', email: 'ananya@iitk.ac.in' };
 
 beforeEach(() => {
-  getSession.mockReset().mockResolvedValue(null);
+  getCurrentUser.mockReset();
   redirect.mockClear();
 });
 
-describe('sign-in page', () => {
-  it('shows the sign-in form', async () => {
-    render(await LoginPage({ searchParams: params({}) } as unknown as PageProps<'/login'>));
-    expect(screen.getByRole('button', { name: /Log in/ })).toBeInTheDocument();
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+describe.each([
+  ['login', () => import('./login/page')],
+  ['register', () => import('./register/page')],
+  ['forgot', () => import('./forgot-password/page')],
+] as const)('%s page', (name, load) => {
+  it('shows the form with the notice when signed out', async () => {
+    getCurrentUser.mockResolvedValue(null);
+    const { default: Page } = await load();
+    render(await Page({ searchParams: Promise.resolve({ notice: 'hello' }) }));
+    const el = screen.getByTestId('next-page');
+    expect(el).toHaveAttribute('data-page', name);
+    expect(el).toHaveAttribute('data-notice', 'hello');
   });
 
-  it.each([
-    ['verified', 'status', 'Email verified.'],
-    ['verify_failed', 'alert', 'invalid or has expired'],
-  ])('explains the result of a verification link (%s)', async (notice, role, text) => {
-    render(await LoginPage({ searchParams: params({ notice }) } as unknown as PageProps<'/login'>));
-    expect(screen.getByRole(role)).toHaveTextContent(text);
+  it('works without a notice', async () => {
+    getCurrentUser.mockResolvedValue(null);
+    const { default: Page } = await load();
+    render(await Page({ searchParams: Promise.resolve({}) }));
+    expect(screen.getByTestId('next-page')).toHaveAttribute('data-notice', '');
   });
 
-  it('ignores unknown notices', async () => {
-    render(
-      await LoginPage({
-        searchParams: params({ notice: 'hello' }),
-      } as unknown as PageProps<'/login'>),
+  it('redirects signed-in users to the dashboard', async () => {
+    getCurrentUser.mockResolvedValue(user);
+    const { default: Page } = await load();
+    await expect(Page({ searchParams: Promise.resolve({}) })).rejects.toThrow(
+      'REDIRECT:/dashboard',
     );
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-  });
-
-  it('sends signed-in users to their home page', async () => {
-    getSession.mockResolvedValue({
-      userId: 'u1',
-      email: 'ananya@iitk.ac.in',
-      displayName: 'Ananya',
-      role: 'student',
-    });
-    await expect(
-      LoginPage({ searchParams: params({}) } as unknown as PageProps<'/login'>),
-    ).rejects.toThrow('NEXT_REDIRECT /home');
   });
 });
 
-describe('registration and password pages', () => {
-  it('shows the registration form', () => {
-    render(<RegisterPage />);
-    expect(screen.getByRole('button', { name: /Create my account/ })).toBeInTheDocument();
+describe('reset-password page', () => {
+  it('passes the token to the reset form', async () => {
+    const { default: Page } = await import('./reset-password/page');
+    render(await Page({ searchParams: Promise.resolve({ token: 'abc' }) }));
+    expect(screen.getByTestId('next-page')).toHaveAttribute('data-token', 'abc');
+    expect(screen.getByTestId('next-page')).toHaveAttribute('data-page', 'reset');
   });
 
-  it('asks for the email address to send a reset link to', () => {
-    render(<ForgotPasswordPage />);
-    expect(screen.getByRole('button', { name: /Send reset link/ })).toBeInTheDocument();
-  });
-
-  it('asks for a new password when opened from a reset email', async () => {
-    render(
-      await ResetPasswordPage({
-        searchParams: params({ token: 'raw' }),
-      } as unknown as PageProps<'/reset-password'>),
+  it('redirects to forgot-password when there is no token', async () => {
+    const { default: Page } = await import('./reset-password/page');
+    await expect(Page({ searchParams: Promise.resolve({}) })).rejects.toThrow(
+      'REDIRECT:/forgot-password',
     );
-    expect(screen.getByLabelText('New password')).toBeInTheDocument();
+  });
+});
+
+describe('dashboard page', () => {
+  it('greets the signed-in user by first name', async () => {
+    getCurrentUser.mockResolvedValue(user);
+    const { default: Page } = await import('./dashboard/page');
+    render(await Page());
+    expect(screen.getByRole('heading', { name: 'Hi, Ananya' })).toBeInTheDocument();
+    expect(screen.getByText(/ananya@iitk\.ac\.in/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Log out' })).toBeInTheDocument();
   });
 
-  it('sends visitors without a reset token to the forgotten-password page', async () => {
-    await expect(
-      ResetPasswordPage({ searchParams: params({}) } as unknown as PageProps<'/reset-password'>),
-    ).rejects.toThrow('NEXT_REDIRECT /forgot-password');
-  });
-
-  it('keeps the old dashboard address working', () => {
-    expect(() => DashboardPage()).toThrow('NEXT_REDIRECT /home');
+  it('redirects to login when signed out', async () => {
+    getCurrentUser.mockResolvedValue(null);
+    const { default: Page } = await import('./dashboard/page');
+    await expect(Page()).rejects.toThrow('REDIRECT:/login');
   });
 });

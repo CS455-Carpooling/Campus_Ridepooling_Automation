@@ -1,84 +1,116 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { db, jsonPost, request, resetAuthMocks } from '../../../../../test/auth-mocks';
+
+const m = vi.hoisted(() => ({
+  query: vi.fn(),
+  guard: vi.fn(),
+  rateLimit: vi.fn(),
+  hashPassword: vi.fn(),
+  sendVerificationEmail: vi.fn(),
+  sendMail: vi.fn(),
+}));
+
+vi.mock('@/lib/db', () => ({ pool: { query: m.query } }));
+vi.mock('@/lib/auth', () => ({
+  EMAIL_RE: /^[a-z0-9._%+-]+@iitk\.ac\.in$/,
+  normalizeEmail: (v: unknown) => (typeof v === 'string' ? v.trim().toLowerCase() : ''),
+  readJson: async (req: Request) => req.json(),
+  json: (body: object, status = 200) => Response.json(body, { status }),
+  appUrl: () => 'http://localhost:3000',
+  guard: m.guard,
+  rateLimit: m.rateLimit,
+  hashPassword: m.hashPassword,
+  sendVerificationEmail: m.sendVerificationEmail,
+  sendMail: m.sendMail,
+}));
+
 import { POST } from './route';
 
-vi.mock('@/lib/db', async () => (await import('../../../../../test/auth-mocks')).dbModule);
-vi.mock('next/headers', async () => (await import('../../../../../test/auth-mocks')).headersModule);
-
 const valid = {
-  name: '  Ananya   Rao ',
-  roll: '230001',
   email: 'Ananya@iitk.ac.in',
-  password: 'correct horse battery',
+  name: '  Ananya   Rao ',
+  roll: '220123',
+  password: 'password123',
   terms: true,
 };
+const post = (body: Record<string, unknown>) =>
+  POST(
+    new Request('http://localhost/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+  );
 
-let mailLog: ReturnType<typeof vi.spyOn>;
 beforeEach(() => {
-  resetAuthMocks();
-  mailLog = vi.spyOn(console, 'log').mockImplementation(() => {});
+  Object.values(m).forEach((f) => f.mockReset());
+  m.guard.mockResolvedValue(null);
+  m.rateLimit.mockResolvedValue(true);
+  m.hashPassword.mockResolvedValue('hash');
 });
 
-async function register(body: unknown) {
-  const response = await POST(jsonPost(body));
-  return { status: response.status, body: await response.json() };
-}
-
 describe('POST /api/auth/register', () => {
-  it('creates the account and emails a verification link', async () => {
-    db.on('INSERT INTO users', [{ id: 'u1' }]);
-    await expect(register(valid)).resolves.toEqual({ status: 200, body: { ok: true } });
-
-    const [email, name, roll, hash] = db.calls('INSERT INTO users')[0];
-    expect([email, name, roll]).toEqual(['ananya@iitk.ac.in', 'Ananya Rao', '230001']);
-    expect(hash).toMatch(/^scrypt\$/);
-    await vi.waitFor(() => expect(mailLog.mock.calls[0][0]).toContain('/api/auth/verify?token='));
-  });
-
-  it('resends the link to an unverified account without changing its password', async () => {
-    db.on('FROM users WHERE email', [{ id: 'u1', email_verified_at: null }]);
-    await expect(register(valid)).resolves.toMatchObject({ status: 200 });
-    expect(db.calls('UPDATE users')).toHaveLength(0);
-    await vi.waitFor(() => expect(mailLog.mock.calls[0][0]).toContain('/api/auth/verify?token='));
-  });
-
-  it('tells the owner of an existing account, and answers the same way', async () => {
-    db.on('FROM users WHERE email', [{ id: 'u1', email_verified_at: new Date() }]);
-    await expect(register(valid)).resolves.toEqual({ status: 200, body: { ok: true } });
-    await vi.waitFor(() => expect(mailLog.mock.calls[0][0]).toContain('already have an account'));
+  it('returns the guard response when the request is blocked', async () => {
+    m.guard.mockResolvedValue(new Response('no', { status: 403 }));
+    expect((await post(valid)).status).toBe(403);
+    expect(m.query).not.toHaveBeenCalled();
   });
 
   it.each([
-    [{ email: 'ananya@gmail.com' }, 'Please use your @iitk.ac.in email address.'],
-    [{ name: 'A' }, 'Please enter your full name.'],
-    [{ roll: '23 0001' }, 'Please enter a valid roll number.'],
-    [{ password: 'short' }, 'Password must be 8 to 128 characters.'],
-    [{ terms: false }, 'Please accept the guidelines and privacy policy.'],
-  ])('rejects %o', async (change, error) => {
-    await expect(register({ ...valid, ...change })).resolves.toEqual({
-      status: 400,
-      body: { error },
-    });
-    expect(db.calls('INSERT INTO users')).toHaveLength(0);
+    ['a non-IITK email', { email: 'a@gmail.com' }, /iitk\.ac\.in/],
+    ['a too-short name', { name: 'A' }, /full name/],
+    ['a too-long name', { name: 'A'.repeat(81) }, /full name/],
+    ['an invalid roll number', { roll: '!!' }, /roll number/],
+    ['a short password', { password: 'short' }, /8 to 128/],
+    ['a long password', { password: 'p'.repeat(129) }, /8 to 128/],
+    ['missing terms', { terms: false }, /guidelines/],
+  ])('rejects %s with 400', async (_, patch, message) => {
+    const res = await post({ ...valid, ...patch });
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toMatch(message);
+    expect(m.query).not.toHaveBeenCalled();
   });
 
-  it('accepts only strings for every field', async () => {
-    const result = await register({ email: 1, name: 2, roll: 3, password: 4, terms: true });
-    expect(result.status).toBe(400);
+  it('returns 429 when the per-email limit is exceeded', async () => {
+    m.rateLimit.mockResolvedValue(false);
+    expect((await post(valid)).status).toBe(429);
+    expect(m.rateLimit).toHaveBeenCalledWith('register:ananya@iitk.ac.in', 3, 3600);
   });
 
-  it('limits sign-ups per email address', async () => {
-    db.handlers.unshift((sql, params) =>
-      sql.includes('rate_limits') && String(params[0]).startsWith('register:ananya')
-        ? { rows: [{ count: 4 }] }
-        : undefined,
+  it('creates a new user with normalised fields and sends a verification email', async () => {
+    m.query.mockResolvedValueOnce({ rows: [{ id: 'u1' }] });
+    const res = await post(valid);
+    expect(await res.json()).toEqual({ ok: true });
+    expect(m.query.mock.calls[0][1]).toEqual(['ananya@iitk.ac.in', 'Ananya Rao', '220123', 'hash']);
+    expect(m.sendVerificationEmail).toHaveBeenCalledWith('u1', 'ananya@iitk.ac.in');
+  });
+
+  it('re-sends verification for an existing unverified account', async () => {
+    m.query
+      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [{ id: 'u2', email_verified_at: null }] });
+    expect((await post(valid)).status).toBe(200);
+    expect(m.sendVerificationEmail).toHaveBeenCalledWith('u2', 'ananya@iitk.ac.in');
+    expect(m.sendMail).not.toHaveBeenCalled();
+  });
+
+  it('emails a notice for an existing verified account, with the same response', async () => {
+    m.query
+      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [{ id: 'u3', email_verified_at: new Date() }] });
+    const res = await post(valid);
+    expect(await res.json()).toEqual({ ok: true });
+    expect(m.sendMail).toHaveBeenCalledWith(
+      'ananya@iitk.ac.in',
+      'You already have an account',
+      expect.stringContaining('http://localhost:3000/forgot-password'),
     );
-    await expect(register(valid)).resolves.toMatchObject({ status: 429 });
+    expect(m.sendVerificationEmail).not.toHaveBeenCalled();
   });
 
-  it('refuses requests from other sites', async () => {
-    request.headers = new Headers({ origin: 'https://evil.example', host: 'localhost:3000' });
-    await expect(register(valid)).resolves.toMatchObject({ status: 403 });
+  it('sends nothing if the conflicting row can no longer be found', async () => {
+    m.query.mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [] });
+    expect((await post(valid)).status).toBe(200);
+    expect(m.sendMail).not.toHaveBeenCalled();
+    expect(m.sendVerificationEmail).not.toHaveBeenCalled();
   });
 });

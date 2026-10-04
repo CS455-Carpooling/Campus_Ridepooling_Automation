@@ -96,6 +96,8 @@ export async function clientIp() {
 
 export async function sameOrigin() {
   const h = await headers();
+  // Browsers set this header themselves; page scripts cannot forge it.
+  if (h.get('sec-fetch-site') === 'same-origin') return true;
   const origin = h.get('origin');
   const host = h.get('x-forwarded-host') ?? h.get('host');
   if (!origin || !host) return false;
@@ -105,7 +107,6 @@ export async function sameOrigin() {
     return false;
   }
 }
-
 /** CSRF origin check + per-IP rate limit. Returns a Response if the request must be rejected. */
 export async function guard(action: string, ipLimit: number, windowSec: number) {
   if (!(await sameOrigin())) return json({ error: 'Invalid request origin.' }, 403);

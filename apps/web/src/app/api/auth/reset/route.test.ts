@@ -1,55 +1,70 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { db, jsonPost, request, resetAuthMocks } from '../../../../../test/auth-mocks';
+
+const m = vi.hoisted(() => ({
+  query: vi.fn(),
+  guard: vi.fn(),
+  consumeToken: vi.fn(),
+  hashPassword: vi.fn(),
+}));
+
+vi.mock('@/lib/db', () => ({ pool: { query: m.query } }));
+vi.mock('@/lib/auth', () => ({
+  readJson: async (req: Request) => req.json(),
+  json: (body: object, status = 200) => Response.json(body, { status }),
+  guard: m.guard,
+  consumeToken: m.consumeToken,
+  hashPassword: m.hashPassword,
+}));
+
 import { POST } from './route';
 
-vi.mock('@/lib/db', async () => (await import('../../../../../test/auth-mocks')).dbModule);
-vi.mock('next/headers', async () => (await import('../../../../../test/auth-mocks')).headersModule);
+const post = (body: Record<string, unknown>) =>
+  POST(
+    new Request('http://localhost/api/auth/reset', { method: 'POST', body: JSON.stringify(body) }),
+  );
 
 beforeEach(() => {
-  resetAuthMocks();
+  Object.values(m).forEach((f) => f.mockReset());
+  m.guard.mockResolvedValue(null);
+  m.hashPassword.mockResolvedValue('newhash');
 });
 
-async function reset(body: unknown) {
-  const response = await POST(jsonPost(body));
-  return { status: response.status, body: await response.json() };
-}
-
 describe('POST /api/auth/reset', () => {
-  it('sets the new password and signs the account out everywhere', async () => {
-    db.on('DELETE FROM auth_tokens', [{ user_id: 'u1' }]);
-    await expect(reset({ token: 'raw', password: 'a new long password' })).resolves.toEqual({
-      status: 200,
-      body: { ok: true },
-    });
-    const [hash, userId] = db.calls('UPDATE users SET password_hash')[0];
-    expect(hash).toMatch(/^scrypt\$/);
-    expect(userId).toBe('u1');
-    expect(db.calls('DELETE FROM sessions WHERE user_id')[0]).toEqual(['u1']);
+  it('returns the guard response when blocked', async () => {
+    m.guard.mockResolvedValue(new Response('no', { status: 403 }));
+    expect((await post({ token: 't', password: 'password123' })).status).toBe(403);
   });
 
-  it('rejects an invalid or used link', async () => {
-    await expect(reset({ token: 'raw', password: 'a new long password' })).resolves.toEqual({
-      status: 400,
-      body: { error: 'This reset link is invalid or has expired.' },
-    });
-    await expect(reset({ password: 'a new long password' })).resolves.toMatchObject({
-      status: 400,
-    });
+  it.each([['short'], ['p'.repeat(129)]])(
+    'rejects a bad password length with 400',
+    async (password) => {
+      expect((await post({ token: 't', password })).status).toBe(400);
+      expect(m.consumeToken).not.toHaveBeenCalled();
+    },
+  );
+
+  it('rejects a missing token without consuming anything', async () => {
+    const res = await post({ password: 'password123' });
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toMatch(/invalid or has expired/);
+    expect(m.consumeToken).not.toHaveBeenCalled();
   });
 
-  it('rejects a password that is too short, before using the token', async () => {
-    await expect(reset({ token: 'raw', password: 'short' })).resolves.toMatchObject({
-      status: 400,
-    });
-    await expect(reset({ token: 'raw', password: 42 })).resolves.toMatchObject({ status: 400 });
-    expect(db.calls('DELETE FROM auth_tokens')).toHaveLength(0);
+  it('rejects an invalid or expired token', async () => {
+    m.consumeToken.mockResolvedValue(null);
+    expect((await post({ token: 't', password: 'password123' })).status).toBe(400);
+    expect(m.query).not.toHaveBeenCalled();
   });
 
-  it('refuses requests from other sites', async () => {
-    request.headers = new Headers({ origin: 'https://evil.example', host: 'localhost:3000' });
-    await expect(reset({ token: 'raw', password: 'long enough' })).resolves.toMatchObject({
-      status: 403,
-    });
+  it('updates the password and signs the user out everywhere', async () => {
+    m.consumeToken.mockResolvedValue('u1');
+    m.query.mockResolvedValue({ rows: [] });
+    const res = await post({ token: 'tok', password: 'password123' });
+    expect(await res.json()).toEqual({ ok: true });
+    expect(m.consumeToken).toHaveBeenCalledWith('tok', 'reset');
+    expect(m.query.mock.calls[0][1]).toEqual(['newhash', 'u1']);
+    expect(m.query.mock.calls[1][0]).toMatch(/DELETE FROM sessions/);
+    expect(m.query.mock.calls[1][1]).toEqual(['u1']);
   });
 });
