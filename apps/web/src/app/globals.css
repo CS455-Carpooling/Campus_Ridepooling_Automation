@@ -38,7 +38,7 @@
 
   /* IBM Plex Mono inside .ds; outside it, Tailwind's default monospace stack. */
   --font-mono:
-    var(--font-ds-mono, ui-monospace), SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    var(--ds-font-mono, ui-monospace), SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
     'Courier New', monospace;
 
   /* The only animation: a slow pulse for skeleton loaders. */
@@ -87,8 +87,11 @@
   --ds-danger: #b3261e;
   --ds-warning: #7a5200;
 
+  /* Both fonts come from the stylesheet that <DesignSystem> links. */
+  --ds-font-mono: 'IBM Plex Mono';
+
   color: var(--ds-ink);
-  font-family: var(--font-ds-sans, 'Manrope'), ui-sans-serif, system-ui, sans-serif;
+  font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
 }
 
 /* Dark scheme, switched by the theme toggle (.dark on <html>). */
