@@ -89,4 +89,15 @@ describe('dashboard page', () => {
     const { default: Page } = await import('./dashboard/page');
     await expect(Page()).rejects.toThrow('REDIRECT:/login');
   });
+
+  it('links to offering a ride and to the home page', async () => {
+    getCurrentUser.mockResolvedValue(user);
+    const { default: Page } = await import('./dashboard/page');
+    render(await Page());
+    expect(screen.getByRole('link', { name: 'Offer a ride' })).toHaveAttribute(
+      'href',
+      '/rides/new',
+    );
+    expect(screen.getByRole('link', { name: 'Go to your rides' })).toHaveAttribute('href', '/home');
+  });
 });
