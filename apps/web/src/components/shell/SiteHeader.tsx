@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { ButtonLink } from '@/components/ui/ButtonLink';
 import { LoadingRegion, Skeleton } from '@/components/ui/Skeleton';
-import { authApi } from '@/lib/auth-client';
 import { roleLabels } from '@/lib/roles';
 import { navigationFor, routes } from '@/lib/routes';
 import { getSession } from '@/lib/session';
@@ -48,20 +47,10 @@ export async function SiteHeader() {
             <nav aria-label="Main">
               <NavLinks items={navigationFor(session.role)} />
             </nav>
-            <div className="flex items-center gap-2 sm:ml-auto">
-              <p className="text-sm text-ink-muted">
-                <span className="font-semibold text-ink">{session.displayName}</span> (
-                {roleLabels[session.role]})
-              </p>
-              <form action={authApi.logout} method="post">
-                <button
-                  type="submit"
-                  className="inline-flex min-h-11 items-center rounded-control px-3 text-sm font-semibold text-ink hover:bg-panel"
-                >
-                  Sign out
-                </button>
-              </form>
-            </div>
+            <p className="text-sm text-ink-muted sm:ml-auto">
+              <span className="font-semibold text-ink">{session.displayName}</span> (
+              {roleLabels[session.role]})
+            </p>
           </>
         ) : (
           <nav aria-label="Account" className="ml-auto">

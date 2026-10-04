@@ -46,12 +46,10 @@ exist yet shows the 404 page until the page is built.
 | --- | --- | --- |
 | `/` | Landing page (public) | Built (CS455-16) |
 | `/home` | Home: one screen for students, another for admins | Built (CS455-15) |
-| `/login` | Sign in with IITK email and password | Built (CS455-17, CS455-19) |
-| `/register` | Registration, iitk.ac.in addresses only, verified by email | Built (CS455-18, CS455-19) |
-| `/forgot-password`, `/reset-password` | Ask for a reset link; set a new password from it | Built (CS455-19) |
-| `/api/auth/*` | Register, verify, log in, log out, forgot, reset | Built (CS455-19), see `setup.md` |
-| `/terms` | Community guidelines | Placeholder |
-| `/privacy` | Privacy policy | Placeholder |
+| `/login` | Sign in with a code sent by email | CS455-17 |
+| `/register` | Registration, iitk.ac.in addresses only | CS455-18 |
+| `/terms` | Terms of service | To be created |
+| `/privacy` | Privacy policy | To be created |
 | `/rides/new` | Offer a ride: route, vehicle, departure window, fare | In progress (CS455-24, 25) |
 | `/rides`, `/rides/[id]` | Find a ride, ride details | Not started |
 | `/notifications` | Notifications | Not started |
@@ -67,15 +65,11 @@ exist yet shows the 404 page until the page is built.
   `src/lib/session.ts`, which redirects to `/login` when nobody is signed in. The header only
   displays the session; the root layout does not protect pages, because layouts are not re-rendered
   on navigation.
-- **Accounts (CS455-19):** `/api/auth/*` stores accounts in PostgreSQL (`db/schema.sql`,
-  `npm run db:migrate`), and `getSession()` reads the session cookie that `/api/auth/login` sets.
-  Every registered account is a student; admin accounts are not provisioned yet. `setup.md`
-  explains the database and email setup.
-- **Development sign-in:** to build pages without a database, copy `.env.example` to `.env.local`
-  in this folder, set `DEV_SESSION_ROLE` to `student` or `admin`, optionally set
-  `DEV_SESSION_EMAIL`, and restart `npm run dev`. It takes priority over real sign-in under
-  `npm run dev`; production builds and tests ignore it. Keep passwords and personal addresses out
-  of the repository.
+- **Development sign-in:** until sign-in exists (CS455-17), `getSession()` returns a development
+  user. Copy `.env.example` to `.env.local` in this folder, set `DEV_SESSION_ROLE` to `student` or
+  `admin`, optionally set `DEV_SESSION_EMAIL` to your own iitk.ac.in address, and restart
+  `npm run dev`. Production builds and tests ignore both. No password is involved: keep
+  passwords and personal addresses out of the repository.
 - **Ride rules** (`src/lib/ride-rules.ts`) hold the create-ride validation shared by the form and
   `POST /api/rides`; `src/lib/ride-options.ts` lists the fixed places and vehicle types.
 - **Page data** comes from server-only modules in `src/lib`, such as `home-data.ts`. Until the APIs
