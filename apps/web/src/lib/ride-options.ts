@@ -1,6 +1,7 @@
 import 'server-only';
+import { pool } from './db';
 
-/** A place a ride starts or ends at. IDs are text codes, the same as in the database seed. */
+/** A place a ride starts or ends at. IDs are text codes stored in the database. */
 export type Place = {
   id: string;
   name: string;
@@ -23,36 +24,42 @@ export type RideFormOptions = {
   vehicleTypes: VehicleType[];
 };
 
-// Agreed with the database task (CS455-22): SYS-FR-09 places and the fixed
-// vehicle types. Capacities are tentative.
-const campusPlaces: Place[] = [
-  ...Array.from({ length: 14 }, (_, index) => ({
-    id: `hall-${index + 1}`,
-    name: `Hall ${index + 1}`,
-  })),
-  { id: 'main-gate', name: 'Main Gate' },
-];
-
-const hubs: Place[] = [
-  { id: 'kanpur-central', name: 'Kanpur Central', detail: 'Railway station' },
-  { id: 'kanpur-anwarganj', name: 'Kanpur Anwarganj', detail: 'Railway station' },
-  { id: 'bus-stand', name: 'Bus stand', detail: 'Kanpur' },
-  { id: 'metro-station', name: 'Metro station', detail: 'Kanpur Metro' },
-  { id: 'kanpur-airport', name: 'Kanpur airport', detail: 'Airport' },
-  { id: 'lucknow-airport', name: 'Lucknow airport', detail: 'Airport' },
-];
-
-const vehicleTypes: VehicleType[] = [
-  { id: 'car', name: 'Car', capacity: 4 },
-  { id: 'auto', name: 'Auto', capacity: 3 },
-  { id: 'vikram', name: 'Vikram', capacity: 7 },
-];
+type LocationRow = {
+  id: string;
+  name: string;
+  detail: string | null;
+  type: 'campus' | 'transport_hub';
+  sort_order: number;
+};
+type VehicleTypeRow = { id: string; name: string; capacity: number; sort_order: number };
 
 /**
- * The choices of the create-ride form. Until the rides database (CS455-22) is
- * on master these are the fixed lists above; then only this function changes,
- * to read the seeded tables.
+ * The Create Ride form's authoritative options. Configuration is read from the
+ * database so the UI never owns the location or vehicle-capacity lists.
  */
 export async function getRideFormOptions(): Promise<RideFormOptions> {
-  return { campusPlaces, hubs, vehicleTypes };
+  const [locations, vehicleTypes] = await Promise.all([
+    pool.query<LocationRow>(
+      `SELECT id,name,detail,type,sort_order
+       FROM locations
+       WHERE is_active=true
+       ORDER BY type, sort_order`,
+    ),
+    pool.query<VehicleTypeRow>(
+      `SELECT id,name,capacity,sort_order
+       FROM vehicle_types
+       WHERE is_active=true
+       ORDER BY sort_order`,
+    ),
+  ]);
+
+  return {
+    campusPlaces: locations.rows
+      .filter((place) => place.type === 'campus')
+      .map(({ id, name, detail }) => ({ id, name, ...(detail ? { detail } : {}) })),
+    hubs: locations.rows
+      .filter((place) => place.type === 'transport_hub')
+      .map(({ id, name, detail }) => ({ id, name, ...(detail ? { detail } : {}) })),
+    vehicleTypes: vehicleTypes.rows.map(({ id, name, capacity }) => ({ id, name, capacity })),
+  };
 }

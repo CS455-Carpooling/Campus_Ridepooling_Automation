@@ -1,40 +1,46 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const query = vi.hoisted(() => vi.fn());
+vi.mock('./db', () => ({ pool: { query } }));
+
 import { getRideFormOptions } from './ride-options';
 
-describe('getRideFormOptions (fixed lists until CS455-22)', () => {
-  it('offers Hall 1 to Hall 14 and Main Gate on campus', async () => {
-    const { campusPlaces } = await getRideFormOptions();
-    expect(campusPlaces).toHaveLength(15);
-    expect(campusPlaces[0]).toEqual({ id: 'hall-1', name: 'Hall 1' });
-    expect(campusPlaces.at(-2)).toEqual({ id: 'hall-14', name: 'Hall 14' });
-    expect(campusPlaces.at(-1)).toEqual({ id: 'main-gate', name: 'Main Gate' });
+beforeEach(() => query.mockReset());
+
+describe('getRideFormOptions', () => {
+  it('reads active campus places, hubs and vehicle types from the database', async () => {
+    query
+      .mockResolvedValueOnce({
+        rows: [
+          { id: 'hall-1', name: 'Hall 1', detail: null, type: 'campus', sort_order: 1 },
+          {
+            id: 'kanpur-central',
+            name: 'Kanpur Central',
+            detail: 'Railway station',
+            type: 'transport_hub',
+            sort_order: 1,
+          },
+        ],
+      })
+      .mockResolvedValueOnce({ rows: [{ id: 'car', name: 'Car', capacity: 4, sort_order: 1 }] });
+
+    await expect(getRideFormOptions()).resolves.toEqual({
+      campusPlaces: [{ id: 'hall-1', name: 'Hall 1' }],
+      hubs: [{ id: 'kanpur-central', name: 'Kanpur Central', detail: 'Railway station' }],
+      vehicleTypes: [{ id: 'car', name: 'Car', capacity: 4 }],
+    });
   });
 
-  it('offers the six SYS-FR-09 transport hubs, metro station included', async () => {
-    const { hubs } = await getRideFormOptions();
-    expect(hubs.map((hub) => hub.name)).toEqual([
-      'Kanpur Central',
-      'Kanpur Anwarganj',
-      'Bus stand',
-      'Metro station',
-      'Kanpur airport',
-      'Lucknow airport',
-    ]);
-  });
+  it('does not include inactive rows because the SQL filters them', async () => {
+    query.mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [] });
 
-  it('offers car, auto and Vikram, with capacities counting the owner', async () => {
-    const { vehicleTypes } = await getRideFormOptions();
-    expect(vehicleTypes.map(({ name, capacity }) => [name, capacity])).toEqual([
-      ['Car', 4],
-      ['Auto', 3],
-      ['Vikram', 7],
-    ]);
-  });
+    await expect(getRideFormOptions()).resolves.toEqual({
+      campusPlaces: [],
+      hubs: [],
+      vehicleTypes: [],
+    });
 
-  it('uses unique lower-case text codes as ids, like the database seed', async () => {
-    const { campusPlaces, hubs, vehicleTypes } = await getRideFormOptions();
-    const ids = [...campusPlaces, ...hubs, ...vehicleTypes].map((item) => item.id);
-    expect(new Set(ids).size).toBe(ids.length);
-    for (const id of ids) expect(id).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
+    expect(query.mock.calls[0][0]).toContain('ORDER BY type, sort_order');
+    expect(query.mock.calls[1][0]).toContain('ORDER BY sort_order');
   });
 });
