@@ -64,7 +64,9 @@ survives restarts (`docker compose down -v` deletes it).
   To let others sign in from their own devices, serve the app over HTTPS (for example through a
   tunnel) and set `APP_URL` to that address.
 - **Development against this database:** it listens on `127.0.0.1:5433`, so `npm run dev` can use
-  `DATABASE_URL=postgres://crp:<password>@localhost:5433/crp` in `apps/web/.env.local`.
+  `DATABASE_URL=postgres://crp:<password>@localhost:5433/crp` in `apps/web/.env.local`. The
+  `crp-pg` container from `apps/web/setup.md` uses the same port, so stop it first
+  (`docker stop crp-pg`).
 - CI builds and starts this setup whenever the Docker files change (`.github/workflows/docker.yml`).
 
 ## Marks
