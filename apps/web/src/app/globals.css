@@ -140,6 +140,13 @@
     text-wrap: pretty;
   }
 
+  /* Tailwind resolves its code font on :root, outside .ds, so set IBM Plex Mono here. */
+  .ds :where(code, kbd, samp, pre) {
+    font-family:
+      var(--ds-font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+      'Courier New', monospace;
+  }
+
   .ds :where(a) {
     text-decoration-line: underline;
     text-underline-offset: 0.2em;

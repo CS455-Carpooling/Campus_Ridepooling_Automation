@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { DESIGN_SYSTEM_FONTS, DesignSystem } from './DesignSystem';
+import { DesignSystem } from './DesignSystem';
+import { DESIGN_SYSTEM_FONTS } from './DesignSystemFonts';
 
 describe('DesignSystem', () => {
   it('scopes the design-system tokens to its content', () => {
