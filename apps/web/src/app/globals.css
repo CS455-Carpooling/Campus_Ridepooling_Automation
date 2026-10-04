@@ -7,7 +7,8 @@
  * <DesignSystem> (src/components/ui/DesignSystem.tsx): the create-ride UI,
  * terms, privacy, home, 404 and error pages. Everything outside .ds keeps
  * index.css's look unchanged. Dark values follow the .dark class that the
- * theme toggle puts on <html>. Every text and border pairing is checked
+ * theme toggle puts on <html> (ThemeSync applies the saved choice on the
+ * pages that have no toggle). Every text and border pairing is checked
  * against WCAG 2.1 AA, in both schemes, by test/contrast.test.ts (NFR-RD-15).
  */
 @theme inline {

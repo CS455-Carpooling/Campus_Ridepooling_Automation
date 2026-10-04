@@ -93,7 +93,8 @@ Every colour is a token in `src/app/globals.css`. The tokens are defined on the 
 work only inside `<DesignSystem>` (`src/components/ui/DesignSystem.tsx`), which also loads the two
 fonts: wrap the outermost element of a page in it. Pages outside it keep the site styles of
 `src/index.css`. The dark values apply when the theme toggle switches the site to dark (the `.dark`
-class on `<html>`); components need no `dark:` classes.
+class on `<html>`), and `<DesignSystem>` applies the saved choice on pages without a toggle;
+components need no `dark:` classes.
 
 | Token            | Light     | Dark      | Use                                              |
 | ---------------- | --------- | --------- | ------------------------------------------------ |
