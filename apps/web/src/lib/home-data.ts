@@ -1,14 +1,7 @@
 import 'server-only';
+import { getUpcomingRides, type UpcomingRide } from './ride-view';
 
-/** A ride the student has a seat on (as a rider) or is offering (as the owner). */
-export type UpcomingRide = {
-  rideId: string;
-  destination: string;
-  /** ISO 8601 date and time. */
-  departure: string;
-  part: 'rider' | 'owner';
-  seatsLeft: number;
-};
+export type { UpcomingRide };
 
 /** A join request waiting for someone's decision. */
 export type WaitingRequest =
@@ -41,12 +34,14 @@ export type AdminHomeData = {
 };
 
 /**
- * Data for the student home page. The rides and join-request APIs do not exist
- * yet, so this returns empty lists; when they do, only this function changes.
+ * Data for the student home page: the rides they offered or joined, from the
+ * database. Join requests do not exist yet, so nothing is waiting.
  */
-export async function getStudentHome(userId: string): Promise<StudentHomeData> {
-  void userId;
-  return { upcoming: [], waiting: [] };
+export async function getStudentHome(
+  userId: string,
+  now: Date = new Date(),
+): Promise<StudentHomeData> {
+  return { upcoming: await getUpcomingRides(userId, now), waiting: [] };
 }
 
 /**

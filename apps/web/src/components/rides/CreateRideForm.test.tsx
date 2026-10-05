@@ -69,5 +69,9 @@ describe('CreateRideForm', () => {
     await waitFor(() =>
       expect(screen.getByRole('status')).toHaveTextContent('Ride created successfully'),
     );
+    expect(screen.getByRole('link', { name: 'View your ride' })).toHaveAttribute(
+      'href',
+      '/rides/ride-1',
+    );
   });
 });

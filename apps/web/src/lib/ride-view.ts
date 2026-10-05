@@ -8,6 +8,7 @@ import {
   isLocked,
   isOpenToJoin,
   lockTime,
+  rideTitle,
   type RideState,
   type ViewerRole,
 } from './ride-status';
@@ -169,4 +170,66 @@ export async function getRideView(
       : null,
     readAt: now.toISOString(),
   };
+}
+
+/** A ride on the viewer's home page: one they offered or one they joined (FR-RD-06.4). */
+export type UpcomingRide = {
+  rideId: string;
+  /** "To Kanpur Central" or "From Kanpur Central". */
+  title: string;
+  /** ISO 8601: the start of the departure window. */
+  departure: string;
+  part: 'rider' | 'owner';
+  seatsLeft: number;
+  state: RideState;
+};
+
+type UpcomingRow = {
+  id: string;
+  direction: Direction;
+  hub_name: string;
+  departure_start: Date;
+  state: RideState;
+  is_owner: boolean;
+  seats_left: number;
+};
+
+/** The most rides the home page lists. */
+export const UPCOMING_LIMIT = 20;
+
+// A ride is upcoming while under way, or while scheduled and its window is not over:
+// nothing moves rides out of 'scheduled' yet, so the time keeps old rides out of the list.
+const UPCOMING_SQL = `
+  SELECT r.id, r.direction, hub.name AS hub_name, r.departure_start, r.state,
+         (r.owner_id = $1) AS is_owner,
+         GREATEST(r.capacity_snapshot
+           - (SELECT COUNT(*)::int FROM riders o WHERE o.ride_id = r.id), 0) AS seats_left
+  FROM riders me
+  JOIN rides r ON r.id = me.ride_id
+  JOIN locations hub ON hub.id = r.hub_id
+  WHERE me.user_id = $1
+    AND (r.state IN ('pickup_in_progress', 'in_transit')
+         OR (r.state = 'scheduled' AND r.departure_end > $2))
+  ORDER BY r.departure_start, r.id
+  LIMIT $3`;
+
+/**
+ * The rides `userId` offered or joined that have not happened yet, soonest
+ * first. The owner has a riders row too, so one query covers both. A user ID
+ * that is not a UUID (the development user) has no rides.
+ */
+export async function getUpcomingRides(
+  userId: string,
+  now: Date = new Date(),
+): Promise<UpcomingRide[]> {
+  if (!isUuid(userId)) return [];
+  const { rows } = await pool.query<UpcomingRow>(UPCOMING_SQL, [userId, now, UPCOMING_LIMIT]);
+  return rows.map((row) => ({
+    rideId: row.id,
+    title: rideTitle(row.direction, row.hub_name),
+    departure: row.departure_start.toISOString(),
+    part: row.is_owner ? 'owner' : 'rider',
+    seatsLeft: row.seats_left,
+    state: row.state,
+  }));
 }
