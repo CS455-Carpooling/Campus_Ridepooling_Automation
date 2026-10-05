@@ -47,10 +47,29 @@ export async function SiteHeader() {
             <nav aria-label="Main">
               <NavLinks items={navigationFor(session.role)} />
             </nav>
-            <p className="text-sm text-ink-muted sm:ml-auto">
-              <span className="font-semibold text-ink">{session.displayName}</span> (
-              {roleLabels[session.role]})
-            </p>
+            <Link href={routes.profile} className="group flex items-center gap-2 sm:ml-auto">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-panel text-ink-muted group-hover:bg-line">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="8" r="4" />
+                  <path d="M4 21a8 8 0 0 1 16 0" />
+                </svg>
+              </div>
+              <p className="text-sm text-ink-muted group-hover:text-ink">
+                <span className="font-semibold text-ink group-hover:underline">
+                  {session.displayName}
+                </span>{' '}
+                ({roleLabels[session.role]})
+              </p>
+            </Link>
           </>
         ) : (
           <nav aria-label="Account" className="ml-auto">

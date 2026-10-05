@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { FareSplitCard } from '@/components/landing/FareSplitCard';
 import { ThemeToggle } from '@/components/landing/ThemeToggle';
 import { Icon } from '@/components/PageShells';
+import { routes } from '@/lib/routes';
 import { getSession } from '@/lib/session';
 
 const HUBS = [
@@ -99,6 +100,11 @@ export default async function LandingPage() {
           <Link className="button button-sm" href={primary.href}>
             {primary.label} <Icon name="arrow" size={17} />
           </Link>
+          {session && (
+            <Link className="button button-sm button-light" href={routes.profile} title="Profile">
+              <Icon name="user" size={17} /> Profile
+            </Link>
+          )}
         </div>
       </header>
 

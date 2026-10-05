@@ -13,6 +13,7 @@ export const routes = {
   privacy: '/privacy',
   findRide: '/rides',
   offerRide: '/rides/new',
+  profile: '/profile',
   ride: (rideId: string) => `/rides/${encodeURIComponent(rideId)}`,
   notifications: '/notifications',
   adminIncidents: '/admin/incidents',
