@@ -81,8 +81,15 @@ CREATE TABLE IF NOT EXISTS riders (
   ride_id UUID NOT NULL REFERENCES rides(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES users(id),
   campus_location_id TEXT NOT NULL REFERENCES locations(id),
+  joined_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   CONSTRAINT riders_ride_user_unique UNIQUE (ride_id, user_id)
 );
+
+-- When the person got their seat: when the owner created the ride, or when a rider's
+-- request was accepted. It orders the fare split (Table T-2: owner first, then riders
+-- in the order they were accepted), so a riders row must be inserted on acceptance.
+-- Added after the table, so existing databases get it too.
+ALTER TABLE riders ADD COLUMN IF NOT EXISTS joined_at TIMESTAMPTZ NOT NULL DEFAULT now();
 
 -- Initial configurable locations. Stable IDs match the current Create Ride form
 -- values so the UI can later read these records directly from the database.
