@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
@@ -125,7 +126,10 @@ export function CreateRideForm({ options }: { options: RideFormOptions }) {
           className="mt-6 rounded-control border border-line-strong bg-panel px-4 py-3"
           role="status"
         >
-          Ride created successfully. Your ride is scheduled.
+          Ride created successfully. Your ride is scheduled.{' '}
+          <Link href={routes.ride(createdRideId)} className="font-semibold">
+            View your ride
+          </Link>
           <span className="sr-only"> Ride ID: {createdRideId}</span>
         </div>
       )}

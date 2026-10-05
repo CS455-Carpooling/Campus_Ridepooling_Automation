@@ -20,43 +20,71 @@ describe('StudentHome', () => {
     render(<StudentHome data={empty} />);
     expect(screen.getByText(/No upcoming rides/)).toBeInTheDocument();
     expect(screen.getByText('Nothing is waiting for a decision.')).toBeInTheDocument();
-    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.queryByRole('list', { name: 'Upcoming rides' })).not.toBeInTheDocument();
   });
 
-  it('lists upcoming rides with IST departure, role and seats', () => {
+  it('FR-RD-06.4: lists rides I offered and joined with IST departure, role and seats', () => {
     render(
       <StudentHome
         data={{
           upcoming: [
             {
               rideId: 'r1',
-              destination: 'Kanpur Central',
+              title: 'To Kanpur Central',
               departure: '2026-10-02T23:30:00Z',
               part: 'rider',
               seatsLeft: 1,
+              state: 'scheduled',
             },
             {
               rideId: 'r2',
-              destination: 'Lucknow airport',
+              title: 'From Lucknow airport',
               departure: '2026-10-03T08:30:00Z',
               part: 'owner',
-              seatsLeft: 3,
+              seatsLeft: 0,
+              state: 'pickup_in_progress',
             },
           ],
           waiting: [],
         }}
       />,
     );
-    const rows = within(screen.getByRole('table')).getAllByRole('row');
-    expect(rows).toHaveLength(3);
-    expect(within(rows[1]).getByText('Sat 3 Oct, 05:00')).toBeInTheDocument();
-    expect(within(rows[1]).getByRole('link', { name: 'Kanpur Central' })).toHaveAttribute(
+    const rides = within(screen.getByRole('list', { name: 'Upcoming rides' })).getAllByRole(
+      'listitem',
+    );
+    expect(rides).toHaveLength(2);
+    expect(within(rides[0]).getByRole('link', { name: 'To Kanpur Central' })).toHaveAttribute(
       'href',
       '/rides/r1',
     );
-    expect(within(rows[1]).getByText('Rider')).toBeInTheDocument();
-    expect(within(rows[2]).getByText('Owner')).toBeInTheDocument();
-    expect(within(rows[2]).getByText('3')).toBeInTheDocument();
+    expect(rides[0]).toHaveTextContent('Sat 3 Oct, 05:00');
+    expect(rides[0]).toHaveTextContent('Your part: Rider');
+    expect(rides[0]).toHaveTextContent('1 seat left');
+    expect(within(rides[0]).queryByText('Scheduled')).not.toBeInTheDocument();
+    expect(rides[1]).toHaveTextContent('Your part: Owner');
+    expect(rides[1]).toHaveTextContent('Full');
+    expect(within(rides[1]).getByText('Pickup in progress')).toBeInTheDocument();
+  });
+
+  it('counts several free seats in the plural', () => {
+    render(
+      <StudentHome
+        data={{
+          upcoming: [
+            {
+              rideId: 'r3',
+              title: 'To Bus stand',
+              departure: '2026-10-03T08:30:00Z',
+              part: 'owner',
+              seatsLeft: 3,
+              state: 'scheduled',
+            },
+          ],
+          waiting: [],
+        }}
+      />,
+    );
+    expect(screen.getByText('3 seats left')).toBeInTheDocument();
   });
 
   it('describes requests sent and received', () => {
@@ -84,7 +112,7 @@ describe('StudentHome', () => {
         }}
       />,
     );
-    const items = screen.getAllByRole('listitem');
+    const items = within(screen.getByRole('list')).getAllByRole('listitem');
     expect(items[0]).toHaveTextContent(
       'Your request for the ride to Kanpur Central on Sat 3 Oct, 05:00 is waiting for the ride owner.',
     );

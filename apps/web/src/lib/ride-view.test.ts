@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const query = vi.hoisted(() => vi.fn());
 vi.mock('./db', () => ({ pool: { query } }));
 
-import { getRideView } from './ride-view';
+import { UPCOMING_LIMIT, getRideView, getUpcomingRides } from './ride-view';
 
 const RIDE_ID = '0b9a7c1e-1111-4000-8000-000000000001';
 const VIEWER_ID = '6f1c2a5e-2222-4000-8000-000000000002';
@@ -177,5 +177,67 @@ describe('getRideView: what the page shows', () => {
     }
     expect(query.mock.calls[1][0]).toContain('m.joined_at');
     expect(JSON.stringify(view)).not.toContain(VIEWER_ID);
+  });
+});
+
+describe('getUpcomingRides (FR-RD-06.4)', () => {
+  it('lists the rides I offered and joined, soonest first, with seats left', async () => {
+    query.mockResolvedValueOnce({
+      rows: [
+        {
+          id: RIDE_ID,
+          direction: 'to_hub',
+          hub_name: 'Kanpur Central',
+          departure_start: new Date('2026-10-10T06:30:00+05:30'),
+          state: 'scheduled',
+          is_owner: true,
+          seats_left: 3,
+        },
+        {
+          id: 'c2d4e6f8-3333-4000-8000-000000000003',
+          direction: 'from_hub',
+          hub_name: 'Lucknow airport',
+          departure_start: new Date('2026-10-11T14:00:00+05:30'),
+          state: 'pickup_in_progress',
+          is_owner: false,
+          seats_left: 0,
+        },
+      ],
+    });
+    await expect(getUpcomingRides(VIEWER_ID, open)).resolves.toEqual([
+      {
+        rideId: RIDE_ID,
+        title: 'To Kanpur Central',
+        departure: '2026-10-10T01:00:00.000Z',
+        part: 'owner',
+        seatsLeft: 3,
+        state: 'scheduled',
+      },
+      {
+        rideId: 'c2d4e6f8-3333-4000-8000-000000000003',
+        title: 'From Lucknow airport',
+        departure: '2026-10-11T08:30:00.000Z',
+        part: 'rider',
+        seatsLeft: 0,
+        state: 'pickup_in_progress',
+      },
+    ]);
+  });
+
+  it('keeps cancelled, completed and past rides out, and shows at most 20', async () => {
+    query.mockResolvedValueOnce({ rows: [] });
+    await getUpcomingRides(VIEWER_ID, open);
+    const [sql, params] = query.mock.calls[0];
+    expect(params).toEqual([VIEWER_ID, open, UPCOMING_LIMIT]);
+    expect(UPCOMING_LIMIT).toBe(20);
+    expect(sql).toContain("r.state IN ('pickup_in_progress', 'in_transit')");
+    expect(sql).toContain("r.state = 'scheduled' AND r.departure_end > $2");
+    expect(sql).toContain('ORDER BY r.departure_start');
+    expect(sql).toContain('COUNT(*)::int');
+  });
+
+  it('gives the development user, whose ID is not a UUID, no rides and no query', async () => {
+    await expect(getUpcomingRides('dev-student', open)).resolves.toEqual([]);
+    expect(query).not.toHaveBeenCalled();
   });
 });

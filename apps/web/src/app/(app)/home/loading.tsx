@@ -13,9 +13,9 @@ export default function HomeLoading() {
         </div>
         <Skeleton className="mt-10 h-7 w-32" />
         <div className="mt-3 space-y-2">
-          <Skeleton className="h-9 w-full" />
-          <Skeleton className="h-9 w-full" />
-          <Skeleton className="h-9 w-full" />
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
         </div>
       </LoadingRegion>
     </DesignSystem>

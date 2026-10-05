@@ -3,6 +3,7 @@ import { ButtonLink } from '@/components/ui/ButtonLink';
 import { formatDeparture } from '@/lib/format';
 import type { StudentHomeData, UpcomingRide, WaitingRequest } from '@/lib/home-data';
 import { routes } from '@/lib/routes';
+import { RideStateLabel } from '@/components/rides/RideStateLabel';
 import { DesignSystem } from '@/components/ui/DesignSystem';
 
 /** Home page of a student: the entry points for riding and offering rides, then their rides. */
@@ -33,43 +34,39 @@ function UpcomingRides({ rides }: { rides: UpcomingRide[] }) {
           No upcoming rides. Rides you join or offer will be listed here.
         </p>
       ) : (
-        <div className="mt-3 overflow-x-auto">
-          <table className="w-full border-collapse text-left text-sm">
-            <thead>
-              <tr className="border-b border-line-strong">
-                <th scope="col" className="py-2 pr-4 font-medium">
-                  Departure
-                </th>
-                <th scope="col" className="py-2 pr-4 font-medium">
-                  Destination
-                </th>
-                <th scope="col" className="py-2 pr-4 font-medium">
-                  Your part
-                </th>
-                <th scope="col" className="py-2 font-medium">
-                  Seats left
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {rides.map((ride) => (
-                <tr key={ride.rideId} className="border-b border-line">
-                  <td className="py-2 pr-4 font-mono whitespace-nowrap tabular-nums">
-                    {formatDeparture(ride.departure)}
-                  </td>
-                  <td className="py-2 pr-4">
-                    <Link href={routes.ride(ride.rideId)}>{ride.destination}</Link>
-                  </td>
-                  <td className="py-2 pr-4">{ride.part === 'owner' ? 'Owner' : 'Rider'}</td>
-                  <td className="py-2 font-mono tabular-nums">{ride.seatsLeft}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ul aria-label="Upcoming rides" className="mt-3 divide-y divide-line border-y border-line">
+          {rides.map((ride) => (
+            <li key={ride.rideId} className="py-2">
+              <div className="flex flex-wrap items-center justify-between gap-x-4">
+                <Link
+                  href={routes.ride(ride.rideId)}
+                  className="inline-flex min-h-11 items-center font-semibold"
+                >
+                  {ride.title}
+                </Link>
+                <span className="text-sm text-ink-muted">
+                  <span className="sr-only">Your part: </span>
+                  {ride.part === 'owner' ? 'Owner' : 'Rider'}
+                </span>
+              </div>
+              <p className="flex flex-wrap items-center gap-x-4 gap-y-1 pb-1 text-sm text-ink-muted">
+                <span className="font-mono text-ink tabular-nums">
+                  {formatDeparture(ride.departure)}
+                </span>
+                <span>{seatsLeftText(ride.seatsLeft)}</span>
+                {ride.state !== 'scheduled' && <RideStateLabel state={ride.state} />}
+              </p>
+            </li>
+          ))}
+        </ul>
       )}
     </section>
   );
+}
+
+function seatsLeftText(seatsLeft: number): string {
+  if (seatsLeft === 0) return 'Full';
+  return `${seatsLeft} ${seatsLeft === 1 ? 'seat' : 'seats'} left`;
 }
 
 function WaitingRequests({ requests }: { requests: WaitingRequest[] }) {
