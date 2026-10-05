@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDeparture, formatDepartureWindow, formatRupees } from './format';
+import { formatDeparture, formatDepartureWindow, formatRupees, formatTimeOfDay } from './format';
 
 describe('formatDeparture', () => {
   it('shows a UTC time in Indian Standard Time', () => {
@@ -40,5 +40,12 @@ describe('formatDepartureWindow', () => {
     expect(formatDepartureWindow('2026-10-10T23:30:00+05:30', '2026-10-11T01:00:00+05:30')).toBe(
       'Sat 10 Oct, 23:30 to Sun 11 Oct, 01:00',
     );
+  });
+});
+
+describe('formatTimeOfDay', () => {
+  it('shows the time in IST with seconds, on a 24-hour clock', () => {
+    expect(formatTimeOfDay('2026-10-05T15:42:05Z')).toBe('21:12:05');
+    expect(formatTimeOfDay('2026-10-05T18:30:00Z')).toBe('00:00:00');
   });
 });

@@ -32,7 +32,7 @@ src/
   components/shell/  header, navigation, footer and the product mark
   components/home/   the student and admin home screens
   components/landing/ the landing page's fare card and live fare calculator
-  components/rides/  create-ride inputs: route, vehicle, departure window and fare
+  components/rides/  create-ride inputs (route, vehicle, departure window, fare) and the ride details
   lib/               session, roles, route map, fares, formatting, page data and small helpers
 test/                test setup, the design-rule checker and the contrast test
 ```
@@ -53,7 +53,8 @@ exist yet shows the 404 page until the page is built.
 | `/terms` | Terms of service (community guidelines) | Built |
 | `/privacy` | Privacy policy | Built |
 | `/rides/new` | Offer a ride: route, vehicle, departure window, fare | Built (CS455-22 to 25) |
-| `/rides`, `/rides/[id]` | Find a ride, ride details | Not started |
+| `/rides/[id]` | Ride details: route, departure window, state and lock time, seats, fare split, people | Built (CS455-28, 29) |
+| `/rides` | Find a ride | Not started |
 | `/notifications` | Notifications | Not started |
 | `/admin/incidents`, `/admin/complaints`, `/admin/recommendations` | Admin queues | Not started |
 | `/admin/configuration/...` | Vehicle types, hubs and pickup points, fares | Not started |
@@ -76,6 +77,10 @@ exist yet shows the 404 page until the page is built.
   addresses out of the repository.
 - **Ride rules** (`src/lib/ride-rules.ts`) hold the create-ride validation shared by the form and
   `POST /api/rides`; `src/lib/ride-options.ts` loads active places and vehicle types from PostgreSQL.
+- **Who may see a ride** (`canViewRide` in `src/lib/ride-status.ts`, NFR-RD-09): its owner and
+  riders always; any other signed-in student only while it is scheduled and before its lock time,
+  an hour before departure. `getRideView()` in `src/lib/ride-view.ts` applies it on the server and
+  answers "Ride not found" for every other case, so a link never reveals whether a ride exists.
 - **Page data** comes from server-only modules in `src/lib`, such as `home-data.ts`. Until the APIs
   exist they return empty lists, or null counts that the page shows as "Not available yet".
 

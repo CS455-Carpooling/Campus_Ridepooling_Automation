@@ -35,6 +35,19 @@ export function formatDepartureWindow(startIso: string, endIso: string): string 
   return `${formatDeparture(startIso)} to ${endText}`;
 }
 
+const timeOfDayFormat = new Intl.DateTimeFormat('en-IN', {
+  timeZone: 'Asia/Kolkata',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hourCycle: 'h23',
+});
+
+/** Formats the time of an ISO date-time as, for example, "21:12:05" (IST), for "as of" notes. */
+export function formatTimeOfDay(iso: string): string {
+  return timeOfDayFormat.format(new Date(iso));
+}
+
 const rupeeFormat = new Intl.NumberFormat('en-IN', {
   style: 'currency',
   currency: 'INR',
