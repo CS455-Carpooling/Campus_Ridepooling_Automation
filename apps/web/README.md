@@ -81,8 +81,10 @@ exist yet shows the 404 page until the page is built.
   riders always; any other signed-in student only while it is scheduled and before its lock time,
   an hour before departure. `getRideView()` in `src/lib/ride-view.ts` applies it on the server and
   answers "Ride not found" for every other case, so a link never reveals whether a ride exists.
-- **Page data** comes from server-only modules in `src/lib`, such as `home-data.ts`. Until the APIs
-  exist they return empty lists, or null counts that the page shows as "Not available yet".
+- **Page data** comes from server-only modules in `src/lib`. `ride-view.ts` reads rides from
+  PostgreSQL for the ride page and for the Upcoming list on `/home` (rides you offered or joined,
+  through `home-data.ts`). Join requests do not exist yet, so nothing is listed as waiting, and the
+  admin counts are null, which the page shows as "Not available yet".
 
 ## Conventions
 

@@ -91,6 +91,9 @@ CREATE TABLE IF NOT EXISTS riders (
 -- Added after the table, so existing databases get it too.
 ALTER TABLE riders ADD COLUMN IF NOT EXISTS joined_at TIMESTAMPTZ NOT NULL DEFAULT now();
 
+-- "My rides" looks rides up by person; the unique (ride_id, user_id) index cannot serve that.
+CREATE INDEX IF NOT EXISTS riders_user_idx ON riders(user_id);
+
 -- Initial configurable locations. Stable IDs match the current Create Ride form
 -- values so the UI can later read these records directly from the database.
 INSERT INTO locations (id, name, detail, type, sort_order, is_active)
