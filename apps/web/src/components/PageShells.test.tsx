@@ -19,11 +19,10 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('Landing', () => {
-  const setup = (dark = false) => {
+  const setup = () => {
     const go = vi.fn();
-    const setDark = vi.fn();
-    render(<Landing dark={dark} setDark={setDark} go={go} />);
-    return { go, setDark, user: userEvent.setup() };
+    render(<Landing go={go} />);
+    return { go, user: userEvent.setup() };
   };
 
   it('shows the main sections', () => {
@@ -71,28 +70,16 @@ describe('Landing', () => {
     await user.click(screen.getByRole('button', { name: 'How it works' }));
     expect(scroll).not.toHaveBeenCalled();
   });
-
-  it('offers dark mode when light', async () => {
-    const light = setup(false);
-    await light.user.click(screen.getByRole('button', { name: 'Switch to dark mode' }));
-    expect(light.setDark).toHaveBeenCalledWith(true);
-  });
-
-  it('offers light mode when dark', async () => {
-    const dark = setup(true);
-    await dark.user.click(screen.getByRole('button', { name: 'Switch to light mode' }));
-    expect(dark.setDark).toHaveBeenCalledWith(false);
-  });
 });
 
 describe('AuthPage', () => {
-  const setup = (page: Exclude<Page, 'home'>, extra: { notice?: string; token?: string } = {}) => {
+  const setup = (
+    page: Exclude<Page, 'home'>,
+    extra: { notice?: string; token?: string; initialEmail?: string } = {},
+  ) => {
     const go = vi.fn();
-    const setDark = vi.fn();
-    const utils = render(
-      <AuthPage page={page} dark={false} setDark={setDark} go={go} {...extra} />,
-    );
-    return { go, setDark, user: userEvent.setup(), ...utils };
+    const utils = render(<AuthPage page={page} go={go} {...extra} />);
+    return { go, user: userEvent.setup(), ...utils };
   };
   const body = () => JSON.parse(fetchMock.mock.calls[0][1].body);
   const email = () => screen.getByPlaceholderText('username@iitk.ac.in');
@@ -160,12 +147,6 @@ describe('AuthPage', () => {
     it('has no page switch on the reset page', () => {
       setup('reset');
       expect(screen.queryByRole('button', { name: 'Log in' })).not.toBeInTheDocument();
-    });
-
-    it('toggles the theme', async () => {
-      const { setDark, user } = setup('login');
-      await user.click(screen.getByRole('button', { name: 'Switch to dark mode' }));
-      expect(setDark).toHaveBeenCalledWith(true);
     });
   });
 
@@ -310,6 +291,15 @@ describe('AuthPage', () => {
       await user.click(screen.getByRole('button', { name: 'Send reset link' }));
       expect(await screen.findByRole('heading', { name: 'Check your inbox' })).toBeInTheDocument();
       expect(fetchMock.mock.calls[0][0]).toBe('/api/auth/forgot');
+    });
+
+    it('prefills the signed-in email and returns to the profile after requesting a link', async () => {
+      fetchMock.mockResolvedValue(reply(true, { ok: true }));
+      const { user } = setup('forgot', { initialEmail: 'a@iitk.ac.in' });
+      expect(email()).toHaveValue('a@iitk.ac.in');
+      await user.click(screen.getByRole('button', { name: 'Send reset link' }));
+      await user.click(await screen.findByRole('button', { name: 'Back to profile' }));
+      expect(router.push).toHaveBeenCalledWith('/profile');
     });
   });
 

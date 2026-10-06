@@ -51,6 +51,43 @@ CREATE TABLE IF NOT EXISTS vehicle_types (
 ALTER TABLE locations ADD COLUMN IF NOT EXISTS sort_order INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE vehicle_types ADD COLUMN IF NOT EXISTS sort_order INTEGER NOT NULL DEFAULT 0;
 
+CREATE TABLE IF NOT EXISTS interest_tags (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+INSERT INTO interest_tags (id, name)
+VALUES
+  ('academic-tracks', 'Academic tracks'),
+  ('hobbies', 'Hobbies'),
+  ('quiet-ride', 'Quiet ride')
+ON CONFLICT (id) DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS user_profiles (
+  user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  display_name TEXT NOT NULL CHECK (char_length(display_name) BETWEEN 2 AND 40),
+  default_pickup_point_id TEXT REFERENCES locations(id),
+  preferred_vehicle_type_id TEXT REFERENCES vehicle_types(id),
+  max_acceptable_fare_share INTEGER CHECK (max_acceptable_fare_share > 0),
+  ai_tag_consent BOOLEAN NOT NULL DEFAULT FALSE,
+  mobile_number TEXT CHECK (mobile_number IS NULL OR mobile_number ~ '^[0-9]{10}$'),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS user_profile_tags (
+  user_id UUID NOT NULL REFERENCES user_profiles(user_id) ON DELETE CASCADE,
+  tag_id TEXT NOT NULL REFERENCES interest_tags(id),
+  is_visible BOOLEAN NOT NULL DEFAULT TRUE,
+  PRIMARY KEY (user_id, tag_id)
+);
+
+INSERT INTO user_profiles (user_id, display_name)
+SELECT id, CASE WHEN char_length(trim(full_name)) < 2 THEN 'User'
+                ELSE left(trim(full_name), 40) END
+FROM users
+ON CONFLICT (user_id) DO NOTHING;
+
 CREATE TABLE IF NOT EXISTS rides (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   owner_id UUID NOT NULL REFERENCES users(id),

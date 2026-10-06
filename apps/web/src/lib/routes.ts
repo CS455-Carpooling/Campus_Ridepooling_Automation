@@ -6,7 +6,8 @@ import type { Role } from './roles';
  */
 export const routes = {
   landing: '/',
-  home: '/home',
+  home: '/dashboard',
+  profile: '/profile',
   login: '/login',
   register: '/register',
   terms: '/terms',
@@ -29,12 +30,14 @@ export type NavItem = { href: string; label: string };
 const navigation: Record<Role, NavItem[]> = {
   student: [
     { href: routes.home, label: 'Home' },
+    { href: routes.profile, label: 'Profile' },
     { href: routes.findRide, label: 'Find a ride' },
     { href: routes.offerRide, label: 'Offer a ride' },
     { href: routes.notifications, label: 'Notifications' },
   ],
   admin: [
     { href: routes.home, label: 'Home' },
+    { href: routes.profile, label: 'Profile' },
     { href: routes.adminIncidents, label: 'Incidents' },
     { href: routes.adminComplaints, label: 'Complaints' },
     { href: routes.adminConfiguration, label: 'Configuration' },

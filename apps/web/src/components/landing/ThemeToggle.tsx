@@ -29,7 +29,13 @@ export function ThemeToggle() {
   const label = `Switch to ${dark ? 'light' : 'dark'} mode`;
 
   return (
-    <button className="theme-toggle" onClick={toggle} aria-label={label} title={label}>
+    <button
+      className="theme-toggle theme-toggle-global"
+      type="button"
+      onClick={toggle}
+      aria-label={label}
+      title={label}
+    >
       <Icon name={dark ? 'sun' : 'moon'} size={18} />
     </button>
   );

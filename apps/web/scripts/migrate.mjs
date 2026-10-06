@@ -1,9 +1,10 @@
 import pg from 'pg';
 import fs from 'node:fs';
 
-const url = process.env.DATABASE_URL;
-if (!url) {
-  console.error('DATABASE_URL is not set');
+const rawUrl = process.env.DATABASE_URL;
+const url = typeof rawUrl === 'string' ? rawUrl.trim() : '';
+if (!/^postgres(?:ql)?:\/\//i.test(url)) {
+  console.error('DATABASE_URL is not set or is not a valid Postgres connection string');
   process.exit(1);
 }
 const client = new pg.Client({

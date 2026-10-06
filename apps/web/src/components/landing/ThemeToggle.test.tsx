@@ -26,7 +26,9 @@ describe('ThemeToggle', () => {
   it('starts light when matchMedia is unavailable and nothing is saved', () => {
     vi.stubGlobal('matchMedia', undefined);
     render(<ThemeToggle />);
-    expect(screen.getByRole('button', { name: 'Switch to dark mode' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Switch to dark mode' })).toHaveClass(
+      'theme-toggle-global',
+    );
     expect(document.documentElement).not.toHaveClass('dark');
   });
 

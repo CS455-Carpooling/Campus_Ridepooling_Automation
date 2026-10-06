@@ -6,6 +6,7 @@ describe('navigationFor', () => {
   it('gives students the rider and ride-owner entry points', () => {
     expect(navigationFor('student').map((item) => item.label)).toEqual([
       'Home',
+      'Profile',
       'Find a ride',
       'Offer a ride',
       'Notifications',
@@ -15,6 +16,7 @@ describe('navigationFor', () => {
   it('gives operations admins their queues and configuration', () => {
     expect(navigationFor('admin').map((item) => item.label)).toEqual([
       'Home',
+      'Profile',
       'Incidents',
       'Complaints',
       'Configuration',
@@ -38,7 +40,8 @@ describe('currentHref', () => {
   const items = navigationFor('student');
 
   it('matches the page itself', () => {
-    expect(currentHref('/home', items)).toBe('/home');
+    expect(currentHref('/dashboard', items)).toBe('/dashboard');
+    expect(currentHref('/profile', items)).toBe('/profile');
     expect(currentHref('/rides', items)).toBe('/rides');
   });
 

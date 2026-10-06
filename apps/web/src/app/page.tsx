@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { FareSplitCard } from '@/components/landing/FareSplitCard';
-import { ThemeToggle } from '@/components/landing/ThemeToggle';
 import { Icon } from '@/components/PageShells';
 import { getSession } from '@/lib/session';
 
@@ -77,7 +76,7 @@ function Brand() {
 export default async function LandingPage() {
   const session = await getSession();
   const primary = session
-    ? { href: '/home', label: 'Go to your rides' }
+    ? { href: '/dashboard', label: 'Go to your rides' }
     : { href: '/register', label: 'Register' };
 
   return (
@@ -90,7 +89,6 @@ export default async function LandingPage() {
           <a href="#safety">Safety</a>
         </nav>
         <div className="nav-actions">
-          <ThemeToggle />
           {!session && (
             <Link className="text-button" href="/login">
               Sign in
@@ -115,7 +113,7 @@ export default async function LandingPage() {
               Share the ride. <em>Split the fare.</em>
             </h1>
             {session ? (
-              <p>Find a ride or offer one from your home page.</p>
+              <p>Find a ride or offer one from your dashboard.</p>
             ) : (
               <p>
                 The trusted carpool network for IIT Kanpur. Find your people, split the fare, and

@@ -10,6 +10,7 @@ describe('AdminHome', () => {
       />,
     );
     expect(screen.getByRole('heading', { level: 1, name: 'Operations' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Profile' })).toHaveAttribute('href', '/profile');
     expect(screen.getAllByText('Not available yet')).toHaveLength(3);
   });
 

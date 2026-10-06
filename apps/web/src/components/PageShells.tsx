@@ -127,28 +127,7 @@ function Logo({ onClick }: { onClick?: () => void }) {
   );
 }
 
-function ThemeToggle({ dark, setDark }: { dark: boolean; setDark: (dark: boolean) => void }) {
-  return (
-    <button
-      className="theme-toggle"
-      onClick={() => setDark(!dark)}
-      aria-label={`Switch to ${dark ? 'light' : 'dark'} mode`}
-      title={`Switch to ${dark ? 'light' : 'dark'} mode`}
-    >
-      <Icon name={dark ? 'sun' : 'moon'} size={18} />
-    </button>
-  );
-}
-
-export function Landing({
-  dark,
-  setDark,
-  go,
-}: {
-  dark: boolean;
-  setDark: (value: boolean) => void;
-  go: (page: Page) => void;
-}) {
+export function Landing({ go }: { go: (page: Page) => void }) {
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -163,7 +142,6 @@ export function Landing({
           <button onClick={() => scrollToSection('community')}>Campus points</button>
         </nav>
         <div className="nav-actions">
-          <ThemeToggle dark={dark} setDark={setDark} />
           <button className="text-button" onClick={() => go('login')}>
             Log in
           </button>
@@ -400,6 +378,7 @@ function Field({
   type = 'text',
   autoComplete,
   minLength,
+  defaultValue,
 }: {
   icon: IconName;
   label: string;
@@ -408,6 +387,7 @@ function Field({
   type?: string;
   autoComplete?: string;
   minLength?: number;
+  defaultValue?: string;
 }) {
   const [show, setShow] = useState(false);
   return (
@@ -420,6 +400,7 @@ function Field({
           type={show ? 'text' : type}
           placeholder={placeholder}
           autoComplete={autoComplete}
+          defaultValue={defaultValue}
           minLength={minLength}
           maxLength={type === 'password' ? 128 : type === 'email' ? 254 : 80}
           // "\\-" keeps the pattern valid under the browser's unicode-sets (v) mode
@@ -457,23 +438,25 @@ function noticeFor(key?: string): { ok: boolean; text: string } | null {
 
 export function AuthPage({
   page,
-  dark,
-  setDark,
   go,
   notice,
   token,
+  initialEmail,
 }: {
   page: Exclude<Page, 'home'>;
-  dark: boolean;
-  setDark: (value: boolean) => void;
   go: (page: Page) => void;
   notice?: string;
   token?: string;
+  initialEmail?: string;
 }) {
   const router = useRouter();
   const [done, setDone] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const returnFromForgot = () => {
+    if (initialEmail) router.push('/profile');
+    else go('login');
+  };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -592,11 +575,14 @@ export function AuthPage({
         <div className="auth-top">
           <button
             className="back-button"
-            onClick={() => go(page === 'forgot' || page === 'reset' ? 'login' : 'home')}
+            onClick={() =>
+              page === 'forgot' && initialEmail
+                ? router.push('/profile')
+                : go(page === 'forgot' || page === 'reset' ? 'login' : 'home')
+            }
           >
-            <span>←</span> Back
+            <span>←</span> {page === 'forgot' && initialEmail ? 'Back to profile' : 'Back'}
           </button>
-          <ThemeToggle dark={dark} setDark={setDark} />
         </div>
         <div className="auth-form-wrap">
           <div className="auth-heading">
@@ -623,8 +609,12 @@ export function AuthPage({
               </span>
               <h2>{success.title}</h2>
               <p>{success.text}</p>
-              <button className="button form-submit" onClick={() => go('login')}>
-                Return to login <Icon name="arrow" size={18} />
+              <button
+                className="button form-submit"
+                onClick={() => (page === 'forgot' ? returnFromForgot() : go('login'))}
+              >
+                {page === 'forgot' && initialEmail ? 'Back to profile' : 'Return to login'}{' '}
+                <Icon name="arrow" size={18} />
               </button>
             </div>
           ) : (
@@ -660,6 +650,7 @@ export function AuthPage({
                   placeholder="username@iitk.ac.in"
                   type="email"
                   autoComplete="email"
+                  defaultValue={page === 'forgot' ? initialEmail : undefined}
                 />
               )}
               {page !== 'forgot' && (
@@ -725,8 +716,18 @@ export function AuthPage({
                 : page === 'register'
                   ? 'Already have an account?'
                   : 'Remember your password?'}{' '}
-              <button onClick={() => go(page === 'login' ? 'register' : 'login')}>
-                {page === 'login' ? 'Create an account' : 'Log in'}
+              <button
+                onClick={() =>
+                  page === 'forgot' && initialEmail
+                    ? router.push('/profile')
+                    : go(page === 'login' ? 'register' : 'login')
+                }
+              >
+                {page === 'login'
+                  ? 'Create an account'
+                  : page === 'forgot' && initialEmail
+                    ? 'Back to profile'
+                    : 'Log in'}
               </button>
             </p>
           )}

@@ -51,7 +51,17 @@ const view = {
   occupantCount: 1,
   seatsLeft: 3,
   totalFare: 350,
-  occupants: [{ name: 'A', campusPlace: 'Hall 6', isOwner: true, isViewer: true, share: 350 }],
+  occupants: [
+    {
+      name: 'A',
+      campusPlace: 'Hall 6',
+      isOwner: true,
+      isViewer: true,
+      share: 350,
+      visibleTags: [],
+      completedTrips: 0,
+    },
+  ],
   viewerRole: 'owner',
   viewerShare: 350,
   estimatedShare: null,

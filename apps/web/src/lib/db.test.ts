@@ -47,6 +47,28 @@ describe('db pool', () => {
     expect(pg.constructed[0].ssl).toBeUndefined();
   });
 
+  it('ignores malformed DATABASE_URL values', async () => {
+    const original = process.env.DATABASE_URL;
+    Object.defineProperty(process.env, 'DATABASE_URL', {
+      value: '[object Object]',
+      configurable: true,
+      enumerable: true,
+      writable: true,
+    });
+    try {
+      await load();
+      expect(pg.constructed[0].connectionString).toBeUndefined();
+      expect(pg.constructed[0].ssl).toBeUndefined();
+    } finally {
+      Object.defineProperty(process.env, 'DATABASE_URL', {
+        value: original,
+        configurable: true,
+        enumerable: true,
+        writable: true,
+      });
+    }
+  });
+
   it('reuses the pool across module reloads', async () => {
     vi.stubEnv('DATABASE_URL', 'postgres://localhost/crp');
     const first = await load();

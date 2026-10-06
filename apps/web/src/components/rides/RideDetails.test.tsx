@@ -10,6 +10,8 @@ const owner = {
   campusPlace: 'Hall 6',
   isOwner: true,
   isViewer: false,
+  visibleTags: ['Quiet ride'],
+  completedTrips: 3,
   share: 175,
 };
 const rider = {
@@ -17,6 +19,8 @@ const rider = {
   campusPlace: 'Hall 3',
   isOwner: false,
   isViewer: false,
+  visibleTags: [],
+  completedTrips: 1,
   share: 175,
 };
 
@@ -82,6 +86,8 @@ describe('RideDetails', () => {
     const people = within(screen.getByRole('list')).getAllByRole('listitem');
     expect(people[0]).toHaveTextContent('Ananya Rao');
     expect(people[0]).toHaveTextContent('Owner, pickup at Hall 6');
+    expect(people[0]).toHaveTextContent('3 completed trips');
+    expect(people[0]).toHaveTextContent('Quiet ride');
     expect(people[0]).toHaveTextContent('Share ₹175');
     expect(people[1]).toHaveTextContent('Kabir Shah');
     expect(people[1]).toHaveTextContent('Rider, pickup at Hall 3');
@@ -193,6 +199,6 @@ describe('RideDetails', () => {
     render(<RideDetails ride={rideView()} />);
     expect(screen.getByText('21:12:05')).toHaveAttribute('datetime', '2026-10-09T15:42:05.000Z');
     expect(screen.getByRole('button', { name: 'Refresh' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Your rides' })).toHaveAttribute('href', '/home');
+    expect(screen.getByRole('link', { name: 'Your rides' })).toHaveAttribute('href', '/dashboard');
   });
 });

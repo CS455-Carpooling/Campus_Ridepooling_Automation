@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
 import { ButtonLink } from '@/components/ui/ButtonLink';
 import { formatDeparture } from '@/lib/format';
@@ -5,20 +8,51 @@ import type { StudentHomeData, UpcomingRide, WaitingRequest } from '@/lib/home-d
 import { routes } from '@/lib/routes';
 import { RideStateLabel } from '@/components/rides/RideStateLabel';
 import { DesignSystem } from '@/components/ui/DesignSystem';
+import { LogoutButton } from '@/components/ui/LogoutButton';
+import { DashboardTabs } from './DashboardTabs';
+import { RideHistoryList } from './RideHistoryList';
 
 /** Home page of a student: the entry points for riding and offering rides, then their rides. */
 export function StudentHome({ data }: { data: StudentHomeData }) {
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'history'>('upcoming');
+
   return (
     <DesignSystem className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-      <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Your rides</h1>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
+          {activeTab === 'upcoming' ? 'Your rides' : 'Ride history'}
+        </h1>
+        <div className="flex flex-wrap gap-3">
+          <ButtonLink href={routes.profile} variant="secondary">
+            Profile
+          </ButtonLink>
+          <LogoutButton />
+        </div>
+      </div>
       <div className="mt-6 flex flex-wrap gap-3">
         <ButtonLink href={routes.findRide}>Find a ride</ButtonLink>
         <ButtonLink href={routes.offerRide} variant="secondary">
           Offer a ride
         </ButtonLink>
       </div>
-      <UpcomingRides rides={data.upcoming} />
-      <WaitingRequests requests={data.waiting} />
+      <DashboardTabs current={activeTab} onChange={setActiveTab} />
+      <div
+        id="upcoming-panel"
+        role="tabpanel"
+        aria-labelledby="upcoming-tab"
+        hidden={activeTab !== 'upcoming'}
+      >
+        <UpcomingRides rides={data.upcoming} />
+        <WaitingRequests requests={data.waiting} />
+      </div>
+      <div
+        id="history-panel"
+        role="tabpanel"
+        aria-labelledby="history-tab"
+        hidden={activeTab !== 'history'}
+      >
+        <RideHistoryList rides={data.history} />
+      </div>
     </DesignSystem>
   );
 }
@@ -78,7 +112,10 @@ function WaitingRequests({ requests }: { requests: WaitingRequest[] }) {
       {requests.length === 0 ? (
         <p className="mt-2 text-ink-muted">Nothing is waiting for a decision.</p>
       ) : (
-        <ul className="mt-3 divide-y divide-line border-y border-line">
+        <ul
+          aria-label="Waiting requests"
+          className="mt-3 divide-y divide-line border-y border-line"
+        >
           {requests.map((request) => {
             const ride = <Link href={routes.ride(request.rideId)}>{request.destination}</Link>;
             const when = (

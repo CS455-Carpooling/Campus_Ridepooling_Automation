@@ -38,6 +38,18 @@ describe('CreateRideForm', () => {
     expect(screen.getByText('4 people, you included')).toBeInTheDocument();
   });
 
+  it('prefills the configured default pickup point and preferred vehicle', async () => {
+    render(
+      <CreateRideForm
+        options={options}
+        defaults={{ defaultPickupPointId: 'hall-6', preferredVehicleTypeId: 'car' }}
+      />,
+    );
+    await userEvent.click(screen.getByRole('radio', { name: 'Leaving campus' }));
+    expect(screen.getByLabelText('Pickup on campus')).toHaveValue('hall-6');
+    expect(screen.getByRole('radio', { name: 'Car' })).toBeChecked();
+  });
+
   it('shows backend validation errors after submission', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       new Response(
