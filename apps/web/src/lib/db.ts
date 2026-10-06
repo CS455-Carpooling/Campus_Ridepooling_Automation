@@ -1,7 +1,9 @@
 import { Pool } from 'pg';
 
 const g = globalThis as unknown as { __pgPool?: Pool };
-const url = process.env.DATABASE_URL;
+const rawUrl = process.env.DATABASE_URL;
+const normalized = typeof rawUrl === 'string' ? rawUrl.trim() : '';
+const url = /^postgres(?:ql)?:\/\//i.test(normalized) ? normalized : undefined;
 
 export const pool =
   g.__pgPool ??

@@ -7,7 +7,7 @@ const { getSession } = vi.hoisted(() => ({
   getSession: vi.fn<() => Promise<Session | null>>(),
 }));
 vi.mock('@/lib/session', () => ({ getSession }));
-vi.mock('next/navigation', () => ({ usePathname: () => '/home' }));
+vi.mock('next/navigation', () => ({ usePathname: () => '/dashboard' }));
 
 describe('SiteHeader', () => {
   beforeEach(() => {
@@ -25,12 +25,13 @@ describe('SiteHeader', () => {
 
     const nav = screen.getByRole('navigation', { name: 'Main' });
     expect(within(nav).getByRole('link', { name: 'Offer a ride' })).toBeInTheDocument();
+    expect(within(nav).getByRole('link', { name: 'Profile' })).toHaveAttribute('href', '/profile');
     expect(within(nav).getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByText('Ananya')).toBeInTheDocument();
     expect(screen.getByText(/\(Student\)/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Campus Ride-Pooling' })).toHaveAttribute(
       'href',
-      '/home',
+      '/dashboard',
     );
   });
 

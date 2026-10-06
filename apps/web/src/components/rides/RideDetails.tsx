@@ -165,6 +165,10 @@ function People({ ride, showShares }: { ride: RideView; showShares: boolean }) {
                   {person.isOwner ? 'Owner' : 'Rider'}, {placeLabel.toLowerCase()} at{' '}
                   {person.campusPlace}
                 </p>
+                <p className="mt-1 text-sm text-ink-muted">
+                  {person.completedTrips} completed {person.completedTrips === 1 ? 'trip' : 'trips'}
+                  {person.visibleTags.length > 0 && ` · ${person.visibleTags.join(' · ')}`}
+                </p>
               </div>
               {showShares && (
                 <p className="font-mono tabular-nums">

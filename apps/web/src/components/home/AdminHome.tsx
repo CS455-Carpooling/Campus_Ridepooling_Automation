@@ -1,7 +1,9 @@
 import Link from 'next/link';
+import { ButtonLink } from '@/components/ui/ButtonLink';
 import type { AdminHomeData } from '@/lib/home-data';
 import { routes } from '@/lib/routes';
 import { DesignSystem } from '@/components/ui/DesignSystem';
+import { LogoutButton } from '@/components/ui/LogoutButton';
 
 /** Home page of an operations admin: the queues that need attention, then configuration. */
 export function AdminHome({ data }: { data: AdminHomeData }) {
@@ -21,7 +23,15 @@ export function AdminHome({ data }: { data: AdminHomeData }) {
 
   return (
     <DesignSystem className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-      <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Operations</h1>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Operations</h1>
+        <div className="flex flex-wrap gap-3">
+          <ButtonLink href={routes.profile} variant="secondary">
+            Profile
+          </ButtonLink>
+          <LogoutButton />
+        </div>
+      </div>
 
       <section aria-labelledby="attention-heading" className="mt-8">
         <h2 id="attention-heading" className="text-xl font-bold tracking-tight">

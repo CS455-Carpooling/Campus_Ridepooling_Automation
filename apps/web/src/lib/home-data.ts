@@ -1,7 +1,12 @@
 import 'server-only';
-import { getUpcomingRides, type UpcomingRide } from './ride-view';
+import {
+  getHistoricalRides,
+  getUpcomingRides,
+  type HistoricalRide,
+  type UpcomingRide,
+} from './ride-view';
 
-export type { UpcomingRide };
+export type { HistoricalRide, UpcomingRide };
 
 /** A join request waiting for someone's decision. */
 export type WaitingRequest =
@@ -23,6 +28,7 @@ export type WaitingRequest =
 
 export type StudentHomeData = {
   upcoming: UpcomingRide[];
+  history: HistoricalRide[];
   waiting: WaitingRequest[];
 };
 
@@ -34,14 +40,18 @@ export type AdminHomeData = {
 };
 
 /**
- * Data for the student home page: the rides they offered or joined, from the
- * database. Join requests do not exist yet, so nothing is waiting.
+ * Data for the student dashboard: upcoming and historical rides they offered
+ * or joined, from the database. Join requests do not exist yet, so none wait.
  */
 export async function getStudentHome(
   userId: string,
   now: Date = new Date(),
 ): Promise<StudentHomeData> {
-  return { upcoming: await getUpcomingRides(userId, now), waiting: [] };
+  const [upcoming, history] = await Promise.all([
+    getUpcomingRides(userId, now),
+    getHistoricalRides(userId, now),
+  ]);
+  return { upcoming, history, waiting: [] };
 }
 
 /**

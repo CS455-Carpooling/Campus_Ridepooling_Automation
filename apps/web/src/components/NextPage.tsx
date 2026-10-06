@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthPage, Landing, type Page } from './PageShells';
 
@@ -8,30 +7,11 @@ type NextPageProps = {
   page: Page;
   notice?: string;
   token?: string;
+  initialEmail?: string;
 };
 
-const THEME_KEY = 'campus-ride-pooling-theme';
-
-export default function NextPage({ page, notice, token }: NextPageProps) {
+export default function NextPage({ page, notice, token, initialEmail }: NextPageProps) {
   const router = useRouter();
-  const [dark, setDarkState] = useState(false);
-
-  useEffect(() => {
-    const saved = localStorage.getItem(THEME_KEY);
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const next = saved ? saved === 'dark' : prefersDark;
-    const id = requestAnimationFrame(() => setDarkState(next));
-    return () => cancelAnimationFrame(id);
-  }, []);
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', dark);
-  }, [dark]);
-
-  const setDark = (value: boolean) => {
-    setDarkState(value);
-    localStorage.setItem(THEME_KEY, value ? 'dark' : 'light');
-  };
 
   const go = (next: Page) => {
     const routes: Record<Page, string> = {
@@ -46,10 +26,10 @@ export default function NextPage({ page, notice, token }: NextPageProps) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const pageProps = { dark, setDark, go };
+  const pageProps = { go, initialEmail };
 
   return page === 'home' ? (
-    <Landing {...pageProps} />
+    <Landing go={go} />
   ) : (
     <AuthPage page={page} notice={notice} token={token} {...pageProps} />
   );

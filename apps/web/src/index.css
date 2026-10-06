@@ -140,6 +140,12 @@ a {
   transform: rotate(8deg);
   border-color: var(--muted);
 }
+.theme-toggle-global {
+  position: fixed;
+  z-index: 100;
+  right: 20px;
+  bottom: 20px;
+}
 .text-button {
   border: 0;
   background: none;

@@ -15,12 +15,15 @@ import {
 
 /** Someone with a seat on the ride: the owner or an accepted rider. */
 export type RideOccupant = {
-  /** The account's full name, its display name until profiles exist (FR-RD-02.4). */
+  /** The public display name from their profile (FR-RD-02.4). */
   name: string;
   /** Their pickup point (leaving campus) or drop-off point (coming to campus). */
   campusPlace: string;
   isOwner: boolean;
   isViewer: boolean;
+  /** Only tags the rider chose to make visible (FR-RD-02.4). */
+  visibleTags: string[];
+  completedTrips: number;
   /** Their share of the total fare now, in whole rupees (Table T-2). */
   share: number;
 };
@@ -80,6 +83,8 @@ type OccupantRow = {
   campus_place: string;
   is_owner: boolean;
   is_viewer: boolean;
+  visible_tags: string[] | null;
+  completed_trips: number;
 };
 
 // Inactive hubs and vehicle types still show: they were valid when the ride was offered.
@@ -96,11 +101,25 @@ const RIDE_SQL = `
 
 // Names and places only: never email, roll number or password hash (FR-RD-02.4).
 const OCCUPANTS_SQL = `
-  SELECT u.full_name, place.name AS campus_place,
-         (m.user_id = r.owner_id) AS is_owner, (m.user_id = $2) AS is_viewer
+  SELECT COALESCE(profile.display_name, u.full_name) AS full_name,
+         place.name AS campus_place,
+         (m.user_id = r.owner_id) AS is_owner, (m.user_id = $2) AS is_viewer,
+         COALESCE(public_tags.visible_tags, ARRAY[]::text[]) AS visible_tags,
+         (SELECT count(DISTINCT completed.ride_id)::int
+          FROM riders completed
+          JOIN rides completed_ride ON completed_ride.id = completed.ride_id
+          WHERE completed.user_id = m.user_id AND completed_ride.state = 'completed')
+           AS completed_trips
   FROM riders m
   JOIN rides r ON r.id = m.ride_id
   JOIN users u ON u.id = m.user_id
+  LEFT JOIN user_profiles profile ON profile.user_id = u.id
+  LEFT JOIN LATERAL (
+    SELECT array_agg(tag.name ORDER BY tag.name) AS visible_tags
+    FROM user_profile_tags selected
+    JOIN interest_tags tag ON tag.id = selected.tag_id AND tag.is_active = true
+    WHERE selected.user_id = m.user_id AND selected.is_visible = true
+  ) public_tags ON true
   JOIN locations place ON place.id = m.campus_location_id
   WHERE m.ride_id = $1
   ORDER BY (m.user_id = r.owner_id) DESC, m.joined_at, m.id`;
@@ -137,6 +156,8 @@ export async function getRideView(
     campusPlace: person.campus_place,
     isOwner: person.is_owner,
     isViewer: person.is_viewer,
+    visibleTags: person.visible_tags ?? [],
+    completedTrips: person.completed_trips ?? 0,
     share: shares[index],
   }));
 
@@ -181,6 +202,22 @@ export type UpcomingRide = {
   departure: string;
   part: 'rider' | 'owner';
   seatsLeft: number;
+  state: RideState;
+};
+
+/** A past ride the viewer offered or joined, with the trip details for their history. */
+export type HistoricalRide = {
+  rideId: string;
+  title: string;
+  departureStart: string;
+  departureEnd: string;
+  part: 'rider' | 'owner';
+  campusPlace: string;
+  direction: Direction;
+  vehicleName: string;
+  totalFare: number;
+  capacity: number;
+  occupantCount: number;
   state: RideState;
 };
 
@@ -230,6 +267,61 @@ export async function getUpcomingRides(
     departure: row.departure_start.toISOString(),
     part: row.is_owner ? 'owner' : 'rider',
     seatsLeft: row.seats_left,
+    state: row.state,
+  }));
+}
+
+type HistoricalRow = {
+  id: string;
+  direction: Direction;
+  hub_name: string;
+  departure_start: Date;
+  departure_end: Date;
+  state: RideState;
+  is_owner: boolean;
+  campus_place: string;
+  vehicle_name: string;
+  total_fare: number;
+  capacity: number;
+  occupant_count: number;
+};
+
+const HISTORY_SQL = `
+  SELECT r.id, r.direction, hub.name AS hub_name, r.departure_start, r.departure_end,
+         r.state, (r.owner_id = $1) AS is_owner, place.name AS campus_place,
+         vehicle.name AS vehicle_name, r.expected_total_fare AS total_fare,
+         r.capacity_snapshot AS capacity,
+         (SELECT COUNT(*)::int FROM riders occupants WHERE occupants.ride_id = r.id)
+           AS occupant_count
+  FROM riders me
+  JOIN rides r ON r.id = me.ride_id
+  JOIN locations hub ON hub.id = r.hub_id
+  JOIN locations place ON place.id = me.campus_location_id
+  JOIN vehicle_types vehicle ON vehicle.id = r.vehicle_type_id
+  WHERE me.user_id = $1
+    AND (r.state IN ('completed', 'cancelled')
+         OR (r.state = 'scheduled' AND r.departure_end <= $2))
+  ORDER BY r.departure_start DESC, r.id DESC`;
+
+/** All completed, cancelled, and elapsed scheduled rides the user offered or joined. */
+export async function getHistoricalRides(
+  userId: string,
+  now: Date = new Date(),
+): Promise<HistoricalRide[]> {
+  if (!isUuid(userId)) return [];
+  const { rows } = await pool.query<HistoricalRow>(HISTORY_SQL, [userId, now]);
+  return rows.map((row) => ({
+    rideId: row.id,
+    title: rideTitle(row.direction, row.hub_name),
+    departureStart: row.departure_start.toISOString(),
+    departureEnd: row.departure_end.toISOString(),
+    part: row.is_owner ? 'owner' : 'rider',
+    campusPlace: row.campus_place,
+    direction: row.direction,
+    vehicleName: row.vehicle_name,
+    totalFare: row.total_fare,
+    capacity: row.capacity,
+    occupantCount: row.occupant_count,
     state: row.state,
   }));
 }

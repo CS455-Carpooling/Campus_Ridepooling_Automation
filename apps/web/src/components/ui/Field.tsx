@@ -5,6 +5,7 @@ import { useFieldIds } from './field-ids';
 export type FieldProps = ComponentProps<'input'> & {
   label: string;
   hint?: string;
+  hintPosition?: 'before' | 'after';
   error?: string;
 };
 
@@ -12,19 +13,28 @@ export type FieldProps = ComponentProps<'input'> & {
  * Labelled text input. The hint and error are linked to the input with
  * aria-describedby, and an error is shown as text, not by colour alone.
  */
-export function Field({ label, hint, error, id, className, ...inputProps }: FieldProps) {
+export function Field({
+  label,
+  hint,
+  hintPosition = 'before',
+  error,
+  id,
+  className,
+  ...inputProps
+}: FieldProps) {
   const { controlId: inputId, hintId, errorId, describedBy } = useFieldIds(id, hint, error);
+  const hintElement = hint && (
+    <p id={hintId} className="text-sm text-ink-muted">
+      {hint}
+    </p>
+  );
 
   return (
     <div className={cx('flex flex-col gap-1', className)}>
       <label htmlFor={inputId} className="text-sm font-semibold">
         {label}
       </label>
-      {hint && (
-        <p id={hintId} className="text-sm text-ink-muted">
-          {hint}
-        </p>
-      )}
+      {hintPosition === 'before' && hintElement}
       <input
         {...inputProps}
         id={inputId}
@@ -35,6 +45,7 @@ export function Field({ label, hint, error, id, className, ...inputProps }: Fiel
           error ? 'border-danger' : 'border-line-strong',
         )}
       />
+      {hintPosition === 'after' && hintElement}
       {error && (
         <p id={errorId} className="text-sm text-danger">
           {error}

@@ -1,9 +1,10 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import type { StudentHomeData } from '@/lib/home-data';
 import { StudentHome } from './StudentHome';
 
-const empty: StudentHomeData = { upcoming: [], waiting: [] };
+const empty: StudentHomeData = { upcoming: [], history: [], waiting: [] };
 
 describe('StudentHome', () => {
   it('offers both ways to start: finding a ride and offering one', () => {
@@ -14,6 +15,7 @@ describe('StudentHome', () => {
       'href',
       '/rides/new',
     );
+    expect(screen.getByRole('link', { name: 'Profile' })).toHaveAttribute('href', '/profile');
   });
 
   it('explains empty lists', () => {
@@ -21,6 +23,14 @@ describe('StudentHome', () => {
     expect(screen.getByText(/No upcoming rides/)).toBeInTheDocument();
     expect(screen.getByText('Nothing is waiting for a decision.')).toBeInTheDocument();
     expect(screen.queryByRole('list', { name: 'Upcoming rides' })).not.toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Your rides' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    expect(screen.getByRole('tab', { name: 'Ride history' })).toHaveAttribute(
+      'aria-selected',
+      'false',
+    );
   });
 
   it('FR-RD-06.4: lists rides I offered and joined with IST departure, role and seats', () => {
@@ -45,6 +55,7 @@ describe('StudentHome', () => {
               state: 'pickup_in_progress',
             },
           ],
+          history: [],
           waiting: [],
         }}
       />,
@@ -80,6 +91,7 @@ describe('StudentHome', () => {
               state: 'scheduled',
             },
           ],
+          history: [],
           waiting: [],
         }}
       />,
@@ -92,6 +104,7 @@ describe('StudentHome', () => {
       <StudentHome
         data={{
           upcoming: [],
+          history: [],
           waiting: [
             {
               kind: 'sent',
@@ -112,7 +125,9 @@ describe('StudentHome', () => {
         }}
       />,
     );
-    const items = within(screen.getByRole('list')).getAllByRole('listitem');
+    const items = within(screen.getByRole('list', { name: 'Waiting requests' })).getAllByRole(
+      'listitem',
+    );
     expect(items[0]).toHaveTextContent(
       'Your request for the ride to Kanpur Central on Sat 3 Oct, 05:00 is waiting for the ride owner.',
     );
@@ -123,5 +138,55 @@ describe('StudentHome', () => {
       'href',
       '/rides/r2',
     );
+  });
+
+  it('switches between tabs in place without navigating away', async () => {
+    const user = userEvent.setup();
+    render(
+      <StudentHome
+        data={{
+          ...empty,
+          history: [
+            {
+              rideId: 'r4',
+              title: 'To Kanpur Central',
+              departureStart: '2026-10-02T23:30:00Z',
+              departureEnd: '2026-10-03T00:30:00Z',
+              part: 'rider',
+              campusPlace: 'Hall 3',
+              direction: 'to_hub',
+              vehicleName: 'Car',
+              totalFare: 350,
+              capacity: 4,
+              occupantCount: 3,
+              state: 'completed',
+            },
+          ],
+        }}
+      />,
+    );
+    const historyTab = screen.getByRole('tab', { name: 'Ride history' });
+
+    await user.click(historyTab);
+
+    expect(historyTab).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('heading', { level: 1, name: 'Ride history' })).toBeInTheDocument();
+    expect(screen.getByRole('tabpanel', { name: 'Ride history' })).toBeVisible();
+    expect(document.getElementById('upcoming-panel')).toHaveAttribute('hidden');
+    expect(screen.getByText('To Kanpur Central')).toBeVisible();
+    expect(window.location.pathname).toBe('/');
+  });
+
+  it('supports arrow-key navigation between tabs', () => {
+    render(<StudentHome data={empty} />);
+    const upcomingTab = screen.getByRole('tab', { name: 'Your rides' });
+
+    fireEvent.keyDown(upcomingTab, { key: 'ArrowRight' });
+
+    expect(screen.getByRole('tab', { name: 'Ride history' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    expect(screen.getByRole('tab', { name: 'Ride history' })).toHaveFocus();
   });
 });

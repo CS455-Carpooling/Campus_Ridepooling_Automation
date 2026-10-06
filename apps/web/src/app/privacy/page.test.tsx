@@ -11,9 +11,9 @@ describe('PrivacyPage', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Privacy Policy' })).toBeInTheDocument();
   });
 
-  it('is marked as a placeholder and links back to registration', () => {
+  it('describes the current prototype and links back to registration', () => {
     render(<PrivacyPage />);
-    expect(screen.getByText(/placeholder page/)).toBeInTheDocument();
+    expect(screen.getByText(/current prototype/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Back to Registration/ })).toHaveAttribute(
       'href',
       routes.register,

@@ -46,9 +46,9 @@ describe('LandingPage', () => {
     await renderLanding(student);
     const toRides = screen.getAllByRole('link', { name: 'Go to your rides' });
     expect(toRides).toHaveLength(2);
-    for (const link of toRides) expect(link).toHaveAttribute('href', '/home');
+    for (const link of toRides) expect(link).toHaveAttribute('href', '/dashboard');
     expect(screen.queryByRole('link', { name: 'Register' })).not.toBeInTheDocument();
-    expect(screen.getByText('Find a ride or offer one from your home page.')).toBeInTheDocument();
+    expect(screen.getByText('Find a ride or offer one from your dashboard.')).toBeInTheDocument();
   });
 
   it('includes the live fare split on an example ride', async () => {

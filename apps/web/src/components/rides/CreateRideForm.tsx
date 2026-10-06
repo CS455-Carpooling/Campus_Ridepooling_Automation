@@ -28,12 +28,30 @@ type ApiError = {
 
 const emptyErrors: RideErrors = {};
 
-export function CreateRideForm({ options }: { options: RideFormOptions }) {
+export function CreateRideForm({
+  options,
+  defaults,
+}: {
+  options: RideFormOptions;
+  defaults?: { defaultPickupPointId: string | null; preferredVehicleTypeId: string | null };
+}) {
   const router = useRouter();
-  const [draft, setDraft] = useState<RideDraft>(emptyRideDraft);
+  const initialDraft = {
+    ...emptyRideDraft,
+    campusLocationId: options.campusPlaces.some(
+      (place) => place.id === defaults?.defaultPickupPointId,
+    )
+      ? (defaults?.defaultPickupPointId ?? '')
+      : '',
+    vehicleTypeId: options.vehicleTypes.some(
+      (vehicle) => vehicle.id === defaults?.preferredVehicleTypeId,
+    )
+      ? (defaults?.preferredVehicleTypeId ?? '')
+      : '',
+  };
+  const [draft, setDraft] = useState<RideDraft>(initialDraft);
   const [errors, setErrors] = useState<RideErrors>(emptyErrors);
   const [formError, setFormError] = useState('');
-  const [loadingOptions, setLoadingOptions] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [createdRideId, setCreatedRideId] = useState<string | null>(null);
 
@@ -90,7 +108,7 @@ export function CreateRideForm({ options }: { options: RideFormOptions }) {
         return;
       }
 
-      setDraft(emptyRideDraft);
+      setDraft(initialDraft);
       setErrors(emptyErrors);
       setCreatedRideId(data.ride?.id ?? null);
     } catch {
@@ -111,6 +129,12 @@ export function CreateRideForm({ options }: { options: RideFormOptions }) {
           Tell other IITK students where you are going, when you will leave, and what the whole
           vehicle is expected to cost.
         </p>
+        <Link
+          href={routes.profile}
+          className="mt-3 inline-flex min-h-11 items-center font-semibold"
+        >
+          Edit your ride preferences
+        </Link>
       </header>
 
       {formError && (

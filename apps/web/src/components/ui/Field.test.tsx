@@ -19,6 +19,14 @@ describe('Field', () => {
     );
   });
 
+  it('can place the hint after the input', () => {
+    render(<Field label="Display name" hint="Shown to other riders." hintPosition="after" />);
+    const input = screen.getByLabelText('Display name');
+    const hint = screen.getByText('Shown to other riders.');
+    expect(input).toHaveAccessibleDescription('Shown to other riders.');
+    expect(input.parentElement?.lastElementChild).toBe(hint);
+  });
+
   it('marks the input invalid and links the error message', () => {
     render(
       <Field

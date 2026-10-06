@@ -12,9 +12,10 @@ describe('NavLinks', () => {
   });
 
   it('renders one link per navigation item', () => {
-    usePathname.mockReturnValue('/home');
+    usePathname.mockReturnValue('/dashboard');
     render(<NavLinks items={navigationFor('student')} />);
-    expect(screen.getAllByRole('link')).toHaveLength(4);
+    expect(screen.getAllByRole('link')).toHaveLength(5);
+    expect(screen.getByRole('link', { name: 'Profile' })).toHaveAttribute('href', '/profile');
     expect(screen.getByRole('link', { name: 'Find a ride' })).toHaveAttribute('href', '/rides');
   });
 

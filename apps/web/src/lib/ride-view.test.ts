@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const query = vi.hoisted(() => vi.fn());
 vi.mock('./db', () => ({ pool: { query } }));
 
-import { UPCOMING_LIMIT, getRideView, getUpcomingRides } from './ride-view';
+import { UPCOMING_LIMIT, getHistoricalRides, getRideView, getUpcomingRides } from './ride-view';
 
 const RIDE_ID = '0b9a7c1e-1111-4000-8000-000000000001';
 const VIEWER_ID = '6f1c2a5e-2222-4000-8000-000000000002';
@@ -178,6 +178,17 @@ describe('getRideView: what the page shows', () => {
     expect(query.mock.calls[1][0]).toContain('m.joined_at');
     expect(JSON.stringify(view)).not.toContain(VIEWER_ID);
   });
+
+  it('FR-RD-02.4: exposes only selected public tags and completed-trip counts', async () => {
+    respond(rideRow(), [{ ...owner, visible_tags: ['Quiet ride'], completed_trips: 3 }]);
+    await expect(getRideView(RIDE_ID, VIEWER_ID, open)).resolves.toMatchObject({
+      occupants: [{ visibleTags: ['Quiet ride'], completedTrips: 3 }],
+    });
+    const occupantSql = query.mock.calls[1][0] as string;
+    expect(occupantSql).toContain('selected.is_visible = true');
+    expect(occupantSql).toContain('profile.display_name');
+    expect(occupantSql).not.toMatch(/email|roll_number|password|mobile_number/);
+  });
 });
 
 describe('getUpcomingRides (FR-RD-06.4)', () => {
@@ -204,6 +215,7 @@ describe('getUpcomingRides (FR-RD-06.4)', () => {
         },
       ],
     });
+
     await expect(getUpcomingRides(VIEWER_ID, open)).resolves.toEqual([
       {
         rideId: RIDE_ID,
@@ -238,6 +250,56 @@ describe('getUpcomingRides (FR-RD-06.4)', () => {
 
   it('gives the development user, whose ID is not a UUID, no rides and no query', async () => {
     await expect(getUpcomingRides('dev-student', open)).resolves.toEqual([]);
+    expect(query).not.toHaveBeenCalled();
+  });
+});
+
+describe('getHistoricalRides', () => {
+  it('returns the user’s completed, cancelled, and elapsed scheduled rides with details', async () => {
+    query.mockResolvedValueOnce({
+      rows: [
+        {
+          id: RIDE_ID,
+          direction: 'to_hub',
+          hub_name: 'Kanpur Central',
+          departure_start: new Date('2026-10-02T23:30:00Z'),
+          departure_end: new Date('2026-10-03T00:30:00Z'),
+          state: 'completed',
+          is_owner: false,
+          campus_place: 'Hall 3',
+          vehicle_name: 'Car',
+          total_fare: 350,
+          capacity: 4,
+          occupant_count: 3,
+        },
+      ],
+    });
+
+    await expect(getHistoricalRides(VIEWER_ID, open)).resolves.toEqual([
+      {
+        rideId: RIDE_ID,
+        title: 'To Kanpur Central',
+        departureStart: '2026-10-02T23:30:00.000Z',
+        departureEnd: '2026-10-03T00:30:00.000Z',
+        part: 'rider',
+        campusPlace: 'Hall 3',
+        direction: 'to_hub',
+        vehicleName: 'Car',
+        totalFare: 350,
+        capacity: 4,
+        occupantCount: 3,
+        state: 'completed',
+      },
+    ]);
+    const [sql, params] = query.mock.calls[0];
+    expect(params).toEqual([VIEWER_ID, open]);
+    expect(sql).toContain("r.state IN ('completed', 'cancelled')");
+    expect(sql).toContain("r.state = 'scheduled' AND r.departure_end <= $2");
+    expect(sql).toContain('ORDER BY r.departure_start DESC');
+  });
+
+  it('returns no rides for a non-UUID user without querying', async () => {
+    await expect(getHistoricalRides('dev-student', open)).resolves.toEqual([]);
     expect(query).not.toHaveBeenCalled();
   });
 });

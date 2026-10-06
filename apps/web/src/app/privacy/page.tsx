@@ -21,14 +21,26 @@ export default function PrivacyPage() {
         <h2 className="mt-12 text-2xl font-bold text-ink">1. Information We Collect</h2>
         <p>
           We collect your name, roll number, and <code>@iitk.ac.in</code> email address when you
-          register. When you offer or join a ride, we collect the trip details (starting point,
-          destination, time) and chat messages associated with that ride.
+          register. Your profile may also store a display name, default pickup point, optional
+          mobile number, interest tags and ride preferences. When you offer or join a ride, we
+          collect the trip details (starting point, destination, time) and chat messages associated
+          with that ride.
         </p>
 
         <h2 className="mt-8 text-2xl font-bold text-ink">2. How We Use Your Data</h2>
         <p>
-          Your data is used solely to facilitate ride-sharing within the IIT Kanpur community. We
-          use your email to verify your identity and your trip data to match you with co-passengers.
+          Your data is used to facilitate ride-sharing within the IIT Kanpur community. We use your
+          email to verify your identity and your trip data to match you with co-passengers. On ride
+          pages, other riders may see your display name, tags you mark visible, and completed-trip
+          count. Your email and mobile number are not shown to other riders or ride owners.
+        </p>
+
+        <p>
+          Mobile numbers are optional, are not shown to other riders, and are never sent to AI
+          services. The administrator-only SOS access flow is not currently implemented. Interest
+          tags are not used for AI suggestions or ranking unless you explicitly opt in from your
+          profile. You can withdraw that consent at any time. The AI suggestion service is not
+          currently available.
         </p>
 
         <h2 className="mt-8 text-2xl font-bold text-ink">3. Data Retention</h2>
@@ -40,15 +52,22 @@ export default function PrivacyPage() {
 
         <h2 className="mt-8 text-2xl font-bold text-ink">4. Third-Party Sharing</h2>
         <p>
-          We do not sell, rent, or share your personal information with third parties. Your data
-          stays strictly within the Campus Ride-Pooling system for the IITK community.
+          We do not sell or rent your personal information. If AI suggestions are enabled in the
+          future, only selected interest tags may be shared with the AI service when you have
+          consented; email addresses, mobile numbers, and chat or complaint text are excluded.
+        </p>
+
+        <h2 className="mt-8 text-2xl font-bold text-ink">5. Your Data Controls</h2>
+        <p>
+          From your profile, you can download a JSON copy of your account, profile, and ride data,
+          or delete your account. Deletion removes your sign-in and profile data and anonymizes your
+          name on retained ride history. You may reset your password from the account settings.
         </p>
 
         <div className="mt-12 rounded-panel border border-line bg-panel p-6">
           <p className="text-sm">
             <em>
-              This is a placeholder page for the Privacy Policy. The final legal terms will be
-              updated prior to production launch.
+              This policy describes the current prototype and should be reviewed before launch.
             </em>
           </p>
         </div>
