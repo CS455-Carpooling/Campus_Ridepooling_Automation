@@ -90,6 +90,8 @@ exist yet shows the 404 page until the page is built.
   that each person rates each other person once. A rating counts only after its ride's 72 hours are
   over; others see an average only from 3 ratings up, comments go only to the person rated, and
   nobody is ever shown who gave a rating (P-24).
+  `POST /api/rides/[id]/complete` marks a ride completed, and the owner's ride page offers it as
+  "Mark ride completed", with a confirmation.
 - **Page data** comes from server-only modules in `src/lib`. `ride-view.ts` reads rides from
   PostgreSQL for the ride page and for the Upcoming list on `/home` (rides you offered or joined,
   through `home-data.ts`). Join requests do not exist yet, so nothing is listed as waiting, and the

@@ -37,6 +37,8 @@ function rideView(change: Partial<RideView> = {}): RideView {
     isLocked: false,
     isOpen: true,
     windowEnded: false,
+    completedAt: null,
+    canComplete: false,
     vehicleName: 'Car',
     capacity: 4,
     occupantCount: 2,
@@ -200,5 +202,33 @@ describe('RideDetails', () => {
     expect(screen.getByText('21:12:05')).toHaveAttribute('datetime', '2026-10-09T15:42:05.000Z');
     expect(screen.getByRole('button', { name: 'Refresh' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Your rides' })).toHaveAttribute('href', '/dashboard');
+  });
+});
+
+describe('RideDetails: completing a ride (FR-RO-09.4)', () => {
+  it('offers the owner "Mark ride completed" only when the server allows it', () => {
+    const { rerender } = render(
+      <RideDetails ride={rideView({ viewerRole: 'owner', canComplete: true })} />,
+    );
+    expect(screen.getByRole('button', { name: 'Mark ride completed' })).toBeInTheDocument();
+    rerender(<RideDetails ride={rideView({ viewerRole: 'owner', canComplete: false })} />);
+    expect(screen.queryByRole('button', { name: 'Mark ride completed' })).not.toBeInTheDocument();
+  });
+
+  it('says when a completed ride was marked completed', () => {
+    render(
+      <RideDetails
+        ride={rideView({
+          state: 'completed',
+          completedAt: '2026-10-10T02:35:00.000Z',
+          isOpen: false,
+          isLocked: true,
+          windowEnded: true,
+          estimatedShare: null,
+        })}
+      />,
+    );
+    expect(screen.getByText('Completed')).toBeInTheDocument();
+    expect(screen.getByText('Marked completed Sat 10 Oct, 08:05')).toBeInTheDocument();
   });
 });

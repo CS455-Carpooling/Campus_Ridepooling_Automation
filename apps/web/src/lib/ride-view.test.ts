@@ -19,6 +19,7 @@ function rideRow(change: Record<string, unknown> = {}) {
     state: 'scheduled',
     departure_start: new Date('2026-10-10T06:30:00+05:30'),
     departure_end: new Date('2026-10-10T07:30:00+05:30'),
+    completed_at: null,
     capacity_snapshot: 4,
     expected_total_fare: 350,
     hub_name: 'Kanpur Central',
@@ -301,5 +302,51 @@ describe('getHistoricalRides', () => {
   it('returns no rides for a non-UUID user without querying', async () => {
     await expect(getHistoricalRides('dev-student', open)).resolves.toEqual([]);
     expect(query).not.toHaveBeenCalled();
+  });
+});
+
+describe('getRideView: completing a ride (FR-RO-09.4)', () => {
+  const started = new Date('2026-10-10T06:30:00+05:30');
+
+  it('lets the owner complete it from the start of the departure window', async () => {
+    respond(rideRow({ viewer_is_owner: true }), [{ ...owner, is_viewer: true }]);
+    await expect(getRideView(RIDE_ID, VIEWER_ID, started)).resolves.toMatchObject({
+      canComplete: true,
+      completedAt: null,
+    });
+    respond(rideRow({ viewer_is_owner: true }), [{ ...owner, is_viewer: true }]);
+    await expect(getRideView(RIDE_ID, VIEWER_ID, locked)).resolves.toMatchObject({
+      canComplete: false,
+    });
+  });
+
+  it('never offers it to a rider, nor on a cancelled ride', async () => {
+    respond(rideRow({ viewer_is_rider: true }), [owner, { ...rider, is_viewer: true }]);
+    await expect(getRideView(RIDE_ID, VIEWER_ID, started)).resolves.toMatchObject({
+      canComplete: false,
+    });
+    respond(rideRow({ viewer_is_owner: true, state: 'cancelled' }), [
+      { ...owner, is_viewer: true },
+    ]);
+    await expect(getRideView(RIDE_ID, VIEWER_ID, started)).resolves.toMatchObject({
+      canComplete: false,
+    });
+  });
+
+  it('gives when a completed ride was completed, and does not offer it again', async () => {
+    respond(
+      rideRow({
+        viewer_is_owner: true,
+        state: 'completed',
+        completed_at: new Date('2026-10-10T08:05:00+05:30'),
+      }),
+      [{ ...owner, is_viewer: true }],
+    );
+    await expect(getRideView(RIDE_ID, VIEWER_ID, started)).resolves.toMatchObject({
+      state: 'completed',
+      completedAt: '2026-10-10T02:35:00.000Z',
+      canComplete: false,
+    });
+    expect(query.mock.calls[0][0]).toContain('r.completed_at');
   });
 });

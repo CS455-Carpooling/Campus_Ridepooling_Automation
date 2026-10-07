@@ -2,6 +2,7 @@ import 'server-only';
 import { pool } from './db';
 import { estimateShare, splitFare } from './fare';
 import { isUuid } from './ids';
+import { completeRideRefusal } from './rating-rules';
 import type { Direction } from './ride-rules';
 import {
   canViewRide,
@@ -46,6 +47,10 @@ export type RideView = {
   isOpen: boolean;
   /** The departure window is over (the state may still say Scheduled). */
   windowEnded: boolean;
+  /** ISO 8601: when the owner marked the ride completed, or null while it is not. */
+  completedAt: string | null;
+  /** The viewer is the owner and may mark the ride completed now (FR-RO-09.4). */
+  canComplete: boolean;
   vehicleName: string;
   /** Everyone the vehicle carries, the owner included. */
   capacity: number;
@@ -69,6 +74,7 @@ type RideRow = {
   state: RideState;
   departure_start: Date;
   departure_end: Date;
+  completed_at: Date | null;
   capacity_snapshot: number;
   expected_total_fare: number;
   hub_name: string;
@@ -89,7 +95,7 @@ type OccupantRow = {
 
 // Inactive hubs and vehicle types still show: they were valid when the ride was offered.
 const RIDE_SQL = `
-  SELECT r.id, r.direction, r.state, r.departure_start, r.departure_end,
+  SELECT r.id, r.direction, r.state, r.departure_start, r.departure_end, r.completed_at,
          r.capacity_snapshot, r.expected_total_fare,
          hub.name AS hub_name, hub.detail AS hub_detail, v.name AS vehicle_name,
          (r.owner_id = $2) AS viewer_is_owner,
@@ -176,6 +182,8 @@ export async function getRideView(
     isLocked: isLocked(ride.departure_start, now),
     isOpen,
     windowEnded: now.getTime() >= ride.departure_end.getTime(),
+    completedAt: ride.completed_at ? ride.completed_at.toISOString() : null,
+    canComplete: completeRideRefusal(viewerRole, ride.state, ride.departure_start, now) === null,
     vehicleName: ride.vehicle_name,
     capacity: ride.capacity_snapshot,
     occupantCount: people.length,
