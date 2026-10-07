@@ -185,4 +185,3 @@ export async function searchRides(
         : row.expected_total_fare,
   }));
 }
-
