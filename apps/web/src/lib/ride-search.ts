@@ -30,7 +30,7 @@ export type SearchRideResult = {
   occupantCount: number;
   seatsLeft: number;
   totalFare: number;
-  /** ceil(totalFare / (occupantCount + 1)) — what the viewer would pay by joining. */
+  /** ceil(totalFare / (occupantCount + 1)): what the viewer would pay by joining. */
   estimatedShare: number;
 };
 
