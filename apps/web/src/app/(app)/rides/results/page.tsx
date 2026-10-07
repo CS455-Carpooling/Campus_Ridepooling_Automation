@@ -25,7 +25,7 @@ function getOptionalInt(value: string | string[] | undefined): number | undefine
 }
 
 /**
- * /rides/results — server component that reads the search params put there by
+ * /rides/results: server component that reads the search params put there by
  * SearchRideForm's router.push, fetches results directly (no API hop needed),
  * and renders them. loading.tsx fires the instant Next.js starts rendering this.
  */

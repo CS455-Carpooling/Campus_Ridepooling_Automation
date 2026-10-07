@@ -6,7 +6,7 @@ import type { SearchRideResult } from '@/lib/ride-search';
 import { routes } from '@/lib/routes';
 
 /**
- * One search result card. Purely presentational — all numbers are worked out
+ * One search result card. Purely presentational: all numbers are worked out
  * by the server in ride-search.ts. Links to the full ride detail page.
  */
 export function RideCard({ ride }: { ride: SearchRideResult }) {

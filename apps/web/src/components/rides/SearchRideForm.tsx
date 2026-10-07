@@ -85,7 +85,7 @@ export function SearchRideForm({ options }: { options: RideFormOptions }) {
       return;
     }
 
-    // Build the results URL and navigate — the results page and its
+    // Build the results URL and navigate: the results page and its
     // loading.tsx take over from here.
     const params = new URLSearchParams({
       direction: filters.direction,
@@ -102,7 +102,7 @@ export function SearchRideForm({ options }: { options: RideFormOptions }) {
 
   return (
     <DesignSystem className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-      {/* Page header — mirrors CreateRideForm's header structure */}
+      {/* Page header: mirrors CreateRideForm's header structure */}
       <header>
         <p className="text-sm font-semibold uppercase tracking-wide text-accent-text">
           Find a ride
