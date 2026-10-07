@@ -84,4 +84,3 @@ export async function GET(req: Request) {
     return json({ error: 'Unable to search for rides right now.' }, 500);
   }
 }
-

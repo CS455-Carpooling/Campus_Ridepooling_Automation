@@ -19,4 +19,3 @@ export default async function RidesPage() {
   const options = await getRideFormOptions();
   return <SearchRideForm options={options} />;
 }
-

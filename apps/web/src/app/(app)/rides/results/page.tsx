@@ -110,4 +110,3 @@ export default async function RideResultsPage({ searchParams }: Props) {
     </DesignSystem>
   );
 }
-

@@ -24,9 +24,7 @@ export function RideCard({ ride }: { ride: SearchRideResult }) {
           <h2 className="mt-0.5 text-xl font-bold tracking-tight">
             {ride.direction === 'to_hub' ? 'To' : 'From'} {ride.hub.name}
           </h2>
-          {ride.hub.detail && (
-            <p className="mt-0.5 text-sm text-ink-muted">{ride.hub.detail}</p>
-          )}
+          {ride.hub.detail && <p className="mt-0.5 text-sm text-ink-muted">{ride.hub.detail}</p>}
         </div>
 
         {/* Seats badge */}

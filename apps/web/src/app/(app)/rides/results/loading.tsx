@@ -55,4 +55,3 @@ export default function RideResultsLoading() {
     </DesignSystem>
   );
 }
-
