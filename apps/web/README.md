@@ -54,6 +54,7 @@ exist yet shows the 404 page until the page is built.
 | `/privacy` | Privacy policy | Built |
 | `/rides/new` | Offer a ride: route, vehicle, departure window, fare | Built (CS455-22 to 25) |
 | `/rides/[id]` | Ride details: route, departure window, state and lock time, seats, fare split, people | Built (CS455-28, 29) |
+| `/rides/[id]/review` | Rate the people on a completed ride, for 72 hours after it is completed | In progress (CS455-39) |
 | `/rides` | Find a ride | Not started |
 | `/notifications` | Notifications | Not started |
 | `/admin/incidents`, `/admin/complaints`, `/admin/recommendations` | Admin queues | Not started |
@@ -81,6 +82,14 @@ exist yet shows the 404 page until the page is built.
   riders always; any other signed-in student only while it is scheduled and before its lock time,
   an hour before departure. `getRideView()` in `src/lib/ride-view.ts` applies it on the server and
   answers "Ride not found" for every other case, so a link never reveals whether a ride exists.
+- **Completing and rating a ride** (`src/lib/rating-rules.ts`, CS455-39): only the owner marks a
+  ride completed, from the start of its departure window, never a cancelled ride and never twice.
+  Everyone with a seat on a completed ride may then rate each other person on it from 1 to 5, once,
+  with an optional comment of up to 500 characters, for 72 hours (P-16). The `ride_ratings` table
+  enforces in PostgreSQL that both people had a seat on that ride, that nobody rates themselves and
+  that each person rates each other person once. A rating counts only after its ride's 72 hours are
+  over; others see an average only from 3 ratings up, comments go only to the person rated, and
+  nobody is ever shown who gave a rating (P-24).
 - **Page data** comes from server-only modules in `src/lib`. `ride-view.ts` reads rides from
   PostgreSQL for the ride page and for the Upcoming list on `/home` (rides you offered or joined,
   through `home-data.ts`). Join requests do not exist yet, so nothing is listed as waiting, and the

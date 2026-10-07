@@ -15,6 +15,7 @@ export const routes = {
   findRide: '/rides',
   offerRide: '/rides/new',
   ride: (rideId: string) => `/rides/${encodeURIComponent(rideId)}`,
+  rideReview: (rideId: string) => `/rides/${encodeURIComponent(rideId)}/review`,
   notifications: '/notifications',
   adminIncidents: '/admin/incidents',
   adminComplaints: '/admin/complaints',
