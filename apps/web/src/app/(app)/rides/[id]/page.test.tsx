@@ -46,6 +46,8 @@ const view = {
   isLocked: false,
   isOpen: true,
   windowEnded: false,
+  completedAt: null,
+  canComplete: false,
   vehicleName: 'Car',
   capacity: 4,
   occupantCount: 1,

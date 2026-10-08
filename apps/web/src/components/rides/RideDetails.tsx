@@ -11,6 +11,7 @@ import {
 import { campusPlaceLabel, directionLabels, rideTitle } from '@/lib/ride-status';
 import type { RideView } from '@/lib/ride-view';
 import { routes } from '@/lib/routes';
+import { CompleteRideButton } from './CompleteRideButton';
 import { RideStateLabel } from './RideStateLabel';
 
 /**
@@ -44,6 +45,8 @@ export function RideDetails({ ride }: { ride: RideView }) {
         </div>
       </header>
 
+      {ride.canComplete && <CompleteRideButton rideId={ride.id} />}
+
       {!cancelled && <SharePanel ride={ride} />}
 
       <dl className="mt-8 grid gap-x-8 gap-y-5 sm:grid-cols-2">
@@ -75,8 +78,13 @@ export function RideDetails({ ride }: { ride: RideView }) {
   );
 }
 
-/** When the ride locks, or that its time has passed. Only a scheduled ride has one. */
+/** When the ride locks, that its time has passed, or when it was marked completed. */
 function TimingNote({ ride }: { ride: RideView }) {
+  if (ride.state === 'completed' && ride.completedAt) {
+    return (
+      <p className="text-sm text-ink-muted">Marked completed {formatDeparture(ride.completedAt)}</p>
+    );
+  }
   if (ride.state !== 'scheduled') return null;
   const text = ride.windowEnded
     ? `Departure window ended ${formatDeparture(ride.departureEnd)}`

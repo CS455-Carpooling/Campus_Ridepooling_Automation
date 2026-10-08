@@ -36,6 +36,12 @@ describe('routes.ride', () => {
   });
 });
 
+describe('routes.rideReview', () => {
+  it('is the review page under the ride, with the id encoded', () => {
+    expect(routes.rideReview('abc 1/2')).toBe('/rides/abc%201%2F2/review');
+  });
+});
+
 describe('currentHref', () => {
   const items = navigationFor('student');
 

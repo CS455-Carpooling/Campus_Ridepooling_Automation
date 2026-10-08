@@ -177,3 +177,46 @@ ON CONFLICT (id) DO NOTHING;
 UPDATE vehicle_types SET sort_order = CASE id
   WHEN 'car' THEN 1 WHEN 'auto' THEN 2 WHEN 'vikram' THEN 3
   ELSE sort_order END;
+
+-- Completing and rating a ride (CS455-39: FR-RO-09.4, FR-RD-12, FR-RO-12).
+-- When the owner marked the ride completed. Rating is open for 72 hours from then (P-16), so a
+-- completed ride must have it, and no other ride may. Rides set to completed by hand before the
+-- column existed take the end of their departure window.
+ALTER TABLE rides ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ;
+
+UPDATE rides SET completed_at = departure_end
+WHERE state = 'completed' AND completed_at IS NULL;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'rides_completed_at_matches_state'
+  ) THEN
+    ALTER TABLE rides ADD CONSTRAINT rides_completed_at_matches_state
+      CHECK ((state = 'completed') = (completed_at IS NOT NULL));
+  END IF;
+END $$;
+
+-- One person's rating of another after a ride (US-RD-28). Both must have a seat on that ride
+-- (a riders row: the owner has one too), nobody rates themselves, and each person rates each
+-- other person once per ride (AC2). Ratings are never updated or deleted by the app; they go
+-- only when the seat or the ride does. Who gave a rating is never shown to anyone (P-24).
+CREATE TABLE IF NOT EXISTS ride_ratings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ride_id UUID NOT NULL REFERENCES rides(id) ON DELETE CASCADE,
+  rater_id UUID NOT NULL,
+  ratee_id UUID NOT NULL,
+  score SMALLINT NOT NULL CHECK (score BETWEEN 1 AND 5),
+  -- Optional, and shown only to the person rated, without the rater's name or the score.
+  comment TEXT CHECK (comment IS NULL OR char_length(comment) BETWEEN 1 AND 500),
+  submitted_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT ride_ratings_once UNIQUE (ride_id, rater_id, ratee_id),
+  CONSTRAINT ride_ratings_not_self CHECK (rater_id <> ratee_id),
+  CONSTRAINT ride_ratings_rater_on_ride FOREIGN KEY (ride_id, rater_id)
+    REFERENCES riders (ride_id, user_id) ON DELETE CASCADE,
+  CONSTRAINT ride_ratings_ratee_on_ride FOREIGN KEY (ride_id, ratee_id)
+    REFERENCES riders (ride_id, user_id) ON DELETE CASCADE
+);
+
+-- A person's average and the comments about them are looked up by the person rated.
+CREATE INDEX IF NOT EXISTS ride_ratings_ratee_idx ON ride_ratings (ratee_id, submitted_at DESC);
