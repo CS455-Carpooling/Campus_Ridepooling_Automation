@@ -6,8 +6,10 @@ import {
   completeRideRefusal,
   ratingClosesAt,
   ratingWindow,
+  type PublicRating,
   type RatingWindow,
 } from './rating-rules';
+import { publicRatingJoin } from './rating-summary';
 import type { Direction } from './ride-rules';
 import {
   canViewRide,
@@ -32,6 +34,8 @@ export type RideOccupant = {
   completedTrips: number;
   /** Their share of the total fare now, in whole rupees (Table T-2). */
   share: number;
+  /** Their average from released ratings, or null below 3 ratings (P-24, CS455-44). */
+  rating: PublicRating | null;
 };
 
 /**
@@ -103,6 +107,8 @@ type OccupantRow = {
   is_viewer: boolean;
   visible_tags: string[] | null;
   completed_trips: number;
+  rating_count: number | null;
+  rating_average: number | null;
 };
 
 // Inactive hubs and vehicle types still show: they were valid when the ride was offered.
@@ -129,7 +135,8 @@ const OCCUPANTS_SQL = `
           FROM riders completed
           JOIN rides completed_ride ON completed_ride.id = completed.ride_id
           WHERE completed.user_id = m.user_id AND completed_ride.state = 'completed')
-           AS completed_trips
+           AS completed_trips,
+         public_rating.rating_count, public_rating.rating_average
   FROM riders m
   JOIN rides r ON r.id = m.ride_id
   JOIN users u ON u.id = m.user_id
@@ -140,6 +147,7 @@ const OCCUPANTS_SQL = `
     JOIN interest_tags tag ON tag.id = selected.tag_id AND tag.is_active = true
     WHERE selected.user_id = m.user_id AND selected.is_visible = true
   ) public_tags ON true
+  ${publicRatingJoin('m.user_id', '$3')}
   JOIN locations place ON place.id = m.campus_location_id
   WHERE m.ride_id = $1
   ORDER BY (m.user_id = r.owner_id) DESC, m.joined_at, m.id`;
@@ -168,7 +176,7 @@ export async function getRideView(
       : 'visitor';
   if (!canViewRide(viewerRole, ride.state, ride.departure_start, now)) return null;
 
-  const { rows: people } = await pool.query<OccupantRow>(OCCUPANTS_SQL, [rideId, viewerId]);
+  const { rows: people } = await pool.query<OccupantRow>(OCCUPANTS_SQL, [rideId, viewerId, now]);
   const totalFare = ride.expected_total_fare;
   const shares = people.length > 0 ? splitFare(totalFare, people.length) : [];
   const occupants = people.map((person, index) => ({
@@ -179,6 +187,10 @@ export async function getRideView(
     visibleTags: person.visible_tags ?? [],
     completedTrips: person.completed_trips ?? 0,
     share: shares[index],
+    rating:
+      person.rating_count !== null && person.rating_average !== null
+        ? { average: person.rating_average, count: person.rating_count }
+        : null,
   }));
 
   const seatsLeft = Math.max(ride.capacity_snapshot - people.length, 0);
@@ -250,6 +262,14 @@ export type HistoricalRide = {
   capacity: number;
   occupantCount: number;
   state: RideState;
+  /** ISO 8601: when the ride was marked completed, or null. */
+  completedAt: string | null;
+  /** How many of the others on the ride the viewer has rated (FR-RD-16.1, CS455-44). */
+  ratingsGiven: number;
+  /** When rating closes on a completed ride, or null. */
+  ratingClosesAt: string | null;
+  /** Rating is open and someone else on the ride is still unrated by the viewer. */
+  canRate: boolean;
 };
 
 type UpcomingRow = {
@@ -315,6 +335,8 @@ type HistoricalRow = {
   total_fare: number;
   capacity: number;
   occupant_count: number;
+  completed_at: Date | null;
+  ratings_given: number;
 };
 
 const HISTORY_SQL = `
@@ -323,7 +345,10 @@ const HISTORY_SQL = `
          vehicle.name AS vehicle_name, r.expected_total_fare AS total_fare,
          r.capacity_snapshot AS capacity,
          (SELECT COUNT(*)::int FROM riders occupants WHERE occupants.ride_id = r.id)
-           AS occupant_count
+           AS occupant_count,
+         r.completed_at,
+         (SELECT count(*)::int FROM ride_ratings given
+          WHERE given.ride_id = r.id AND given.rater_id = $1) AS ratings_given
   FROM riders me
   JOIN rides r ON r.id = me.ride_id
   JOIN locations hub ON hub.id = r.hub_id
@@ -354,5 +379,11 @@ export async function getHistoricalRides(
     capacity: row.capacity,
     occupantCount: row.occupant_count,
     state: row.state,
+    completedAt: row.completed_at ? row.completed_at.toISOString() : null,
+    ratingsGiven: row.ratings_given ?? 0,
+    ratingClosesAt: row.completed_at ? ratingClosesAt(row.completed_at).toISOString() : null,
+    canRate:
+      ratingWindow(row.state, row.completed_at, now) === 'open' &&
+      (row.ratings_given ?? 0) < row.occupant_count - 1,
   }));
 }

@@ -1,6 +1,7 @@
 import 'server-only';
 import { pool } from './db';
 import type { ProfileData, ProfileTag } from './profile-types';
+import { getOwnRating } from './rating-summary';
 
 type ProfileRow = {
   email: string;
@@ -47,7 +48,7 @@ export async function getRideProfileDefaults(userId: string): Promise<{
 export async function getProfileData(userId: string): Promise<ProfileData | null> {
   await ensureProfile(userId);
 
-  const [profile, locations, vehicles, tags, completedTrips] = await Promise.all([
+  const [profile, locations, vehicles, tags, completedTrips, rating] = await Promise.all([
     pool.query<ProfileRow>(
       `SELECT u.email, u.full_name, u.roll_number, p.display_name,
               p.default_pickup_point_id, p.preferred_vehicle_type_id,
@@ -79,6 +80,7 @@ export async function getProfileData(userId: string): Promise<ProfileData | null
        WHERE m.user_id = $1 AND r.state = 'completed'`,
       [userId],
     ),
+    getOwnRating(userId),
   ]);
 
   const row = profile.rows[0];
@@ -98,6 +100,6 @@ export async function getProfileData(userId: string): Promise<ProfileData | null
     vehicles: vehicles.rows,
     tags: tags.rows,
     completedTrips: Number(completedTrips.rows[0]?.count ?? 0),
-    rating: null,
+    rating,
   };
 }

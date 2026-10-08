@@ -100,6 +100,11 @@ exist yet shows the 404 page until the page is built.
   `{ ratings: [{ occupantId, score, comment? }] }`, where `occupantId` is a seat on the ride
   (`riders.id`), so no user ID reaches the browser. It stores all of the ratings or none of them
   and answers only how many it stored; refusals come as `{ error, code }`.
+- **Showing ratings** (`src/lib/rating-summary.ts`, CS455-44): a rating counts only once its ride's
+  72 hours of rating are over, so all of a ride's ratings appear together. From 3 such ratings, the
+  ride page's people list shows a person's average and count, and their profile shows them their
+  average and the comments left about them, without names, scores or dates. Dashboard history
+  shows "Ratings given" on completed rides, with a link to rate while rating is open.
 
 ## Conventions
 

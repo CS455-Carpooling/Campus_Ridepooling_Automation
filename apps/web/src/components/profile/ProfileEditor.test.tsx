@@ -21,7 +21,7 @@ const profile: ProfileData = {
   vehicles: [{ id: 'car', name: 'Car' }],
   tags: [{ id: 'quiet-ride', name: 'Quiet ride', selected: false, visible: true }],
   completedTrips: 2,
-  rating: null,
+  rating: { count: 0, average: null, comments: [] },
 };
 
 beforeEach(() => {
@@ -66,5 +66,20 @@ describe('ProfileEditor', () => {
       }),
     );
     expect(await screen.findByRole('status')).toHaveTextContent('Profile saved.');
+  });
+});
+
+describe('ProfileEditor: ratings (CS455-44)', () => {
+  it('shows the rating others see in the rider preview, and the comments only the user sees', () => {
+    render(
+      <ProfileEditor
+        profile={{ ...profile, rating: { count: 4, average: 4.5, comments: ['Always on time.'] } }}
+      />,
+    );
+    const preview = screen.getByRole('region', { name: 'Rider preview' });
+    expect(preview).toHaveTextContent('Rating: 4.5 out of 5 from 4 ratings.');
+    expect(preview).not.toHaveTextContent('not available yet');
+    const comments = screen.getByRole('region', { name: 'Comments about you' });
+    expect(comments).toHaveTextContent('Always on time.');
   });
 });

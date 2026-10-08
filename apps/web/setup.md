@@ -256,6 +256,22 @@ npm run db:migrate
 
 On Render, run the same SQL through `psql` with the External URL, or the database's **Shell** tab.
 
+### Trying ratings locally
+
+Joining a ride is not built yet, so put people on a ride by hand to try the review page. With the
+Docker Compose stack from the root README, after registering the accounts and offering a ride:
+
+```bash
+# put another account on the ride, with a pickup point
+docker compose exec db psql -U crp -d crp -c "INSERT INTO riders (ride_id, user_id, campus_location_id) SELECT '<ride id>', id, 'hall-5' FROM users WHERE email = '<name>@iitk.ac.in';"
+
+# move the ride into the past, so its owner can mark it completed on the ride page
+docker compose exec db psql -U crp -d crp -c "UPDATE rides SET departure_start = now() - interval '2 hours', departure_end = now() - interval '1 hour' WHERE id = '<ride id>';"
+
+# after rating: end the 72 hours early, so averages and comments appear (from 3 ratings)
+docker compose exec db psql -U crp -d crp -c "UPDATE rides SET completed_at = now() - interval '73 hours' WHERE id = '<ride id>';"
+```
+
 ## 11. Troubleshooting
 
 | Problem | Fix |
