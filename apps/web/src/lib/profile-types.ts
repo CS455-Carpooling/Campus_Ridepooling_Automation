@@ -1,3 +1,5 @@
+import type { OwnRating } from './rating-rules';
+
 export type ProfileTag = {
   id: string;
   name: string;
@@ -19,5 +21,6 @@ export type ProfileData = {
   vehicles: Array<{ id: string; name: string }>;
   tags: ProfileTag[];
   completedTrips: number;
-  rating: null;
+  /** Released ratings, and from 3 up the average and comments (CS455-44). */
+  rating: OwnRating;
 };

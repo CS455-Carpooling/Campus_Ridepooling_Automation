@@ -13,6 +13,7 @@ const owner = {
   visibleTags: ['Quiet ride'],
   completedTrips: 3,
   share: 175,
+  rating: null,
 };
 const rider = {
   name: 'Kabir Shah',
@@ -22,6 +23,7 @@ const rider = {
   visibleTags: [],
   completedTrips: 1,
   share: 175,
+  rating: null,
 };
 
 // Leaves campus 06:30 to 07:30 IST on Saturday 10 October 2026; read at 21:12:05 IST the night before.
@@ -292,5 +294,19 @@ describe('RideDetails: the link to rate (CS455-43)', () => {
       />,
     );
     expect(screen.queryByText(/You rated everyone/)).toBeNull();
+  });
+});
+
+describe('RideDetails: public ratings (CS455-44)', () => {
+  it("FR-RD-02.4: shows a person's average only when they have one", () => {
+    render(
+      <RideDetails
+        ride={rideView({ occupants: [{ ...owner, rating: { average: 4.25, count: 7 } }, rider] })}
+      />,
+    );
+    expect(
+      screen.getByText(/3 completed trips · 4\.3 out of 5 from 7 ratings · Quiet ride/),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText(/out of 5/)).toHaveLength(1);
   });
 });

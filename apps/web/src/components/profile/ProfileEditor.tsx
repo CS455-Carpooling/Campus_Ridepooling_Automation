@@ -8,6 +8,7 @@ import { DesignSystem } from '@/components/ui/DesignSystem';
 import { Field } from '@/components/ui/Field';
 import { routes } from '@/lib/routes';
 import type { ProfileData } from '@/lib/profile-types';
+import { CommentsAboutYou, YourRating } from './RatingSummary';
 
 type SelectedTag = { id: string; visible: boolean };
 
@@ -154,8 +155,8 @@ export function ProfileEditor({ profile }: { profile: ProfileData }) {
               Rider preview
             </h2>
             <p className="mt-1 text-sm text-ink-muted">
-              Other riders see your display name, visible tags, and completed-trip count. They do
-              not see your email or phone number.
+              Other riders see your display name, visible tags, completed-trip count and, from 3
+              ratings, your average rating. They do not see your email or phone number.
             </p>
           </div>
           <span className="rounded-control bg-panel px-3 py-1 text-sm font-semibold">
@@ -174,11 +175,11 @@ export function ProfileEditor({ profile }: { profile: ProfileData }) {
             <span className="text-sm text-ink-muted">No visible interest tags</span>
           )}
         </div>
-        <p className="mt-3 text-sm text-ink-muted">
-          Rating: not available yet. When ratings are supported, they will appear only after at
-          least three ratings.
-        </p>
+        {/* CS455-44: the placeholder "Rating: not available yet" is now the real rating. */}
+        <YourRating rating={profile.rating} />
       </section>
+
+      <CommentsAboutYou rating={profile.rating} />
 
       <form onSubmit={save} className="mt-8 space-y-8">
         <section aria-labelledby="personal-heading">

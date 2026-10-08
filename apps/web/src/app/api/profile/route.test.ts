@@ -36,7 +36,7 @@ const profile = {
   vehicles: [{ id: 'car', name: 'Car' }],
   tags: [{ id: 'quiet-ride', name: 'Quiet ride', selected: false, visible: true }],
   completedTrips: 0,
-  rating: null,
+  rating: { count: 0, average: null, comments: [] },
 };
 
 const validUpdate = {
