@@ -96,6 +96,10 @@ exist yet shows the 404 page until the page is built.
   PostgreSQL for the ride page and for the Upcoming list on `/home` (rides you offered or joined,
   through `home-data.ts`). Join requests do not exist yet, so nothing is listed as waiting, and the
   admin counts are null, which the page shows as "Not available yet".
+- **Ratings API** (`src/lib/ride-ratings.ts`, CS455-42): `POST /api/rides/[id]/ratings` takes
+  `{ ratings: [{ occupantId, score, comment? }] }`, where `occupantId` is a seat on the ride
+  (`riders.id`), so no user ID reaches the browser. It stores all of the ratings or none of them
+  and answers only how many it stored; refusals come as `{ error, code }`.
 
 ## Conventions
 
