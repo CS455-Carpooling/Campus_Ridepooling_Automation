@@ -48,6 +48,7 @@ const view = {
   windowEnded: false,
   completedAt: null,
   canComplete: false,
+  review: null,
   vehicleName: 'Car',
   capacity: 4,
   occupantCount: 1,

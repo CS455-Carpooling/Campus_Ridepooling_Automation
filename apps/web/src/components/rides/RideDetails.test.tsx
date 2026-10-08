@@ -39,6 +39,7 @@ function rideView(change: Partial<RideView> = {}): RideView {
     windowEnded: false,
     completedAt: null,
     canComplete: false,
+    review: null,
     vehicleName: 'Car',
     capacity: 4,
     occupantCount: 2,
@@ -230,5 +231,66 @@ describe('RideDetails: completing a ride (FR-RO-09.4)', () => {
     );
     expect(screen.getByText('Completed')).toBeInTheDocument();
     expect(screen.getByText('Marked completed Sat 10 Oct, 08:05')).toBeInTheDocument();
+  });
+});
+
+describe('RideDetails: the link to rate (CS455-43)', () => {
+  const completed = (review: RideView['review'], change: Partial<RideView> = {}) =>
+    rideView({
+      state: 'completed',
+      completedAt: '2026-10-10T02:35:00.000Z',
+      isOpen: false,
+      isLocked: true,
+      windowEnded: true,
+      estimatedShare: null,
+      viewerRole: 'rider',
+      viewerShare: 175,
+      review,
+      ...change,
+    });
+
+  it('links the people on the ride to the review page while rating is open', () => {
+    render(
+      <RideDetails
+        ride={completed({ window: 'open', closesAt: '2026-10-13T02:35:00.000Z', leftToRate: 1 })}
+      />,
+    );
+    expect(screen.getByRole('link', { name: 'Rate the people on this ride' })).toHaveAttribute(
+      'href',
+      '/rides/0b9a7c1e-1111-4000-8000-000000000001/review',
+    );
+    expect(screen.getByText('Open until Tue 13 Oct, 08:05')).toBeInTheDocument();
+  });
+
+  it('says so once the viewer has rated everyone', () => {
+    render(
+      <RideDetails
+        ride={completed({ window: 'open', closesAt: '2026-10-13T02:35:00.000Z', leftToRate: 0 })}
+      />,
+    );
+    expect(screen.queryByRole('link', { name: 'Rate the people on this ride' })).toBeNull();
+    expect(
+      screen.getByText(
+        'You rated everyone on this ride. Ratings count from Tue 13 Oct, 08:05, when rating closes.',
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('offers nothing once rating has closed, or when nobody else was on the ride', () => {
+    const { rerender } = render(
+      <RideDetails
+        ride={completed({ window: 'closed', closesAt: '2026-10-13T02:35:00.000Z', leftToRate: 1 })}
+      />,
+    );
+    expect(screen.queryByRole('link', { name: 'Rate the people on this ride' })).toBeNull();
+    rerender(
+      <RideDetails
+        ride={completed(
+          { window: 'open', closesAt: '2026-10-13T02:35:00.000Z', leftToRate: 0 },
+          { occupantCount: 1, occupants: [owner] },
+        )}
+      />,
+    );
+    expect(screen.queryByText(/You rated everyone/)).toBeNull();
   });
 });

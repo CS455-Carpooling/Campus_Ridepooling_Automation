@@ -46,6 +46,7 @@ export function RideDetails({ ride }: { ride: RideView }) {
       </header>
 
       {ride.canComplete && <CompleteRideButton rideId={ride.id} />}
+      <RateLink ride={ride} />
 
       {!cancelled && <SharePanel ride={ride} />}
 
@@ -92,6 +93,29 @@ function TimingNote({ ride }: { ride: RideView }) {
       ? `Locked since ${formatDeparture(ride.lockAt)}: the group and shares are fixed`
       : `Locks ${formatDeparture(ride.lockAt)}, an hour before departure`;
   return <p className="text-sm text-ink-muted">{text}</p>;
+}
+
+/**
+ * While rating is open (CS455-43), the people on a completed ride get a link to
+ * the review page, or a note once they have rated everyone else on it.
+ */
+function RateLink({ ride }: { ride: RideView }) {
+  const review = ride.review;
+  if (!review || review.window !== 'open' || ride.occupantCount < 2) return null;
+  const closes = formatDeparture(review.closesAt);
+  if (review.leftToRate === 0) {
+    return (
+      <p className="mt-6 text-sm text-ink-muted">
+        You rated everyone on this ride. Ratings count from {closes}, when rating closes.
+      </p>
+    );
+  }
+  return (
+    <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+      <ButtonLink href={routes.rideReview(ride.id)}>Rate the people on this ride</ButtonLink>
+      <p className="text-sm text-ink-muted">Open until {closes}</p>
+    </div>
+  );
 }
 
 /** The viewer's own share, or what they would pay by joining (FR-RD-08.1). */
