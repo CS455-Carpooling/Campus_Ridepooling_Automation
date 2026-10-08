@@ -27,6 +27,7 @@ function rideRow(change: Record<string, unknown> = {}) {
     vehicle_name: 'Car',
     viewer_is_owner: false,
     viewer_is_rider: false,
+    viewer_ratings_given: 0,
     ...change,
   };
 }
@@ -348,5 +349,42 @@ describe('getRideView: completing a ride (FR-RO-09.4)', () => {
       canComplete: false,
     });
     expect(query.mock.calls[0][0]).toContain('r.completed_at');
+  });
+});
+
+describe('getRideView: rating the people on a completed ride (CS455-43)', () => {
+  const completedAt = new Date('2026-10-10T08:05:00+05:30');
+  const completed = (change: Record<string, unknown> = {}) =>
+    rideRow({ state: 'completed', completed_at: completedAt, ...change });
+  const during = new Date('2026-10-11T12:00:00+05:30');
+  const after = new Date('2026-10-13T08:05:00+05:30');
+
+  it('tells a rider how many of the others are left to rate, and until when', async () => {
+    respond(completed({ viewer_is_rider: true, viewer_ratings_given: 1 }), [
+      owner,
+      { ...rider, is_viewer: true },
+      third,
+    ]);
+    await expect(getRideView(RIDE_ID, VIEWER_ID, during)).resolves.toMatchObject({
+      review: { window: 'open', closesAt: '2026-10-13T02:35:00.000Z', leftToRate: 1 },
+    });
+    expect(query.mock.calls[0][0]).toContain('given.rater_id = $2');
+  });
+
+  it('says when rating has closed, and never goes below nobody left', async () => {
+    respond(completed({ viewer_is_owner: true, viewer_ratings_given: 5 }), [
+      { ...owner, is_viewer: true },
+      rider,
+    ]);
+    await expect(getRideView(RIDE_ID, VIEWER_ID, after)).resolves.toMatchObject({
+      review: { window: 'closed', leftToRate: 0 },
+    });
+  });
+
+  it('has no rating for rides that are not completed', async () => {
+    respond(rideRow({ viewer_is_owner: true }), [{ ...owner, is_viewer: true }, rider]);
+    await expect(getRideView(RIDE_ID, VIEWER_ID, during)).resolves.toMatchObject({
+      review: null,
+    });
   });
 });

@@ -54,7 +54,7 @@ exist yet shows the 404 page until the page is built.
 | `/privacy` | Privacy policy | Built |
 | `/rides/new` | Offer a ride: route, vehicle, departure window, fare | Built (CS455-22 to 25) |
 | `/rides/[id]` | Ride details: route, departure window, state and lock time, seats, fare split, people | Built (CS455-28, 29) |
-| `/rides/[id]/review` | Rate the people on a completed ride, for 72 hours after it is completed | In progress (CS455-39) |
+| `/rides/[id]/review` | Rate the people on a completed ride, for 72 hours after it is completed | Built (CS455-40 to 43) |
 | `/rides` | Find a ride | Not started |
 | `/notifications` | Notifications | Not started |
 | `/admin/incidents`, `/admin/complaints`, `/admin/recommendations` | Admin queues | Not started |

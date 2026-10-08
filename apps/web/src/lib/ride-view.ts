@@ -2,7 +2,12 @@ import 'server-only';
 import { pool } from './db';
 import { estimateShare, splitFare } from './fare';
 import { isUuid } from './ids';
-import { completeRideRefusal } from './rating-rules';
+import {
+  completeRideRefusal,
+  ratingClosesAt,
+  ratingWindow,
+  type RatingWindow,
+} from './rating-rules';
 import type { Direction } from './ride-rules';
 import {
   canViewRide,
@@ -51,6 +56,12 @@ export type RideView = {
   completedAt: string | null;
   /** The viewer is the owner and may mark the ride completed now (FR-RO-09.4). */
   canComplete: boolean;
+  /**
+   * Rating on a completed ride, for the people on it (CS455-43): whether it is
+   * open, until when, and how many of the others the viewer has not rated yet.
+   * Null for anyone else and for rides that are not completed.
+   */
+  review: { window: RatingWindow; closesAt: string; leftToRate: number } | null;
   vehicleName: string;
   /** Everyone the vehicle carries, the owner included. */
   capacity: number;
@@ -82,6 +93,7 @@ type RideRow = {
   vehicle_name: string;
   viewer_is_owner: boolean;
   viewer_is_rider: boolean;
+  viewer_ratings_given: number;
 };
 
 type OccupantRow = {
@@ -99,7 +111,9 @@ const RIDE_SQL = `
          r.capacity_snapshot, r.expected_total_fare,
          hub.name AS hub_name, hub.detail AS hub_detail, v.name AS vehicle_name,
          (r.owner_id = $2) AS viewer_is_owner,
-         EXISTS (SELECT 1 FROM riders m WHERE m.ride_id = r.id AND m.user_id = $2) AS viewer_is_rider
+         EXISTS (SELECT 1 FROM riders m WHERE m.ride_id = r.id AND m.user_id = $2) AS viewer_is_rider,
+         (SELECT count(*)::int FROM ride_ratings given
+          WHERE given.ride_id = r.id AND given.rater_id = $2) AS viewer_ratings_given
   FROM rides r
   JOIN locations hub ON hub.id = r.hub_id
   JOIN vehicle_types v ON v.id = r.vehicle_type_id
@@ -169,6 +183,7 @@ export async function getRideView(
 
   const seatsLeft = Math.max(ride.capacity_snapshot - people.length, 0);
   const isOpen = isOpenToJoin(ride.state, ride.departure_start, now);
+  const rating = ratingWindow(ride.state, ride.completed_at, now);
   const canAskToJoin = viewerRole === 'visitor' && isOpen && seatsLeft > 0;
 
   return {
@@ -184,6 +199,14 @@ export async function getRideView(
     windowEnded: now.getTime() >= ride.departure_end.getTime(),
     completedAt: ride.completed_at ? ride.completed_at.toISOString() : null,
     canComplete: completeRideRefusal(viewerRole, ride.state, ride.departure_start, now) === null,
+    review:
+      viewerRole !== 'visitor' && ride.completed_at && (rating === 'open' || rating === 'closed')
+        ? {
+            window: rating,
+            closesAt: ratingClosesAt(ride.completed_at).toISOString(),
+            leftToRate: Math.max(people.length - 1 - (ride.viewer_ratings_given ?? 0), 0),
+          }
+        : null,
     vehicleName: ride.vehicle_name,
     capacity: ride.capacity_snapshot,
     occupantCount: people.length,
