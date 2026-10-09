@@ -29,6 +29,7 @@ RUN npm ci --omit=dev --workspace @ridepool/web --include-workspace-root \
     && npm cache clean --force
 COPY --from=build --chown=node:node /app/apps/web/.next apps/web/.next
 COPY --chown=node:node apps/web/next.config.ts apps/web/
+COPY --chown=node:node apps/web/server.mjs apps/web/
 COPY --chown=node:node apps/web/db apps/web/db
 COPY --chown=node:node apps/web/scripts apps/web/scripts
 

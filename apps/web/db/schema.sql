@@ -183,9 +183,13 @@ UPDATE vehicle_types SET sort_order = CASE id
 -- completed ride must have it, and no other ride may. Rides set to completed by hand before the
 -- column existed take the end of their departure window.
 ALTER TABLE rides ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ;
+ALTER TABLE rides ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMPTZ;
 
 UPDATE rides SET completed_at = departure_end
 WHERE state = 'completed' AND completed_at IS NULL;
+
+UPDATE rides SET cancelled_at = now()
+WHERE state = 'cancelled' AND cancelled_at IS NULL;
 
 DO $$
 BEGIN
@@ -195,7 +199,55 @@ BEGIN
     ALTER TABLE rides ADD CONSTRAINT rides_completed_at_matches_state
       CHECK ((state = 'completed') = (completed_at IS NOT NULL));
   END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'rides_cancelled_at_matches_state'
+  ) THEN
+    ALTER TABLE rides ADD CONSTRAINT rides_cancelled_at_matches_state
+      CHECK ((state = 'cancelled') = (cancelled_at IS NOT NULL));
+  END IF;
 END $$;
+
+-- Private ride pool chat. Chat opens once the ride locks and persists for the life of the pool,
+-- then closes 24 hours after completion or cancellation and is kept for 30 days longer if needed
+-- for unresolved complaints. The database is the source of truth, so offline members still see the
+-- conversation when they return.
+CREATE TABLE IF NOT EXISTS ride_chats (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ride_id UUID NOT NULL UNIQUE REFERENCES rides(id) ON DELETE CASCADE,
+  opened_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  closed_at TIMESTAMPTZ,
+  archived_at TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS ride_chat_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  chat_id UUID NOT NULL REFERENCES ride_chats(id) ON DELETE CASCADE,
+  sender_id UUID NOT NULL REFERENCES users(id),
+  body TEXT NOT NULL CHECK (char_length(trim(body)) BETWEEN 1 AND 1000),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  reported_at TIMESTAMPTZ,
+  report_reason TEXT
+);
+
+CREATE INDEX IF NOT EXISTS ride_chat_messages_chat_created_idx
+  ON ride_chat_messages(chat_id, created_at);
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type TEXT NOT NULL CHECK (type IN ('pool_chat_opened','pool_chat_message','ride_update')),
+  title TEXT NOT NULL,
+  body TEXT NOT NULL,
+  related_ride_id UUID REFERENCES rides(id),
+  related_chat_id UUID REFERENCES ride_chats(id),
+  related_message_id UUID REFERENCES ride_chat_messages(id),
+  read_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS notifications_user_created_idx
+  ON notifications(user_id, created_at DESC);
 
 -- One person's rating of another after a ride (US-RD-28). Both must have a seat on that ride
 -- (a riders row: the owner has one too), nobody rates themselves, and each person rates each
