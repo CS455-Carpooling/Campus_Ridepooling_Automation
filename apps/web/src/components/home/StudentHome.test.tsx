@@ -160,6 +160,10 @@ describe('StudentHome', () => {
               capacity: 4,
               occupantCount: 3,
               state: 'completed',
+              completedAt: '2026-10-03T01:00:00.000Z',
+              ratingsGiven: 0,
+              ratingClosesAt: '2026-10-06T01:00:00.000Z',
+              canRate: false,
             },
           ],
         }}

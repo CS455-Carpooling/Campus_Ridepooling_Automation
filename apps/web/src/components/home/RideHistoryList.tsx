@@ -39,6 +39,12 @@ export function RideHistoryList({ rides }: { rides: HistoricalRide[] }) {
             <HistoryFact label="People">
               {ride.occupantCount} of {ride.capacity}
             </HistoryFact>
+            {/* CS455-44: how many of the others the viewer rated, once the ride is completed. */}
+            {ride.completedAt && ride.occupantCount > 1 && (
+              <HistoryFact label="Ratings given">
+                {ride.ratingsGiven} of {ride.occupantCount - 1}
+              </HistoryFact>
+            )}
           </dl>
           <Link
             href={routes.ride(ride.rideId)}
@@ -46,6 +52,14 @@ export function RideHistoryList({ rides }: { rides: HistoricalRide[] }) {
           >
             View all ride details
           </Link>
+          {ride.canRate && (
+            <Link
+              href={routes.rideReview(ride.rideId)}
+              className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold sm:ml-6"
+            >
+              Rate the people on this ride
+            </Link>
+          )}
         </li>
       ))}
     </ul>

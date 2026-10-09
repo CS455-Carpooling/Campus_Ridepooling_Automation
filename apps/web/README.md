@@ -54,7 +54,7 @@ exist yet shows the 404 page until the page is built.
 | `/privacy` | Privacy policy | Built |
 | `/rides/new` | Offer a ride: route, vehicle, departure window, fare | Built (CS455-22 to 25) |
 | `/rides/[id]` | Ride details: route, departure window, state and lock time, seats, fare split, people | Built (CS455-28, 29) |
-| `/rides/[id]/review` | Rate the people on a completed ride, for 72 hours after it is completed | In progress (CS455-39) |
+| `/rides/[id]/review` | Rate the people on a completed ride, for 72 hours after it is completed | Built (CS455-40 to 43) |
 | `/rides` | Find a ride | Not started |
 | `/notifications` | Notifications | Not started |
 | `/admin/incidents`, `/admin/complaints`, `/admin/recommendations` | Admin queues | Not started |
@@ -100,6 +100,11 @@ exist yet shows the 404 page until the page is built.
   `{ ratings: [{ occupantId, score, comment? }] }`, where `occupantId` is a seat on the ride
   (`riders.id`), so no user ID reaches the browser. It stores all of the ratings or none of them
   and answers only how many it stored; refusals come as `{ error, code }`.
+- **Showing ratings** (`src/lib/rating-summary.ts`, CS455-44): a rating counts only once its ride's
+  72 hours of rating are over, so all of a ride's ratings appear together. From 3 such ratings, the
+  ride page's people list shows a person's average and count, and their profile shows them their
+  average and the comments left about them, without names, scores or dates. Dashboard history
+  shows "Ratings given" on completed rides, with a link to rate while rating is open.
 
 ## Conventions
 

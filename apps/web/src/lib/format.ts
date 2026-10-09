@@ -59,3 +59,8 @@ const rupeeFormat = new Intl.NumberFormat('en-IN', {
 export function formatRupees(amount: number): string {
   return rupeeFormat.format(amount);
 }
+
+/** A public rating as text, for example "4.3 out of 5 from 7 ratings" (CS455-44). */
+export function formatRating(rating: { average: number; count: number }): string {
+  return `${rating.average.toFixed(1)} out of 5 from ${rating.count} ratings`;
+}

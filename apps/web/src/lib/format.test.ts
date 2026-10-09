@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { formatDeparture, formatDepartureWindow, formatRupees, formatTimeOfDay } from './format';
+import {
+  formatDeparture,
+  formatDepartureWindow,
+  formatRating,
+  formatRupees,
+  formatTimeOfDay,
+} from './format';
 
 describe('formatDeparture', () => {
   it('shows a UTC time in Indian Standard Time', () => {
@@ -47,5 +53,12 @@ describe('formatTimeOfDay', () => {
   it('shows the time in IST with seconds, on a 24-hour clock', () => {
     expect(formatTimeOfDay('2026-10-05T15:42:05Z')).toBe('21:12:05');
     expect(formatTimeOfDay('2026-10-05T18:30:00Z')).toBe('00:00:00');
+  });
+});
+
+describe('formatRating', () => {
+  it('gives the average to one decimal with how many ratings it rests on', () => {
+    expect(formatRating({ average: 4.3, count: 7 })).toBe('4.3 out of 5 from 7 ratings');
+    expect(formatRating({ average: 5, count: 3 })).toBe('5.0 out of 5 from 3 ratings');
   });
 });

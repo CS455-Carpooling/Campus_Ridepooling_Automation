@@ -27,6 +27,7 @@ function rideRow(change: Record<string, unknown> = {}) {
     vehicle_name: 'Car',
     viewer_is_owner: false,
     viewer_is_rider: false,
+    viewer_ratings_given: 0,
     ...change,
   };
 }
@@ -290,6 +291,10 @@ describe('getHistoricalRides', () => {
         capacity: 4,
         occupantCount: 3,
         state: 'completed',
+        completedAt: null,
+        ratingsGiven: 0,
+        ratingClosesAt: null,
+        canRate: false,
       },
     ]);
     const [sql, params] = query.mock.calls[0];
@@ -348,5 +353,103 @@ describe('getRideView: completing a ride (FR-RO-09.4)', () => {
       canComplete: false,
     });
     expect(query.mock.calls[0][0]).toContain('r.completed_at');
+  });
+});
+
+describe('getRideView: rating the people on a completed ride (CS455-43)', () => {
+  const completedAt = new Date('2026-10-10T08:05:00+05:30');
+  const completed = (change: Record<string, unknown> = {}) =>
+    rideRow({ state: 'completed', completed_at: completedAt, ...change });
+  const during = new Date('2026-10-11T12:00:00+05:30');
+  const after = new Date('2026-10-13T08:05:00+05:30');
+
+  it('tells a rider how many of the others are left to rate, and until when', async () => {
+    respond(completed({ viewer_is_rider: true, viewer_ratings_given: 1 }), [
+      owner,
+      { ...rider, is_viewer: true },
+      third,
+    ]);
+    await expect(getRideView(RIDE_ID, VIEWER_ID, during)).resolves.toMatchObject({
+      review: { window: 'open', closesAt: '2026-10-13T02:35:00.000Z', leftToRate: 1 },
+    });
+    expect(query.mock.calls[0][0]).toContain('given.rater_id = $2');
+  });
+
+  it('says when rating has closed, and never goes below nobody left', async () => {
+    respond(completed({ viewer_is_owner: true, viewer_ratings_given: 5 }), [
+      { ...owner, is_viewer: true },
+      rider,
+    ]);
+    await expect(getRideView(RIDE_ID, VIEWER_ID, after)).resolves.toMatchObject({
+      review: { window: 'closed', leftToRate: 0 },
+    });
+  });
+
+  it('has no rating for rides that are not completed', async () => {
+    respond(rideRow({ viewer_is_owner: true }), [{ ...owner, is_viewer: true }, rider]);
+    await expect(getRideView(RIDE_ID, VIEWER_ID, during)).resolves.toMatchObject({
+      review: null,
+    });
+  });
+});
+
+describe('ratings on the ride page and in history (CS455-44)', () => {
+  it('FR-RD-02.4: gives each person their public average, or none below 3 ratings', async () => {
+    respond(rideRow(), [
+      { ...owner, rating_count: 7, rating_average: 4.3 },
+      { ...rider, rating_count: null, rating_average: null },
+    ]);
+    const view = await getRideView(RIDE_ID, VIEWER_ID, open);
+    expect(view?.occupants.map((person) => person.rating)).toEqual([
+      { average: 4.3, count: 7 },
+      null,
+    ]);
+    const [occupantSql, params] = query.mock.calls[1];
+    expect(occupantSql).toContain(') public_rating ON true');
+    expect(occupantSql).toContain('<= $3');
+    expect(params).toEqual([RIDE_ID, VIEWER_ID, open]);
+  });
+
+  it('FR-RD-16.1: says how many the viewer rated on a completed ride, and whether rating is open', async () => {
+    const completedAt = new Date('2026-10-10T08:05:00+05:30');
+    const historyRow = {
+      id: RIDE_ID,
+      direction: 'to_hub',
+      hub_name: 'Kanpur Central',
+      departure_start: new Date('2026-10-10T06:30:00+05:30'),
+      departure_end: new Date('2026-10-10T07:30:00+05:30'),
+      state: 'completed',
+      is_owner: false,
+      campus_place: 'Hall 3',
+      vehicle_name: 'Car',
+      total_fare: 350,
+      capacity: 4,
+      occupant_count: 3,
+      completed_at: completedAt,
+      ratings_given: 1,
+    };
+    const during = new Date('2026-10-11T12:00:00+05:30');
+    query.mockResolvedValueOnce({ rows: [historyRow] });
+    await expect(getHistoricalRides(VIEWER_ID, during)).resolves.toMatchObject([
+      {
+        completedAt: '2026-10-10T02:35:00.000Z',
+        ratingsGiven: 1,
+        ratingClosesAt: '2026-10-13T02:35:00.000Z',
+        canRate: true,
+      },
+    ]);
+    expect(query.mock.calls[0][0]).toContain('given.rater_id = $1');
+
+    query.mockResolvedValueOnce({ rows: [{ ...historyRow, ratings_given: 2 }] });
+    await expect(getHistoricalRides(VIEWER_ID, during)).resolves.toMatchObject([
+      { canRate: false },
+    ]);
+
+    query.mockResolvedValueOnce({
+      rows: [{ ...historyRow, completed_at: null, state: 'cancelled' }],
+    });
+    await expect(getHistoricalRides(VIEWER_ID, during)).resolves.toMatchObject([
+      { completedAt: null, ratingClosesAt: null, canRate: false },
+    ]);
   });
 });
