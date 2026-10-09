@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
 
 export type ChatMessagePayload = {
@@ -38,7 +38,7 @@ export function RideChat({
   const [error, setError] = useState('');
   const socketRef = useRef<Socket | null>(null);
 
-  const loadThread = async () => {
+  const loadThread = useCallback(async () => {
     try {
       const res = await fetch(`/api/rides/${rideId}/chat`, { cache: 'no-store' });
       if (!res.ok) {
@@ -54,12 +54,12 @@ export function RideChat({
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Unable to load chat.');
     }
-  };
+  }, [rideId]);
 
   useEffect(() => {
     if (viewerRole === 'visitor') return;
 
-    void loadThread();
+    void Promise.resolve().then(loadThread);
 
     const socket = io({
       path: '/socket.io/',
@@ -76,29 +76,41 @@ export function RideChat({
       void loadThread();
     });
 
-    socket.on('ride:chat:message', (payload: { rideId: string; id: string; senderId: string; senderName: string; body: string; createdAt: string; isMine?: boolean; reported?: boolean }) => {
-      if (payload.rideId !== rideId) return;
-      setThread((current) => {
-        if (!current) return current;
-        const exists = current.messages.some((item) => item.id === payload.id);
-        if (exists) return current;
-        return {
-          ...current,
-          messages: [
-            ...current.messages,
-            {
-              id: payload.id,
-              senderId: payload.senderId,
-              senderName: payload.senderName,
-              body: payload.body,
-              createdAt: payload.createdAt,
-              isMine: Boolean(payload.isMine),
-              reported: Boolean(payload.reported),
-            },
-          ],
-        };
-      });
-    });
+    socket.on(
+      'ride:chat:message',
+      (payload: {
+        rideId: string;
+        id: string;
+        senderId: string;
+        senderName: string;
+        body: string;
+        createdAt: string;
+        isMine?: boolean;
+        reported?: boolean;
+      }) => {
+        if (payload.rideId !== rideId) return;
+        setThread((current) => {
+          if (!current) return current;
+          const exists = current.messages.some((item) => item.id === payload.id);
+          if (exists) return current;
+          return {
+            ...current,
+            messages: [
+              ...current.messages,
+              {
+                id: payload.id,
+                senderId: payload.senderId,
+                senderName: payload.senderName,
+                body: payload.body,
+                createdAt: payload.createdAt,
+                isMine: Boolean(payload.isMine),
+                reported: Boolean(payload.reported),
+              },
+            ],
+          };
+        });
+      },
+    );
 
     socket.on('ride:chat:error', (payload: { error?: string }) => {
       if (payload.error) setError(payload.error);
@@ -109,10 +121,14 @@ export function RideChat({
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [rideId, viewerRole]);
+  }, [loadThread, rideId, viewerRole]);
 
   const showComposer = viewerRole !== 'visitor' && thread && thread.canWrite;
-  const headerText = thread ? (thread.readOnly ? 'Pool chat is now read-only.' : 'Pool chat') : 'Pool chat';
+  const headerText = thread
+    ? thread.readOnly
+      ? 'Pool chat is now read-only.'
+      : 'Pool chat'
+    : 'Pool chat';
 
   const sendMessage = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -170,7 +186,7 @@ export function RideChat({
       const body = encodeURIComponent(
         `Ride ID: ${rideId}\nMessage reference: ${reference}\nMessage ID: ${messageId}\n\nPlease describe the issue and attach the relevant conversation context.`,
       );
-      window.location.href = `mailto:${COMPLAINT_EMAIL}?subject=${subject}&body=${body}`;
+      window.location.assign(`mailto:${COMPLAINT_EMAIL}?subject=${subject}&body=${body}`);
       setError(`Complaint reference: ${reference}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'The message could not be reported.');
@@ -180,13 +196,18 @@ export function RideChat({
   if (viewerRole === 'visitor') return null;
 
   return (
-    <section aria-labelledby="ride-chat-heading" className="mt-10 rounded-panel border border-line bg-surface p-4 sm:p-5">
+    <section
+      aria-labelledby="ride-chat-heading"
+      className="mt-10 rounded-panel border border-line bg-surface p-4 sm:p-5"
+    >
       <div className="mb-4 flex items-center justify-between gap-2">
         <h2 id="ride-chat-heading" className="text-xl font-bold tracking-tight">
           {headerText}
         </h2>
         {thread && !thread.readOnly && (
-          <span className="text-xs font-semibold uppercase tracking-wide text-accent-text">Live</span>
+          <span className="text-xs font-semibold uppercase tracking-wide text-accent-text">
+            Live
+          </span>
         )}
       </div>
 
@@ -233,7 +254,10 @@ export function RideChat({
 
       {showComposer && (
         <form onSubmit={sendMessage} className="mt-4 space-y-3">
-          <label className="block text-sm font-medium text-ink-muted" htmlFor={`ride-chat-message-${rideId}`}>
+          <label
+            className="block text-sm font-medium text-ink-muted"
+            htmlFor={`ride-chat-message-${rideId}`}
+          >
             Message the pool
           </label>
           <textarea
@@ -246,7 +270,9 @@ export function RideChat({
             placeholder="Tell the group about pickup, delays, or route changes."
           />
           <div className="flex items-center justify-between gap-3">
-            <span className="text-xs text-ink-muted">{message.trim().length}/{CHAT_MESSAGE_LIMIT}</span>
+            <span className="text-xs text-ink-muted">
+              {message.trim().length}/{CHAT_MESSAGE_LIMIT}
+            </span>
             <button
               type="submit"
               disabled={busy || !message.trim()}

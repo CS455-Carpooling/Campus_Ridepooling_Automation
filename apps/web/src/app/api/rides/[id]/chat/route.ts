@@ -52,7 +52,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       return json({ error: 'A message ID is required to report a chat message.' }, 400);
     }
 
-    const result = await reportChatMessage(id, user.id, messageId, typeof body.reason === 'string' ? body.reason : 'Other');
+    const result = await reportChatMessage(
+      id,
+      user.id,
+      messageId,
+      typeof body.reason === 'string' ? body.reason : 'Other',
+    );
     if (!result.ok) {
       return json({ error: result.error }, result.code === 'FORBIDDEN' ? 403 : 400);
     }

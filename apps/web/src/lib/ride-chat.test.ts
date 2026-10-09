@@ -23,7 +23,11 @@ describe('ride-chat domain helpers', () => {
 
     expect(
       rideChatReadOnly(
-        { state: 'completed', completed_at: new Date('2026-10-10T06:45:00+05:30'), cancelled_at: null },
+        {
+          state: 'completed',
+          completed_at: new Date('2026-10-10T06:45:00+05:30'),
+          cancelled_at: null,
+        },
         new Date('2026-10-11T06:46:00+05:30'),
       ),
     ).toBe(true);
@@ -38,7 +42,18 @@ describe('ride-chat domain helpers', () => {
     query.mockImplementation(() => {
       count += 1;
       if (count === 1) {
-        return Promise.resolve({ rows: [{ id: rideId, owner_id: 'owner-1', state: 'scheduled', departure_start: new Date('2026-10-10T06:30:00+05:30'), completed_at: null, cancelled_at: null }] });
+        return Promise.resolve({
+          rows: [
+            {
+              id: rideId,
+              owner_id: 'owner-1',
+              state: 'scheduled',
+              departure_start: new Date('2026-10-10T06:30:00+05:30'),
+              completed_at: null,
+              cancelled_at: null,
+            },
+          ],
+        });
       }
       if (count === 2) {
         return Promise.resolve({ rows: [{ user_id: 'owner-1' }, { user_id: viewerId }] });
@@ -47,7 +62,9 @@ describe('ride-chat domain helpers', () => {
         return Promise.resolve({ rows: [] });
       }
       if (count === 4) {
-        return Promise.resolve({ rows: [{ id: 'chat-1', ride_id: rideId, opened_at: now, closed_at: null }] });
+        return Promise.resolve({
+          rows: [{ id: 'chat-1', ride_id: rideId, opened_at: now, closed_at: null }],
+        });
       }
       if (count === 5) {
         return Promise.resolve({ rows: [{ user_id: 'owner-1' }, { user_id: viewerId }] });
@@ -56,7 +73,17 @@ describe('ride-chat domain helpers', () => {
         return Promise.resolve({ rows: [{ id: 'notif-1' }] });
       }
       return Promise.resolve({
-        rows: [{ id: 'm-1', sender_id: 'owner-1', sender_name: 'Ananya', body: 'On my way', created_at: new Date('2026-10-10T06:02:00+05:30'), reported_at: null, viewer_is_sender: false }],
+        rows: [
+          {
+            id: 'm-1',
+            sender_id: 'owner-1',
+            sender_name: 'Ananya',
+            body: 'On my way',
+            created_at: new Date('2026-10-10T06:02:00+05:30'),
+            reported_at: null,
+            viewer_is_sender: false,
+          },
+        ],
       });
     });
 
@@ -83,23 +110,39 @@ describe('ride-chat domain helpers', () => {
       }
       if (statement.includes('from rides where id')) {
         return Promise.resolve({
-          rows: [{ id: rideId, owner_id: 'owner-1', state: 'scheduled', departure_start: new Date('2026-10-10T06:30:00+05:30'), completed_at: null, cancelled_at: null }],
+          rows: [
+            {
+              id: rideId,
+              owner_id: 'owner-1',
+              state: 'scheduled',
+              departure_start: new Date('2026-10-10T06:30:00+05:30'),
+              completed_at: null,
+              cancelled_at: null,
+            },
+          ],
         });
       }
       if (statement.includes('select id, ride_id, opened_at, closed_at from ride_chats')) {
         return Promise.resolve({ rows: [] });
       }
       if (statement.includes('insert into ride_chats')) {
-        return Promise.resolve({ rows: [{ id: 'chat-1', ride_id: rideId, opened_at: now, closed_at: null }] });
+        return Promise.resolve({
+          rows: [{ id: 'chat-1', ride_id: rideId, opened_at: now, closed_at: null }],
+        });
       }
-      if (statement.includes('insert into notifications') && statement.includes('related_message_id')) {
+      if (
+        statement.includes('insert into notifications') &&
+        statement.includes('related_message_id')
+      ) {
         return Promise.resolve({ rows: [{ id: 'notif-2' }] });
       }
       if (statement.includes('insert into notifications')) {
         return Promise.resolve({ rows: [{ id: 'notif-1' }] });
       }
       if (statement.includes('insert into ride_chat_messages')) {
-        return Promise.resolve({ rows: [{ id: 'm-2', sender_id: senderId, body: 'See you at Hall 6', created_at: now }] });
+        return Promise.resolve({
+          rows: [{ id: 'm-2', sender_id: senderId, body: 'See you at Hall 6', created_at: now }],
+        });
       }
       if (statement.includes('select user_id from (')) {
         return Promise.resolve({ rows: [{ user_id: 'owner-1' }] });
@@ -107,7 +150,9 @@ describe('ride-chat domain helpers', () => {
       return Promise.resolve({ rows: [] });
     });
 
-    await expect(createChatMessage(rideId, senderId, 'See you at Hall 6', now)).resolves.toMatchObject({
+    await expect(
+      createChatMessage(rideId, senderId, 'See you at Hall 6', now),
+    ).resolves.toMatchObject({
       ok: true,
       message: { senderName: 'You', body: 'See you at Hall 6' },
     });
@@ -117,9 +162,10 @@ describe('ride-chat domain helpers', () => {
       code: 'INVALID_MESSAGE',
     });
 
-    query
-      .mockResolvedValueOnce({ rows: [{ count: 20 }] });
-    await expect(createChatMessage(rideId, senderId, 'Too many messages', now)).resolves.toMatchObject({
+    query.mockResolvedValueOnce({ rows: [{ count: 20 }] });
+    await expect(
+      createChatMessage(rideId, senderId, 'Too many messages', now),
+    ).resolves.toMatchObject({
       ok: false,
       code: 'RATE_LIMITED',
     });
@@ -127,11 +173,22 @@ describe('ride-chat domain helpers', () => {
     query
       .mockResolvedValueOnce({ rows: [{ count: 0 }] })
       .mockResolvedValueOnce({
-        rows: [{ id: rideId, owner_id: 'owner-1', state: 'completed', departure_start: new Date('2026-10-10T06:30:00+05:30'), completed_at: new Date('2026-10-10T06:00:00+05:30'), cancelled_at: null }],
+        rows: [
+          {
+            id: rideId,
+            owner_id: 'owner-1',
+            state: 'completed',
+            departure_start: new Date('2026-10-10T06:30:00+05:30'),
+            completed_at: new Date('2026-10-10T06:00:00+05:30'),
+            cancelled_at: null,
+          },
+        ],
       })
       .mockResolvedValueOnce({ rows: [{ user_id: 'owner-1' }, { user_id: senderId }] });
 
-    await expect(createChatMessage(rideId, senderId, 'Too late', new Date('2026-10-11T06:30:00+05:30'))).resolves.toMatchObject({
+    await expect(
+      createChatMessage(rideId, senderId, 'Too late', new Date('2026-10-11T06:30:00+05:30')),
+    ).resolves.toMatchObject({
       ok: false,
       code: 'CHAT_READ_ONLY',
     });
@@ -144,22 +201,54 @@ describe('ride-chat domain helpers', () => {
     const messageId = '44ca86d4-4444-4000-8000-000000000004';
     const now = new Date('2026-10-10T06:20:00+05:30');
 
-    query.mockResolvedValueOnce({ rows: [{ id: rideId, owner_id: 'owner-1', state: 'scheduled', departure_start: new Date('2026-10-10T06:30:00+05:30'), completed_at: null, cancelled_at: null }] });
-    query.mockResolvedValueOnce({ rows: [{ user_id: 'owner-1' }, { user_id: reporterId }, { user_id: senderId }] });
-    query.mockResolvedValueOnce({ rows: [{ id: 'chat-1', ride_id: rideId, opened_at: now, closed_at: null }] });
+    query.mockResolvedValueOnce({
+      rows: [
+        {
+          id: rideId,
+          owner_id: 'owner-1',
+          state: 'scheduled',
+          departure_start: new Date('2026-10-10T06:30:00+05:30'),
+          completed_at: null,
+          cancelled_at: null,
+        },
+      ],
+    });
+    query.mockResolvedValueOnce({
+      rows: [{ user_id: 'owner-1' }, { user_id: reporterId }, { user_id: senderId }],
+    });
+    query.mockResolvedValueOnce({
+      rows: [{ id: 'chat-1', ride_id: rideId, opened_at: now, closed_at: null }],
+    });
     query.mockResolvedValueOnce({ rows: [{ id: messageId }] });
 
-    await expect(reportChatMessage(rideId, reporterId, messageId, 'Spam', now)).resolves.toMatchObject({
+    await expect(
+      reportChatMessage(rideId, reporterId, messageId, 'Spam', now),
+    ).resolves.toMatchObject({
       ok: true,
       reference: `chat-${messageId.slice(0, 8)}`,
     });
 
-    query.mockResolvedValueOnce({ rows: [{ id: rideId, owner_id: 'owner-1', state: 'scheduled', departure_start: new Date('2026-10-10T06:30:00+05:30'), completed_at: null, cancelled_at: null }] });
+    query.mockResolvedValueOnce({
+      rows: [
+        {
+          id: rideId,
+          owner_id: 'owner-1',
+          state: 'scheduled',
+          departure_start: new Date('2026-10-10T06:30:00+05:30'),
+          completed_at: null,
+          cancelled_at: null,
+        },
+      ],
+    });
     query.mockResolvedValueOnce({ rows: [{ user_id: 'owner-1' }, { user_id: senderId }] });
-    query.mockResolvedValueOnce({ rows: [{ id: 'chat-1', ride_id: rideId, opened_at: now, closed_at: null }] });
+    query.mockResolvedValueOnce({
+      rows: [{ id: 'chat-1', ride_id: rideId, opened_at: now, closed_at: null }],
+    });
     query.mockResolvedValueOnce({ rows: [] });
 
-    await expect(reportChatMessage(rideId, senderId, messageId, 'Spam', now)).resolves.toMatchObject({
+    await expect(
+      reportChatMessage(rideId, senderId, messageId, 'Spam', now),
+    ).resolves.toMatchObject({
       ok: false,
       code: 'REPORT_FAILED',
     });

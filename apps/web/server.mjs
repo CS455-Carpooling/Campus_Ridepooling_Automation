@@ -10,7 +10,8 @@ const hostname = '0.0.0.0';
 const port = Number(process.env.PORT ?? 3000);
 const MAX_CHAT_MESSAGE_LENGTH = 500;
 const MAX_MESSAGES_PER_MEMBER_PER_MINUTE = 20;
-const normalized = typeof process.env.DATABASE_URL === 'string' ? process.env.DATABASE_URL.trim() : '';
+const normalized =
+  typeof process.env.DATABASE_URL === 'string' ? process.env.DATABASE_URL.trim() : '';
 const databaseUrl = /^postgres(?:ql)?:\/\//i.test(normalized) ? normalized : undefined;
 
 const pool = new Pool({
@@ -30,7 +31,9 @@ function parseCookies(cookieHeader = '') {
       .filter(Boolean)
       .map((item) => {
         const idx = item.indexOf('=');
-        return idx === -1 ? [item, ''] : [item.slice(0, idx), decodeURIComponent(item.slice(idx + 1))];
+        return idx === -1
+          ? [item, '']
+          : [item.slice(0, idx), decodeURIComponent(item.slice(idx + 1))];
       }),
   );
 }
@@ -178,7 +181,14 @@ async function createChatMessageForSocket(rideId, senderId, rawMessage, now = ne
     await pool.query(
       `INSERT INTO notifications (user_id, type, title, body, related_ride_id, related_chat_id, related_message_id, created_at)
        VALUES ($1, 'pool_chat_message', 'New ride chat message', $2, $3, $4, $5, $6)`,
-      [recipient.user_id, `${text.slice(0, 120)}${text.length > 120 ? '…' : ''}`, rideId, chat.id, message.id, now],
+      [
+        recipient.user_id,
+        `${text.slice(0, 120)}${text.length > 120 ? '…' : ''}`,
+        rideId,
+        chat.id,
+        message.id,
+        now,
+      ],
     );
   }
 
@@ -196,7 +206,13 @@ async function createChatMessageForSocket(rideId, senderId, rawMessage, now = ne
   };
 }
 
-async function reportChatMessageForSocket(rideId, reporterId, messageId, reason = 'Other', now = new Date()) {
+async function reportChatMessageForSocket(
+  rideId,
+  reporterId,
+  messageId,
+  reason = 'Other',
+  now = new Date(),
+) {
   const rideQuery = await pool.query(
     `SELECT id, owner_id, state, departure_start, completed_at, cancelled_at
      FROM rides WHERE id = $1`,
@@ -206,7 +222,11 @@ async function reportChatMessageForSocket(rideId, reporterId, messageId, reason 
   if (!ride) return { ok: false, code: 'NOT_FOUND', error: 'Ride not found.' };
 
   if (!(await isRideMember(rideId, reporterId))) {
-    return { ok: false, code: 'FORBIDDEN', error: 'Only current pool members may report messages.' };
+    return {
+      ok: false,
+      code: 'FORBIDDEN',
+      error: 'Only current pool members may report messages.',
+    };
   }
 
   const chat = await loadOrCreateChat(ride, now);
@@ -255,13 +275,19 @@ app.prepare().then(() => {
   io.on('connection', (socket) => {
     socket.on('ride:chat:join', async ({ rideId }) => {
       if (typeof rideId !== 'string' || !rideId) {
-        socket.emit('ride:chat:error', { code: 'INVALID_ID', error: 'A valid ride ID is required.' });
+        socket.emit('ride:chat:error', {
+          code: 'INVALID_ID',
+          error: 'A valid ride ID is required.',
+        });
         return;
       }
 
       const member = await isRideMember(rideId, socket.data.userId);
       if (!member) {
-        socket.emit('ride:chat:error', { code: 'FORBIDDEN', error: 'Only current pool members may join this chat.' });
+        socket.emit('ride:chat:error', {
+          code: 'FORBIDDEN',
+          error: 'Only current pool members may join this chat.',
+        });
         return;
       }
 
@@ -278,17 +304,28 @@ app.prepare().then(() => {
 
     socket.on('ride:chat:message', async ({ rideId, message }) => {
       if (typeof rideId !== 'string' || typeof message !== 'string') {
-        socket.emit('ride:chat:error', { code: 'INVALID_MESSAGE', error: 'Message payload is invalid.' });
+        socket.emit('ride:chat:error', {
+          code: 'INVALID_MESSAGE',
+          error: 'Message payload is invalid.',
+        });
         return;
       }
 
       const member = await isRideMember(rideId, socket.data.userId);
       if (!member) {
-        socket.emit('ride:chat:error', { code: 'FORBIDDEN', error: 'Only current pool members may post here.' });
+        socket.emit('ride:chat:error', {
+          code: 'FORBIDDEN',
+          error: 'Only current pool members may post here.',
+        });
         return;
       }
 
-      const result = await createChatMessageForSocket(rideId, socket.data.userId, message, new Date());
+      const result = await createChatMessageForSocket(
+        rideId,
+        socket.data.userId,
+        message,
+        new Date(),
+      );
       if (!result.ok) {
         socket.emit('ride:chat:error', { code: result.code, error: result.error });
         return;
@@ -308,12 +345,21 @@ app.prepare().then(() => {
 
     socket.on('ride:chat:report', async ({ rideId, messageId, reason }) => {
       if (typeof rideId !== 'string' || typeof messageId !== 'string') {
-        socket.emit('ride:chat:error', { code: 'INVALID_ID', error: 'A valid ride and message ID are required.' });
+        socket.emit('ride:chat:error', {
+          code: 'INVALID_ID',
+          error: 'A valid ride and message ID are required.',
+        });
         return;
       }
 
       const userId = socket.data.userId;
-      const result = await reportChatMessageForSocket(rideId, userId, messageId, typeof reason === 'string' ? reason : 'Other', new Date());
+      const result = await reportChatMessageForSocket(
+        rideId,
+        userId,
+        messageId,
+        typeof reason === 'string' ? reason : 'Other',
+        new Date(),
+      );
       if (!result.ok) {
         socket.emit('ride:chat:error', { code: result.code, error: result.error });
         return;

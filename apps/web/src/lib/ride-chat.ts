@@ -58,7 +58,10 @@ type MessageRow = {
   viewer_is_sender: boolean;
 };
 
-export function rideChatAvailable(ride: Pick<RideRow, 'state' | 'departure_start'>, now: Date): boolean {
+export function rideChatAvailable(
+  ride: Pick<RideRow, 'state' | 'departure_start'>,
+  now: Date,
+): boolean {
   if (ride.state !== 'scheduled') return true;
   return now.getTime() >= lockTime(ride.departure_start).getTime();
 }
@@ -82,9 +85,16 @@ export function rideChatDeletionDue(
   ride: Pick<RideRow, 'state' | 'completed_at' | 'cancelled_at'>,
   now: Date,
 ): boolean {
-  const completionTime = ride.state === 'completed' ? ride.completed_at : ride.state === 'cancelled' ? ride.cancelled_at : null;
+  const completionTime =
+    ride.state === 'completed'
+      ? ride.completed_at
+      : ride.state === 'cancelled'
+        ? ride.cancelled_at
+        : null;
   if (!completionTime) return false;
-  const deleteAfter = new Date(completionTime.getTime() + 30 * 24 * 60 * 60 * 1000 + 24 * 60 * 60 * 1000);
+  const deleteAfter = new Date(
+    completionTime.getTime() + 30 * 24 * 60 * 60 * 1000 + 24 * 60 * 60 * 1000,
+  );
   return now.getTime() >= deleteAfter.getTime();
 }
 
@@ -121,7 +131,13 @@ async function loadOrCreateChat(ride: RideRow, now: Date) {
       await pool.query(
         `INSERT INTO notifications (user_id, type, title, body, related_ride_id, related_chat_id, created_at)
          VALUES ($1, 'pool_chat_opened', 'Pool chat opened', $2, $3, $4, $5)`,
-        [memberId, 'The ride is locked and the private pool chat is now open.', ride.id, created.rows[0].id, now],
+        [
+          memberId,
+          'The ride is locked and the private pool chat is now open.',
+          ride.id,
+          created.rows[0].id,
+          now,
+        ],
       );
     }
     return created.rows[0];
@@ -258,7 +274,12 @@ export async function createChatMessage(
     return { ok: false, code: 'CHAT_UNAVAILABLE', error: 'Pool chat is not open yet.' };
   }
 
-  const created = await pool.query<{ id: string; sender_id: string; body: string; created_at: Date }>(
+  const created = await pool.query<{
+    id: string;
+    sender_id: string;
+    body: string;
+    created_at: Date;
+  }>(
     `INSERT INTO ride_chat_messages (chat_id, sender_id, body, created_at)
      VALUES ($1, $2, $3, $4)
      RETURNING id, sender_id, body, created_at`,
@@ -283,7 +304,14 @@ export async function createChatMessage(
     await pool.query(
       `INSERT INTO notifications (user_id, type, title, body, related_ride_id, related_chat_id, related_message_id, created_at)
        VALUES ($1, 'pool_chat_message', 'New ride chat message', $2, $3, $4, $5, $6)`,
-      [recipient.user_id, `${text.slice(0, 120)}${text.length > 120 ? '…' : ''}`, rideId, chat.id, message.id, now],
+      [
+        recipient.user_id,
+        `${text.slice(0, 120)}${text.length > 120 ? '…' : ''}`,
+        rideId,
+        chat.id,
+        message.id,
+        now,
+      ],
     );
   }
 
@@ -323,7 +351,11 @@ export async function reportChatMessage(
 
   const memberIds = await memberIdsForRide(rideId);
   if (!memberIds.includes(reporterId)) {
-    return { ok: false, code: 'FORBIDDEN', error: 'Only current pool members may report messages.' };
+    return {
+      ok: false,
+      code: 'FORBIDDEN',
+      error: 'Only current pool members may report messages.',
+    };
   }
 
   const chat = await loadOrCreateChat(ride, now);

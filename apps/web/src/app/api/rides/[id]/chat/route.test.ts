@@ -103,18 +103,24 @@ describe('POST /api/rides/[id]/chat', () => {
   it('rejects a missing message body', async () => {
     auth.readJson.mockResolvedValue({} as never);
     db.query.mockResolvedValue({ rows: [{ user_id: 'user-1' }] });
-    const response = await POST(new Request('http://localhost/api/rides/ride-1/chat', { method: 'POST' }), {
-      params: Promise.resolve({ id: '0b9a7c1e-1111-4000-8000-000000000001' }),
-    });
+    const response = await POST(
+      new Request('http://localhost/api/rides/ride-1/chat', { method: 'POST' }),
+      {
+        params: Promise.resolve({ id: '0b9a7c1e-1111-4000-8000-000000000001' }),
+      },
+    );
     expect(response.status).toBe(400);
     expect(await response.json()).toEqual({ error: 'A message is required.' });
   });
 
   it('sends a message when a current member posts', async () => {
     db.query.mockResolvedValue({ rows: [{ user_id: 'user-1' }] });
-    const response = await POST(new Request('http://localhost/api/rides/ride-1/chat', { method: 'POST' }), {
-      params: Promise.resolve({ id: '0b9a7c1e-1111-4000-8000-000000000001' }),
-    });
+    const response = await POST(
+      new Request('http://localhost/api/rides/ride-1/chat', { method: 'POST' }),
+      {
+        params: Promise.resolve({ id: '0b9a7c1e-1111-4000-8000-000000000001' }),
+      },
+    );
     expect(response.status).toBe(200);
     expect(vi.mocked(createChatMessage)).toHaveBeenCalledWith(
       '0b9a7c1e-1111-4000-8000-000000000001',
@@ -127,9 +133,12 @@ describe('POST /api/rides/[id]/chat', () => {
   it('reports a problematic message with a reference', async () => {
     auth.readJson.mockResolvedValue({ action: 'report', messageId: 'm-7', reason: 'Spam' });
     db.query.mockResolvedValue({ rows: [{ user_id: 'user-1' }] });
-    const response = await POST(new Request('http://localhost/api/rides/ride-1/chat', { method: 'POST' }), {
-      params: Promise.resolve({ id: '0b9a7c1e-1111-4000-8000-000000000001' }),
-    });
+    const response = await POST(
+      new Request('http://localhost/api/rides/ride-1/chat', { method: 'POST' }),
+      {
+        params: Promise.resolve({ id: '0b9a7c1e-1111-4000-8000-000000000001' }),
+      },
+    );
     expect(response.status).toBe(200);
     expect(vi.mocked(reportChatMessage)).toHaveBeenCalledWith(
       '0b9a7c1e-1111-4000-8000-000000000001',
