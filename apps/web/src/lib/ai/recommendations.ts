@@ -27,8 +27,14 @@ export async function getRideRecommendations(
   let response: RideRecommendationResponse;
   try {
     response = await withDeadline(
-      rankRideRecommendations(viewerId, filters, (request) =>
-        withDeadline(rankWithGemini(request), 8_000)),
+      rankRideRecommendations(viewerId, filters, async (request) => {
+        try {
+          return await withDeadline(rankWithGemini(request), 8_000);
+        } catch (error) {
+          if (error instanceof Error && error.message === 'recommendation_deadline') timedOut = true;
+          throw error;
+        }
+      }),
       RECOMMENDATION_DEADLINE_MS,
     );
   } catch (error) {
@@ -53,7 +59,8 @@ export async function getRideRecommendations(
     ? "fallback_no_candidates"
     : response.source === "ai"
       ? "ai_validated"
-      : timedOut ? "fallback_timeout" : "fallback_model_error";
+      : timedOut ? "fallback_timeout"
+        : response.message?.includes('invalid') ? "fallback_invalid" : "fallback_model_error";
 
   try {
     await pool.query('DELETE FROM ride_recommendation_audits WHERE created_at < now() - interval \'90 days\'');
