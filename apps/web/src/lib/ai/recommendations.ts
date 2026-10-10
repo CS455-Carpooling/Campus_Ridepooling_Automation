@@ -56,6 +56,8 @@ export async function getRideRecommendations(
       : timedOut ? "fallback_timeout" : "fallback_model_error";
 
   try {
+    await pool.query('DELETE FROM ride_recommendation_audits WHERE created_at < now() - interval \'90 days\'');
+    await pool.query('DELETE FROM ride_recommendation_rate_events WHERE created_at < now() - interval \'1 hour\'');
     await pool.query(
       `INSERT INTO ride_recommendation_audits
          (request_id, user_id, model_version, prompt_version, outcome, suggested_ride_ids, latency_ms, input_tokens, output_tokens)
