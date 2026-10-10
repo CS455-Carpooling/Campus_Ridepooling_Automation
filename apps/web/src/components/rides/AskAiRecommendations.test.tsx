@@ -50,6 +50,7 @@ const response: RideRecommendationResponse = {
 describe('AskAiRecommendations', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it('shows loading and then trusted ride details with explanations', async () => {
