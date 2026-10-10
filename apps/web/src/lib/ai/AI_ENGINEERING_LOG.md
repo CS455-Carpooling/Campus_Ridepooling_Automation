@@ -199,3 +199,37 @@ Deliverable: working AI ranking behind a stable service interface.
 - Added `apps/web/.env.example` documenting `GEMINI_API_KEY` and optional `GEMINI_MODEL`. The real `.env*` files are ignored by Git; only the placeholder example is exempted. No real API key was added to the repository.
 - Used Gemini structured-output schema enum types and inspected the edited files and feature-branch diff. No client-side Gemini code, UI, HTTP endpoint, database access for the model, or changes to `master` were added.
 - Tests, type checks, and a live Gemini call were not run in this session, which has GitHub repository access but no checked-out runtime or configured API key. Live operation still requires setting `GEMINI_API_KEY` in the deployment/server environment and running the project checks.
+
+
+## Prompt 9
+
+```text
+### Implement the “Ask AI to Suggest” UI
+
+- Add the entry point to the existing ride-search experience.
+- Display up to five recommendations, each with pros, cons and relevant ranking factors.
+- Show loading, empty, error and fallback states.
+- Make sure displayed fares, seats, departure times and ride details come from trusted application data.
+
+Deliverable: the complete rider-facing feature.
+
+### Run tests and review the feature branch
+
+- Unit-test the matrix, pickup-order calculation, shared-interest filtering, response validation and fallback.
+- Add API integration tests and UI tests.
+- Run the project's lint, typecheck, test and build commands.
+- Inspect the complete diff against `master`, verify the engineering log, and check that no secrets or unrelated changes were introduced.
+
+Deliverable: a tested feature branch ready for review.
+```
+
+## Action taken
+
+- Added authenticated `POST /api/rides/recommendations`. It applies the existing same-origin/CSRF guard and per-IP rate limit, requires a current session, validates the search filter payload, and calls the stable server-side `getRideRecommendations()` service. It returns a generic server error rather than exposing provider internals.
+- Added `AskAiRecommendations.tsx` to the existing `/rides/results` experience. Riders can request or refresh suggestions. The UI shows loading, retryable error, empty, AI-ranked and deterministic-fallback states; renders at most five results; and displays each suggestion's pros, cons and ranking-factor labels.
+- Reuses `RideCard` with the trusted `SearchRideResult` returned by the server pipeline. Fare share, total fare, seats, departure window, hub, vehicle and ride link are rendered from trusted ride data, not model output. Only explanations and the validated ranking factors come from the model.
+- Added `AskAiRecommendations.test.tsx` for loading/success, trusted ride fields, empty/fallback and retryable error states; added `src/app/api/rides/recommendations/route.test.ts` for authentication, invalid filters, service delegation, and safe error handling; and added `recommendation-pipeline.test.ts` for model failure, ineligible model IDs, trusted ride data, availability recheck, and the no-candidate fallback.
+- Existing tests cover the travel-time matrix's structural invariants, pickup-order calculation, shared-interest privacy filtering, and ranking response validation. The travel matrix is still explicitly a placeholder; structural tests do not validate its real-world accuracy.
+- Reviewed the API route, UI integration, candidate pipeline, and the files in the feature-branch comparison. No real API key was added; `apps/web/.env.example` contains only an empty placeholder and `GEMINI_API_KEY` is read only by server-side code. No changes were made to `master`.
+- Could not run `npm run lint`, `npm run typecheck`, `npm test`, or `npm run build`: repository access in this session permits GitHub file edits and reads but does not provide a checked-out Node project runtime or configured Gemini API key. Tests are authored, not confirmed passing; no CI run was triggered or verified. Therefore this branch is not yet confirmed ready to merge.
+- Remaining review caveats: candidate enrichment uses the existing ratings schema and the placeholder campus travel-time matrix; local typecheck/build must verify those queries and all new UI/API tests. Live Gemini operation requires configuring `GEMINI_API_KEY` as a server-side secret.
