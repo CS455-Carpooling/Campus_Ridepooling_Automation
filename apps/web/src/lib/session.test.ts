@@ -1,7 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getSession, verifySession } from './session';
 
-type Account = { id: string; email: string; full_name: string; roll_number: string };
+type Account = {
+  id: string;
+  email: string;
+  full_name: string;
+  roll_number: string;
+  role: string;
+};
 
 const { getCurrentUser, redirect } = vi.hoisted(() => ({
   getCurrentUser: vi.fn<() => Promise<Account | null>>(),
@@ -17,6 +23,7 @@ const account: Account = {
   email: 'ananya@iitk.ac.in',
   full_name: 'Ananya Rao',
   roll_number: '220123',
+  role: 'student',
 };
 
 beforeEach(() => {
@@ -38,6 +45,16 @@ describe('getSession with an account signed in through /login', () => {
       displayName: 'Ananya Rao',
       role: 'student',
     });
+  });
+
+  it('is an operations admin when an operator made the account one (CS455-48)', async () => {
+    getCurrentUser.mockResolvedValue({ ...account, role: 'admin' });
+    await expect(getSession()).resolves.toMatchObject({ userId: account.id, role: 'admin' });
+  });
+
+  it('treats an unknown role as a student, never as an admin', async () => {
+    getCurrentUser.mockResolvedValue({ ...account, role: 'owner' });
+    await expect(getSession()).resolves.toMatchObject({ role: 'student' });
   });
 
   it('comes before the development user', async () => {
