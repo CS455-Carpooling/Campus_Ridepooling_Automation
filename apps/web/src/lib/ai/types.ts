@@ -71,6 +71,7 @@ export type RideSuggestion = {
 
 /** Final response after validation or deterministic fallback. */
 export type RideRecommendationResponse = {
+  requestId?: string;
   source: RecommendationSource;
   suggestions: RideSuggestion[];
   message?: string;
