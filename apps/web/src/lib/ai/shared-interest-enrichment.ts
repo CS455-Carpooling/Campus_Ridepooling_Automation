@@ -9,6 +9,7 @@ export type SharedInterestData = {
 type SharedInterestRow = {
   ride_id: string;
   all_participants_consented: boolean;
+  all_participants_have_visible_tags: boolean;
   shared_tag_names: string[] | null;
 };
 
@@ -52,48 +53,54 @@ export async function enrichSharedInterests(
         LEFT JOIN user_profiles up ON up.user_id = p.user_id
         GROUP BY p.ride_id
       ),
-      viewer_tags AS (
-        SELECT upt.tag_id
-        FROM user_profile_tags upt
-        JOIN interest_tags it ON it.id = upt.tag_id AND it.is_active = TRUE
-        JOIN user_profiles up ON up.user_id = upt.user_id
-        WHERE upt.user_id = $1::uuid
-          AND up.ai_tag_consent = TRUE
-          AND upt.is_visible = TRUE
-      ),
-      occupant_tags AS (
-        SELECT DISTINCT p.ride_id, upt.tag_id
+      visible_tags AS (
+        SELECT DISTINCT p.ride_id, p.user_id, it.id AS tag_id, it.name AS tag_name
         FROM participants p
         JOIN user_profiles up ON up.user_id = p.user_id AND up.ai_tag_consent = TRUE
         JOIN user_profile_tags upt ON upt.user_id = p.user_id AND upt.is_visible = TRUE
         JOIN interest_tags it ON it.id = upt.tag_id AND it.is_active = TRUE
-        WHERE p.user_id <> $1::uuid
+      ),
+      usable_data AS (
+        SELECT
+          p.ride_id,
+          COUNT(DISTINCT p.user_id) = COUNT(DISTINCT vt.user_id) AS all_participants_have_visible_tags
+        FROM participants p
+        LEFT JOIN visible_tags vt ON vt.ride_id = p.ride_id AND vt.user_id = p.user_id
+        GROUP BY p.ride_id
       ),
       shared_tags AS (
-        SELECT ot.ride_id, array_agg(DISTINCT it.name ORDER BY it.name) AS tag_names
-        FROM occupant_tags ot
-        JOIN viewer_tags vt ON vt.tag_id = ot.tag_id
-        JOIN interest_tags it ON it.id = ot.tag_id AND it.is_active = TRUE
-        GROUP BY ot.ride_id
+        SELECT vt.ride_id, array_agg(vt.tag_name ORDER BY vt.tag_name) AS tag_names
+        FROM visible_tags vt
+        JOIN consent c ON c.ride_id = vt.ride_id
+        WHERE c.participant_count >= 2
+        GROUP BY vt.ride_id, vt.tag_id
+        HAVING COUNT(DISTINCT vt.user_id) = MAX(c.participant_count)
+      ),
+      shared_tag_lists AS (
+        SELECT ride_id, array_agg(tag_names[1] ORDER BY tag_names[1]) AS tag_names
+        FROM shared_tags
+        GROUP BY ride_id
       )
       SELECT
         cr.ride_id,
         COALESCE(c.all_participants_consented, FALSE)
           AND COALESCE(c.participant_count, 0) >= 2 AS all_participants_consented,
+        COALESCE(ud.all_participants_have_visible_tags, FALSE) AS all_participants_have_visible_tags,
         st.tag_names AS shared_tag_names
       FROM candidate_rides cr
       LEFT JOIN consent c ON c.ride_id = cr.ride_id
-      LEFT JOIN shared_tags st ON st.ride_id = cr.ride_id
+      LEFT JOIN usable_data ud ON ud.ride_id = cr.ride_id
+      LEFT JOIN shared_tag_lists st ON st.ride_id = cr.ride_id
     `,
     [requestingRiderId, [...new Set(candidateRideIds)]],
   );
 
   for (const row of rows) {
-    const tags = row.all_participants_consented ? row.shared_tag_names : null;
+    const tags = row.all_participants_consented && row.all_participants_have_visible_tags
+      ? (row.shared_tag_names ?? [])
+      : null;
     result.set(row.ride_id, {
-      // No common visible labels is treated as unavailable, not as a negative
-      // inference for the model to explain.
-      sharedInterestTags: tags?.length ? tags : null,
+      sharedInterestTags: tags,
     });
   }
   return result;
