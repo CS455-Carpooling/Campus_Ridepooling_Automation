@@ -146,3 +146,29 @@ Deliverable: privacy-filtered shared-interest data for each candidate ride.
 
 
 - Follow-up implementation detail: extracted the pure privacy-gating/deduplication function into `shared-interest-tags.ts` so its unit tests do not import the `server-only` database module. The server enrichment imports that helper; the model payload contract remains label-only.
+
+
+## Prompt 7
+
+```text
+Build candidate enrichment and validation
+
+- Reuse `searchRides()` and the existing fare calculations.
+- Assemble the model-safe candidate data using the finalized types.
+- Populate available factors such as fare share, departure suitability, vehicle, seats, pickup impact, shared interests and permitted aggregate ratings.
+- Validate model output: accept only eligible ride IDs, allowlisted factors, bounded explanations and at most five results.
+- Recheck ride availability before returning suggestions.
+
+Deliverable: a reliable backend pipeline that separates trusted ride data from untrusted model output.
+```
+
+## Action taken
+
+- Added `recommendation-pipeline.ts`, which calls the existing `searchRides()` for eligible rides and reuses its authoritative estimated fare shares, vehicle, departure window, and available-seat values.
+- Enriched candidates with server-computed pickup-order impact from current occupant pickup-point labels and the requesting rider's selected campus location; privacy-filtered shared-interest tags from `enrichSharedInterests()`; and an aggregate average/count of ratings for current occupants. Rating comments and individual rating identities are not selected or returned.
+- Kept `trustIndicator` as `null`: the current schema does not define a trustworthy trust-indicator source, so the pipeline does not invent one. Missing pickup, shared-interest, or rating data stays unavailable rather than being fabricated.
+- Added `validate-ranking.ts`. It accepts only candidate ride IDs, removes factors outside the allowlist or unavailable for that candidate, rejects duplicate IDs and malformed or overlong explanations, enforces at most three pros and three cons per ride, and caps the ranking at five rides.
+- Added `rankRideRecommendations()`, which passes only the typed model-safe filters/candidates to an injected ranking function, then reruns `searchRides()` before returning suggestions. Rider-facing ride details always come from this second trusted search, never from model output. If ranking throws or yields no valid eligible result, it falls back to current eligible rides in deterministic search order.
+- Added `validate-ranking.test.ts` for unknown IDs, unavailable factors, duplicate IDs, the five-result cap, explanation bounds, and malformed model output.
+- No Gemini provider, HTTP API endpoint, UI, or database schema change was added. The ranking runner is injected so a future model integration can be added separately.
+- Tests/type checks were authored but not executed because this session has GitHub file-editing access without a checked-out project runtime. No changes were made to `master`.
