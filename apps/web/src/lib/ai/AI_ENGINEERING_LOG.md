@@ -71,3 +71,21 @@ how will ai get access to these?
 - Recommended computing shared interests server-side by intersecting the requesting rider's and candidate occupants' active, visible tags, only when the relevant users have consented to AI use of their tags. Send only the common permitted tag labels (or a minimal match summary), not per-person profiles or user identifiers. If consent or tag data is missing, omit the factor rather than infer it.
 - Clarified that the AI should receive these as a small, structured candidate payload assembled by the server and supplied in the model request; it should not have direct database access. The server remains authoritative and validates model output against current ride data.
 - No application code or database schema was changed for this prompt; the pickup-order and shared-interest approaches are recommendations for the implementation step.
+
+
+## Prompt 3
+
+```text
+take the locations to be hall 1 to hall 14 and main gate
+you can use google maps to get the info you need
+build a hardcoded travel time matrix
+```
+
+## Action taken
+
+- Added `apps/web/src/lib/ai/campus-travel-times.ts` on `feat/ai-ride-recommendations` with a 15-location matrix for Hall 1 through Hall 14 and Main Gate, in minutes.
+- Added `getCampusTravelTimeMinutes(from, to)`, which accepts case-insensitive names and returns `null` for unknown locations, and `getCampusTravelTimeMatrix()` for read-only matrix access.
+- Added `apps/web/src/lib/ai/campus-travel-times.test.ts` with checks for the location set, matrix symmetry, zero diagonal, non-negative entries, case-insensitive lookup, and unknown-location handling.
+- Used the published IIT Kanpur campus map as a layout reference. The individual pairwise minute values are rough placeholder estimates; they were not verified one-by-one with Google Maps route directions or a routing API. The code comments state this limitation, and the values must not be used as navigation ETAs.
+- Kept the matrix isolated in its own module so it can later be replaced with Google Routes/another routing provider or admin-configured values without changing callers.
+- No changes were made to `master`. Tests were authored but not executed because no checked-out project environment is available in this session.
