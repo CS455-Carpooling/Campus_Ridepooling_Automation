@@ -120,7 +120,18 @@ export async function rankWithGemini(request: RecommendationRequest): Promise<un
 
   if (!text) throw new Error("Gemini returned an empty ranking.");
   try {
-    return JSON.parse(text) as unknown;
+    const parsed: unknown = JSON.parse(text);
+    const usage = (body as { usageMetadata?: { promptTokenCount?: unknown; candidatesTokenCount?: unknown } }).usageMetadata;
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      return {
+        ...(parsed as Record<string, unknown>),
+        __usageMetadata: {
+          inputTokens: typeof usage?.promptTokenCount === "number" && Number.isSafeInteger(usage.promptTokenCount) && usage.promptTokenCount >= 0 ? usage.promptTokenCount : null,
+          outputTokens: typeof usage?.candidatesTokenCount === "number" && Number.isSafeInteger(usage.candidatesTokenCount) && usage.candidatesTokenCount >= 0 ? usage.candidatesTokenCount : null,
+        },
+      };
+    }
+    return parsed;
   } catch {
     throw new Error("Gemini returned malformed JSON.");
   }
