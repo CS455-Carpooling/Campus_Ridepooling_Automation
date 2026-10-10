@@ -37,12 +37,56 @@ describe('home data', () => {
     expect(getHistoricalRides).toHaveBeenCalledWith('u1', now);
   });
 
-  it('returns the open chat complaint count and marks other queues unavailable', async () => {
-    query.mockResolvedValue({ rows: [{ count: 3 }] });
+  it('counts open complaints, AI items, suspensions, and lists the last admin actions', async () => {
+    query.mockImplementation(async (sql: string) =>
+      sql.includes('FROM admin_audit_log')
+        ? {
+            rows: [
+              {
+                id: 'e1',
+                action: 'rider.warn',
+                actor_type: 'admin',
+                admin_name: 'Ops Admin',
+                outcome: 'succeeded',
+                created_at: new Date('2026-10-10T22:51:00Z'),
+                subject: 'Aditi Rao',
+              },
+            ],
+          }
+        : { rows: [{ complaints: 4, safety: 1, recommendations: 2, suspended: 3 }] },
+    );
     await expect(getAdminHome()).resolves.toEqual({
       openIncidents: null,
-      complaintsToReview: 3,
-      recommendationsToDecide: null,
+      complaintsToReview: 4,
+      safetyComplaintsToReview: 1,
+      recommendationsToDecide: 2,
+      ridersSuspended: 3,
+      recentActions: [
+        {
+          id: 'e1',
+          action: 'rider.warn',
+          actor: 'admin',
+          adminName: 'Ops Admin',
+          subject: 'Aditi Rao',
+          outcome: 'succeeded',
+          at: '2026-10-10T22:51:00.000Z',
+        },
+      ],
     });
+  });
+
+  it('reads complaints, chat reports included, not the old chat report table (CS455-49)', async () => {
+    query.mockResolvedValue({ rows: [] });
+    await expect(getAdminHome()).resolves.toMatchObject({
+      complaintsToReview: 0,
+      recommendationsToDecide: 0,
+      ridersSuspended: 0,
+      recentActions: [],
+    });
+    const sql = query.mock.calls.map(([text]) => String(text)).join(' ');
+    expect(sql).toContain('FROM complaints');
+    expect(sql).toContain('active_rider_suspensions');
+    expect(sql).toContain('LIMIT 10');
+    expect(sql).not.toContain('ride_chat_complaints');
   });
 });

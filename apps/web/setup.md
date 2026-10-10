@@ -272,6 +272,24 @@ docker compose exec db psql -U crp -d crp -c "UPDATE rides SET departure_start =
 docker compose exec db psql -U crp -d crp -c "UPDATE rides SET completed_at = now() - interval '73 hours' WHERE id = '<ride id>';"
 ```
 
+### Making an operations admin
+
+Admins are ordinary accounts with the admin role. Register and verify the account in the app
+first, then run this where `DATABASE_URL` points at the database (it fails for an unknown or
+unverified address):
+
+```bash
+# from apps/web, against your own database
+npm run admin:grant -- name@iitk.ac.in
+npm run admin:revoke -- name@iitk.ac.in
+
+# with the Docker Compose stack
+docker compose exec web node apps/web/scripts/admin-role.mjs grant name@iitk.ac.in
+```
+
+Give each admin their own account rather than sharing one, so the audit log shows who did what
+(SYS-NFR-08). Accounts with audit records cannot be deleted.
+
 ## 11. Troubleshooting
 
 | Problem | Fix |
