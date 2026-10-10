@@ -301,3 +301,44 @@ CREATE TABLE IF NOT EXISTS ride_ratings (
 
 -- A person's average and the comments about them are looked up by the person rated.
 CREATE INDEX IF NOT EXISTS ride_ratings_ratee_idx ON ride_ratings (ratee_id, submitted_at DESC);
+
+
+-- Ask AI recommendation audit trail. Request payloads and personal/profile data are
+-- intentionally not stored. Records are retained for 90 days.
+CREATE TABLE IF NOT EXISTS ride_recommendation_audits (
+  request_id UUID PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  model_version TEXT NOT NULL,
+  prompt_version TEXT NOT NULL,
+  outcome TEXT NOT NULL CHECK (outcome IN ('ai_validated', 'fallback_model_error', 'fallback_timeout', 'fallback_invalid', 'fallback_no_candidates', 'fallback_service_error')),
+  latency_ms INTEGER NOT NULL CHECK (latency_ms >= 0),
+  input_tokens INTEGER CHECK (input_tokens IS NULL OR input_tokens >= 0),
+  output_tokens INTEGER CHECK (output_tokens IS NULL OR output_tokens >= 0),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS ride_recommendation_audits_created_idx
+  ON ride_recommendation_audits(created_at);
+CREATE INDEX IF NOT EXISTS ride_recommendation_audits_user_created_idx
+  ON ride_recommendation_audits(user_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS ride_recommendation_feedback (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  request_id UUID NOT NULL REFERENCES ride_recommendation_audits(request_id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  ride_id UUID NOT NULL REFERENCES rides(id) ON DELETE CASCADE,
+  value TEXT NOT NULL CHECK (value IN ('helpful', 'not_helpful')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT ride_recommendation_feedback_once UNIQUE (request_id, user_id, ride_id)
+);
+CREATE INDEX IF NOT EXISTS ride_recommendation_feedback_created_idx
+  ON ride_recommendation_feedback(created_at);
+
+-- Exact rolling-hour quota events. A unique request ID prevents retries from
+-- consuming quota twice. Expired events are pruned by cleanup.
+CREATE TABLE IF NOT EXISTS ride_recommendation_rate_events (
+  request_id UUID PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS ride_recommendation_rate_events_user_created_idx
+  ON ride_recommendation_rate_events(user_id, created_at DESC);
