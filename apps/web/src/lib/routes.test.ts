@@ -13,13 +13,13 @@ describe('navigationFor', () => {
     ]);
   });
 
-  it('gives operations admins their queues and configuration', () => {
+  it('gives operations admins their queues, riders and configuration (CS455-49)', () => {
     expect(navigationFor('admin').map((item) => item.label)).toEqual([
       'Home',
-      'Profile',
-      'Incidents',
       'Complaints',
+      'Riders',
       'Configuration',
+      'Profile',
     ]);
   });
 
@@ -39,6 +39,22 @@ describe('routes.ride', () => {
 describe('routes.rideReview', () => {
   it('is the review page under the ride, with the id encoded', () => {
     expect(routes.rideReview('abc 1/2')).toBe('/rides/abc%201%2F2/review');
+  });
+});
+
+describe('the complaint and admin pages', () => {
+  it('encode the ID in every path', () => {
+    expect(routes.rideComplaint('abc 1/2')).toBe('/rides/abc%201%2F2/complaint');
+    expect(routes.adminComplaint('c/1')).toBe('/admin/complaints/c%2F1');
+    expect(routes.adminRider('u/1')).toBe('/admin/riders/u%2F1');
+    expect(routes.adminRide('r/1')).toBe('/admin/rides/r%2F1');
+  });
+
+  it('mark Complaints for a complaint and Riders for a rider record', () => {
+    const items = navigationFor('admin');
+    expect(currentHref(routes.adminComplaint('c1'), items)).toBe('/admin/complaints');
+    expect(currentHref(routes.adminRider('u1'), items)).toBe('/admin/riders');
+    expect(currentHref('/admin/configuration/fares', items)).toBe('/admin/configuration');
   });
 });
 
