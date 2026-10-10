@@ -143,3 +143,6 @@ Deliverable: privacy-filtered shared-interest data for each candidate ride.
 - Added `resolveSharedInterestTags` and `shared-interest-enrichment.test.ts` to cover consent filtering, missing usable data, deduplication, and the no-common-tag case.
 - Updated the model-safe candidate type comment to clarify the distinction between unavailable data (`null`) and a valid empty intersection (`[]`).
 - Did not change the placeholder travel-time matrix, database schema, UI, API, Gemini integration, or `master`. Tests/type checks were authored but not run because this session does not have a checked-out project runtime.
+
+
+- Follow-up implementation detail: extracted the pure privacy-gating/deduplication function into `shared-interest-tags.ts` so its unit tests do not import the `server-only` database module. The server enrichment imports that helper; the model payload contract remains label-only.
