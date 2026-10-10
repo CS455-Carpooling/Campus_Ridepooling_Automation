@@ -33,9 +33,12 @@ Run relevant tests or type checks if possible, inspect the diff, and report any 
 
 ## Action taken
 
-- Inspected the existing AI types, ride-search types, and authoritative fare helper on `feat/ai-ride-recommendations`.
-- Finalized the shared TypeScript contracts for recommendation input, model ranking output, rider-facing suggestions, allowed ranking factors, AI/fallback source, and feedback.
-- Kept the model's explanation text separate from the trusted `SearchRideResult` ride object; the model response carries ride IDs and explanations, not authoritative ride details.
-- Did not implement Gemini integration, UI, or an API endpoint.
-- Checked the resulting diff. Automated tests/type checks could not be run in this GitHub-only editing environment.
-- Unresolved: current `SearchRideResult` does not provide pickup-order impact, shared interest tags, aggregate ratings, or a trust indicator. These need authoritative, privacy-filtered data sources before those factors can be used at runtime.
+- Read `apps/web/src/lib/ai/types.ts`, `apps/web/src/lib/ride-search.ts`, and `apps/web/src/lib/fare.ts` on `feat/ai-ride-recommendations`.
+- Created shared types for the model-safe recommendation request, privacy-filtered candidate data, model ranking response, trusted rider-facing suggestions, AI/fallback source, and helpful/not-helpful feedback.
+- Added ranking factors for fare, departure suitability, pickup-order changes, shared interests, aggregate ratings, vehicle, available seats, and the optional trust indicator. Added constants for the five-suggestion limit and the three-pros/three-cons limits.
+- Kept model output limited to ride IDs, factors, pros, and cons. The final suggestion references the server-owned `SearchRideResult`; model output does not supply authoritative ride details, fare, or availability.
+- Marked unavailable factor data as `null` so the model contract distinguishes missing data from a negative result. The candidate contract excludes names, contact details, raw profile data, and complaint details.
+- Compared the feature branch with `master` and fetched the changed files to inspect the resulting contents. No files on `master` were changed.
+- Automated tests/type checks were not run: this session has GitHub file-editing access but no checked-out project environment to execute the test commands.
+- Unresolved: `SearchRideResult` currently lacks computed pickup-order impact, consent-filtered shared interest tags, aggregate ratings, and the optional trust indicator. Those fields need authoritative server-side sources before the factors can be populated. Validation must also enforce the result/pros/cons limits and re-check ride availability before display.
+- No Gemini integration, UI, or API endpoint was added.
