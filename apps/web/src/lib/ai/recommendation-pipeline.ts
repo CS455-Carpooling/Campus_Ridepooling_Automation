@@ -4,8 +4,6 @@ import { searchRides, type SearchRideRequest, type SearchRideResult } from "@/li
 import { enrichSharedInterests } from "./shared-interest-enrichment";
 import { calculatePickupOrderImpact } from "./pickup-order-impact";
 import {
-  MAX_RECOMMENDATION_CONS,
-  MAX_RECOMMENDATION_PROS,
   MAX_RIDE_RECOMMENDATIONS,
   type AiRankedRide,
   type RecommendationCandidate,
