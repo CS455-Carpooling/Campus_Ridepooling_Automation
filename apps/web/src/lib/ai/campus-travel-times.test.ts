@@ -24,6 +24,17 @@ describe("hardcoded campus travel-time matrix", () => {
     }
   });
 
+  it("satisfies the triangle inequality for the placeholder matrix", () => {
+    const matrix = getCampusTravelTimeMatrix();
+    for (const from of CAMPUS_TRAVEL_TIME_LOCATIONS) {
+      for (const to of CAMPUS_TRAVEL_TIME_LOCATIONS) {
+        for (const via of CAMPUS_TRAVEL_TIME_LOCATIONS) {
+          expect(matrix[from][to]).toBeLessThanOrEqual(matrix[from][via] + matrix[via][to]);
+        }
+      }
+    }
+  });
+
   it("looks up names case-insensitively and reports unknown locations", () => {
     expect(getCampusTravelTimeMinutes("hall 1", "MAIN GATE")).toBeGreaterThan(0);
     expect(getCampusTravelTimeMinutes("Hall 1", "Hall 1")).toBe(0);
