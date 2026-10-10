@@ -118,3 +118,28 @@ and implement the pickup order impact calculation
 - Added `apps/web/src/lib/ai/pickup-order-impact.test.ts` covering an already-present stop, route-duration comparison, missing data, duplicate locations, and empty proposed locations. Corrected expectations to use metric test distances.
 - Strengthened `campus-travel-times.test.ts` with a triangle-inequality check. The existing matrix passes the structural checks by direct programmatic inspection, but its pairwise times remain unverified estimates.
 - No Gemini integration, API, UI, database changes, or changes to `master` were made. Automated tests/type checks were not run in this environment.
+
+
+## Prompt 6
+
+```text
+the travel time matrix is a placeholder and can be left as such for now
+
+Implement shared interest enrichment
+
+- Intersect the requesting rider's and candidate occupants' interest tags on the server.
+- Respect `ai_tag_consent` and `is_visible`.
+- Send only permitted common tag labels or a minimal match summary to the model.
+- Omit the factor when consent or usable data is missing.
+
+Deliverable: privacy-filtered shared-interest data for each candidate ride.
+```
+
+## Action taken
+
+- Added `apps/web/src/lib/ai/shared-interest-enrichment.ts`, a server-only helper that batch-enriches candidate ride IDs using the existing PostgreSQL schema. It intersects active, visible tags across the requesting rider and every current occupant of each candidate ride.
+- Requires `ai_tag_consent = TRUE` for the requesting rider and every current occupant. It considers only `user_profile_tags.is_visible = TRUE` and active `interest_tags`; departed riders are excluded. No names, user IDs, per-person tags, contact details, or complaint data are returned in the enrichment result.
+- Returns `sharedInterestTags: null` if any participant lacks consent or any participant lacks usable visible active tags. Returns an empty array when all participants consent and have usable tags but no label is common to everyone. Otherwise returns distinct, sorted common labels only.
+- Added `resolveSharedInterestTags` and `shared-interest-enrichment.test.ts` to cover consent filtering, missing usable data, deduplication, and the no-common-tag case.
+- Updated the model-safe candidate type comment to clarify the distinction between unavailable data (`null`) and a valid empty intersection (`[]`).
+- Did not change the placeholder travel-time matrix, database schema, UI, API, Gemini integration, or `master`. Tests/type checks were authored but not run because this session does not have a checked-out project runtime.
