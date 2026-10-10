@@ -1,13 +1,13 @@
 import { pool } from '@/lib/db';
 import { guard, getCurrentUser, json, readJson } from '@/lib/auth';
 import { isUuid } from '@/lib/ids';
-import { createChatMessage, getRideChatThread, reportChatMessage } from '@/lib/ride-chat';
+import { getRideChatThread, reportChatMessage } from '@/lib/ride-chat';
 
 async function isRideMember(rideId: string, userId: string) {
   const { rows } = await pool.query<{ user_id: string }>(
     `SELECT owner_id AS user_id FROM rides WHERE id = $1
      UNION ALL
-     SELECT user_id FROM riders WHERE ride_id = $1`,
+     SELECT user_id FROM riders WHERE ride_id = $1 AND left_at IS NULL`,
     [rideId],
   );
   return rows.some((row) => row.user_id === userId);
@@ -22,10 +22,26 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
 
   const thread = await getRideChatThread(id, user.id);
   if (!thread) {
-    const ride = await pool.query<{ id: string }>('SELECT id FROM rides WHERE id = $1', [id]);
+    const ride = await pool.query<{
+      id: string;
+      state: string;
+      completed_at: Date | null;
+      cancelled_at: Date | null;
+    }>('SELECT id, state, completed_at, cancelled_at FROM rides WHERE id = $1', [id]);
     if (ride.rows.length === 0) return json({ error: 'Ride not found.' }, 404);
     const member = await isRideMember(id, user.id);
     if (!member) return json({ error: 'Ride not found.' }, 404);
+    const row = ride.rows[0];
+    const completedAt = row.state === 'completed' ? row.completed_at : row.cancelled_at;
+    if (completedAt && Date.now() >= completedAt.getTime() + 31 * 24 * 60 * 60 * 1000) {
+      return json({ thread: null, message: 'The pool chat retention period has ended.' }, 200);
+    }
+    if (row.state === 'cancelled') {
+      return json(
+        { thread: null, message: 'No pool chat was opened for this cancelled ride.' },
+        200,
+      );
+    }
     return json({ thread: null, message: 'Pool chat opens once the ride locks.' }, 200);
   }
 
@@ -65,24 +81,5 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return json({ reference: result.reference }, 200);
   }
 
-  if (typeof body.message !== 'string') {
-    return json({ error: 'A message is required.' }, 400);
-  }
-
-  const result = await createChatMessage(id, user.id, body.message);
-  if (!result.ok) {
-    const statusMap: Record<string, number> = {
-      FORBIDDEN: 403,
-      NOT_FOUND: 404,
-      CHAT_READ_ONLY: 403,
-      CHAT_UNAVAILABLE: 409,
-      INVALID_MESSAGE: 400,
-      INVALID_ID: 400,
-      RATE_LIMITED: 429,
-      SAVE_FAILED: 500,
-    };
-    return json({ error: result.error }, statusMap[result.code] ?? 400);
-  }
-
-  return json({ message: result.message }, 200);
+  return json({ error: 'Send chat messages over the authenticated live connection.' }, 405);
 }

@@ -45,9 +45,10 @@ export default function PrivacyPage() {
 
         <h2 className="mt-8 text-2xl font-bold text-ink">3. Data Retention</h2>
         <p>
-          Ride chats become read-only a day after the trip and are automatically deleted 30 days
-          later, unless a complaint requires them to be retained for review. We do not keep your
-          location history beyond what is necessary to complete the ride.
+          Ride chats become read-only 24 hours after a trip is completed or cancelled and are
+          automatically deleted 30 days after that read-only period, unless an unresolved complaint
+          requires them to be retained for review. We do not keep your location history beyond what
+          is necessary to complete the ride.
         </p>
 
         <h2 className="mt-8 text-2xl font-bold text-ink">4. Third-Party Sharing</h2>

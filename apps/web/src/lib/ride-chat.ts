@@ -81,6 +81,14 @@ export function rideChatReadOnly(
   return false;
 }
 
+export function rideChatCanWrite(
+  ride: Pick<RideRow, 'state' | 'completed_at' | 'cancelled_at'>,
+  now: Date,
+): boolean {
+  if (ride.state === 'cancelled') return false;
+  return !rideChatReadOnly(ride, now);
+}
+
 export function rideChatDeletionDue(
   ride: Pick<RideRow, 'state' | 'completed_at' | 'cancelled_at'>,
   now: Date,
@@ -102,44 +110,47 @@ async function memberIdsForRide(rideId: string) {
   const { rows } = await pool.query<{ user_id: string }>(
     `SELECT owner_id AS user_id FROM rides WHERE id = $1
      UNION ALL
-     SELECT user_id FROM riders WHERE ride_id = $1`,
+     SELECT user_id FROM riders WHERE ride_id = $1 AND left_at IS NULL`,
     [rideId],
   );
   return rows.map((row) => row.user_id);
 }
 
 async function loadOrCreateChat(ride: RideRow, now: Date) {
-  if (!rideChatAvailable(ride, now)) return null;
-
   const existing = await pool.query<ChatRow>(
     'SELECT id, ride_id, opened_at, closed_at FROM ride_chats WHERE ride_id = $1',
     [ride.id],
   );
   if (existing.rows[0]) return existing.rows[0];
+  if (!rideChatAvailable(ride, now) || ride.state === 'cancelled') return null;
 
   const created = await pool.query<ChatRow>(
-    `INSERT INTO ride_chats (ride_id, opened_at)
-     VALUES ($1, $2)
-     ON CONFLICT (ride_id) DO NOTHING
-     RETURNING id, ride_id, opened_at, closed_at`,
+    `WITH created AS (
+       INSERT INTO ride_chats (ride_id, opened_at)
+       VALUES ($1, $2)
+       ON CONFLICT (ride_id) DO NOTHING
+       RETURNING id, ride_id, opened_at, closed_at
+     ),
+     notified AS (
+       INSERT INTO notifications
+         (user_id, type, title, body, related_ride_id, related_chat_id, created_at)
+       SELECT members.user_id, 'pool_chat_opened', 'Pool chat opened',
+              'The ride is locked and the private pool chat is now open.',
+              $1, created.id, $2
+       FROM created
+       CROSS JOIN (
+         SELECT owner_id AS user_id FROM rides WHERE id = $1
+         UNION
+         SELECT user_id FROM riders WHERE ride_id = $1 AND left_at IS NULL
+       ) members
+       RETURNING id
+     )
+     SELECT created.id, created.ride_id, created.opened_at, created.closed_at
+     FROM created CROSS JOIN (SELECT count(*) FROM notified) notification_count`,
     [ride.id, now],
   );
 
   if (created.rows[0]) {
-    const memberIds = await memberIdsForRide(ride.id);
-    for (const memberId of memberIds) {
-      await pool.query(
-        `INSERT INTO notifications (user_id, type, title, body, related_ride_id, related_chat_id, created_at)
-         VALUES ($1, 'pool_chat_opened', 'Pool chat opened', $2, $3, $4, $5)`,
-        [
-          memberId,
-          'The ride is locked and the private pool chat is now open.',
-          ride.id,
-          created.rows[0].id,
-          now,
-        ],
-      );
-    }
     return created.rows[0];
   }
 
@@ -169,8 +180,21 @@ export async function getRideChatThread(
   if (!memberIds.includes(viewerId)) return null;
 
   if (rideChatDeletionDue(ride, now)) {
-    await pool.query('DELETE FROM ride_chats WHERE ride_id = $1', [ride.id]);
-    return null;
+    const deleted = await pool.query<{ id: string }>(
+      `DELETE FROM ride_chats c
+       WHERE c.ride_id = $1
+         AND NOT EXISTS (
+           SELECT 1 FROM ride_chat_complaints complaint
+           WHERE complaint.chat_id = c.id AND complaint.status = 'open'
+         )`,
+      [ride.id],
+    );
+    if (deleted.rows[0]) return null;
+    const retained = await pool.query<{ id: string }>(
+      'SELECT id FROM ride_chats WHERE ride_id = $1',
+      [ride.id],
+    );
+    if (!retained.rows[0]) return null;
   }
 
   if (!rideChatAvailable(ride, now)) return null;
@@ -199,7 +223,7 @@ export async function getRideChatThread(
     rideId: ride.id,
     openedAt: chat.opened_at.toISOString(),
     readOnly: rideChatReadOnly(ride, now),
-    canWrite: !rideChatReadOnly(ride, now),
+    canWrite: rideChatCanWrite(ride, now),
     messages: messages.rows.map((message) => ({
       id: message.id,
       senderId: message.sender_id,
@@ -264,8 +288,7 @@ export async function createChatMessage(
     return { ok: false, code: 'CHAT_UNAVAILABLE', error: 'Pool chat opens once the ride locks.' };
   }
 
-  const readOnly = rideChatReadOnly(ride, now);
-  if (readOnly) {
+  if (!rideChatCanWrite(ride, now)) {
     return { ok: false, code: 'CHAT_READ_ONLY', error: 'This pool chat is read-only.' };
   }
 
@@ -294,7 +317,7 @@ export async function createChatMessage(
     `SELECT user_id FROM (
        SELECT owner_id AS user_id FROM rides WHERE id = $1
        UNION ALL
-       SELECT user_id FROM riders WHERE ride_id = $1
+       SELECT user_id FROM riders WHERE ride_id = $1 AND left_at IS NULL
      ) members
      WHERE user_id <> $2`,
     [rideId, senderId],
@@ -363,18 +386,59 @@ export async function reportChatMessage(
     return { ok: false, code: 'CHAT_UNAVAILABLE', error: 'Pool chat is not open yet.' };
   }
 
-  const result = await pool.query<{ id: string }>(
-    `UPDATE ride_chat_messages
-     SET reported_at = $4,
-         report_reason = $5
-     WHERE id = $1 AND chat_id = $2 AND sender_id <> $3 AND reported_at IS NULL
-     RETURNING id`,
-    [messageId, chat.id, reporterId, now, reason.trim() || 'Other'],
+  const normalizedReason = reason.trim().slice(0, 500) || 'Other';
+  const result = await pool.query<{ reference: string }>(
+    `WITH reported AS (
+       UPDATE ride_chat_messages
+       SET reported_at = $4, report_reason = $5
+       WHERE id = $1 AND chat_id = $2 AND sender_id <> $3 AND reported_at IS NULL
+       RETURNING id
+     )
+     INSERT INTO ride_chat_complaints
+       (reference, ride_id, chat_id, message_id, reporter_id, reason, created_at)
+     SELECT 'chat-' || left(id::text, 8), $6, $2, id, $3, $5, $4 FROM reported
+     RETURNING reference`,
+    [messageId, chat.id, reporterId, now, normalizedReason, rideId],
   );
 
-  if (result.rows.length === 0) {
+  if (!result.rows[0]) {
     return { ok: false, code: 'REPORT_FAILED', error: 'This message could not be reported.' };
   }
 
-  return { ok: true, reference: `chat-${messageId.slice(0, 8)}` };
+  return { ok: true, reference: result.rows[0].reference };
+}
+
+export async function listOpenChatComplaints() {
+  const { rows } = await pool.query<{
+    reference: string;
+    ride_id: string;
+    message_id: string;
+    reporter_name: string;
+    sender_name: string;
+    body: string;
+    reason: string;
+    created_at: Date;
+  }>(
+    `SELECT complaint.reference, complaint.ride_id, complaint.message_id,
+            reporter.full_name AS reporter_name, sender.full_name AS sender_name,
+            message.body, complaint.reason, complaint.created_at
+     FROM ride_chat_complaints complaint
+     JOIN ride_chat_messages message ON message.id = complaint.message_id
+     JOIN users reporter ON reporter.id = complaint.reporter_id
+     JOIN users sender ON sender.id = message.sender_id
+     WHERE complaint.status = 'open'
+     ORDER BY complaint.created_at ASC`,
+  );
+  return rows.map((row) => ({ ...row, created_at: asIsoString(row.created_at) }));
+}
+
+export async function resolveChatComplaint(reference: string) {
+  const result = await pool.query(
+    `UPDATE ride_chat_complaints
+     SET status = 'resolved', resolved_at = now()
+     WHERE reference = $1 AND status = 'open'
+     RETURNING reference`,
+    [reference],
+  );
+  return result.rows.length > 0;
 }

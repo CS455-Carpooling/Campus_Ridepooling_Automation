@@ -225,4 +225,39 @@ not to be edited.
 **Decision:** The differences are recorded here for team
 reconciliation; no other section was edited.
 
+------------------------------------------------------------------------
 
+## Entry 06 --- CS455-45 ride-chat implementation follow-up
+
+**Date:** 2026-10-10
+
+**AI assistance:** Copilot coding assistance in VS Code.
+
+**Prompt (summary):** Re-check the implemented ride-pool chat against the
+chat requirements and deliverables, correct the identified real-time,
+reporting, access, cancellation, and retention gaps, and verify the result.
+
+**Changes made:** The regular UI now sends through the authenticated
+Socket.IO message handler, which persists before acknowledging and
+broadcasting. Chat reports are stored as complaints and exposed in an
+administrator review queue. Active-rider filtering, scheduled cleanup,
+unresolved-complaint retention, immediate write closure for cancelled
+rides, delayed read-only notifications, and the one-tap pickup message
+were added. The privacy statement and traceability matrix were updated.
+
+**Validation:** `npm run format:check`, `npm run typecheck`, and
+`npm run build` passed. `npm run lint` passed with one pre-existing
+unused-variable warning in `apps/web/src/lib/ride-search.ts`.
+`npm run test` passed 86 files and 661 tests with 83.06% branch coverage.
+The Socket.IO test uses an in-memory server
+and simulated persistence; it does not establish the database-backed
+20-concurrent-rider p95 target.
+
+**Limitations:** This codebase has no rider leave/cancel workflow. The
+chat now checks `riders.left_at`, but revocation cannot be exercised until
+the ride-leave workflow updates that field. The owner cancellation path
+is likewise not present; chat writes are refused as soon as the ride is
+recorded as cancelled. The existing account model has no production
+administrator-role provisioning, so the review queue follows the current
+development-admin role mechanism. The author should review these
+limitations and complete the end-to-end evaluation.

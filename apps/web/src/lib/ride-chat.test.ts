@@ -8,6 +8,8 @@ import {
   getRideChatThread,
   reportChatMessage,
   rideChatAvailable,
+  rideChatCanWrite,
+  rideChatDeletionDue,
   rideChatReadOnly,
 } from './ride-chat';
 
@@ -31,6 +33,18 @@ describe('ride-chat domain helpers', () => {
         new Date('2026-10-11T06:46:00+05:30'),
       ),
     ).toBe(true);
+  });
+
+  it('stops writes immediately when cancelled and keeps unresolved reports past expiry', () => {
+    const cancelled = {
+      state: 'cancelled' as const,
+      completed_at: null,
+      cancelled_at: new Date('2026-10-10T06:00:00Z'),
+    };
+    expect(rideChatCanWrite(cancelled, new Date('2026-10-10T06:01:00Z'))).toBe(false);
+    expect(rideChatReadOnly(cancelled, new Date('2026-10-10T06:01:00Z'))).toBe(false);
+    expect(rideChatDeletionDue(cancelled, new Date('2026-11-10T05:59:59.999Z'))).toBe(false);
+    expect(rideChatDeletionDue(cancelled, new Date('2026-11-10T06:00:00Z'))).toBe(true);
   });
 
   it('loads the pool chat only for current members and returns the thread', async () => {
@@ -65,12 +79,6 @@ describe('ride-chat domain helpers', () => {
         return Promise.resolve({
           rows: [{ id: 'chat-1', ride_id: rideId, opened_at: now, closed_at: null }],
         });
-      }
-      if (count === 5) {
-        return Promise.resolve({ rows: [{ user_id: 'owner-1' }, { user_id: viewerId }] });
-      }
-      if (count === 6) {
-        return Promise.resolve({ rows: [{ id: 'notif-1' }] });
       }
       return Promise.resolve({
         rows: [
@@ -219,7 +227,7 @@ describe('ride-chat domain helpers', () => {
     query.mockResolvedValueOnce({
       rows: [{ id: 'chat-1', ride_id: rideId, opened_at: now, closed_at: null }],
     });
-    query.mockResolvedValueOnce({ rows: [{ id: messageId }] });
+    query.mockResolvedValueOnce({ rows: [{ reference: `chat-${messageId.slice(0, 8)}` }] });
 
     await expect(
       reportChatMessage(rideId, reporterId, messageId, 'Spam', now),

@@ -119,6 +119,7 @@ CREATE TABLE IF NOT EXISTS riders (
   user_id UUID NOT NULL REFERENCES users(id),
   campus_location_id TEXT NOT NULL REFERENCES locations(id),
   joined_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  left_at TIMESTAMPTZ,
   CONSTRAINT riders_ride_user_unique UNIQUE (ride_id, user_id)
 );
 
@@ -127,6 +128,7 @@ CREATE TABLE IF NOT EXISTS riders (
 -- in the order they were accepted), so a riders row must be inserted on acceptance.
 -- Added after the table, so existing databases get it too.
 ALTER TABLE riders ADD COLUMN IF NOT EXISTS joined_at TIMESTAMPTZ NOT NULL DEFAULT now();
+ALTER TABLE riders ADD COLUMN IF NOT EXISTS left_at TIMESTAMPTZ;
 
 -- "My rides" looks rides up by person; the unique (ride_id, user_id) index cannot serve that.
 CREATE INDEX IF NOT EXISTS riders_user_idx ON riders(user_id);
@@ -208,17 +210,19 @@ BEGIN
   END IF;
 END $$;
 
--- Private ride pool chat. Chat opens once the ride locks and persists for the life of the pool,
--- then closes 24 hours after completion or cancellation and is kept for 30 days longer if needed
--- for unresolved complaints. The database is the source of truth, so offline members still see the
--- conversation when they return.
+-- Private ride pool chat. Chat opens at lock, persists for the pool, and stops accepting writes
+-- immediately on cancellation or 24 hours after completion. History remains readable until it is
+-- deleted 30 days after the read-only point, unless an unresolved complaint needs it for review.
 CREATE TABLE IF NOT EXISTS ride_chats (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   ride_id UUID NOT NULL UNIQUE REFERENCES rides(id) ON DELETE CASCADE,
   opened_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   closed_at TIMESTAMPTZ,
+  read_only_at TIMESTAMPTZ,
   archived_at TIMESTAMPTZ
 );
+
+ALTER TABLE ride_chats ADD COLUMN IF NOT EXISTS read_only_at TIMESTAMPTZ;
 
 CREATE TABLE IF NOT EXISTS ride_chat_messages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -232,6 +236,31 @@ CREATE TABLE IF NOT EXISTS ride_chat_messages (
 
 CREATE INDEX IF NOT EXISTS ride_chat_messages_chat_created_idx
   ON ride_chat_messages(chat_id, created_at);
+
+CREATE TABLE IF NOT EXISTS ride_chat_message_limits (
+  user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  window_started_at TIMESTAMPTZ NOT NULL,
+  message_count INTEGER NOT NULL CHECK (message_count BETWEEN 1 AND 20)
+);
+
+CREATE TABLE IF NOT EXISTS ride_chat_complaints (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  reference TEXT NOT NULL UNIQUE,
+  ride_id UUID NOT NULL REFERENCES rides(id) ON DELETE CASCADE,
+  chat_id UUID NOT NULL REFERENCES ride_chats(id) ON DELETE CASCADE,
+  message_id UUID NOT NULL REFERENCES ride_chat_messages(id) ON DELETE CASCADE,
+  reporter_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  reason TEXT NOT NULL CHECK (char_length(reason) BETWEEN 1 AND 500),
+  status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'resolved')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  resolved_at TIMESTAMPTZ,
+  CONSTRAINT ride_chat_complaints_reporter_message_unique UNIQUE (reporter_id, message_id),
+  CONSTRAINT ride_chat_complaints_resolution_matches_status
+    CHECK ((status = 'resolved') = (resolved_at IS NOT NULL))
+);
+
+CREATE INDEX IF NOT EXISTS ride_chat_complaints_open_created_idx
+  ON ride_chat_complaints(created_at) WHERE status = 'open';
 
 CREATE TABLE IF NOT EXISTS notifications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -2,13 +2,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const getUpcomingRides = vi.hoisted(() => vi.fn());
 const getHistoricalRides = vi.hoisted(() => vi.fn());
+const query = vi.hoisted(() => vi.fn());
 vi.mock('./ride-view', () => ({ getUpcomingRides, getHistoricalRides }));
+vi.mock('./db', () => ({ pool: { query } }));
 
 import { getAdminHome, getStudentHome } from './home-data';
 
 beforeEach(() => {
   getUpcomingRides.mockReset();
   getHistoricalRides.mockReset();
+  query.mockReset();
 });
 
 describe('home data', () => {
@@ -34,10 +37,11 @@ describe('home data', () => {
     expect(getHistoricalRides).toHaveBeenCalledWith('u1', now);
   });
 
-  it('marks every admin count as not available rather than zero', async () => {
+  it('returns the open chat complaint count and marks other queues unavailable', async () => {
+    query.mockResolvedValue({ rows: [{ count: 3 }] });
     await expect(getAdminHome()).resolves.toEqual({
       openIncidents: null,
-      complaintsToReview: null,
+      complaintsToReview: 3,
       recommendationsToDecide: null,
     });
   });

@@ -4,6 +4,7 @@ import { parse } from 'node:url';
 import { Pool } from 'pg';
 import next from 'next';
 import { Server } from 'socket.io';
+import { registerRideChatMessageHandler } from './src/lib/ride-chat-realtime.mjs';
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = '0.0.0.0';
@@ -45,8 +46,10 @@ async function getSessionUser(cookieHeader = '') {
 
   const hash = crypto.createHash('sha256').update(token).digest('hex');
   const { rows } = await pool.query(
-    `SELECT u.id, u.full_name FROM sessions s
+    `SELECT u.id, COALESCE(NULLIF(profile.display_name, ''), u.full_name) AS display_name
+     FROM sessions s
      JOIN users u ON u.id = s.user_id
+     LEFT JOIN user_profiles profile ON profile.user_id = u.id
      WHERE s.token_hash = $1 AND s.expires_at > now()`,
     [hash],
   );
@@ -58,7 +61,7 @@ async function isRideMember(rideId, userId) {
   const { rows } = await pool.query(
     `SELECT owner_id AS user_id FROM rides WHERE id = $1
      UNION ALL
-     SELECT user_id FROM riders WHERE ride_id = $1`,
+     SELECT user_id FROM riders WHERE ride_id = $1 AND left_at IS NULL`,
     [rideId],
   );
   return rows.some((row) => row.user_id === userId);
@@ -82,24 +85,46 @@ function rideChatReadOnly(ride, now) {
   return false;
 }
 
-async function loadOrCreateChat(ride, now) {
-  if (!rideChatAvailable(ride, now)) return null;
+function rideChatCanWrite(ride, now) {
+  return ride.state !== 'cancelled' && !rideChatReadOnly(ride, now);
+}
 
+async function loadOrCreateChat(ride, now) {
   const existing = await pool.query(
     'SELECT id, ride_id, opened_at, closed_at FROM ride_chats WHERE ride_id = $1',
     [ride.id],
   );
   if (existing.rows[0]) return existing.rows[0];
+  if (!rideChatAvailable(ride, now) || ride.state === 'cancelled') return null;
 
   const created = await pool.query(
-    `INSERT INTO ride_chats (ride_id, opened_at)
-     VALUES ($1, $2)
-     ON CONFLICT (ride_id) DO NOTHING
-     RETURNING id, ride_id, opened_at, closed_at`,
+    `WITH created AS (
+       INSERT INTO ride_chats (ride_id, opened_at)
+       VALUES ($1, $2)
+       ON CONFLICT (ride_id) DO NOTHING
+       RETURNING id, ride_id, opened_at, closed_at
+     ),
+     notified AS (
+       INSERT INTO notifications
+         (user_id, type, title, body, related_ride_id, related_chat_id, created_at)
+       SELECT members.user_id, 'pool_chat_opened', 'Pool chat opened',
+              'The ride is locked and the private pool chat is now open.',
+              $1, created.id, $2
+       FROM created
+       CROSS JOIN (
+         SELECT owner_id AS user_id FROM rides WHERE id = $1
+         UNION
+         SELECT user_id FROM riders WHERE ride_id = $1 AND left_at IS NULL
+       ) members
+       RETURNING id
+     )
+     SELECT created.id, created.ride_id, created.opened_at, created.closed_at
+     FROM created CROSS JOIN (SELECT count(*) FROM notified) notification_count`,
     [ride.id, now],
   );
-
-  if (created.rows[0]) return created.rows[0];
+  if (created.rows[0]) {
+    return created.rows[0];
+  }
 
   const retry = await pool.query(
     'SELECT id, ride_id, opened_at, closed_at FROM ride_chats WHERE ride_id = $1',
@@ -115,20 +140,6 @@ async function createChatMessageForSocket(rideId, senderId, rawMessage, now = ne
       ok: false,
       code: 'INVALID_MESSAGE',
       error: `Message must be 1 to ${MAX_CHAT_MESSAGE_LENGTH} characters.`,
-    };
-  }
-
-  const rate = await pool.query(
-    `SELECT COUNT(*)::int AS count
-     FROM ride_chat_messages
-     WHERE sender_id = $1 AND created_at >= now() - interval '1 minute'`,
-    [senderId],
-  );
-  if ((rate.rows[0]?.count ?? 0) >= MAX_MESSAGES_PER_MEMBER_PER_MINUTE) {
-    return {
-      ok: false,
-      code: 'RATE_LIMITED',
-      error: `Only ${MAX_MESSAGES_PER_MEMBER_PER_MINUTE} messages per minute are allowed per member.`,
     };
   }
 
@@ -149,8 +160,31 @@ async function createChatMessageForSocket(rideId, senderId, rawMessage, now = ne
     return { ok: false, code: 'CHAT_UNAVAILABLE', error: 'Pool chat opens once the ride locks.' };
   }
 
-  if (rideChatReadOnly(ride, now)) {
+  if (!rideChatCanWrite(ride, now)) {
     return { ok: false, code: 'CHAT_READ_ONLY', error: 'This pool chat is read-only.' };
+  }
+
+  const rate = await pool.query(
+    `INSERT INTO ride_chat_message_limits (user_id, window_started_at, message_count)
+     VALUES ($1, $2, 1)
+     ON CONFLICT (user_id) DO UPDATE
+       SET window_started_at = CASE
+             WHEN ride_chat_message_limits.window_started_at <= $2 - interval '1 minute'
+             THEN $2 ELSE ride_chat_message_limits.window_started_at END,
+           message_count = CASE
+             WHEN ride_chat_message_limits.window_started_at <= $2 - interval '1 minute'
+             THEN 1 ELSE ride_chat_message_limits.message_count + 1 END
+       WHERE ride_chat_message_limits.window_started_at <= $2 - interval '1 minute'
+          OR ride_chat_message_limits.message_count < $3
+     RETURNING message_count`,
+    [senderId, now, MAX_MESSAGES_PER_MEMBER_PER_MINUTE],
+  );
+  if (!rate.rows[0]) {
+    return {
+      ok: false,
+      code: 'RATE_LIMITED',
+      error: `Only ${MAX_MESSAGES_PER_MEMBER_PER_MINUTE} messages per minute are allowed per member.`,
+    };
   }
 
   const chat = await loadOrCreateChat(ride, now);
@@ -158,31 +192,30 @@ async function createChatMessageForSocket(rideId, senderId, rawMessage, now = ne
     return { ok: false, code: 'CHAT_UNAVAILABLE', error: 'Pool chat is not open yet.' };
   }
 
-  const created = await pool.query(
-    `INSERT INTO ride_chat_messages (chat_id, sender_id, body, created_at)
-     VALUES ($1, $2, $3, $4)
-     RETURNING id, sender_id, body, created_at`,
-    [chat.id, senderId, text, now],
-  );
-  const message = created.rows[0];
-  if (!message) return { ok: false, code: 'SAVE_FAILED', error: 'Message could not be saved.' };
-
-  const recipients = await pool.query(
-    `SELECT user_id FROM (
-       SELECT owner_id AS user_id FROM rides WHERE id = $1
-       UNION ALL
-       SELECT user_id FROM riders WHERE ride_id = $1
-     ) members
-     WHERE user_id <> $2`,
-    [rideId, senderId],
-  );
-
-  for (const recipient of recipients.rows) {
-    await pool.query(
-      `INSERT INTO notifications (user_id, type, title, body, related_ride_id, related_chat_id, related_message_id, created_at)
-       VALUES ($1, 'pool_chat_message', 'New ride chat message', $2, $3, $4, $5, $6)`,
+  const client = await pool.connect();
+  let message;
+  try {
+    await client.query('BEGIN');
+    const created = await client.query(
+      `INSERT INTO ride_chat_messages (chat_id, sender_id, body, created_at)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, sender_id, body, created_at`,
+      [chat.id, senderId, text, now],
+    );
+    message = created.rows[0];
+    if (!message) throw new Error('Chat message insert returned no row.');
+    await client.query(
+      `INSERT INTO notifications
+         (user_id, type, title, body, related_ride_id, related_chat_id, related_message_id, created_at)
+       SELECT members.user_id, 'pool_chat_message', 'New ride chat message', $2, $3, $4, $5, $6
+       FROM (
+         SELECT owner_id AS user_id FROM rides WHERE id = $3
+         UNION
+         SELECT user_id FROM riders WHERE ride_id = $3 AND left_at IS NULL
+       ) members
+       WHERE members.user_id <> $1`,
       [
-        recipient.user_id,
+        senderId,
         `${text.slice(0, 120)}${text.length > 120 ? '…' : ''}`,
         rideId,
         chat.id,
@@ -190,6 +223,12 @@ async function createChatMessageForSocket(rideId, senderId, rawMessage, now = ne
         now,
       ],
     );
+    await client.query('COMMIT');
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
   }
 
   return {
@@ -206,48 +245,6 @@ async function createChatMessageForSocket(rideId, senderId, rawMessage, now = ne
   };
 }
 
-async function reportChatMessageForSocket(
-  rideId,
-  reporterId,
-  messageId,
-  reason = 'Other',
-  now = new Date(),
-) {
-  const rideQuery = await pool.query(
-    `SELECT id, owner_id, state, departure_start, completed_at, cancelled_at
-     FROM rides WHERE id = $1`,
-    [rideId],
-  );
-  const ride = rideQuery.rows[0];
-  if (!ride) return { ok: false, code: 'NOT_FOUND', error: 'Ride not found.' };
-
-  if (!(await isRideMember(rideId, reporterId))) {
-    return {
-      ok: false,
-      code: 'FORBIDDEN',
-      error: 'Only current pool members may report messages.',
-    };
-  }
-
-  const chat = await loadOrCreateChat(ride, now);
-  if (!chat) return { ok: false, code: 'CHAT_UNAVAILABLE', error: 'Pool chat is not open yet.' };
-
-  const result = await pool.query(
-    `UPDATE ride_chat_messages
-     SET reported_at = $4,
-         report_reason = $5
-     WHERE id = $1 AND chat_id = $2 AND sender_id <> $3 AND reported_at IS NULL
-     RETURNING id`,
-    [messageId, chat.id, reporterId, now, reason.trim() || 'Other'],
-  );
-
-  if (result.rows.length === 0) {
-    return { ok: false, code: 'REPORT_FAILED', error: 'This message could not be reported.' };
-  }
-
-  return { ok: true, reference: `chat-${messageId.slice(0, 8)}` };
-}
-
 app.prepare().then(() => {
   const httpServer = createServer((req, res) => {
     const parsedUrl = parse(req.url ?? '/', true);
@@ -262,18 +259,138 @@ app.prepare().then(() => {
     transports: ['websocket', 'polling'],
   });
 
-  io.use(async (socket, next) => {
-    const user = await getSessionUser(socket.handshake.headers.cookie ?? '');
-    if (!user) {
-      return next(new Error('Authentication required.'));
+  const emitToCurrentMembers = async (rideId, event, payload) => {
+    for (const recipient of await io.in(`ride:${rideId}`).fetchSockets()) {
+      if (!(await isRideMember(rideId, recipient.data.userId))) {
+        recipient.leave(`ride:${rideId}`);
+        continue;
+      }
+      recipient.emit(event, payload);
     }
-    socket.data.userId = user.id;
-    socket.data.userName = user.full_name || 'Rider';
-    next();
+  };
+
+  io.use(async (socket, next) => {
+    try {
+      const user = await getSessionUser(socket.handshake.headers.cookie ?? '');
+      if (!user) {
+        return next(new Error('Authentication required.'));
+      }
+      socket.data.userId = user.id;
+      socket.data.userName = user.display_name || 'Rider';
+      next();
+    } catch (error) {
+      console.error('Ride chat authentication failed:', error);
+      next(new Error('Authentication could not be verified.'));
+    }
   });
 
+  const openChatForLockedRide = async (ride) => {
+    const created = await pool.query(
+      `WITH created AS (
+         INSERT INTO ride_chats (ride_id, opened_at)
+         VALUES ($1, now())
+         ON CONFLICT (ride_id) DO NOTHING
+         RETURNING id
+       ),
+       notified AS (
+         INSERT INTO notifications
+           (user_id, type, title, body, related_ride_id, related_chat_id)
+         SELECT members.user_id, 'pool_chat_opened', 'Pool chat opened',
+                'The ride is locked and the private pool chat is now open.',
+                $1, created.id
+         FROM created
+         CROSS JOIN (
+           SELECT owner_id AS user_id FROM rides WHERE id = $1
+           UNION
+           SELECT user_id FROM riders WHERE ride_id = $1 AND left_at IS NULL
+         ) members
+         RETURNING id
+       )
+       SELECT created.id
+       FROM created CROSS JOIN (SELECT count(*) FROM notified) notification_count`,
+      [ride.id],
+    );
+    if (!created.rows[0]) return;
+    await emitToCurrentMembers(ride.id, 'ride:chat:opened', { rideId: ride.id });
+  };
+
+  const runChatMaintenance = async () => {
+    try {
+      const lockedRides = await pool.query(
+        `SELECT id, state, departure_start, completed_at, cancelled_at
+         FROM rides
+        WHERE (
+            (state = 'scheduled' AND departure_start <= now() + interval '1 hour')
+            OR state IN ('pickup_in_progress', 'in_transit')
+            OR (state = 'completed'
+              AND completed_at >= now() - interval '24 hours')
+            OR (state = 'cancelled'
+              AND cancelled_at >= departure_start - interval '1 hour'
+              AND cancelled_at >= now() - interval '31 days')
+          )
+          AND NOT EXISTS (SELECT 1 FROM ride_chats WHERE ride_id = rides.id)`,
+      );
+      for (const ride of lockedRides.rows) await openChatForLockedRide(ride);
+
+      const closedChats = await pool.query(
+        `UPDATE ride_chats chat
+         SET closed_at = CASE
+               WHEN ride.state = 'cancelled' THEN COALESCE(chat.closed_at, ride.cancelled_at, now())
+               ELSE ride.completed_at + interval '24 hours'
+             END,
+             read_only_at = CASE
+               WHEN ride.state = 'completed' THEN ride.completed_at + interval '24 hours'
+               WHEN ride.state = 'cancelled'
+                 AND ride.cancelled_at <= now() - interval '24 hours' THEN now()
+               ELSE chat.read_only_at
+             END
+         FROM rides ride
+         WHERE ride.id = chat.ride_id
+           AND ((ride.state = 'cancelled' AND chat.closed_at IS NULL)
+             OR (ride.state = 'cancelled' AND chat.read_only_at IS NULL
+               AND ride.cancelled_at <= now() - interval '24 hours')
+             OR (ride.state = 'completed'
+               AND chat.read_only_at IS NULL
+               AND ride.completed_at <= now() - interval '24 hours'))
+         RETURNING chat.ride_id, (chat.read_only_at IS NOT NULL) AS read_only`,
+      );
+      for (const chat of closedChats.rows) {
+        await emitToCurrentMembers(chat.ride_id, 'ride:chat:closed', {
+          rideId: chat.ride_id,
+          readOnly: chat.read_only,
+        });
+      }
+
+      await pool.query(
+        `DELETE FROM ride_chats chat
+         USING rides ride
+         WHERE ride.id = chat.ride_id
+           AND ((ride.state = 'completed' AND ride.completed_at <= now() - interval '31 days')
+             OR (ride.state = 'cancelled' AND ride.cancelled_at <= now() - interval '31 days'))
+           AND NOT EXISTS (
+             SELECT 1 FROM ride_chat_complaints complaint
+             WHERE complaint.chat_id = chat.id AND complaint.status = 'open'
+           )`,
+      );
+    } catch (error) {
+      console.error('Ride chat maintenance failed:', error);
+    }
+  };
+
   io.on('connection', (socket) => {
-    socket.on('ride:chat:join', async ({ rideId }) => {
+    const sessionCheck = setInterval(async () => {
+      try {
+        const user = await getSessionUser(socket.handshake.headers.cookie ?? '');
+        if (!user || user.id !== socket.data.userId) socket.disconnect(true);
+      } catch (error) {
+        console.error('Ride chat session revalidation failed:', error);
+        socket.disconnect(true);
+      }
+    }, 15_000);
+    socket.on('disconnect', () => clearInterval(sessionCheck));
+
+    socket.on('ride:chat:join', async (payload) => {
+      const rideId = payload && typeof payload.rideId === 'string' ? payload.rideId : '';
       if (typeof rideId !== 'string' || !rideId) {
         socket.emit('ride:chat:error', {
           code: 'INVALID_ID',
@@ -282,97 +399,55 @@ app.prepare().then(() => {
         return;
       }
 
-      const member = await isRideMember(rideId, socket.data.userId);
-      if (!member) {
-        socket.emit('ride:chat:error', {
-          code: 'FORBIDDEN',
-          error: 'Only current pool members may join this chat.',
-        });
-        return;
-      }
+      try {
+        const user = await getSessionUser(socket.handshake.headers.cookie ?? '');
+        if (!user || user.id !== socket.data.userId) {
+          socket.emit('ride:chat:error', {
+            code: 'AUTHENTICATION_REQUIRED',
+            error: 'Sign in again to join this chat.',
+          });
+          socket.disconnect(true);
+          return;
+        }
+        const member = await isRideMember(rideId, socket.data.userId);
+        if (!member) {
+          socket.emit('ride:chat:error', {
+            code: 'FORBIDDEN',
+            error: 'Only current pool members may join this chat.',
+          });
+          return;
+        }
 
-      socket.data.rideId = rideId;
-      socket.join(`ride:${rideId}`);
-      socket.emit('ride:chat:joined', { rideId });
+        socket.data.rideId = rideId;
+        socket.join(`ride:${rideId}`);
+        socket.emit('ride:chat:joined', { rideId });
+      } catch (error) {
+        console.error('Ride chat membership verification failed:', error);
+        socket.emit('ride:chat:error', {
+          code: 'ACCESS_CHECK_FAILED',
+          error: 'Chat access could not be verified. Try again.',
+        });
+      }
     });
 
-    socket.on('ride:chat:leave', ({ rideId }) => {
+    socket.on('ride:chat:leave', (payload) => {
+      const rideId = payload && typeof payload.rideId === 'string' ? payload.rideId : '';
       if (typeof rideId === 'string' && rideId) {
         socket.leave(`ride:${rideId}`);
       }
     });
 
-    socket.on('ride:chat:message', async ({ rideId, message }) => {
-      if (typeof rideId !== 'string' || typeof message !== 'string') {
-        socket.emit('ride:chat:error', {
-          code: 'INVALID_MESSAGE',
-          error: 'Message payload is invalid.',
-        });
-        return;
-      }
-
-      const member = await isRideMember(rideId, socket.data.userId);
-      if (!member) {
-        socket.emit('ride:chat:error', {
-          code: 'FORBIDDEN',
-          error: 'Only current pool members may post here.',
-        });
-        return;
-      }
-
-      const result = await createChatMessageForSocket(
-        rideId,
-        socket.data.userId,
-        message,
-        new Date(),
-      );
-      if (!result.ok) {
-        socket.emit('ride:chat:error', { code: result.code, error: result.error });
-        return;
-      }
-
-      io.to(`ride:${rideId}`).emit('ride:chat:message', {
-        rideId,
-        id: result.message.id,
-        senderId: result.message.senderId,
-        senderName: socket.data.userName,
-        body: result.message.body,
-        createdAt: result.message.createdAt,
-        isMine: false,
-        reported: false,
-      });
-    });
-
-    socket.on('ride:chat:report', async ({ rideId, messageId, reason }) => {
-      if (typeof rideId !== 'string' || typeof messageId !== 'string') {
-        socket.emit('ride:chat:error', {
-          code: 'INVALID_ID',
-          error: 'A valid ride and message ID are required.',
-        });
-        return;
-      }
-
-      const userId = socket.data.userId;
-      const result = await reportChatMessageForSocket(
-        rideId,
-        userId,
-        messageId,
-        typeof reason === 'string' ? reason : 'Other',
-        new Date(),
-      );
-      if (!result.ok) {
-        socket.emit('ride:chat:error', { code: result.code, error: result.error });
-        return;
-      }
-
-      io.to(`ride:${rideId}`).emit('ride:chat:report', {
-        rideId,
-        reporterId: userId,
-        messageId,
-        reference: result.reference,
-      });
+    registerRideChatMessageHandler(io, socket, {
+      authenticate: async (connectedSocket) =>
+        getSessionUser(connectedSocket.handshake.headers.cookie ?? ''),
+      isMember: isRideMember,
+      createMessage: (rideId, senderId, message) =>
+        createChatMessageForSocket(rideId, senderId, message, new Date()),
     });
   });
+
+  void runChatMaintenance();
+  setInterval(() => void runChatMaintenance(), 30_000);
 
   httpServer.listen(port, hostname, () => {
     console.log(`> Ready on http://${hostname}:${port} (${dev ? 'dev' : 'prod'})`);
