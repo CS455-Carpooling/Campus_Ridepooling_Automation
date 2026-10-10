@@ -30,7 +30,7 @@ export type RecommendationCandidate = {
     changesPickupOrder: boolean;
     affectedStops: number;
   } | null;
-  sharedInterestTags: string[];
+  sharedInterestTags: string[] | null;
   aggregateRating: {
     average: number;
     count: number;
@@ -55,7 +55,7 @@ export type AiRankedRide = {
   cons: string[];
 };
 
-/** The model's ranking payload. It is validated against current server data. */
+/** Model ranking output; validate and cap it before displaying any suggestion. */
 export type AiRankingResponse = {
   rankedRides: AiRankedRide[];
 };
