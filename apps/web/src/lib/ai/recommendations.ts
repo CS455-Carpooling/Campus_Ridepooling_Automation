@@ -36,7 +36,8 @@ export async function getRideRecommendations(
             const usage = (raw as { __usageMetadata?: { inputTokens?: unknown; outputTokens?: unknown } }).__usageMetadata;
             inputTokens = typeof usage?.inputTokens === "number" ? usage.inputTokens : null;
             outputTokens = typeof usage?.outputTokens === "number" ? usage.outputTokens : null;
-            const { __usageMetadata: _ignored, ...ranking } = raw as Record<string, unknown>;
+            const ranking = { ...(raw as Record<string, unknown>) };
+            delete ranking.__usageMetadata;
             return ranking;
           }
           return raw;
