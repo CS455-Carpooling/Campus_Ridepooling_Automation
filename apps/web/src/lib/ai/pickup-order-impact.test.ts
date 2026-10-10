@@ -1,0 +1,50 @@
+import { describe, expect, it } from "vitest";
+import { calculatePickupOrderImpact } from "./pickup-order-impact";
+
+const times: Record<string, number> = {
+  "A|B": 4, "B|A": 4,
+  "A|C": 10, "C|A": 10,
+  "A|D": 8, "D|A": 8,
+  "B|C": 3, "C|B": 3,
+  "B|D": 6, "D|B": 6,
+  "C|D": 2, "D|C": 2,
+};
+
+const lookup = (from: string, to: string): number | null =>
+  from === to ? 0 : (times[`${from}|${to}`] ?? null);
+
+describe("calculatePickupOrderImpact", () => {
+  it("returns a route and zero impact for an already-present stop", () => {
+    const result = calculatePickupOrderImpact(["A", "B"], "a", lookup);
+    expect(result).not.toBeNull();
+    expect(result?.changesPickupOrder).toBe(false);
+    expect(result?.affectedStops).toBe(0);
+    expect(result?.additionalTravelMinutes).toBe(0);
+  });
+
+  it("compares optimized route durations after adding a new stop", () => {
+    const result = calculatePickupOrderImpact(["A", "C"], "B", lookup);
+    expect(result).not.toBeNull();
+    expect(result?.existingOrder).toEqual(["A", "C"]);
+    expect(result?.proposedOrder).toEqual(["A", "B", "C"]);
+    expect(result?.additionalTravelMinutes).toBe(-3);
+    // Existing A and C retain their relative order, even though B is inserted.
+    expect(result?.changesPickupOrder).toBe(false);
+    expect(result?.affectedStops).toBe(0);
+  });
+
+  it("returns null when a route leg has no travel-time data", () => {
+    const result = calculatePickupOrderImpact(["Unknown A"], "Unknown B", () => null);
+    expect(result).toBeNull();
+  });
+
+  it("deduplicates locations so multiple riders at one stop count as one stop", () => {
+    const result = calculatePickupOrderImpact(["A", "A", "C"], "B", lookup);
+    expect(result?.existingOrder).toEqual(["A", "C"]);
+    expect(result?.proposedOrder).toEqual(["A", "B", "C"]);
+  });
+
+  it("rejects an empty proposed stop", () => {
+    expect(calculatePickupOrderImpact(["A"], "  ", lookup)).toBeNull();
+  });
+});
