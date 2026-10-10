@@ -172,3 +172,5 @@ Deliverable: a reliable backend pipeline that separates trusted ride data from u
 - Added `validate-ranking.test.ts` for unknown IDs, unavailable factors, duplicate IDs, the five-result cap, explanation bounds, and malformed model output.
 - No Gemini provider, HTTP API endpoint, UI, or database schema change was added. The ranking runner is injected so a future model integration can be added separately.
 - Tests/type checks were authored but not executed because this session has GitHub file-editing access without a checked-out project runtime. No changes were made to `master`.
+
+- Kept the implementation in a single pipeline module and removed a duplicate candidate-enrichment file so there is one source of truth for candidate assembly and availability rechecks.
