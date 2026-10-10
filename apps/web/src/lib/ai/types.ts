@@ -30,6 +30,7 @@ export type RecommendationCandidate = {
     changesPickupOrder: boolean;
     affectedStops: number;
   } | null;
+  /** null = consent/data unavailable; [] = checked successfully, but no tag is shared by everyone. */
   sharedInterestTags: string[] | null;
   aggregateRating: {
     average: number;
