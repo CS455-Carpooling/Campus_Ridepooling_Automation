@@ -6,6 +6,15 @@ export type SharedInterestData = {
   sharedInterestTags: string[] | null;
 };
 
+export function resolveSharedInterestTags(input: {
+  allParticipantsConsented: boolean;
+  allParticipantsHaveVisibleTags: boolean;
+  sharedTagNames: readonly string[] | null;
+}): string[] | null {
+  if (!input.allParticipantsConsented || !input.allParticipantsHaveVisibleTags) return null;
+  return [...new Set(input.sharedTagNames ?? [])].sort((a, b) => a.localeCompare(b));
+}
+
 type SharedInterestRow = {
   ride_id: string;
   all_participants_consented: boolean;
@@ -96,11 +105,12 @@ export async function enrichSharedInterests(
   );
 
   for (const row of rows) {
-    const tags = row.all_participants_consented && row.all_participants_have_visible_tags
-      ? (row.shared_tag_names ?? [])
-      : null;
     result.set(row.ride_id, {
-      sharedInterestTags: tags,
+      sharedInterestTags: resolveSharedInterestTags({
+        allParticipantsConsented: row.all_participants_consented,
+        allParticipantsHaveVisibleTags: row.all_participants_have_visible_tags,
+        sharedTagNames: row.shared_tag_names,
+      }),
     });
   }
   return result;
