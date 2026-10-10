@@ -1,4 +1,5 @@
 import 'server-only';
+import { pool } from './db';
 import {
   getHistoricalRides,
   getUpcomingRides,
@@ -55,9 +56,18 @@ export async function getStudentHome(
 }
 
 /**
- * Data for the admin home page. SOS incidents, complaints and AI review do not
- * exist yet, so every count is null ("not available yet"), not a false zero.
+ * Data for the admin home page. Chat complaints are tracked here; SOS incidents
+ * and AI review are not implemented yet, so their counts remain unavailable.
  */
 export async function getAdminHome(): Promise<AdminHomeData> {
-  return { openIncidents: null, complaintsToReview: null, recommendationsToDecide: null };
+  const { rows } = await pool.query<{ count: number }>(
+    `SELECT count(*)::int AS count
+     FROM ride_chat_complaints
+     WHERE status = 'open'`,
+  );
+  return {
+    openIncidents: null,
+    complaintsToReview: rows[0]?.count ?? 0,
+    recommendationsToDecide: null,
+  };
 }

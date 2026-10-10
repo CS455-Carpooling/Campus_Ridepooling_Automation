@@ -87,13 +87,13 @@ Initial traceability for the Rider section: every requirement mapped to its use 
 | FR-RD-08.4 | Must | Yes | UC-RD-08 | US-RD-22 | pending | Test | — | — | — |
 | FR-RD-08.5 | Must |  | UC-RD-08 | US-RD-21 | pending | Test | — | — | — |
 | FR-RD-08.6 | Should |  | UC-RD-08 | US-RD-22 | pending | Test | — | — | — |
-| FR-RD-09.1 | Must |  | UC-RD-09 | US-RD-23 | pending | Test | — | — | — |
-| FR-RD-09.2 | Must |  | UC-RD-09 | US-RD-23 | pending | Test | — | — | — |
-| FR-RD-09.3 | Must |  | UC-RD-09 | US-RD-23 | pending | Test | — | — | — |
-| FR-RD-09.4 | Must |  | UC-RD-09 | US-RD-23 | pending | Test | — | — | — |
-| FR-RD-09.5 | Must |  | UC-RD-09 | US-RD-23 | pending | Test | — | — | — |
-| FR-RD-09.6 | Should |  | UC-RD-09 | US-RD-24 | pending | Test | — | — | — |
-| FR-RD-09.7 | Could |  | UC-RD-09 | US-RD-23 | pending | Demo | — | — | — |
+| FR-RD-09.1 | Must |  | UC-RD-09 | US-RD-23 | CS455-45 | Test | mahir/CS455-45-ride-pool-chat | ride-chat.ts, server.mjs | Implemented; database-backed verification pending |
+| FR-RD-09.2 | Must |  | UC-RD-09 | US-RD-23 | CS455-45 | Test | mahir/CS455-45-ride-pool-chat | ride-chat-realtime.test.ts | Local Socket.IO delivery passes; 20-concurrent-rider p95 not measured |
+| FR-RD-09.3 | Must |  | UC-RD-09 | US-RD-23 | CS455-45 | Test | mahir/CS455-45-ride-pool-chat | ride-chat.ts, chat/route.ts | Partial; active-member filtering added, ride-leave workflow absent |
+| FR-RD-09.4 | Must |  | UC-RD-09 | US-RD-23 | CS455-45 | Test | mahir/CS455-45-ride-pool-chat | server.mjs | Implemented; database-backed quota verification pending |
+| FR-RD-09.5 | Must |  | UC-RD-09 | US-RD-23 | CS455-45 | Test | mahir/CS455-45-ride-pool-chat | ride-chat.ts, server.mjs | Scheduled cleanup and unresolved-report retention implemented; database-backed verification pending |
+| FR-RD-09.6 | Should |  | UC-RD-09 | US-RD-24 | CS455-45 | Test | mahir/CS455-45-ride-pool-chat | RideChat.test.tsx, chat-reports/route.test.ts | Complaint submission and review tests pass; production admin provisioning absent |
+| FR-RD-09.7 | Could |  | UC-RD-09 | US-RD-23 | CS455-45 | Demo | mahir/CS455-45-ride-pool-chat | RideChat.test.tsx | One-tap pickup message implemented |
 | FR-RD-10.1 | Must |  | UC-RD-10 | US-RD-25 | pending | Test | — | — | — |
 | FR-RD-10.2 | Must |  | UC-RD-10 | US-RD-25 | pending | Test | — | — | — |
 | FR-RD-10.3 | Must |  | UC-RD-10 | US-RD-25 | pending | Test | — | — | — |
@@ -154,7 +154,7 @@ Initial traceability for the Rider section: every requirement mapped to its use 
 |---|---|---|---|---|---|---|---|---|---|
 | NFR-RD-01 | Must |  | UC-RD-03 | — | pending | Test | — | — | — |
 | NFR-RD-02 | Must |  | UC-RD-06, UC-RD-07, UC-RD-17 | — | pending | Test | — | — | — |
-| NFR-RD-03 | Must |  | UC-RD-03, UC-RD-06, UC-RD-09, UC-RD-14 | — | pending | Test | — | — | — |
+| NFR-RD-03 | Must |  | UC-RD-03, UC-RD-06, UC-RD-09, UC-RD-14 | — | CS455-45 | Test | mahir/CS455-45-ride-pool-chat | ride-chat-realtime.test.ts | Local sequential delivery p95 passes; required 20-concurrent-rider p95 remains unverified |
 | NFR-RD-04 | Must |  | UC-RD-04, UC-RD-05 | — | pending | Test | — | — | — |
 | NFR-RD-05 | Must | Yes | UC-RD-06, UC-RD-07 | — | pending | Test | — | — | — |
 | NFR-RD-06 | Must |  | UC-RD-06 | — | pending | Test | — | — | — |

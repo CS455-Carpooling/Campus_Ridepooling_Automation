@@ -8,6 +8,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   'font-src https://fonts.gstatic.com',
   "img-src 'self' data:",
+  "connect-src 'self' ws: wss: http://localhost:3000 https://localhost:3000",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

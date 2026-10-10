@@ -13,6 +13,7 @@ import { campusPlaceLabel, directionLabels, rideTitle } from '@/lib/ride-status'
 import type { RideView } from '@/lib/ride-view';
 import { routes } from '@/lib/routes';
 import { CompleteRideButton } from './CompleteRideButton';
+import { RideChat } from './RideChat';
 import { RideStateLabel } from './RideStateLabel';
 
 /**
@@ -66,6 +67,7 @@ export function RideDetails({ ride }: { ride: RideView }) {
       </dl>
 
       <People ride={ride} showShares={!cancelled} />
+      <RideChat rideId={ride.id} viewerRole={ride.viewerRole} />
 
       <div className="mt-10 flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-line pt-6">
         <p aria-live="polite" className="text-sm text-ink-muted">
