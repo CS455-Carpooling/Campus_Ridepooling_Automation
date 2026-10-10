@@ -5,14 +5,14 @@ const DEFAULT_MODEL = "gemini-2.5-flash";
 const REQUEST_TIMEOUT_MS = 20_000;
 
 const RANKING_SCHEMA = {
-  type: "object",
+  type: "OBJECT",
   properties: {
     rankedRides: {
-      type: "array",
+      type: "ARRAY",
       items: {
         type: "object",
         properties: {
-          rideId: { type: "string" },
+          rideId: { type: "STRING" },
           factors: {
             type: "array",
             items: {
