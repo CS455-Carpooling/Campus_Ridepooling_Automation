@@ -236,3 +236,25 @@ Deliverable: a tested feature branch ready for review.
 
 - Final review follow-up: added test cleanup for stubbed global `fetch` in the recommendation UI tests. Compared the feature branch against `master`: the diff is limited to the AI feature, its search-results integration, the authenticated recommendation endpoint, tests, the engineering log, and the environment example. The repository search for `GEMINI_API_KEY` found no committed key values; only the server-side environment lookup and empty example placeholder are present.
 - Attempted to obtain a local checkout to execute the required commands, but the environment could not resolve `github.com`. Consequently lint, typecheck, tests, and build remain unrun; no passing CI result was verified. This is an explicit verification blocker, not a successful test result.
+
+
+## Prompt 10
+
+```text
+1. Fallback ranking: rank eligible rides by departure-window closeness, then estimated fare share; add deterministic unit tests for overlapping windows and ties.
+2. Timeout: reduce Gemini's timeout from 20 to 8 seconds and bound the overall recommendation operation so timeouts return fallback results.
+3. Rate limiting: enforce 20 recommendation requests per authenticated rider per rolling hour, alongside a separate IP abuse limit.
+4. Audit and feedback: add audit persistence with 90-day retention, request IDs, model and prompt versions, validation/fallback outcomes, latency and token usage; add authenticated per-recommendation helpful/not-helpful feedback with duplicate protection.
+```
+
+## Action taken
+
+- Updated `recommendation-pipeline.ts` with `departureWindowDistanceMinutes` and `rankFallbackRides`. Overlapping windows have zero distance; otherwise the gap between windows is measured in minutes. Fallback order is closest window first, then lower authoritative estimated fare share, then ride ID for stable final ties.
+- Added `fallback-ranking.test.ts` for overlapping windows, timing taking precedence over fare, fare ties, and deterministic ID ties.
+- Reduced Gemini's HTTP abort timeout from 20 seconds to 8 seconds. Added a 9-second overall orchestration deadline and a deterministic fallback path if ranking times out or errors. The timeout path performs a fresh trusted ride search before returning suggestions.
+- Added a separate rolling-hour rider quota using PostgreSQL recommendation events, serialized per rider with a transaction-scoped advisory lock. Requests are limited to 20 per authenticated user per hour. The existing independent IP guard remains active (10 requests per 60 seconds for this endpoint). Expired quota events are pruned.
+- Added `ride_recommendation_audits`, `ride_recommendation_rate_events`, and `ride_recommendation_feedback` tables to `apps/web/db/schema.sql`. Audit rows contain request ID, authenticated user, model and prompt versions, outcome, latency, token-count columns, and the trusted IDs actually recommended; raw filters, profiles, interests, and model payloads are not persisted. Audit rows older than 90 days are pruned during recommendation handling, cascading their feedback. Token counts currently remain NULL because the existing Gemini adapter does not yet expose provider usage metadata.
+- The recommendation response now includes a request ID. Added an authenticated feedback endpoint and UI controls for helpful/not-helpful. Feedback insertion verifies the audit belongs to the current user and the ride was among that request's suggestions; a unique constraint and `ON CONFLICT DO NOTHING` prevent duplicates. Added API tests for authentication, invalid feedback, successful feedback, and duplicate/ineligible feedback.
+- Audit outcome values distinguish validated AI output, timeout, invalid output, model error and no candidates. Persistence failures are deliberately logged generically so they do not expose user data or make the ride search fail.
+- The separate IP limit and CSRF/origin guard remain unchanged. No secrets were added, and all writes target `feat/ai-ride-recommendations`; `master` was not modified.
+- Verification limitation: this session provides GitHub file edits but no working local checkout/runtime. Lint, typecheck, unit tests, API tests and build were not executed. The branch must not be described as fully tested until those commands run. Also, token usage capture is a known incomplete part of the audit requirement and should be completed by reading Gemini's `usageMetadata` and safely passing it to audit persistence.
