@@ -311,6 +311,7 @@ CREATE TABLE IF NOT EXISTS ride_recommendation_audits (
   model_version TEXT NOT NULL,
   prompt_version TEXT NOT NULL,
   outcome TEXT NOT NULL CHECK (outcome IN ('ai_validated', 'fallback_model_error', 'fallback_timeout', 'fallback_invalid', 'fallback_no_candidates', 'fallback_service_error')),
+  suggested_ride_ids UUID[] NOT NULL DEFAULT '{}',
   latency_ms INTEGER NOT NULL CHECK (latency_ms >= 0),
   input_tokens INTEGER CHECK (input_tokens IS NULL OR input_tokens >= 0),
   output_tokens INTEGER CHECK (output_tokens IS NULL OR output_tokens >= 0),
@@ -342,3 +343,5 @@ CREATE TABLE IF NOT EXISTS ride_recommendation_rate_events (
 );
 CREATE INDEX IF NOT EXISTS ride_recommendation_rate_events_user_created_idx
   ON ride_recommendation_rate_events(user_id, created_at DESC);
+
+ALTER TABLE ride_recommendation_audits ADD COLUMN IF NOT EXISTS suggested_ride_ids UUID[] NOT NULL DEFAULT '{}';
