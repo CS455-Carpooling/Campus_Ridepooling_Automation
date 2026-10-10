@@ -7,6 +7,7 @@ const h = vi.hoisted(() => ({
   json: vi.fn((body: unknown, status = 200) => Response.json(body, { status })),
   readJson: vi.fn(),
   getRideRecommendations: vi.fn(),
+  clientQuery: vi.fn(),
 }));
 
 vi.mock('@/lib/auth', () => ({
@@ -15,6 +16,7 @@ vi.mock('@/lib/auth', () => ({
   json: h.json,
   readJson: h.readJson,
 }));
+vi.mock('@/lib/db', () => ({ pool: { connect: vi.fn(async () => ({ query: h.clientQuery, release: vi.fn() })) } }));
 vi.mock('@/lib/ai/recommendations', () => ({
   getRideRecommendations: h.getRideRecommendations,
 }));
@@ -37,6 +39,7 @@ describe('POST /api/rides/recommendations', () => {
     h.getCurrentUser.mockResolvedValue({ id: 'user-1' });
     h.readJson.mockResolvedValue(validFilters);
     h.getRideRecommendations.mockResolvedValue({ source: 'fallback', suggestions: [] });
+    h.clientQuery.mockImplementation((sql: string) => sql.includes('COUNT(*)') ? Promise.resolve({ rows: [{ count: '0' }] }) : Promise.resolve({ rows: [], rowCount: 1 }));
   });
 
   it('requires authentication', async () => {
