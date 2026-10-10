@@ -24,12 +24,22 @@ export async function getRideRecommendations(
   const requestId = randomUUID();
   const started = Date.now();
   let timedOut = false;
+  let inputTokens: number | null = null;
+  let outputTokens: number | null = null;
   let response: RideRecommendationResponse;
   try {
     response = await withDeadline(
       rankRideRecommendations(viewerId, filters, async (request) => {
         try {
-          return await withDeadline(rankWithGemini(request), 8_000);
+          const raw = await withDeadline(rankWithGemini(request), 8_000);
+          if (raw && typeof raw === "object" && "__usageMetadata" in raw) {
+            const usage = (raw as { __usageMetadata?: { inputTokens?: unknown; outputTokens?: unknown } }).__usageMetadata;
+            inputTokens = typeof usage?.inputTokens === "number" ? usage.inputTokens : null;
+            outputTokens = typeof usage?.outputTokens === "number" ? usage.outputTokens : null;
+            const { __usageMetadata: _ignored, ...ranking } = raw as Record<string, unknown>;
+            return ranking;
+          }
+          return raw;
         } catch (error) {
           if (error instanceof Error && error.message === 'recommendation_deadline') timedOut = true;
           throw error;
@@ -68,8 +78,8 @@ export async function getRideRecommendations(
     await pool.query(
       `INSERT INTO ride_recommendation_audits
          (request_id, user_id, model_version, prompt_version, outcome, suggested_ride_ids, latency_ms, input_tokens, output_tokens)
-       VALUES ($1, $2, $3, $4, $5, $6::uuid[], $7, NULL, NULL)`,
-      [requestId, viewerId, GEMINI_MODEL_VERSION, GEMINI_PROMPT_VERSION, outcome, response.suggestions.map((item) => item.ride.id), latencyMs],
+       VALUES ($1, $2, $3, $4, $5, $6::uuid[], $7, $8, $9)`,
+      [requestId, viewerId, GEMINI_MODEL_VERSION, GEMINI_PROMPT_VERSION, outcome, response.suggestions.map((item) => item.ride.id), latencyMs, inputTokens, outputTokens],
     );
   } catch {
     // Recommendation delivery should not fail solely because the audit sink is unavailable.
