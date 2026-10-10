@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { formatDepartureWindow, formatRupees } from '@/lib/format';
 import type { RideRecommendationResponse, RecommendationFactor } from '@/lib/ai/types';
 import type { SearchRideRequest } from '@/lib/ride-search';
 import { RideCard } from './RideCard';
