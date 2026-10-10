@@ -1,19 +1,11 @@
 import "server-only";
 import { pool } from "@/lib/db";
+import { resolveSharedInterestTags } from "./shared-interest-tags";
 
 export type SharedInterestData = {
   /** Common visible tag labels safe to include in a model prompt, or null if unavailable. */
   sharedInterestTags: string[] | null;
 };
-
-export function resolveSharedInterestTags(input: {
-  allParticipantsConsented: boolean;
-  allParticipantsHaveVisibleTags: boolean;
-  sharedTagNames: readonly string[] | null;
-}): string[] | null {
-  if (!input.allParticipantsConsented || !input.allParticipantsHaveVisibleTags) return null;
-  return [...new Set(input.sharedTagNames ?? [])].sort((a, b) => a.localeCompare(b));
-}
 
 type SharedInterestRow = {
   ride_id: string;
@@ -28,7 +20,7 @@ type SharedInterestRow = {
  * Consent is required from the requesting rider and every current occupant
  * of a candidate ride. Only active, visible tags are considered. The query
  * returns labels only—never profile/user identifiers or per-person tag lists.
- * No shared labels, missing participants, or absent consent yields null.
+ * Missing consent or visible tags yields null; no common tag yields an empty array.
  */
 export async function enrichSharedInterests(
   requestingRiderId: string,
