@@ -19,8 +19,6 @@ const MAX_EXPLANATION_LENGTH = 180;
 
 type PickupStopRow = { ride_id: string; location_name: string };
 type AggregateRatingRow = { ride_id: string; average_score: string | number | null; rating_count: string | number };
-type CurrentRideRow = { id: string; direction: SearchRideResult["direction"] };
-
 /**
  * Loads campus stop names for current occupants, without selecting user IDs or
  * names. The viewer's proposed stop is supplied from the validated search filter.
@@ -79,10 +77,6 @@ async function loadAggregateRatings(rideIds: readonly string[]): Promise<Map<str
     );
   }
   return result;
-}
-
-function isValidNumber(value: unknown): value is number {
-  return typeof value === "number" && Number.isFinite(value);
 }
 
 function isExplanation(value: unknown): value is string {
@@ -144,10 +138,11 @@ function buildCandidate(
   ride: SearchRideResult,
   filters: SearchRideRequest,
   pickupStops: readonly string[],
+  proposedPickupName: string,
   sharedTags: string[] | null,
   aggregateRating: RecommendationCandidate["aggregateRating"],
 ): RecommendationCandidate {
-  const pickupImpact = calculatePickupOrderImpact(pickupStops, ride.campusLocationName);
+  const pickupImpact = calculatePickupOrderImpact(pickupStops, proposedPickupName);
   const departureStart = Date.parse(ride.departureStart);
   const departureEnd = Date.parse(ride.departureEnd);
   const requestedStart = Date.parse(filters.departureStart);
@@ -188,18 +183,24 @@ export async function buildRecommendationCandidates(
   if (!rides.length) return { rides: [], candidates: [] };
 
   const ids = rides.map((ride) => ride.id);
-  const [stopsByRide, sharedByRide, ratingsByRide] = await Promise.all([
+  const [stopsByRide, sharedByRide, ratingsByRide, proposedPickup] = await Promise.all([
     loadExistingStops(ids),
     enrichSharedInterests(viewerId, ids),
     loadAggregateRatings(ids),
+    pool.query<{ name: string }>(
+      "SELECT name FROM locations WHERE id = $1 AND type = $2 AND is_active = TRUE",
+      [filters.campusLocationId, "campus"],
+    ),
   ]);
 
+  const proposedPickupName = proposedPickup.rows[0]?.name ?? "";
   const candidates = rides.map((ride) => {
     const shared = sharedByRide.get(ride.id);
     return buildCandidate(
       ride,
       filters,
-      [...(stopsByRide.get(ride.id) ?? []), filters.campusLocationId],
+      stopsByRide.get(ride.id) ?? [],
+      proposedPickupName,
       shared?.sharedInterestTags ?? null,
       ratingsByRide.get(ride.id) ?? null,
     );
