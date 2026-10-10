@@ -3,8 +3,9 @@
  *
  * Values are minutes between the named pickup points, intended for ranking/
  * comparing pickup-order changes—not for navigation or ETA promises. They are
- * rough symmetric estimates inferred from the campus layout and Google Maps/
- * campus-map references, not live Google Routes API results. Replace this
+ * rough symmetric placeholder estimates informed by the published IITK campus
+ * map; individual pairwise driving routes/times have NOT been verified against
+ * Google Maps. Do not treat these as measured travel times. Replace this
  * module with a routing-provider or admin-configured matrix when available.
  *
  * Matrix order is defined by CAMPUS_TRAVEL_TIME_LOCATIONS. Unknown locations
