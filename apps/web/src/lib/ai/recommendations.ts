@@ -58,9 +58,9 @@ export async function getRideRecommendations(
   try {
     await pool.query(
       `INSERT INTO ride_recommendation_audits
-         (request_id, user_id, model_version, prompt_version, outcome, latency_ms, input_tokens, output_tokens)
-       VALUES ($1, $2, $3, $4, $5, $6, NULL, NULL)`,
-      [requestId, viewerId, GEMINI_MODEL_VERSION, GEMINI_PROMPT_VERSION, outcome, latencyMs],
+         (request_id, user_id, model_version, prompt_version, outcome, suggested_ride_ids, latency_ms, input_tokens, output_tokens)
+       VALUES ($1, $2, $3, $4, $5, $6::uuid[], $7, NULL, NULL)`,
+      [requestId, viewerId, GEMINI_MODEL_VERSION, GEMINI_PROMPT_VERSION, outcome, response.suggestions.map((item) => item.ride.id), latencyMs],
     );
   } catch {
     // Recommendation delivery should not fail solely because the audit sink is unavailable.
