@@ -15,9 +15,67 @@ import {
 } from "./types";
 import { validateAiRanking } from "./validate-ranking";
 
+type PickupStopRow = { ride_id: string; location_name: string };
+type AggregateRatingRow = { ride_id: string; average_score: string | number | null; rating_count: string | number };
+
+/** Load only stop labels; occupant identities are not needed for route impact. */
+async function loadExistingStops(rideIds: readonly string[]): Promise<Map<string, string[]>> {
+  const result = new Map<string, string[]>();
+  for (const id of rideIds) result.set(id, []);
+  if (!rideIds.length) return result;
+
+  const { rows } = await pool.query<PickupStopRow>(
+    `SELECT r.ride_id, l.name AS location_name
+       FROM riders r
+       JOIN locations l ON l.id = r.campus_location_id AND l.is_active = TRUE
+      WHERE r.ride_id = ANY($1::uuid[]) AND r.left_at IS NULL
+      ORDER BY r.ride_id, r.joined_at, r.id`,
+    [[...new Set(rideIds)]],
+  );
+  for (const row of rows) {
+    const stops = result.get(row.ride_id) ?? [];
+    stops.push(row.location_name);
+    result.set(row.ride_id, stops);
+  }
+  return result;
+}
+
+/** Aggregate ratings only; never selects comments or individual rating identities. */
+async function loadAggregateRatings(
+  rideIds: readonly string[],
+): Promise<Map<string, RecommendationCandidate["aggregateRating"]>> {
+  const result = new Map<string, RecommendationCandidate["aggregateRating"]>();
+  for (const id of rideIds) result.set(id, null);
+  if (!rideIds.length) return result;
+
+  const { rows } = await pool.query<AggregateRatingRow>(
+    `SELECT r.id AS ride_id,
+            AVG(rr.score)::float AS average_score,
+            COUNT(rr.id)::int AS rating_count
+       FROM rides r
+       JOIN riders occupant ON occupant.ride_id = r.id AND occupant.left_at IS NULL
+       LEFT JOIN ride_ratings rr
+         ON rr.ratee_id = occupant.user_id
+        AND rr.ride_id = r.id
+      WHERE r.id = ANY($1::uuid[])
+      GROUP BY r.id`,
+    [[...new Set(rideIds)]],
+  );
+
+  for (const row of rows) {
+    const count = Number(row.rating_count);
+    const average = row.average_score === null ? null : Number(row.average_score);
+    result.set(row.ride_id,
+      count > 0 && average !== null && Number.isFinite(average)
+        ? { average: Math.round(average * 100) / 100, count }
+        : null,
+    );
+  }
+  return result;
+}
+
 function buildCandidate(
   ride: SearchRideResult,
-  filters: SearchRideRequest,
   pickupStops: readonly string[],
   proposedPickupName: string,
   sharedTags: string[] | null,
@@ -71,7 +129,6 @@ export async function buildRecommendationCandidates(
     const shared = sharedByRide.get(ride.id);
     return buildCandidate(
       ride,
-      filters,
       stopsByRide.get(ride.id) ?? [],
       proposedPickupName,
       shared?.sharedInterestTags ?? null,
