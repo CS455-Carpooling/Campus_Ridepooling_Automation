@@ -105,6 +105,22 @@ exist yet shows the 404 page until the page is built.
   ride page's people list shows a person's average and count, and their profile shows them their
   average and the comments left about them, without names, scores or dates. Dashboard history
   shows "Ratings given" on completed rides, with a link to rate while rating is open.
+- **Operations admin data** (`db/schema.sql`, CS455-46 and CS455-47): `users.role` (`student` or
+  `admin`), the append-only `admin_audit_log`, versioned vehicle types and places,
+  `campus_fares`, `external_fare_ranges`, `complaints` (with `complaint_chat_messages`),
+  `rider_warnings`, `rider_suspensions` (and the `active_rider_suspensions` view),
+  `complaint_ai_analyses` and `ai_enforcement_decisions`. The database itself refuses what must
+  never happen: changing or deleting audit rows, editing an original complaint, a warning,
+  suspension or AI decision by anyone but an admin, a suspension both timed and indefinite (or
+  neither), a complaint about yourself or about someone not on the ride, and a rejected AI
+  recommendation that still acts. Chat reports are complaints too: existing reports were copied
+  over, and a trigger copies new ones until the chat report flow writes complaints itself.
+  The shared rules are `src/lib/complaint-rules.ts` and `src/lib/admin-config-rules.ts`; the
+  shapes the admin pages and APIs exchange are in `src/lib/admin-types.ts`, and
+  `getActiveSuspension()` in `src/lib/suspensions.ts` tells whether a rider is suspended.
+- **Admin accounts** are existing, verified iitk.ac.in accounts promoted by whoever runs the
+  database, with `npm run admin:grant -- name@iitk.ac.in` (and `admin:revoke`); see setup.md.
+  Nothing in the app can change a role, and each change is written to the audit log.
 
 ## Conventions
 
