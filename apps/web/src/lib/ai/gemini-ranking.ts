@@ -10,13 +10,13 @@ const RANKING_SCHEMA = {
     rankedRides: {
       type: "ARRAY",
       items: {
-        type: "object",
+        type: "OBJECT",
         properties: {
           rideId: { type: "STRING" },
           factors: {
-            type: "array",
+            type: "ARRAY",
             items: {
-              type: "string",
+              type: "STRING",
               enum: [
                 "fare",
                 "departure",
@@ -29,8 +29,8 @@ const RANKING_SCHEMA = {
               ],
             },
           },
-          pros: { type: "array", items: { type: "string" } },
-          cons: { type: "array", items: { type: "string" } },
+          pros: { type: "ARRAY", items: { type: "STRING" } },
+          cons: { type: "ARRAY", items: { type: "STRING" } },
         },
         required: ["rideId", "factors", "pros", "cons"],
       },
