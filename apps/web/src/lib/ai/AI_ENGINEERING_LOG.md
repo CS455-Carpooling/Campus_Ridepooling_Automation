@@ -89,3 +89,32 @@ build a hardcoded travel time matrix
 - Used the published IIT Kanpur campus map as a layout reference. The individual pairwise minute values are rough placeholder estimates; they were not verified one-by-one with Google Maps route directions or a routing API. The code comments state this limitation, and the values must not be used as navigation ETAs.
 - Kept the matrix isolated in its own module so it can later be replaced with Google Routes/another routing provider or admin-configured values without changing callers.
 - No changes were made to `master`. Tests were authored but not executed because no checked-out project environment is available in this session.
+
+
+## Prompt 4
+
+```text
+validate them
+```
+
+## Action taken
+
+- Reviewed what can be validated from public sources. IIT Kanpur's published tender lists a 1,492 m road segment from the Main Gate to the Hall I diversion (https://iitk.ac.in/iwd/file/2022/25-C-D1-2021-22/TenderDocumentMech.pdf), but that is not a verified driving duration and does not validate every pair in the matrix.
+- Confirmed the current matrix is square (15 × 15), symmetric, non-negative, zero on the diagonal, and satisfies the triangle inequality. Added a test for the triangle inequality.
+- Could not verify individual pairwise driving durations from Google Maps directions in this environment. The matrix values remain explicitly labelled as placeholders; structural consistency must not be confused with geographic accuracy.
+- Tests were authored but not executed because this session has GitHub repository access without a checked-out runtime.
+
+## Prompt 5
+
+```text
+Validate the travel time matrix
+and implement the pickup order impact calculation
+```
+
+## Action taken
+
+- Added `apps/web/src/lib/ai/pickup-order-impact.ts` on `feat/ai-ride-recommendations`. It computes a minimum-duration open stop order with Held–Karp dynamic programming, compares the best existing route with the best route including the proposed stop, and returns both orders, the estimated duration difference, whether existing stops change position, and the number of affected existing stops.
+- The calculation deduplicates same-location stops, handles case-insensitive duplicate proposed stops, and returns `null` when required travel-time data is missing or invalid. It is a stop-order estimate only, not a navigation route, traffic-aware ETA, or direction-specific pickup/drop-off solver.
+- Added `apps/web/src/lib/ai/pickup-order-impact.test.ts` covering an already-present stop, route-duration comparison, missing data, duplicate locations, and empty proposed locations. Corrected expectations to use metric test distances.
+- Strengthened `campus-travel-times.test.ts` with a triangle-inequality check. The existing matrix passes the structural checks by direct programmatic inspection, but its pairwise times remain unverified estimates.
+- No Gemini integration, API, UI, database changes, or changes to `master` were made. Automated tests/type checks were not run in this environment.
