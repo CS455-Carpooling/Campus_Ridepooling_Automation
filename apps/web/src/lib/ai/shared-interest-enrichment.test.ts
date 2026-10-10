@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveSharedInterestTags } from "./shared-interest-enrichment";
+import { resolveSharedInterestTags } from "./shared-interest-tags";
 
 describe("resolveSharedInterestTags", () => {
   it("returns only shared labels when all participants consent and have visible tags", () => {
