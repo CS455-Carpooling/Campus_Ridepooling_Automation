@@ -2,7 +2,10 @@ import "server-only";
 import type { RecommendationRequest } from "./types";
 
 const DEFAULT_MODEL = "gemini-2.5-flash";
-const REQUEST_TIMEOUT_MS = 20_000;
+export const GEMINI_MODEL_VERSION = process.env.GEMINI_MODEL?.trim() || DEFAULT_MODEL;
+export const GEMINI_PROMPT_VERSION = 'ride-ranking-v1';
+export const REQUEST_TIMEOUT_MS = 8_000;
+export const RECOMMENDATION_DEADLINE_MS = 9_000;
 
 const RANKING_SCHEMA = {
   type: "OBJECT",
@@ -63,7 +66,7 @@ export async function rankWithGemini(request: RecommendationRequest): Promise<un
   const apiKey = process.env.GEMINI_API_KEY?.trim();
   if (!apiKey) throw new Error("Gemini is not configured.");
 
-  const model = process.env.GEMINI_MODEL?.trim() || DEFAULT_MODEL;
+  const model = GEMINI_MODEL_VERSION;
   if (!/^[a-zA-Z0-9._-]+$/.test(model)) throw new Error("Invalid Gemini model configuration.");
 
   const response = await fetch(
