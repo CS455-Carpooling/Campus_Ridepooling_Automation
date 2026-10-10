@@ -258,3 +258,6 @@ Deliverable: a tested feature branch ready for review.
 - Audit outcome values distinguish validated AI output, timeout, invalid output, model error and no candidates. Persistence failures are deliberately logged generically so they do not expose user data or make the ride search fail.
 - The separate IP limit and CSRF/origin guard remain unchanged. No secrets were added, and all writes target `feat/ai-ride-recommendations`; `master` was not modified.
 - Verification limitation: this session provides GitHub file edits but no working local checkout/runtime. Lint, typecheck, unit tests, API tests and build were not executed. The branch must not be described as fully tested until those commands run. Also, token usage capture is a known incomplete part of the audit requirement and should be completed by reading Gemini's `usageMetadata` and safely passing it to audit persistence.
+
+- Follow-up completed: Gemini's `usageMetadata.promptTokenCount` and `usageMetadata.candidatesTokenCount` are now read when present, kept out of the ranking payload, and persisted as audit input/output token counts. If the provider omits usage metadata, the corresponding database value remains NULL.
+- Updated the recommendation API test harness to mock the PostgreSQL transaction used by the per-rider rolling quota.
