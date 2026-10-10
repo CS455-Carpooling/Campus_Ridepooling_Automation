@@ -174,3 +174,28 @@ Deliverable: a reliable backend pipeline that separates trusted ride data from u
 - Tests/type checks were authored but not executed because this session has GitHub file-editing access without a checked-out project runtime. No changes were made to `master`.
 
 - Kept the implementation in a single pipeline module and removed a duplicate candidate-enrichment file so there is one source of truth for candidate assembly and availability rechecks.
+
+
+## Prompt 8
+
+```text
+### Integrate Gemini
+
+- Add a server-side Gemini client and structured ranking prompt.
+- Send only the enriched candidate payload—not direct database access, raw profiles or complaint data.
+- Ask Gemini to rank candidate IDs and explain the ranking with concise pros and cons.
+- Validate the response and use a deterministic fallback if the model fails or returns invalid output.
+- Keep the API key in server-side environment configuration, never in client code or Git.
+
+Deliverable: working AI ranking behind a stable service interface.
+```
+
+## Action taken
+
+- Added `apps/web/src/lib/ai/gemini-ranking.ts`, a server-only Gemini REST client using `GEMINI_API_KEY` from the server environment, with optional `GEMINI_MODEL` configuration (default `gemini-2.5-flash`), a 20-second request timeout, and structured JSON response schema.
+- Added a structured ranking prompt that asks Gemini to rank only supplied candidate IDs, use only supplied fields, avoid inferences for unavailable factors, and provide up to five recommendations with up to three concise pros and cons per ride. The request sends only the typed `RecommendationRequest` filters and enriched `RecommendationCandidate[]`; it has no database tools or direct database access.
+- Parsed Gemini's JSON response as untrusted data and connected the client through `apps/web/src/lib/ai/recommendations.ts`, a stable server-side `getRideRecommendations(viewerId, filters)` interface.
+- Reused the existing ranking pipeline's allowlist validation, trusted-data attachment, current availability recheck, and deterministic fallback when Gemini fails or returns unusable output. API keys and provider response bodies are not included in thrown error messages.
+- Added `apps/web/.env.example` documenting `GEMINI_API_KEY` and optional `GEMINI_MODEL`. The real `.env*` files are ignored by Git; only the placeholder example is exempted. No real API key was added to the repository.
+- Used Gemini structured-output schema enum types and inspected the edited files and feature-branch diff. No client-side Gemini code, UI, HTTP endpoint, database access for the model, or changes to `master` were added.
+- Tests, type checks, and a live Gemini call were not run in this session, which has GitHub repository access but no checked-out runtime or configured API key. Live operation still requires setting `GEMINI_API_KEY` in the deployment/server environment and running the project checks.
