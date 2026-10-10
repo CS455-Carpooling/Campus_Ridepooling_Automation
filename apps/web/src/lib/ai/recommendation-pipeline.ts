@@ -138,6 +138,41 @@ export async function buildRecommendationCandidates(
 
 export type RankingRunner = (request: RecommendationRequest) => Promise<unknown>;
 
+/** Distance in minutes between two time windows; overlapping windows have distance zero. */
+export function departureWindowDistanceMinutes(
+  rideStart: string,
+  rideEnd: string,
+  requestedStart: string,
+  requestedEnd: string,
+): number {
+  const rs = Date.parse(rideStart);
+  const re = Date.parse(rideEnd);
+  const qs = Date.parse(requestedStart);
+  const qe = Date.parse(requestedEnd);
+  if (![rs, re, qs, qe].every(Number.isFinite) || rs >= re || qs >= qe) return Number.POSITIVE_INFINITY;
+  if (re < qs) return (qs - re) / 60_000;
+  if (rs > qe) return (rs - qe) / 60_000;
+  return 0;
+}
+
+/** Stable fallback order: closest departure window, lowest fare share, then ride ID. */
+export function rankFallbackRides(
+  rides: readonly SearchRideResult[],
+  filters: SearchRideRequest,
+): SearchRideResult[] {
+  return [...rides].sort((a, b) => {
+    const distance = departureWindowDistanceMinutes(
+      a.departureStart, a.departureEnd, filters.departureStart, filters.departureEnd,
+    ) - departureWindowDistanceMinutes(
+      b.departureStart, b.departureEnd, filters.departureStart, filters.departureEnd,
+    );
+    if (distance !== 0) return distance;
+    const fare = a.estimatedShare - b.estimatedShare;
+    if (fare !== 0) return fare;
+    return a.id.localeCompare(b.id);
+  });
+}
+
 /**
  * Validates untrusted ranking output, then re-runs the authoritative search
  * immediately before returning. Only current search results are returned as
@@ -183,9 +218,9 @@ export async function rankRideRecommendations(
     if (suggestions.length >= MAX_RIDE_RECOMMENDATIONS) break;
   }
 
-  // Deterministic fallback uses trusted current search order, never model fields.
+  // Deterministic fallback uses only trusted current search fields, never model fields.
   if (!suggestions.length) {
-    for (const ride of currentRides.slice(0, MAX_RIDE_RECOMMENDATIONS)) {
+    for (const ride of rankFallbackRides(currentRides, filters).slice(0, MAX_RIDE_RECOMMENDATIONS)) {
       suggestions.push({
         ride,
         pros: [],
