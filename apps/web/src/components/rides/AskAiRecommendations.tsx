@@ -20,6 +20,23 @@ export function AskAiRecommendations({ filters }: { filters: SearchRideRequest }
   const [result, setResult] = useState<RideRecommendationResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [feedbackStatus, setFeedbackStatus] = useState<Record<string, string>>({});
+
+  async function submitFeedback(rideId: string, value: 'helpful' | 'not_helpful') {
+    if (!result?.requestId) return;
+    setFeedbackStatus((old) => ({ ...old, [rideId]: 'Saving…' }));
+    try {
+      const response = await fetch('/api/rides/recommendations/feedback', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requestId: result.requestId, rideId, value }),
+      });
+      const body: unknown = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(body && typeof body === 'object' && 'error' in body && typeof body.error === 'string' ? body.error : 'Could not save feedback.');
+      setFeedbackStatus((old) => ({ ...old, [rideId]: 'Thanks for your feedback.' }));
+    } catch (e) {
+      setFeedbackStatus((old) => ({ ...old, [rideId]: e instanceof Error ? e.message : 'Could not save feedback.' }));
+    }
+  }
 
   async function suggest() {
     setLoading(true);
@@ -119,6 +136,16 @@ export function AskAiRecommendations({ filters }: { filters: SearchRideRequest }
                       ) : <p className="mt-2 text-sm text-ink-muted">No trade-offs provided.</p>}
                     </div>
                   </div>
+                  {result.requestId && (
+                    <div className="mt-4 border-t border-line pt-3">
+                      <p className="text-sm font-semibold">Was this recommendation helpful?</p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <button type="button" className="rounded-control border border-line px-3 py-2 text-sm" onClick={() => submitFeedback(suggestion.ride.id, 'helpful')} disabled={Boolean(feedbackStatus[suggestion.ride.id]?.startsWith('Thanks'))}>Helpful</button>
+                        <button type="button" className="rounded-control border border-line px-3 py-2 text-sm" onClick={() => submitFeedback(suggestion.ride.id, 'not_helpful')} disabled={Boolean(feedbackStatus[suggestion.ride.id]?.startsWith('Thanks'))}>Not helpful</button>
+                      </div>
+                      {feedbackStatus[suggestion.ride.id] && <p className="mt-2 text-xs text-ink-muted" role="status">{feedbackStatus[suggestion.ride.id]}</p>}
+                    </div>
+                  )}
                   {suggestion.factors.length > 0 && (
                     <div className="mt-4 border-t border-line pt-3">
                       <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Factors considered</h4>
