@@ -130,6 +130,34 @@ const OCCUPANT_NAMES_SQL = `
   WHERE m.ride_id = ANY($1::uuid[])
   ORDER BY m.ride_id, (m.user_id = r.owner_id) DESC, m.joined_at, m.id`;
 
+/** The rider's saved search preferences; null where none is saved. */
+export type SearchDefaults = {
+  vehicleTypeId: string | null;
+  maxFareShare: number | null;
+};
+
+/**
+ * The preferred vehicle type and maximum fare share saved on the rider's profile, which
+ * pre-fill the search form (FR-RD-02.5). The rider sees them there and can change them,
+ * "Any" included, so searchRides() applies only the filters the form sends.
+ */
+export async function getSearchDefaults(viewerId: string): Promise<SearchDefaults> {
+  if (!isUuid(viewerId)) return { vehicleTypeId: null, maxFareShare: null };
+  const { rows } = await pool.query<{
+    preferred_vehicle_type_id: string | null;
+    max_acceptable_fare_share: number | null;
+  }>(
+    `SELECT preferred_vehicle_type_id, max_acceptable_fare_share
+     FROM user_profiles
+     WHERE user_id = $1`,
+    [viewerId],
+  );
+  return {
+    vehicleTypeId: rows[0]?.preferred_vehicle_type_id ?? null,
+    maxFareShare: rows[0]?.max_acceptable_fare_share ?? null,
+  };
+}
+
 /**
  * Searches for open, unlocked rides matching the given filters as seen by
  * `viewerId`. Excludes rides the viewer already belongs to, rides that have
@@ -141,46 +169,14 @@ export async function searchRides(
 ): Promise<SearchRideResult[]> {
   if (!isUuid(viewerId)) return [];
 
-  // 1. Initialize resolved filters with the explicit form overrides
-  let resolvedVehicleTypeId = filters.vehicleTypeId;
-  let resolvedMaxFareShare = filters.maxFareShare;
-
-  // 2. Fallback to User Profile defaults if explicit form overrides are missing
-  if (!resolvedVehicleTypeId || resolvedMaxFareShare === undefined) {
-    const { rows: profileRows } = await pool.query<{
-      preferred_vehicle_type_id: string | null;
-      max_acceptable_fare_share: number | null;
-    }>(
-      `SELECT preferred_vehicle_type_id, max_acceptable_fare_share 
-       FROM user_profiles 
-       WHERE user_id = $1`,
-      [viewerId]
-    );
-
-    if (profileRows.length > 0) {
-      const profile = profileRows[0];
-      
-      // If form didn't specify vehicle type, use profile preferred vehicle type
-      if (!resolvedVehicleTypeId) {
-        resolvedVehicleTypeId = profile.preferred_vehicle_type_id ?? undefined;
-      }
-      
-      // If form didn't specify max budget share, use profile max acceptable share
-      if (resolvedMaxFareShare === undefined) {
-        resolvedMaxFareShare = profile.max_acceptable_fare_share ?? undefined;
-      }
-    }
-  }
-
-  // 3. Execute main search query passing the resolved fallback filters
   const { rows } = await pool.query<SearchRow>(SEARCH_SQL, [
     filters.direction,
     filters.hubId,
     filters.departureStart,
     filters.departureEnd,
     viewerId,
-    resolvedVehicleTypeId ?? null,
-    resolvedMaxFareShare ?? null,
+    filters.vehicleTypeId ?? null,
+    filters.maxFareShare ?? null,
   ]);
 
   if (rows.length === 0) return [];

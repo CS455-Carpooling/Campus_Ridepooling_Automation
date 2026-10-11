@@ -9,7 +9,7 @@ vi.mock('./db', () => ({
   pool: { query: h.query },
 }));
 
-import { searchRides, type SearchRideRequest } from './ride-search';
+import { getSearchDefaults, searchRides, type SearchRideRequest } from './ride-search';
 
 const validRequest: SearchRideRequest = {
   direction: 'to_hub',
@@ -85,5 +85,66 @@ describe('searchRides', () => {
 
     expect(results).toEqual([]);
     expect(h.query).toHaveBeenCalledTimes(1);
+  });
+
+  it('applies only the filters the form sent, never the profile behind its back', async () => {
+    h.query.mockResolvedValueOnce({ rows: [] });
+    await searchRides('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', validRequest);
+    expect(h.query).toHaveBeenCalledTimes(1);
+    expect(h.query.mock.calls[0][1].slice(5)).toEqual([null, null]);
+
+    h.query.mockResolvedValueOnce({ rows: [] });
+    await searchRides('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', {
+      ...validRequest,
+      vehicleTypeId: 'auto',
+      maxFareShare: 150,
+    });
+    expect(h.query.mock.calls[1][1].slice(5)).toEqual(['auto', 150]);
+  });
+
+  it('estimates the share with the viewer as one more person (FR-RD-08.1)', async () => {
+    h.query.mockResolvedValueOnce({ rows: [] });
+    await searchRides('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', validRequest);
+    expect(String(h.query.mock.calls[0][0])).toMatch(/WHERE o\.ride_id = r\.id\) \+ 1\s/);
+  });
+});
+
+describe('getSearchDefaults (FR-RD-02.5)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns the profile's preferred vehicle type and maximum share", async () => {
+    h.query.mockResolvedValueOnce({
+      rows: [{ preferred_vehicle_type_id: 'auto', max_acceptable_fare_share: 120 }],
+    });
+    await expect(getSearchDefaults('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22')).resolves.toEqual({
+      vehicleTypeId: 'auto',
+      maxFareShare: 120,
+    });
+    expect(h.query.mock.calls[0][1]).toEqual(['b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22']);
+  });
+
+  it('returns no defaults when nothing is saved or there is no profile', async () => {
+    h.query.mockResolvedValueOnce({
+      rows: [{ preferred_vehicle_type_id: null, max_acceptable_fare_share: null }],
+    });
+    await expect(getSearchDefaults('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22')).resolves.toEqual({
+      vehicleTypeId: null,
+      maxFareShare: null,
+    });
+    h.query.mockResolvedValueOnce({ rows: [] });
+    await expect(getSearchDefaults('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22')).resolves.toEqual({
+      vehicleTypeId: null,
+      maxFareShare: null,
+    });
+  });
+
+  it('does not query for an ID that is not a UUID', async () => {
+    await expect(getSearchDefaults('dev-student')).resolves.toEqual({
+      vehicleTypeId: null,
+      maxFareShare: null,
+    });
+    expect(h.query).not.toHaveBeenCalled();
   });
 });
