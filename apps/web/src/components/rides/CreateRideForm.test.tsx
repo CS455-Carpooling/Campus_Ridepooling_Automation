@@ -50,6 +50,22 @@ describe('CreateRideForm', () => {
     expect(screen.getByRole('radio', { name: 'Car' })).toBeChecked();
   });
 
+  it('shows the typical fare for the chosen hub and vehicle (SYS-FR-12, CS455-51)', async () => {
+    render(
+      <CreateRideForm
+        options={{
+          ...options,
+          fareRanges: [
+            { hubId: 'kanpur-central', vehicleTypeId: 'car', minFare: 450, maxFare: 700 },
+          ],
+        }}
+      />,
+    );
+    expect(screen.queryByText(/Typical fare/)).not.toBeInTheDocument();
+    await fillValidRide();
+    expect(screen.getByText(/Typical fare for this trip: ₹450 to ₹700/)).toBeInTheDocument();
+  });
+
   it('shows backend validation errors after submission', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       new Response(

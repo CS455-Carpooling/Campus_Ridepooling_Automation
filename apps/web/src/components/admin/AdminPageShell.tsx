@@ -1,6 +1,6 @@
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { NavLinks } from '@/components/shell/NavLinks';
-import { ButtonLink } from '@/components/ui/ButtonLink';
 import { DesignSystem } from '@/components/ui/DesignSystem';
 import { LogoutButton } from '@/components/ui/LogoutButton';
 import { cx } from '@/lib/cx';
@@ -42,9 +42,12 @@ export function AdminPageShell({
 
       <main>
         {back && (
-          <ButtonLink href={back.href} variant="quiet" className="mt-6 px-0">
+          <Link
+            href={back.href}
+            className="mt-6 inline-flex min-h-11 items-center font-semibold underline underline-offset-4 hover:text-accent-text"
+          >
             {back.label}
-          </ButtonLink>
+          </Link>
         )}
         <header
           className={cx('flex flex-wrap items-end justify-between gap-4', back ? 'mt-4' : 'mt-8')}
