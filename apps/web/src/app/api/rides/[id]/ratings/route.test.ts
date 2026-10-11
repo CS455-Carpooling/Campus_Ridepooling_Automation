@@ -10,6 +10,7 @@ const h = vi.hoisted(() => ({
   clientQuery: vi.fn(),
   release: vi.fn(),
   submitRatings: vi.fn(),
+  getActiveSuspension: vi.fn(),
 }));
 
 vi.mock('@/lib/auth', () => ({
@@ -20,6 +21,7 @@ vi.mock('@/lib/auth', () => ({
 }));
 vi.mock('@/lib/db', () => ({ pool: { connect: h.connect } }));
 vi.mock('@/lib/ride-ratings', () => ({ submitRatings: h.submitRatings }));
+vi.mock('@/lib/suspensions', () => ({ getActiveSuspension: h.getActiveSuspension }));
 
 import { POST } from './route';
 
@@ -39,6 +41,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   h.guard.mockResolvedValue(null);
   h.getCurrentUser.mockResolvedValue({ id: USER_ID });
+  h.getActiveSuspension.mockResolvedValue(null);
   h.readJson.mockResolvedValue({ ratings: [{ occupantId: SEAT, score: 4, comment: ' Kind. ' }] });
   h.connect.mockResolvedValue({ query: h.clientQuery, release: h.release });
   h.clientQuery.mockResolvedValue({ rows: [] });
@@ -46,6 +49,20 @@ beforeEach(() => {
 });
 
 describe('POST /api/rides/[id]/ratings', () => {
+  it('refuses a suspended rider (FR-RD-01.5, CS455-52)', async () => {
+    h.getActiveSuspension.mockResolvedValue({
+      id: 's1',
+      reasonCategory: 'safety',
+      startsAt: '2026-10-11T00:00:00.000Z',
+      endsAt: '2026-10-14T00:00:00.000Z',
+      isIndefinite: false,
+    });
+    const res = await call();
+    expect(res.status).toBe(403);
+    expect(await res.json()).toMatchObject({ code: 'suspended' });
+    expect(h.connect).not.toHaveBeenCalled();
+  });
+
   it('passes on the answer of the origin check and rate limit', async () => {
     h.guard.mockResolvedValue(Response.json({ error: 'Too many attempts.' }, { status: 429 }));
     expect((await call()).status).toBe(429);

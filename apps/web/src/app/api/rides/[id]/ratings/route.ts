@@ -1,9 +1,11 @@
 import type { PoolClient } from 'pg';
 import { getCurrentUser, guard, json, readJson } from '@/lib/auth';
 import { pool } from '@/lib/db';
+import { suspendedMessage } from '@/lib/enforcement-rules';
 import { isUuid } from '@/lib/ids';
 import { parseRatingsRequest, ratingMessages } from '@/lib/rating-rules';
 import { submitRatings, type SubmitRatingsResult } from '@/lib/ride-ratings';
+import { getActiveSuspension } from '@/lib/suspensions';
 
 type Refusal = Exclude<SubmitRatingsResult, { kind: 'rated' }>;
 
@@ -50,6 +52,12 @@ export async function POST(req: Request, ctx: RouteContext<'/api/rides/[id]/rati
 
   const { id } = await ctx.params;
   if (!isUuid(id)) return json({ error: 'Ride not found.', code: 'not_found' }, 404);
+
+  // A suspended rider cannot rate others (FR-RD-01.5, CS455-52).
+  const suspension = await getActiveSuspension(user.id);
+  if (suspension) {
+    return json({ error: suspendedMessage(suspension, 'rate people'), code: 'suspended' }, 403);
+  }
 
   const parsed = parseRatingsRequest(await readJson(req));
   if (!parsed.ok) return json({ error: parsed.error, code: 'invalid_ratings' }, 400);

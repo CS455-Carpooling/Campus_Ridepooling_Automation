@@ -144,6 +144,23 @@ exist yet shows the 404 page until the page is built.
   (`/dashboard` for an admin) counts open complaints (chat reports included, safety ones called
   out), AI recommendations awaiting a decision and riders suspended now, and lists the last 10
   audit entries, each marked Done, Refused or Failed.
+- **Admin APIs** (CS455-50, 52): each checks `requireAdminApi({ write: true })`, makes its change
+  in `withAdminAction()` and answers `{ error, code, fields?, current? }`.
+  - Configuration: `POST /api/admin/vehicle-types` and `PATCH .../[id]`, `POST /api/admin/locations`
+    and `PATCH .../[id]`, `PUT /api/admin/campus-fares`, `PUT /api/admin/external-fares`
+    (`src/lib/admin-config.ts`). Every edit sends the `version` it loaded, and a stale one gets 409
+    `version_conflict` with the item as it is now. Nothing is deleted: a vehicle type or place is
+    deactivated, leaves the forms and stays on the rides that use it.
+  - Complaints (`src/lib/complaints.ts`): `POST /api/rides/[id]/complaints` for someone on the
+    ride, until 7 days after it is completed, or about a reported chat message at any time; one per
+    person, ride and accused, at most 5 in 24 hours. `PATCH /api/admin/complaints/[id]` moves one to
+    Under review or Resolved (saying whether action was taken), tells the person who complained, and
+    closes the chat reports it came from.
+  - Riders (`src/lib/enforcement.ts`): `POST /api/admin/riders/[id]/warnings`, `.../suspensions`
+    (a number of days, or indefinite) and `.../reactivation`, each with a required reason. Lifting
+    a suspension keeps its history. The rider is notified, without the admin's own words.
+- **Suspended riders** cannot offer a ride or rate others: those APIs answer 403 `suspended` with
+  the end time and reason category. They can still file complaints (FR-RD-01.5).
 
 ## Conventions
 

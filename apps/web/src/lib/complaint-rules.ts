@@ -4,6 +4,7 @@
  * may hold. Shared by the complaint form and the complaints API, so they always agree. The
  * database enforces the absolute ones again (schema.sql). Pure functions only.
  */
+import type { ComplaintStatusChange } from './admin-types';
 import { isUuid } from './ids';
 import type { RideState } from './ride-status';
 
@@ -138,4 +139,65 @@ export function parseComplaintRequest(body: unknown): ComplaintRequestResult {
       messageId: typeof messageId === 'string' ? messageId.toLowerCase() : null,
     },
   };
+}
+
+/** An admin's note on a complaint, at most this many characters (schema.sql). */
+export const COMPLAINT_NOTE_MAX = 1000;
+
+export type ComplaintStatusField = 'status' | 'actionTaken' | 'note' | 'version';
+
+export const complaintStatusMessages = {
+  status: 'Choose Under review or Resolved.',
+  actionTaken: 'Say whether any action was taken.',
+  note: `Keep the note to ${COMPLAINT_NOTE_MAX} characters or fewer.`,
+  version: 'Reload the page: this complaint is out of date.',
+} as const;
+
+export type ComplaintStatusChangeResult =
+  | { ok: true; value: ComplaintStatusChange }
+  | { ok: false; errors: Partial<Record<ComplaintStatusField, string>> };
+
+/**
+ * Checks the body of PATCH /api/admin/complaints/[id]: the new status, whether action was
+ * taken (required to resolve, FR-RD-13.5), an optional note and the version the admin saw.
+ */
+export function parseComplaintStatusChange(body: unknown): ComplaintStatusChangeResult {
+  const input = isRecord(body) ? body : {};
+  const errors: Partial<Record<ComplaintStatusField, string>> = {};
+
+  const status = input.status;
+  if (status !== 'under_review' && status !== 'resolved')
+    errors.status = complaintStatusMessages.status;
+  if (status === 'resolved' && typeof input.actionTaken !== 'boolean') {
+    errors.actionTaken = complaintStatusMessages.actionTaken;
+  }
+
+  const note = typeof input.note === 'string' ? input.note.trim() : '';
+  if (input.note !== undefined && input.note !== null && typeof input.note !== 'string') {
+    errors.note = complaintStatusMessages.note;
+  } else if (characterCount(note) > COMPLAINT_NOTE_MAX) {
+    errors.note = complaintStatusMessages.note;
+  }
+
+  const version = input.version;
+  if (typeof version !== 'number' || !Number.isInteger(version) || version < 1) {
+    errors.version = complaintStatusMessages.version;
+  }
+
+  if (Object.keys(errors).length > 0) return { ok: false, errors };
+  return {
+    ok: true,
+    value: {
+      status: status as ComplaintStatusChange['status'],
+      ...(status === 'resolved' ? { actionTaken: input.actionTaken as boolean } : {}),
+      ...(note ? { note } : {}),
+      version: version as number,
+    },
+  };
+}
+
+/** A complaint moves Submitted, then Under review, then Resolved; Resolved is final. */
+export function canMoveComplaint(from: ComplaintStatus, to: ComplaintStatus): boolean {
+  if (from === 'resolved' || from === to) return false;
+  return to !== 'submitted';
 }

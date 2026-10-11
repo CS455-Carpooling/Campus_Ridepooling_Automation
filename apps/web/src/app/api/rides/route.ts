@@ -1,11 +1,13 @@
 import { pool } from '@/lib/db';
 import { getCurrentUser, guard, json, readJson } from '@/lib/auth';
+import { suspendedMessage } from '@/lib/enforcement-rules';
 import {
   knownRideIds,
   rideMessages,
   validateRideRequest,
   type CreateRideRequest,
 } from '@/lib/ride-rules';
+import { getActiveSuspension } from '@/lib/suspensions';
 import type { PoolClient } from 'pg';
 
 const ACTIVE_RIDE_STATES = ['scheduled', 'pickup_in_progress', 'in_transit'] as const;
@@ -137,6 +139,12 @@ export async function POST(req: Request) {
 
   const user = await getCurrentUser();
   if (!user) return json({ error: 'Authentication required.' }, 401);
+
+  // A suspended rider cannot offer rides (FR-RD-01.5, SYS-FR-24, CS455-52).
+  const suspension = await getActiveSuspension(user.id);
+  if (suspension) {
+    return json({ error: suspendedMessage(suspension, 'offer a ride'), code: 'suspended' }, 403);
+  }
 
   const body = await readJson(req);
   let client: PoolClient | null = null;
