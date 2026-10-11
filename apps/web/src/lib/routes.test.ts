@@ -17,6 +17,7 @@ describe('navigationFor', () => {
     expect(navigationFor('admin').map((item) => item.label)).toEqual([
       'Home',
       'Complaints',
+      'AI decisions',
       'Riders',
       'Configuration',
       'Profile',

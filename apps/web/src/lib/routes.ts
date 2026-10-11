@@ -24,6 +24,7 @@ export const routes = {
   adminIncidents: '/admin/incidents',
   adminComplaints: '/admin/complaints',
   adminComplaint: (complaintId: string) => `/admin/complaints/${encodeURIComponent(complaintId)}`,
+  adminAiDecisions: '/admin/ai-decisions',
   adminRiders: '/admin/riders',
   adminRider: (userId: string) => `/admin/riders/${encodeURIComponent(userId)}`,
   adminRide: (rideId: string) => `/admin/rides/${encodeURIComponent(rideId)}`,
@@ -43,10 +44,11 @@ const navigation: Record<Role, NavItem[]> = {
     { href: routes.offerRide, label: 'Offer a ride' },
     { href: routes.notifications, label: 'Notifications' },
   ],
-  // AI recommendations are decided on each complaint, so they have no entry of their own.
+  // Recommendations are decided on their complaint; the separate page preserves decision history.
   admin: [
     { href: routes.home, label: 'Home' },
     { href: routes.adminComplaints, label: 'Complaints' },
+    { href: routes.adminAiDecisions, label: 'AI decisions' },
     { href: routes.adminRiders, label: 'Riders' },
     { href: routes.adminConfiguration, label: 'Configuration' },
     { href: routes.profile, label: 'Profile' },

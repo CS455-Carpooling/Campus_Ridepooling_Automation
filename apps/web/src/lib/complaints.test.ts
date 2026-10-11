@@ -60,6 +60,7 @@ describe('fileComplaint (FR-RD-13.1 to 13.4)', () => {
     const { client, query } = filingClient({});
     await expect(fileComplaint(client, RIDE, ME, request, now)).resolves.toEqual({
       kind: 'filed',
+      id: 'c-1',
       reference: 'CMP-1A2B3C4D',
     });
     const insert = query.mock.calls.find(([text]) =>
@@ -113,7 +114,7 @@ describe('fileComplaint (FR-RD-13.1 to 13.4)', () => {
       { ...request, category: 'harassment', messageId: MESSAGE },
       now,
     );
-    expect(result).toEqual({ kind: 'filed', reference: 'CMP-1A2B3C4D' });
+    expect(result).toEqual({ kind: 'filed', id: 'c-1', reference: 'CMP-1A2B3C4D' });
     const message = query.mock.calls.find(([text]) =>
       String(text).includes('FROM ride_chat_messages'),
     );

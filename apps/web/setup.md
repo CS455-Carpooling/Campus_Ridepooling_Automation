@@ -82,6 +82,12 @@ APP_URL=http://localhost:3000
 # Leave both empty for local development: emails are printed in the terminal instead.
 MAIL_SCRIPT_URL=
 MAIL_SCRIPT_SECRET=
+
+# Optional: server-side Gemini key for admin complaint analysis. Without it,
+# complaints remain available for manual admin review.
+GEMINI_API_KEY=
+# Optional model override; defaults to gemini-2.5-flash.
+GEMINI_MODEL=
 ```
 
 | Variable | Purpose |
@@ -90,8 +96,11 @@ MAIL_SCRIPT_SECRET=
 | `APP_URL` | Public base URL, used in email links and redirects (no trailing slash). |
 | `MAIL_SCRIPT_URL` | Your deployed Apps Script web app URL (step 5). |
 | `MAIL_SCRIPT_SECRET` | Shared secret that must match the script's `MAIL_SECRET` property. |
+| `GEMINI_API_KEY` | Optional server-only Gemini key used to summarize and classify complaints. Never expose it with a `NEXT_PUBLIC_` variable. |
+| `GEMINI_MODEL` | Optional Gemini model ID override. The default is `gemini-2.5-flash`. |
 
 Make sure `.env*` is listed in `.gitignore` and never commit real values.
+Complaint analysis is advisory; a missing key, timeout, invalid output, or confidence below 65% routes the complaint to manual admin review without affecting the complaint itself.
 
 ## 5. Email setup (Google Apps Script)
 

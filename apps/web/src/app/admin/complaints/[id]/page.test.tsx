@@ -45,6 +45,7 @@ const detail = (change: Partial<AdminComplaintDetail> = {}): AdminComplaintDetai
   },
   messages: [],
   earlierAboutAccused: [],
+  aiHistory: [],
   ...change,
 });
 
@@ -85,6 +86,7 @@ describe('/admin/complaints/[id] (CS455-53, OA-FR-18, 20)', () => {
     expect(screen.getByRole('button', { name: 'Mark under review' })).toBeInTheDocument();
     expect(screen.getByRole('form', { name: 'Resolve this complaint' })).toBeInTheDocument();
     expect(screen.getByText('None.')).toBeInTheDocument();
+    expect(screen.getByText(/Manual review required/)).toBeInTheDocument();
   });
 
   it('shows the reported chat messages and the other complaints about the same person', async () => {
@@ -141,6 +143,35 @@ describe('/admin/complaints/[id] (CS455-53, OA-FR-18, 20)', () => {
     expect(screen.getByText(/by Ops Admin/)).toBeInTheDocument();
     expect(screen.getByText('Warned the owner.')).toBeInTheDocument();
     expect(screen.queryByRole('form', { name: 'Resolve this complaint' })).not.toBeInTheDocument();
+  });
+
+  it('shows validated advisory analysis and its approval boundary', async () => {
+    mocks.getComplaintDetail.mockResolvedValue(
+      detail({
+        aiHistory: [
+          {
+            id: 'analysis-1',
+            outcome: 'ai_validated',
+            summary: 'The report describes unsafe driving.',
+            severity: 'high',
+            behaviorTags: ['safety_risk'],
+            recommendedAction: 'warning',
+            recommendedSuspensionDays: null,
+            recommendedIndefinite: false,
+            confidence: 0.9,
+            createdAt: '2026-10-11T05:00:00.000Z',
+            decision: null,
+          },
+        ],
+      }),
+    );
+    render(await open());
+    expect(screen.getByRole('heading', { name: 'AI complaint review' })).toBeInTheDocument();
+    expect(screen.getByText('The report describes unsafe driving.')).toBeInTheDocument();
+    expect(screen.getByText('Recommended action:').parentElement).toHaveTextContent('Warning');
+    expect(
+      screen.getByRole('form', { name: 'Decide on AI recommendation analysis-1' }),
+    ).toBeInTheDocument();
   });
 
   it('is not found for an unknown complaint, and not for students', async () => {

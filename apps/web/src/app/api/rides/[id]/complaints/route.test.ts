@@ -9,6 +9,7 @@ const h = vi.hoisted(() => ({
   clientQuery: vi.fn(),
   release: vi.fn(),
   fileComplaint: vi.fn(),
+  analyzeComplaint: vi.fn(),
 }));
 
 vi.mock('@/lib/auth', () => ({
@@ -19,6 +20,7 @@ vi.mock('@/lib/auth', () => ({
 }));
 vi.mock('@/lib/db', () => ({ pool: { connect: h.connect } }));
 vi.mock('@/lib/complaints', () => ({ fileComplaint: h.fileComplaint }));
+vi.mock('@/lib/complaint-ai', () => ({ analyzeComplaint: h.analyzeComplaint }));
 
 import { POST } from './route';
 
@@ -45,7 +47,11 @@ beforeEach(() => {
   h.readJson.mockResolvedValue({ ...body });
   h.connect.mockResolvedValue({ query: h.clientQuery, release: h.release });
   h.clientQuery.mockResolvedValue({ rows: [] });
-  h.fileComplaint.mockResolvedValue({ kind: 'filed', reference: 'CMP-1A2B3C4D' });
+  h.fileComplaint.mockResolvedValue({
+    kind: 'filed',
+    id: 'c0c0c0c0-1111-4000-8000-000000000001',
+    reference: 'CMP-1A2B3C4D',
+  });
 });
 
 describe('POST /api/rides/[id]/complaints (FR-RD-13.1 to 13.4, CS455-52)', () => {
@@ -62,6 +68,7 @@ describe('POST /api/rides/[id]/complaints (FR-RD-13.1 to 13.4, CS455-52)', () =>
       expect.any(Date),
     );
     expect(h.release).toHaveBeenCalledOnce();
+    expect(h.analyzeComplaint).toHaveBeenCalledWith('c0c0c0c0-1111-4000-8000-000000000001');
   });
 
   it('passes on the origin check and rate limit, and needs sign-in', async () => {
@@ -120,5 +127,18 @@ describe('POST /api/rides/[id]/complaints (FR-RD-13.1 to 13.4, CS455-52)', () =>
     expect(await res.json()).toMatchObject({ code: 'server_error' });
     expect(sqlCalls()).toEqual(['BEGIN', 'ROLLBACK']);
     expect(h.release).toHaveBeenCalledOnce();
+  });
+
+  it('keeps a committed complaint available if AI analysis cannot be recorded', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    h.analyzeComplaint.mockRejectedValue(new Error('analysis table unavailable'));
+    const res = await call();
+    expect(res.status).toBe(201);
+    expect(await res.json()).toEqual({ reference: 'CMP-1A2B3C4D' });
+    expect(sqlCalls()).toEqual(['BEGIN', 'COMMIT']);
+    expect(log).toHaveBeenCalledWith(
+      'Complaint AI analysis could not be recorded:',
+      expect.any(Error),
+    );
   });
 });

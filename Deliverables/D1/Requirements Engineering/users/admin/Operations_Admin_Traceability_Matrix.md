@@ -14,23 +14,23 @@ Verification entries describe how the requirement can be tested or inspected lat
 
 | Requirement | User story / scenario | Use case | Verification approach |
 |---|---|---|---|
-| OA-FR-01 | US-OA-01 — A New Vehicle Type Becomes Popular | UC-OA-01 | Functional acceptance test: add a vehicle type and verify it becomes active for future rides. |
+| OA-FR-01 | US-OA-01 — A New Vehicle Type Becomes Popular | UC-OA-02 | Functional acceptance test: add a vehicle type and verify it becomes active for future rides. |
 | OA-FR-02 | US-OA-03 — A Vehicle Type Is No Longer Supported | UC-OA-02 | Functional test: deactivate a type and verify it is unavailable for new rides while historical records remain. |
-| OA-FR-03 | US-OA-02 — A Popular Vehicle Type Needs a Capacity Change | UC-OA-03 | Functional test: configure capacity and verify the new value is accepted for future rides. |
-| OA-FR-05 | US-OA-04 — A New Destination Needs to Be Supported | UC-OA-04 | Functional test: add a hub and verify it becomes an active configured destination. |
-| OA-FR-06 | US-OA-05 — A Destination Changes or Stops Being Supported | UC-OA-05 | Functional test: modify a hub and verify existing ride references remain unchanged. |
-| OA-FR-07 | US-OA-05 — A Destination Changes or Stops Being Supported | UC-OA-05 | Functional test: deactivate a hub and verify it is unavailable for new rides while historical references remain. |
-| OA-FR-10 | US-OA-06 — Different Vehicle Types Need Different Campus Fares | UC-OA-06 | Functional test: configure fares for hub pair/vehicle type combinations and verify non-directionality. |
-| OA-FR-11 | US-OA-07 — Riders Need an External Fare Estimate | UC-OA-07 | Functional test: configure an external fare range for a segment and vehicle type. |
-| OA-FR-16 | US-OA-08 — An Admin Needs to Investigate a Ride Without Interfering With It | UC-OA-08 | Functional/access test: authorized Admin can view ride information. |
-| OA-FR-18 | US-OA-09, US-OA-10 — Fare-share complaint / SOS complaint | UC-OA-09 | Functional/privacy test: authorized Admin can view rider complaints. |
-| OA-FR-20 | US-OA-09, US-OA-10 — Complaint history scenarios | UC-OA-09 | Functional test: view current and retained previous complaints for reported rider. |
-| OA-FR-21 | US-OA-11 — A Warning Is Issued After Reviewing Repeated Fare Complaints | UC-OA-10 | Acceptance test: warning requires reason and is recorded. |
-| OA-FR-23 | US-OA-12, US-OA-13 — Three-month / indefinite suspension | UC-OA-11 | Functional test: create both finite and indefinite suspension states. |
-| OA-FR-28 | US-OA-14 — An Indefinitely Suspended Rider Is Manually Reactivated | UC-OA-12 | Functional test: manually reactivate suspended rider and verify audit information. |
-| OA-FR-34 | US-OA-15 — The AI Flags Repeated Fare-Share Complaints | UC-OA-13 | AI oversight test: verify warning/suspension is not executed without explicit Admin approval. |
-| OA-FR-36 | US-OA-16 — The Admin Rejects an AI Recommendation | UC-OA-14 | AI oversight test: rejection requires a reason and prevents execution. |
-| OA-FR-42 | US-OA-09, US-OA-10, US-OA-15, US-OA-19 | UC-OA-09, UC-OA-13, UC-OA-15 | Authorization/privacy test: authorized Admin can view the specified rider/account history. |
+| OA-FR-03 | US-OA-02 — A Popular Vehicle Type Needs a Capacity Change | UC-OA-02 | Functional test: configure capacity and verify the new value is accepted for future rides. |
+| OA-FR-05 | US-OA-04 — A New Destination Needs to Be Supported | UC-OA-03 | Functional test: add a hub and verify it becomes an active configured destination. |
+| OA-FR-06 | US-OA-05 — A Destination Changes or Stops Being Supported | UC-OA-03 | Functional test: modify a hub and verify existing ride references remain unchanged. |
+| OA-FR-07 | US-OA-05 — A Destination Changes or Stops Being Supported | UC-OA-03 | Functional test: deactivate a hub and verify it is unavailable for new rides while historical references remain. |
+| OA-FR-10 | US-OA-06 — Different Vehicle Types Need Different Campus Fares | UC-OA-04 | Functional test: configure fares for campus-place pairs and vehicle types, verify non-directionality, and verify the fare is consumed by ride fare calculation. |
+| OA-FR-11 | US-OA-07 — Riders Need an External Fare Estimate | UC-OA-04 | Functional test: configure an external fare range for a segment and vehicle type. |
+| OA-FR-16 | US-OA-08 — An Admin Needs to Investigate a Ride Without Interfering With It | UC-OA-05 | Functional/access test: authorized Admin can view ride information. |
+| OA-FR-18 | US-OA-09, US-OA-10 — Fare-share complaint / SOS complaint | UC-OA-06 | Functional/privacy test: authorized Admin can view rider complaints. |
+| OA-FR-20 | US-OA-09, US-OA-10 — Complaint history scenarios | UC-OA-06, UC-OA-10 | Functional test: view current and retained previous complaints for reported rider. |
+| OA-FR-21 | US-OA-11 — A Warning Is Issued After Reviewing Repeated Fare Complaints | UC-OA-07 | Acceptance test: warning requires reason and is recorded. |
+| OA-FR-23 | US-OA-12, US-OA-13 — Three-month / indefinite suspension | UC-OA-08 | Functional test: create both finite and indefinite suspension states. |
+| OA-FR-28 | US-OA-14 — An Indefinitely Suspended Rider Is Manually Reactivated | UC-OA-09 | Functional test: manually reactivate suspended rider and verify audit information. |
+| OA-FR-34 | US-OA-15 — The AI Flags Repeated Fare-Share Complaints | UC-OA-11, UC-OA-12 | AI oversight test: verify warning/suspension is not executed without explicit Admin approval. |
+| OA-FR-36 | US-OA-16 — The Admin Rejects an AI Recommendation | UC-OA-12 | AI oversight test: rejection requires a reason and prevents execution. |
+| OA-FR-42 | US-OA-09, US-OA-10, US-OA-15, US-OA-19 | UC-OA-06, UC-OA-10 | Authorization/privacy test: authorized Admin can view the specified rider/account history. |
 
 ---
 
@@ -38,34 +38,34 @@ Verification entries describe how the requirement can be tested or inspected lat
 
 | Requirement | User story / scenario | Use case | Verification approach |
 |---|---|---|---|
-| SYS-FR-04 | US-OA-02 | UC-OA-03 | State-transition test: capacity change affects only newly created rides. |
-| SYS-FR-08 | US-OA-04, US-OA-05 | UC-OA-04, UC-OA-05 | Functional test: rider destination selection is restricted to active configured hubs. |
-| SYS-FR-09 | US-OA-04 | UC-OA-04 | Configuration inspection / initialization test: required initial hubs are present. |
-| SYS-FR-12 | US-OA-07 | UC-OA-07 | Functional test: external range is displayed as an estimate. |
-| SYS-FR-13 | US-OA-07 | UC-OA-07 | Authorization/function test: Admin cannot set final exact external fare. |
-| SYS-FR-14 | US-OA-06 | UC-OA-06 | Fare calculation test: common segment is divided equally among riders sharing it. |
-| SYS-FR-15 | US-OA-06 | UC-OA-06 | Fare calculation test: rider-specific post-common-segment fare is added to that rider's total. |
-| SYS-FR-17 | US-OA-08 | UC-OA-08 | Authorization test: Admin ride modification is rejected. |
-| SYS-FR-19 | US-OA-10 | UC-OA-09 | Functional test: rider can submit SOS complaint against another rider. |
-| SYS-FR-45 | US-OA-01, 02, 03, 04, 05, 06, 07, 09, 11, 12, 13, 14, 15, 16, 18, 20 | UC-OA-02, 03, 04, 06, 07, 08, 09, 11, 12, 13, 14 | Audit verification: each state-changing Admin action records authenticated Admin identity, timestamp, action, affected entity, and required reason where applicable. |
-| SYS-FR-24 | US-OA-12, US-OA-13 | UC-OA-11 | Functional test: suspended rider cannot create or join rides. |
-| SYS-FR-25 | US-OA-12 | UC-OA-11 | Time/state test: temporary suspension automatically reactivates at expiry. |
-| SYS-FR-26 | US-OA-13, US-OA-14 | UC-OA-11, UC-OA-12 | State test: indefinite suspension persists until manual reactivation. |
-| SYS-FR-27 | US-OA-12, US-OA-13, US-OA-14 | UC-OA-11, UC-OA-12 | Data-integrity test: historical records survive suspension/reactivation. |
-| SYS-FR-30 | US-OA-15 | UC-OA-13 | AI output test: valid complaint summary is displayed. |
-| SYS-FR-31 | US-OA-15, US-OA-17 | UC-OA-13, UC-OA-16 | Data-integrity test: original complaint is preserved independently of AI output. |
-| SYS-FR-32 | US-OA-15 | UC-OA-13 | AI output test: severity and behavioral tags are displayed when valid output exists. |
-| SYS-FR-33 | US-OA-15, US-OA-16 | UC-OA-13, UC-OA-14 | AI oversight test: valid enforcement recommendation is shown to Admin. |
-| SYS-FR-35 | US-OA-16 | UC-OA-14 | Negative test: rejected AI recommendation does not execute. |
-| SYS-FR-37 | US-OA-15, US-OA-16 | UC-OA-13, UC-OA-14 | Authorization/AI safety test: AI cannot directly change warning/suspension state. |
-| SYS-FR-38 | US-OA-15, US-OA-16 | UC-OA-13, UC-OA-14 | Audit test: complaint ID, recommendation, decision, Admin, timestamp, and final action are recorded. |
-| SYS-FR-39 | US-OA-19 | UC-OA-15 | Authentication test: unauthenticated user cannot obtain Admin access. |
-| SYS-FR-40 | US-OA-19 | UC-OA-15 | Authorization test: all authorized Admins receive the same Admin permission set. |
-| SYS-FR-41 | US-OA-19 | UC-OA-15 | Negative security test: Rider cannot self-assign Admin role. |
-| SYS-FR-43 | US-OA-09, US-OA-10, US-OA-15, US-OA-19 | UC-OA-09, UC-OA-13, UC-OA-15 | Privacy/authorization test: sensitive records are inaccessible to unauthorized users. |
-| SYS-FR-44 | US-OA-19 | UC-OA-15 | Authorization test: Admin cannot modify rider personal profile data through Admin account-management functions. |
-| SYS-FR-46 | US-OA-17 | UC-OA-16 | Failure test: AI failure/timeout/invalid/low-confidence output routes complaint to manual review. |
-| SYS-FR-47 | US-OA-17 | UC-OA-16 | Failure/data-integrity test: original complaint survives AI failure. |
+| SYS-FR-04 | US-OA-02 | UC-OA-02 | State-transition test: capacity change affects only newly created rides. |
+| SYS-FR-08 | US-OA-04, US-OA-05 | UC-OA-03 | Functional test: rider destination selection is restricted to active configured hubs. |
+| SYS-FR-09 | US-OA-04 | UC-OA-03 | Configuration inspection / initialization test: required initial hubs are present. |
+| SYS-FR-12 | US-OA-07 | UC-OA-04 | Functional test: external range is displayed as an estimate. |
+| SYS-FR-13 | US-OA-07 | UC-OA-04 | Authorization/function test: Admin cannot set final exact external fare. |
+| SYS-FR-14 | US-OA-06 | UC-OA-04 | Fare calculation test: common segment is divided equally among riders sharing it. |
+| SYS-FR-15 | US-OA-06 | UC-OA-04 | Fare calculation test: rider-specific post-common-segment fare is added to that rider's total. |
+| SYS-FR-17 | US-OA-08 | UC-OA-05 | Authorization test: Admin ride modification is rejected. |
+| SYS-FR-19 | US-OA-10 | UC-OA-06 | Functional test: rider can submit SOS complaint against another rider. |
+| SYS-FR-45 | US-OA-01, 02, 03, 04, 05, 06, 07, 09, 11, 12, 13, 14, 15, 16, 18, 20 | UC-OA-02, 03, 04, 06, 07, 08, 09, 12, 13 | Audit verification: each state-changing Admin action records authenticated Admin identity, timestamp, action, affected entity, and required reason where applicable. |
+| SYS-FR-24 | US-OA-12, US-OA-13 | UC-OA-08 | Functional test: suspended rider cannot create or join rides. |
+| SYS-FR-25 | US-OA-12 | UC-OA-08 | Time/state test: temporary suspension automatically reactivates at expiry and records the expiry. |
+| SYS-FR-26 | US-OA-13, US-OA-14 | UC-OA-08, UC-OA-09 | State test: indefinite suspension persists until manual reactivation. |
+| SYS-FR-27 | US-OA-12, US-OA-13, US-OA-14 | UC-OA-08, UC-OA-09 | Data-integrity test: historical records survive suspension/reactivation. |
+| SYS-FR-30 | US-OA-15 | UC-OA-11 | AI output test: valid complaint summary is displayed. |
+| SYS-FR-31 | US-OA-15, US-OA-17 | UC-OA-11, UC-OA-14 | Data-integrity test: original complaint is preserved independently of AI output. |
+| SYS-FR-32 | US-OA-15 | UC-OA-11 | AI output test: severity and behavioral tags are displayed when valid output exists. |
+| SYS-FR-33 | US-OA-15, US-OA-16 | UC-OA-11, UC-OA-12 | AI oversight test: valid enforcement recommendation is shown to Admin. |
+| SYS-FR-35 | US-OA-16 | UC-OA-12 | Negative test: rejected AI recommendation does not execute. |
+| SYS-FR-37 | US-OA-15, US-OA-16 | UC-OA-11, UC-OA-12 | Authorization/AI safety test: AI cannot directly change warning/suspension state. |
+| SYS-FR-38 | US-OA-15, US-OA-16, US-OA-20 | UC-OA-12, UC-OA-13 | Audit test: complaint ID, recommendation, decision, Admin, timestamp, and final action are recorded. |
+| SYS-FR-39 | US-OA-19 | UC-OA-01 | Authentication test: unauthenticated user cannot obtain Admin access. |
+| SYS-FR-40 | US-OA-19 | UC-OA-01 | Authorization test: all authorized Admins receive the same Admin permission set. |
+| SYS-FR-41 | US-OA-19 | UC-OA-01 | Negative security test: Rider cannot self-assign Admin role. |
+| SYS-FR-43 | US-OA-09, US-OA-10, US-OA-15, US-OA-19 | UC-OA-01, UC-OA-06, UC-OA-10, UC-OA-11, UC-OA-12 | Privacy/authorization test: sensitive records are inaccessible to unauthorized users. |
+| SYS-FR-44 | US-OA-19 | UC-OA-01, UC-OA-10 | Authorization test: Admin cannot modify rider personal profile data through Admin account-management functions. |
+| SYS-FR-46 | US-OA-17 | UC-OA-14 | Failure test: AI failure/timeout/invalid/low-confidence output routes complaint to manual review. |
+| SYS-FR-47 | US-OA-17 | UC-OA-14 | Failure/data-integrity test: original complaint survives AI failure. |
 | SYS-FR-48 | US-OA-20 and all state-changing Admin stories | Cross-cutting | Atomicity test: success is reported only after all relevant state changes persist. |
 
 ---
@@ -140,3 +140,33 @@ The intended future chain is:
 **Requirement → User Story → Use Case → Jira Issue → GitHub branch/commit/PR → Test Case → Test Result**
 
 No Jira issue IDs, commits, branches, or test results are invented in this document.
+
+---
+
+## 7. Implementation Verification Snapshot — 12 October 2026
+
+The current codebase was checked against the Operations Admin requirements, user stories, use
+cases, traceability matrix, all eleven Admin sequence diagrams, and the relevant architecture
+and UI deliverables. The Admin surface is implemented for protected configuration management,
+read-only ride and rider review, complaint review, warning/suspension/reactivation, and AI
+analysis and human decisions. The full web test suite passed: `npm run test --workspace @ridepool/web`
+— 123 test files and 943 tests passed.
+
+The following cross-cutting system requirements remain outside the current Admin-only scope and
+are not considered end-to-end complete:
+
+| Requirement | Current implementation | Remaining dependency |
+|---|---|---|
+| OA-FR-10, SYS-FR-14, SYS-FR-15 | Admin campus fares are versioned and audited; external-hub fare ranges are supplied to ride forms as estimates. | The current ride fare flow accepts a whole-vehicle fare from the owner and does not consume the configured campus-fare matrix or calculate shared and rider-specific route segments. |
+| SYS-FR-24 | Active suspensions block ride creation. | No ride-join API exists in the current codebase, so enforcement at join time cannot yet be implemented or verified. |
+| SYS-FR-25 | The suspension record stores its expiry, and active status is derived from that timestamp without a scheduled job. | No separate audit-log event is emitted when a temporary suspension expires; add one if the acceptance criterion requires an explicit expiry event in addition to the retained end time. |
+
+These are dependencies on the broader ride/pricing workflows, not missing Admin configuration
+screens or Admin authorization paths.
+
+The complaint pipeline persists the source complaint before invoking AI and falls back to manual
+review, but the model call is awaited inline (with an eight-second timeout) rather than queued
+asynchronously as shown in Architecture 3. The implementation records model, prompt version,
+latency, token counts, and outcome with each analysis, but does not yet provide Architecture 6's
+shared AI gateway, per-rider rate limiter, explicit input-token budget, or separate 90-day trace
+retention store. These are architecture-level follow-ups beyond the Admin UI/API audit.
