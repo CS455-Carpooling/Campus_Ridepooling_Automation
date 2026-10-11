@@ -62,7 +62,7 @@ exist yet shows the 404 page until the page is built.
 | `/admin/complaints` | Complaint queue; today it lists ride chat reports | Built (CS455-45); one queue for all complaints in CS455-53 |
 | `/admin/complaints/[id]`, `/admin/riders`, `/admin/riders/[id]`, `/admin/rides/[id]` | Complaint detail, rider search and record, a read-only ride | Not started (CS455-53) |
 | `/rides/[id]/complaint`, `/complaints` | File a complaint about someone on a ride; your complaints | Not started (CS455-53) |
-| `/admin/configuration/...` | Vehicle types, hubs and pickup points, fares | Not started (CS455-51) |
+| `/admin/configuration/...` | Vehicle types, hubs and pickup points, fares | Built (CS455-51) |
 | `/admin/incidents` | SOS incidents | Not started (needs in-trip ride states) |
 
 ## Signed-in pages and roles
@@ -159,6 +159,12 @@ exist yet shows the 404 page until the page is built.
   - Riders (`src/lib/enforcement.ts`): `POST /api/admin/riders/[id]/warnings`, `.../suspensions`
     (a number of days, or indefinite) and `.../reactivation`, each with a required reason. Lifting
     a suspension keeps its history. The rider is notified, without the admin's own words.
+- **Configuration pages** (`/admin/configuration`, CS455-51) read everything with
+  `getConfiguration()` (`src/lib/admin-config-queries.ts`) and edit it through the configuration
+  APIs. `ConfigListEditor` (vehicle types, hubs, campus places) checks each form with the rules of
+  `admin-config-rules.ts` before sending, asks before deactivating, and on a 409 keeps the admin's
+  input and shows the other admin's version. Offer a ride shows the hub's typical fare range under
+  the fare as an estimate (SYS-FR-12).
 - **Suspended riders** cannot offer a ride or rate others: those APIs answer 403 `suspended` with
   the end time and reason category. They can still file complaints (FR-RD-01.5).
 
