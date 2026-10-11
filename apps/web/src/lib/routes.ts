@@ -16,10 +16,17 @@ export const routes = {
   offerRide: '/rides/new',
   ride: (rideId: string) => `/rides/${encodeURIComponent(rideId)}`,
   rideReview: (rideId: string) => `/rides/${encodeURIComponent(rideId)}/review`,
+  rideComplaint: (rideId: string) => `/rides/${encodeURIComponent(rideId)}/complaint`,
+  myComplaints: '/complaints',
   notifications: '/notifications',
+  admin: '/admin',
+  /** SOS alerts (FR-RD-15) wait for in-trip ride states; nothing links here until then. */
   adminIncidents: '/admin/incidents',
   adminComplaints: '/admin/complaints',
-  adminRecommendations: '/admin/recommendations',
+  adminComplaint: (complaintId: string) => `/admin/complaints/${encodeURIComponent(complaintId)}`,
+  adminRiders: '/admin/riders',
+  adminRider: (userId: string) => `/admin/riders/${encodeURIComponent(userId)}`,
+  adminRide: (rideId: string) => `/admin/rides/${encodeURIComponent(rideId)}`,
   adminConfiguration: '/admin/configuration',
   adminVehicleTypes: '/admin/configuration/vehicle-types',
   adminHubs: '/admin/configuration/hubs',
@@ -36,12 +43,13 @@ const navigation: Record<Role, NavItem[]> = {
     { href: routes.offerRide, label: 'Offer a ride' },
     { href: routes.notifications, label: 'Notifications' },
   ],
+  // AI recommendations are decided on each complaint, so they have no entry of their own.
   admin: [
     { href: routes.home, label: 'Home' },
-    { href: routes.profile, label: 'Profile' },
-    { href: routes.adminIncidents, label: 'Incidents' },
     { href: routes.adminComplaints, label: 'Complaints' },
+    { href: routes.adminRiders, label: 'Riders' },
     { href: routes.adminConfiguration, label: 'Configuration' },
+    { href: routes.profile, label: 'Profile' },
   ],
 };
 

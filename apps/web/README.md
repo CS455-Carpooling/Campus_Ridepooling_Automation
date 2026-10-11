@@ -31,6 +31,7 @@ src/
   components/ui/     shared building blocks: Button, ButtonLink, Field, Skeleton, LoadingRegion
   components/shell/  header, navigation, footer and the product mark
   components/home/   the student and admin home screens
+  components/admin/  the admin page shell, outcome labels, the not-allowed page, the chat report queue
   components/landing/ the landing page's fare card and live fare calculator
   components/rides/  create-ride inputs (route, vehicle, departure window, fare) and the ride details
   lib/               session, roles, route map, fares, formatting, page data and small helpers
@@ -57,8 +58,12 @@ exist yet shows the 404 page until the page is built.
 | `/rides/[id]/review` | Rate the people on a completed ride, for 72 hours after it is completed | Built (CS455-40 to 43) |
 | `/rides` | Find a ride | Not started |
 | `/notifications` | Notifications | Not started |
-| `/admin/incidents`, `/admin/complaints`, `/admin/recommendations` | Admin queues | Not started |
-| `/admin/configuration/...` | Vehicle types, hubs and pickup points, fares | Not started |
+| `/admin` | Sends an admin to their home; tells a student the admin pages are not for them | Built (CS455-49) |
+| `/admin/complaints` | Complaint queue; today it lists ride chat reports | Built (CS455-45); one queue for all complaints in CS455-53 |
+| `/admin/complaints/[id]`, `/admin/riders`, `/admin/riders/[id]`, `/admin/rides/[id]` | Complaint detail, rider search and record, a read-only ride | Not started (CS455-53) |
+| `/rides/[id]/complaint`, `/complaints` | File a complaint about someone on a ride; your complaints | Not started (CS455-53) |
+| `/admin/configuration/...` | Vehicle types, hubs and pickup points, fares | Not started (CS455-51) |
+| `/admin/incidents` | SOS incidents | Not started (needs in-trip ride states) |
 
 ## Signed-in pages and roles
 
@@ -131,7 +136,14 @@ exist yet shows the 404 page until the page is built.
 - **Admin changes** go through `withAdminAction()` (`src/lib/admin-actions.ts`): one transaction
   that checks the role again, does the work and writes the audit row, and answers only after the
   commit. A refused or failed attempt keeps nothing and is audited as `refused` or `failed`;
-  errors are logged, never shown.
+  errors are logged, never shown. Each action uses a code from `src/lib/admin-activity.ts`, which
+  also holds how the pages name it.
+- **Admin pages** sit in `AdminPageShell` (CS455-49): the admin navigation (Home, Complaints,
+  Riders, Configuration, Profile) with the current page marked and a way to log out, then the
+  page's title with an optional back link, eyebrow, description and actions. The admin home
+  (`/dashboard` for an admin) counts open complaints (chat reports included, safety ones called
+  out), AI recommendations awaiting a decision and riders suspended now, and lists the last 10
+  audit entries, each marked Done, Refused or Failed.
 
 ## Conventions
 
