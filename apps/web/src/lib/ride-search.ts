@@ -110,7 +110,7 @@ const SEARCH_SQL = `
       OR CEIL(
            r.expected_total_fare::numeric
            / (
-               (SELECT COUNT(*)::int FROM riders o WHERE o.ride_id = r.id) + 2
+               (SELECT COUNT(*)::int FROM riders o WHERE o.ride_id = r.id) + 1
              )
          ) <= $7::int
     )
@@ -138,18 +138,49 @@ const OCCUPANT_NAMES_SQL = `
 export async function searchRides(
   viewerId: string,
   filters: SearchRideRequest,
-  _now: Date = new Date(),
 ): Promise<SearchRideResult[]> {
   if (!isUuid(viewerId)) return [];
 
+  // 1. Initialize resolved filters with the explicit form overrides
+  let resolvedVehicleTypeId = filters.vehicleTypeId;
+  let resolvedMaxFareShare = filters.maxFareShare;
+
+  // 2. Fallback to User Profile defaults if explicit form overrides are missing
+  if (!resolvedVehicleTypeId || resolvedMaxFareShare === undefined) {
+    const { rows: profileRows } = await pool.query<{
+      preferred_vehicle_type_id: string | null;
+      max_acceptable_fare_share: number | null;
+    }>(
+      `SELECT preferred_vehicle_type_id, max_acceptable_fare_share 
+       FROM user_profiles 
+       WHERE user_id = $1`,
+      [viewerId]
+    );
+
+    if (profileRows.length > 0) {
+      const profile = profileRows[0];
+      
+      // If form didn't specify vehicle type, use profile preferred vehicle type
+      if (!resolvedVehicleTypeId) {
+        resolvedVehicleTypeId = profile.preferred_vehicle_type_id ?? undefined;
+      }
+      
+      // If form didn't specify max budget share, use profile max acceptable share
+      if (resolvedMaxFareShare === undefined) {
+        resolvedMaxFareShare = profile.max_acceptable_fare_share ?? undefined;
+      }
+    }
+  }
+
+  // 3. Execute main search query passing the resolved fallback filters
   const { rows } = await pool.query<SearchRow>(SEARCH_SQL, [
     filters.direction,
     filters.hubId,
     filters.departureStart,
     filters.departureEnd,
     viewerId,
-    filters.vehicleTypeId ?? null,
-    filters.maxFareShare ?? null,
+    resolvedVehicleTypeId ?? null,
+    resolvedMaxFareShare ?? null,
   ]);
 
   if (rows.length === 0) return [];
