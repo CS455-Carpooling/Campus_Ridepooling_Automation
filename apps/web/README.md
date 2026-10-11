@@ -59,9 +59,9 @@ exist yet shows the 404 page until the page is built.
 | `/rides` | Find a ride | Not started |
 | `/notifications` | Notifications | Not started |
 | `/admin` | Sends an admin to their home; tells a student the admin pages are not for them | Built (CS455-49) |
-| `/admin/complaints` | Complaint queue; today it lists ride chat reports | Built (CS455-45); one queue for all complaints in CS455-53 |
-| `/admin/complaints/[id]`, `/admin/riders`, `/admin/riders/[id]`, `/admin/rides/[id]` | Complaint detail, rider search and record, a read-only ride | Not started (CS455-53) |
-| `/rides/[id]/complaint`, `/complaints` | File a complaint about someone on a ride; your complaints | Not started (CS455-53) |
+| `/admin/complaints` | One complaint queue, from the form and from chat reports, Safety first | Built (CS455-45, 53) |
+| `/admin/complaints/[id]`, `/admin/riders`, `/admin/riders/[id]`, `/admin/rides/[id]` | Complaint detail, rider search and record, a read-only ride | Built (CS455-53) |
+| `/rides/[id]/complaint`, `/complaints` | File a complaint about someone on a ride; your complaints | Built (CS455-53) |
 | `/admin/configuration/...` | Vehicle types, hubs and pickup points, fares | Built (CS455-51) |
 | `/admin/incidents` | SOS incidents | Not started (needs in-trip ride states) |
 
@@ -165,6 +165,14 @@ exist yet shows the 404 page until the page is built.
   `admin-config-rules.ts` before sending, asks before deactivating, and on a 409 keeps the admin's
   input and shows the other admin's version. Offer a ride shows the hub's typical fare range under
   the fare as an estimate (SYS-FR-12).
+- **Complaint pages** (CS455-53): `/rides/[id]/complaint` is linked from the ride page for 7 days
+  after completion and from a low score on the review page; it names people by their seat, shows
+  the emergency numbers for Safety (`src/lib/emergency.ts`: the IIT Kanpur security number is still
+  to be filled in), and gives the reference. `/complaints` lists the rider's own, with status and
+  whether action was taken. Admins get one queue, the complaint with its original words and the
+  accused's other complaints, rider search and records, and a read-only ride
+  (`admin-complaint-queries.ts`, `admin-rider-queries.ts`). Avoid `<blockquote>` in our pages:
+  `src/index.css` styles it as a large landing-page quote.
 - **Suspended riders** cannot offer a ride or rate others: those APIs answer 403 `suspended` with
   the end time and reason category. They can still file complaints (FR-RD-01.5).
 

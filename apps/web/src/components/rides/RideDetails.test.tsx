@@ -41,6 +41,7 @@ function rideView(change: Partial<RideView> = {}): RideView {
     windowEnded: false,
     completedAt: null,
     canComplete: false,
+    canComplain: false,
     review: null,
     vehicleName: 'Car',
     capacity: 4,
@@ -294,6 +295,16 @@ describe('RideDetails: the link to rate (CS455-43)', () => {
       />,
     );
     expect(screen.queryByText(/You rated everyone/)).toBeNull();
+  });
+
+  it('links the people on the ride to the complaint form while it is open (CS455-53)', () => {
+    const { rerender } = render(<RideDetails ride={rideView({ canComplain: true })} />);
+    expect(screen.getByRole('link', { name: 'Report a problem' })).toHaveAttribute(
+      'href',
+      `/rides/${rideView().id}/complaint`,
+    );
+    rerender(<RideDetails ride={rideView({ canComplain: false })} />);
+    expect(screen.queryByRole('link', { name: 'Report a problem' })).toBeNull();
   });
 });
 

@@ -1,6 +1,7 @@
 import 'server-only';
 import { pool } from './db';
 import { estimateShare, splitFare } from './fare';
+import { complaintWindow } from './complaint-rules';
 import { isUuid } from './ids';
 import {
   completeRideRefusal,
@@ -60,6 +61,11 @@ export type RideView = {
   completedAt: string | null;
   /** The viewer is the owner and may mark the ride completed now (FR-RO-09.4). */
   canComplete: boolean;
+  /**
+   * Someone on the ride may report a problem with the trip now (CS455-53, FR-RD-13.1): it was
+   * completed less than 7 days ago and has someone else on it.
+   */
+  canComplain: boolean;
   /**
    * Rating on a completed ride, for the people on it (CS455-43): whether it is
    * open, until when, and how many of the others the viewer has not rated yet.
@@ -211,6 +217,10 @@ export async function getRideView(
     windowEnded: now.getTime() >= ride.departure_end.getTime(),
     completedAt: ride.completed_at ? ride.completed_at.toISOString() : null,
     canComplete: completeRideRefusal(viewerRole, ride.state, ride.departure_start, now) === null,
+    canComplain:
+      viewerRole !== 'visitor' &&
+      people.length > 1 &&
+      complaintWindow(ride.state, ride.completed_at, now) === 'open',
     review:
       viewerRole !== 'visitor' && ride.completed_at && (rating === 'open' || rating === 'closed')
         ? {
