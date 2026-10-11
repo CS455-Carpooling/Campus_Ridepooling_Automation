@@ -3,13 +3,16 @@ import {
   COMPLAINT_CATEGORIES,
   COMPLAINT_RULES,
   COMPLAINT_STATUSES,
+  canMoveComplaint,
   characterCount,
   complaintCategoryLabels,
   complaintFormClosesAt,
   complaintMessages,
   complaintStatusLabels,
+  complaintStatusMessages,
   complaintWindow,
   parseComplaintRequest,
+  parseComplaintStatusChange,
 } from './complaint-rules';
 
 const SEAT = '2b0f1f8e-4c1a-4a43-9b51-0d7f2b7c9a10';
@@ -128,5 +131,61 @@ describe('parseComplaintRequest', () => {
     expect(at('\u{1F697}'.repeat(2000)).ok).toBe(true);
     expect(at('a'.repeat(2001)).ok).toBe(false);
     expect(characterCount('\u{1F697}ok')).toBe(3);
+  });
+});
+
+describe('parseComplaintStatusChange (OA-FR-18, FR-RD-13.5)', () => {
+  it('moves a complaint under review, with an optional note', () => {
+    expect(parseComplaintStatusChange({ status: 'under_review', version: 1 })).toEqual({
+      ok: true,
+      value: { status: 'under_review', version: 1 },
+    });
+    expect(
+      parseComplaintStatusChange({ status: 'under_review', note: '  Called both.  ', version: 2 }),
+    ).toEqual({ ok: true, value: { status: 'under_review', note: 'Called both.', version: 2 } });
+  });
+
+  it('resolves only with whether action was taken', () => {
+    expect(
+      parseComplaintStatusChange({ status: 'resolved', actionTaken: false, version: 3 }),
+    ).toEqual({
+      ok: true,
+      value: { status: 'resolved', actionTaken: false, version: 3 },
+    });
+    expect(parseComplaintStatusChange({ status: 'resolved', version: 3 })).toEqual({
+      ok: false,
+      errors: { actionTaken: complaintStatusMessages.actionTaken },
+    });
+  });
+
+  it('refuses another status, a long or non-text note, and a missing version', () => {
+    expect(
+      parseComplaintStatusChange({ status: 'submitted', note: 'x'.repeat(1001), version: 0 }),
+    ).toEqual({
+      ok: false,
+      errors: {
+        status: complaintStatusMessages.status,
+        note: complaintStatusMessages.note,
+        version: complaintStatusMessages.version,
+      },
+    });
+    expect(
+      parseComplaintStatusChange({ status: 'under_review', note: 5, version: 1 }),
+    ).toMatchObject({
+      ok: false,
+      errors: { note: complaintStatusMessages.note },
+    });
+    expect(parseComplaintStatusChange('nonsense')).toMatchObject({ ok: false });
+  });
+});
+
+describe('canMoveComplaint', () => {
+  it('goes forward only, and Resolved is final', () => {
+    expect(canMoveComplaint('submitted', 'under_review')).toBe(true);
+    expect(canMoveComplaint('submitted', 'resolved')).toBe(true);
+    expect(canMoveComplaint('under_review', 'resolved')).toBe(true);
+    expect(canMoveComplaint('under_review', 'under_review')).toBe(false);
+    expect(canMoveComplaint('under_review', 'submitted')).toBe(false);
+    expect(canMoveComplaint('resolved', 'under_review')).toBe(false);
   });
 });

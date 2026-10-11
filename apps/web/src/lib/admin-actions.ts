@@ -1,6 +1,7 @@
 import 'server-only';
 import type { Pool, PoolClient } from 'pg';
 import type { AdminSession } from './admin-auth';
+import { json } from './auth';
 import { pool } from './db';
 import { isUuid } from './ids';
 
@@ -24,13 +25,15 @@ export type AdminActionSuccess<T> = {
   after?: unknown;
 };
 
-/** A refusal to send back as `{ error, code, fields? }` with `status`. */
+/** A refusal to send back as `{ error, code, fields?, current? }` with `status`. */
 export type AdminActionRefusal = {
   ok: false;
   status: number;
   error: string;
   code: string;
   fields?: Record<string, string>;
+  /** On a 409 `version_conflict`: the item as it is now, so the page can show what changed. */
+  current?: unknown;
 };
 
 export type AdminActionResult<T> = AdminActionSuccess<T> | AdminActionRefusal;
@@ -42,6 +45,36 @@ export function adminRefusal(
   fields?: Record<string, string>,
 ): AdminActionRefusal {
   return fields ? { ok: false, status, error, code, fields } : { ok: false, status, error, code };
+}
+
+/** 409: another admin changed the item since this one loaded it (SYS-NFR-04, 05). */
+export function versionConflict(current: unknown): AdminActionRefusal {
+  return {
+    ok: false,
+    status: 409,
+    code: 'version_conflict',
+    error: 'Someone else changed this since you opened it. Check their change, then try again.',
+    current,
+  };
+}
+
+/** The answer for a finished admin action: its success body, or the refusal as JSON. */
+export function adminActionResponse<T>(
+  result: AdminActionResult<T>,
+  success: (value: T) => object,
+  successStatus = 200,
+): Response {
+  if (result.ok) return json(success(result.value), successStatus);
+  const { status, error, code, fields, current } = result;
+  return json(
+    {
+      error,
+      code,
+      ...(fields ? { fields } : {}),
+      ...(current !== undefined ? { current } : {}),
+    },
+    status,
+  );
 }
 
 const AUDIT_SQL = `

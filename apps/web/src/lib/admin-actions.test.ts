@@ -14,7 +14,13 @@ const h = vi.hoisted(() => {
 });
 vi.mock('./db', () => ({ pool: { query: h.poolQuery, connect: h.connect } }));
 
-import { adminRefusal, withAdminAction, type AdminActionMeta } from './admin-actions';
+import {
+  adminActionResponse,
+  adminRefusal,
+  versionConflict,
+  withAdminAction,
+  type AdminActionMeta,
+} from './admin-actions';
 
 const ADMIN_ID = '6f1c2a5e-0000-4000-8000-000000000001';
 const admin: AdminSession = {
@@ -208,5 +214,32 @@ describe('withAdminAction when something fails', () => {
     });
     expect(result).toMatchObject({ ok: false, code: 'server_error' });
     expect(h.release).toHaveBeenCalledOnce();
+  });
+});
+
+describe('versionConflict and adminActionResponse (CS455-50)', () => {
+  it('answers a conflict with 409 and the item as it is now (SYS-NFR-04, 05)', async () => {
+    const response = adminActionResponse(versionConflict({ id: 'auto', version: 5 }), () => ({}));
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({
+      error: 'Someone else changed this since you opened it. Check their change, then try again.',
+      code: 'version_conflict',
+      current: { id: 'auto', version: 5 },
+    });
+  });
+
+  it('answers a refusal with its fields, and a success with its body and status', async () => {
+    const refused = adminActionResponse(
+      adminRefusal(400, 'invalid', 'Check.', { name: 'Taken.' }),
+      () => ({}),
+    );
+    expect(await refused.json()).toEqual({
+      error: 'Check.',
+      code: 'invalid',
+      fields: { name: 'Taken.' },
+    });
+    const created = adminActionResponse({ ok: true, value: 'auto' }, (id) => ({ id }), 201);
+    expect(created.status).toBe(201);
+    expect(await created.json()).toEqual({ id: 'auto' });
   });
 });

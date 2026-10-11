@@ -9,6 +9,7 @@ const h = vi.hoisted(() => ({
   connect: vi.fn(),
   clientQuery: vi.fn(),
   release: vi.fn(),
+  getActiveSuspension: vi.fn(),
 }));
 
 vi.mock('@/lib/auth', () => ({
@@ -20,6 +21,7 @@ vi.mock('@/lib/auth', () => ({
 vi.mock('@/lib/db', () => ({
   pool: { connect: h.connect },
 }));
+vi.mock('@/lib/suspensions', () => ({ getActiveSuspension: h.getActiveSuspension }));
 
 import { POST } from './route';
 
@@ -47,6 +49,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   h.guard.mockResolvedValue(null);
   h.getCurrentUser.mockResolvedValue({ id: 'user-1' });
+  h.getActiveSuspension.mockResolvedValue(null);
   h.readJson.mockResolvedValue({ ...validBody });
   h.connect.mockResolvedValue(client());
   h.clientQuery.mockImplementation((sql: string) => {
@@ -80,6 +83,22 @@ beforeEach(() => {
 });
 
 describe('POST /api/rides', () => {
+  it('refuses a suspended rider before touching the ride tables (FR-RD-01.5, CS455-52)', async () => {
+    h.getActiveSuspension.mockResolvedValue({
+      id: 's1',
+      reasonCategory: 'safety',
+      startsAt: '2026-10-11T00:00:00.000Z',
+      endsAt: '2026-10-14T00:00:00.000Z',
+      isIndefinite: false,
+    });
+    const res = await POST(new Request('http://localhost/api/rides', { method: 'POST' }));
+    expect(res.status).toBe(403);
+    const body = (await res.json()) as { code: string; error: string };
+    expect(body.code).toBe('suspended');
+    expect(body.error).toMatch(/suspended until .* \(reason: Safety\), so you cannot offer a ride/);
+    expect(h.connect).not.toHaveBeenCalled();
+  });
+
   it('requires authentication', async () => {
     h.getCurrentUser.mockResolvedValue(null);
     const response = await POST(new Request('http://localhost/api/rides', { method: 'POST' }));
