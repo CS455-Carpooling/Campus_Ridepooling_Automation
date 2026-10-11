@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { ButtonLink } from '@/components/ui/ButtonLink';
 import { DesignSystem } from '@/components/ui/DesignSystem';
@@ -49,6 +50,14 @@ export function RideDetails({ ride }: { ride: RideView }) {
 
       {ride.canComplete && <CompleteRideButton rideId={ride.id} />}
       <RateLink ride={ride} />
+      {ride.canComplain && (
+        <p className="mt-4 text-sm text-ink-muted">
+          Something went wrong on this trip?{' '}
+          <Link href={routes.rideComplaint(ride.id)} className="font-semibold text-ink">
+            Report a problem
+          </Link>
+        </p>
+      )}
 
       {!cancelled && <SharePanel ride={ride} />}
 

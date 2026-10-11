@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition, type FormEvent } from 'react';
 import { Button } from '@/components/ui/Button';
@@ -8,9 +9,6 @@ import { TextAreaField } from '@/components/ui/TextAreaField';
 import { RATING_RULES, offersComplaint, parseRatingsRequest } from '@/lib/rating-rules';
 import type { RatingPerson } from '@/lib/ride-ratings';
 import { routes } from '@/lib/routes';
-
-/** Where complaints go until the app has its own complaint form (FR-RD-12.4, in part). */
-const CONTACT_EMAIL = 'campusridepooling@iitk.ac.in';
 
 export type RatingFormProps = {
   rideId: string;
@@ -137,11 +135,14 @@ export function RatingForm({ rideId, people, closesAt, placeLabel }: RatingFormP
                 <div className="mt-4 rounded-control bg-panel p-4">
                   <p className="font-bold">Was there a problem on this trip?</p>
                   <p className="mt-1 text-sm">
-                    Reporting a problem in the app is coming later. For now, write to{' '}
-                    <a href={`mailto:${CONTACT_EMAIL}`} className="font-semibold text-accent-text">
-                      {CONTACT_EMAIL}
-                    </a>{' '}
-                    with the ride date and what happened. Your score is sent either way.
+                    You can{' '}
+                    <Link
+                      href={routes.rideComplaint(rideId)}
+                      className="font-semibold text-accent-text"
+                    >
+                      report the problem
+                    </Link>{' '}
+                    to the operations team (FR-RD-12.4). Your score is sent either way.
                   </p>
                 </div>
               )}

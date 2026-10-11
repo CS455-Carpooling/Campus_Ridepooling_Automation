@@ -23,6 +23,9 @@ export function StudentHome({ data }: { data: StudentHomeData }) {
           {activeTab === 'upcoming' ? 'Your rides' : 'Ride history'}
         </h1>
         <div className="flex flex-wrap gap-3">
+          <ButtonLink href={routes.myComplaints} variant="secondary">
+            Your complaints
+          </ButtonLink>
           <ButtonLink href={routes.profile} variant="secondary">
             Profile
           </ButtonLink>

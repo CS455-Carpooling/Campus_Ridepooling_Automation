@@ -82,14 +82,14 @@ describe('RatingForm (FR-RD-12.1 to 12.4)', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('US-RD-28 AC4: points to the complaint contact for a score of 1 or 2 only', async () => {
+  it('US-RD-28 AC4: points to the complaint form for a score of 1 or 2 only (CS455-53)', async () => {
     const { user, card } = setup();
     const ananya = card('Ananya Rao');
     await user.click(ananya.getByRole('radio', { name: '2, Fair' }));
     expect(ananya.getByText('Was there a problem on this trip?')).toBeInTheDocument();
-    expect(ananya.getByRole('link', { name: 'campusridepooling@iitk.ac.in' })).toHaveAttribute(
+    expect(ananya.getByRole('link', { name: 'report the problem' })).toHaveAttribute(
       'href',
-      'mailto:campusridepooling@iitk.ac.in',
+      `/rides/${RIDE_ID}/complaint`,
     );
     await user.click(ananya.getByRole('radio', { name: '3, Good' }));
     expect(ananya.queryByText('Was there a problem on this trip?')).toBeNull();
