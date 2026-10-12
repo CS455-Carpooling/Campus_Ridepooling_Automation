@@ -1,11 +1,11 @@
 /**
- * Rules for completing a ride and rating the people on it (CS455-39: FR-RO-09.4,
- * FR-RD-12, FR-RO-12): when rating is open, who may mark a ride completed, and
- * what a rating request may hold. Shared by the review page, its form and the
+ * Rules for rating the people on a completed ride (CS455-39: FR-RD-12, FR-RO-12):
+ * when rating is open and what a rating request may hold. Who may complete a ride is
+ * a trip rule (trip-rules.ts, CS455-62). Shared by the review page, its form and the
  * APIs, so they always agree. Pure functions only: no database, no React.
  */
 import { isUuid } from './ids';
-import type { RideState, ViewerRole } from './ride-status';
+import type { RideState } from './ride-status';
 
 export const RATING_RULES = {
   /** Rating is open for 72 hours after the owner marks the ride completed (P-16, AC1). */
@@ -39,28 +39,6 @@ export function ratingWindow(state: RideState, completedAt: Date | null, now: Da
   if (state === 'cancelled') return 'cancelled';
   if (state !== 'completed' || !completedAt) return 'not_completed';
   return now.getTime() < ratingClosesAt(completedAt).getTime() ? 'open' : 'closed';
-}
-
-/** Why a ride cannot be marked completed now. */
-export type CompleteRideRefusal = 'not_owner' | 'cancelled' | 'already_completed' | 'too_early';
-
-/**
- * Why `role` may not mark this ride completed, or null when they may: only its
- * owner, only once the departure window has started, never a cancelled ride,
- * and only once, because a completed ride cannot be reopened. An owner alone on
- * the ride may complete it too; there is then simply nobody to rate.
- */
-export function completeRideRefusal(
-  role: ViewerRole,
-  state: RideState,
-  departureStart: Date,
-  now: Date,
-): CompleteRideRefusal | null {
-  if (role !== 'owner') return 'not_owner';
-  if (state === 'cancelled') return 'cancelled';
-  if (state === 'completed') return 'already_completed';
-  if (now.getTime() < departureStart.getTime()) return 'too_early';
-  return null;
 }
 
 /**

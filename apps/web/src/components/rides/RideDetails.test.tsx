@@ -1,11 +1,12 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import type { RideView } from '@/lib/ride-view';
+import type { RideOccupant, RideView } from '@/lib/ride-view';
 import { RideDetails } from './RideDetails';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
-const owner = {
+const owner: RideOccupant = {
+  occupantId: '6f1c2a5e-3333-4000-8000-000000000001',
   name: 'Ananya Rao',
   campusPlace: 'Hall 6',
   isOwner: true,
@@ -14,8 +15,11 @@ const owner = {
   completedTrips: 3,
   share: 175,
   rating: null,
+  status: 'waiting',
+  noShowAvailableAt: null,
 };
-const rider = {
+const rider: RideOccupant = {
+  occupantId: '6f1c2a5e-3333-4000-8000-000000000002',
   name: 'Kabir Shah',
   campusPlace: 'Hall 3',
   isOwner: false,
@@ -24,6 +28,8 @@ const rider = {
   completedTrips: 1,
   share: 175,
   rating: null,
+  status: 'waiting',
+  noShowAvailableAt: null,
 };
 
 // Leaves campus 06:30 to 07:30 IST on Saturday 10 October 2026; read at 21:12:05 IST the night before.
@@ -41,6 +47,7 @@ function rideView(change: Partial<RideView> = {}): RideView {
     windowEnded: false,
     completedAt: null,
     canComplete: false,
+    trip: null,
     canComplain: false,
     review: null,
     vehicleName: 'Car',

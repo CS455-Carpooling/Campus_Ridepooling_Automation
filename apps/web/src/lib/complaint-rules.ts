@@ -61,8 +61,21 @@ export function complaintFormClosesAt(completedAt: Date): Date {
 }
 
 /**
- * Whether the complaint form is open for a ride (FR-RD-13.1): from completion until 7 days
- * later. Reporting a chat message (FR-RD-09.6) follows the pool chat's own rules instead.
+ * When the complaint form opens for the viewer (FR-RD-13.1): when the trip was completed, or when
+ * the viewer was marked a no-show (CS455-62), whichever is later; null while neither happened.
+ */
+export function complaintWindowStart(
+  completedAt: Date | null,
+  noShowAt: Date | null = null,
+): Date | null {
+  if (completedAt && noShowAt) return completedAt > noShowAt ? completedAt : noShowAt;
+  return completedAt ?? noShowAt;
+}
+
+/**
+ * Whether the complaint form is open for a ride (FR-RD-13.1): from completion, or from the
+ * viewer's own no-show so they can dispute it, until 7 days later. Reporting a chat message
+ * (FR-RD-09.6) follows the pool chat's own rules instead.
  */
 export type ComplaintWindow = 'not_completed' | 'cancelled' | 'open' | 'closed';
 
@@ -70,10 +83,12 @@ export function complaintWindow(
   state: RideState,
   completedAt: Date | null,
   now: Date,
+  noShowAt: Date | null = null,
 ): ComplaintWindow {
   if (state === 'cancelled') return 'cancelled';
-  if (state !== 'completed' || !completedAt) return 'not_completed';
-  return now.getTime() < complaintFormClosesAt(completedAt).getTime() ? 'open' : 'closed';
+  const start = complaintWindowStart(state === 'completed' ? completedAt : null, noShowAt);
+  if (!start) return 'not_completed';
+  return now.getTime() < complaintFormClosesAt(start).getTime() ? 'open' : 'closed';
 }
 
 /**

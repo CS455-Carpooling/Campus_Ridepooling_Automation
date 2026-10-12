@@ -218,7 +218,7 @@ function People({ ride, showShares }: { ride: RideView; showShares: boolean }) {
               {showShares && (
                 <p className="font-mono tabular-nums">
                   <span className="sr-only">Share </span>
-                  {formatRupees(person.share)}
+                  {person.share === null ? 'No share' : formatRupees(person.share)}
                 </p>
               )}
             </li>
