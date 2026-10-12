@@ -60,6 +60,9 @@ jobs:
       - name: The admin tables were created
         run: docker compose exec -T db psql -U crp -d crp -tAc "SELECT to_regclass('public.admin_audit_log') IS NOT NULL AND to_regclass('public.complaints') IS NOT NULL" | grep -x t
 
+      - name: The trip and SOS tables were created
+        run: docker compose exec -T db psql -U crp -d crp -tAc "SELECT to_regclass('public.sos_incidents') IS NOT NULL AND to_regclass('public.ride_final_shares') IS NOT NULL" | grep -x t
+
       - name: Show logs
         if: failure()
         run: docker compose logs

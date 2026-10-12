@@ -185,6 +185,32 @@ exist yet shows the 404 page until the page is built.
   `src/index.css` styles it as a large landing-page quote.
 - **Suspended riders** cannot offer a ride or rate others: those APIs answer 403 `suspended` with
   the end time and reason category. They can still file complaints (FR-RD-01.5).
+- **Trips under way and SOS** (CS455-60). The data is in `db/schema.sql`:
+  - each step of the trip keeps its time on `rides`;
+  - each seat on `riders` records checked in, arrived and no-show;
+  - `ride_final_shares` stores what each person owed when the ride was completed, and never
+    changes;
+  - `sos_incidents` holds the SOS alerts, which only admins see.
+
+  The database refuses:
+  - a trip state without its time;
+  - a seat both arrived and a no-show;
+  - a change to final shares;
+  - a change to what an SOS recorded;
+  - a second active SOS by the same person on the same ride;
+  - deleting an incident.
+
+  The shared rules are:
+  - `src/lib/trip-rules.ts`: the steps, which go Scheduled, then Pickup in Progress once locked,
+    then optionally In Transit, then Completed, by the owner only. It also holds what the owner
+    may mark about each seat, the 5-minute no-show grace period (P-19), checking in, and
+    `canLeave()`, which is false once pickup starts;
+  - `src/lib/sos-rules.ts`: who may raise an SOS, and how an incident moves for admins;
+  - `src/lib/trip-itinerary.ts`: the stop order and estimated times, from the campus travel
+    estimates in `src/lib/ai/campus-travel-times.ts`.
+
+  A no-show leaves the pool: the fare is split between the seats that neither left nor were
+  no-shows (FR-RO-10.2).
 
 ## Conventions
 
