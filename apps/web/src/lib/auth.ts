@@ -144,11 +144,20 @@ export async function getCurrentUser() {
   const token = (await cookies()).get(COOKIE)?.value;
   if (!token) return null;
   const { rows } = await pool.query(
-    `SELECT u.id,u.email,u.full_name,u.roll_number FROM sessions s
+    `SELECT u.id,u.email,u.full_name,u.roll_number,u.role FROM sessions s
      JOIN users u ON u.id=s.user_id WHERE s.token_hash=$1 AND s.expires_at>now()`,
     [sha256(token)],
   );
-  return (rows[0] as { id: string; email: string; full_name: string; roll_number: string }) ?? null;
+  return (
+    (rows[0] as {
+      id: string;
+      email: string;
+      full_name: string;
+      roll_number: string;
+      /** 'student' or 'admin' (CS455-48); set only by scripts/admin-role.mjs. */
+      role: string;
+    }) ?? null
+  );
 }
 
 export async function destroySession() {

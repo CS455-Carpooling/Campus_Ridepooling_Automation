@@ -57,6 +57,9 @@ jobs:
       - name: The database schema was applied
         run: docker compose exec -T db psql -U crp -d crp -tAc "SELECT to_regclass('public.users')" | grep -x users
 
+      - name: The admin tables were created
+        run: docker compose exec -T db psql -U crp -d crp -tAc "SELECT to_regclass('public.admin_audit_log') IS NOT NULL AND to_regclass('public.complaints') IS NOT NULL" | grep -x t
+
       - name: Show logs
         if: failure()
         run: docker compose logs

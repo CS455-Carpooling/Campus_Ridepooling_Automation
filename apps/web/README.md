@@ -31,6 +31,7 @@ src/
   components/ui/     shared building blocks: Button, ButtonLink, Field, Skeleton, LoadingRegion
   components/shell/  header, navigation, footer and the product mark
   components/home/   the student and admin home screens
+  components/admin/  the admin page shell, outcome labels, the not-allowed page, the chat report queue
   components/landing/ the landing page's fare card and live fare calculator
   components/rides/  create-ride inputs (route, vehicle, departure window, fare) and the ride details
   lib/               session, roles, route map, fares, formatting, page data and small helpers
@@ -57,8 +58,12 @@ exist yet shows the 404 page until the page is built.
 | `/rides/[id]/review` | Rate the people on a completed ride, for 72 hours after it is completed | Built (CS455-40 to 43) |
 | `/rides` | Find a ride | Not started |
 | `/notifications` | Notifications | Not started |
-| `/admin/incidents`, `/admin/complaints`, `/admin/recommendations` | Admin queues | Not started |
-| `/admin/configuration/...` | Vehicle types, hubs and pickup points, fares | Not started |
+| `/admin` | Sends an admin to their home; tells a student the admin pages are not for them | Built (CS455-49) |
+| `/admin/complaints` | One complaint queue, from the form and from chat reports, Safety first | Built (CS455-45, 53) |
+| `/admin/complaints/[id]`, `/admin/riders`, `/admin/riders/[id]`, `/admin/rides/[id]` | Complaint detail, rider search and record, a read-only ride | Built (CS455-53) |
+| `/rides/[id]/complaint`, `/complaints` | File a complaint about someone on a ride; your complaints | Built (CS455-53) |
+| `/admin/configuration/...` | Vehicle types, hubs and pickup points, fares | Built (CS455-51) |
+| `/admin/incidents` | SOS incidents | Not started (needs in-trip ride states) |
 
 ## Signed-in pages and roles
 
@@ -70,12 +75,14 @@ exist yet shows the 404 page until the page is built.
   sets; `getSession()` and `verifySession()` in `src/lib/session.ts` build on it for pages that
   need a role, such as `/home`. The root layout does not protect pages, because layouts are not
   re-rendered on navigation.
-- **Sign-in:** `getSession()` returns the account signed in through `/login`. Accounts have no
-  roles yet, so every account is a student. Under `npm run dev` only, when nobody is signed in,
-  `DEV_SESSION_ROLE` (`student` or `admin`) in `apps/web/.env.local` still gives a test user, and
-  the optional `DEV_SESSION_EMAIL` sets its address; until admin accounts exist, it is the only way
-  to see the admin home. Production builds and tests ignore both. Keep passwords and personal
-  addresses out of the repository.
+- **Sign-in:** `getSession()` returns the account signed in through `/login`, with its role from
+  the database. Every account is a student until an operator makes it an admin (see Admin
+  accounts below); the role is read on every request, so a revoked admin loses access at once.
+  Under `npm run dev` only, when nobody is signed in, `DEV_SESSION_ROLE` (`student` or `admin`) in
+  `apps/web/.env.local` still gives a test user, and the optional `DEV_SESSION_EMAIL` sets its
+  address. The test admin can look at the admin pages but not change anything, because every
+  admin change is audited against a real account. Production builds and tests ignore both. Keep
+  passwords and personal addresses out of the repository.
 - **Ride rules** (`src/lib/ride-rules.ts`) hold the create-ride validation shared by the form and
   `POST /api/rides`; `src/lib/ride-options.ts` loads active places and vehicle types from PostgreSQL.
 - **Who may see a ride** (`canViewRide` in `src/lib/ride-status.ts`, NFR-RD-09): its owner and
@@ -105,6 +112,69 @@ exist yet shows the 404 page until the page is built.
   ride page's people list shows a person's average and count, and their profile shows them their
   average and the comments left about them, without names, scores or dates. Dashboard history
   shows "Ratings given" on completed rides, with a link to rate while rating is open.
+- **Operations admin data** (`db/schema.sql`, CS455-46 and CS455-47): `users.role` (`student` or
+  `admin`), the append-only `admin_audit_log`, versioned vehicle types and places,
+  `campus_fares`, `external_fare_ranges`, `complaints` (with `complaint_chat_messages`),
+  `rider_warnings`, `rider_suspensions` (and the `active_rider_suspensions` view),
+  `complaint_ai_analyses` and `ai_enforcement_decisions`. The database itself refuses what must
+  never happen: changing or deleting audit rows, editing an original complaint, a warning,
+  suspension or AI decision by anyone but an admin, a suspension both timed and indefinite (or
+  neither), a complaint about yourself or about someone not on the ride, and a rejected AI
+  recommendation that still acts. Chat reports are complaints too: existing reports were copied
+  over, and a trigger copies new ones until the chat report flow writes complaints itself.
+  The shared rules are `src/lib/complaint-rules.ts` and `src/lib/admin-config-rules.ts`; the
+  shapes the admin pages and APIs exchange are in `src/lib/admin-types.ts`, and
+  `getActiveSuspension()` in `src/lib/suspensions.ts` tells whether a rider is suspended.
+- **Admin accounts** are existing, verified iitk.ac.in accounts promoted by whoever runs the
+  database, with `npm run admin:grant -- name@iitk.ac.in` (and `admin:revoke`); see setup.md.
+  Nothing in the app can change a role, and each change is written to the audit log.
+- **Admin access** (`src/lib/admin-auth.ts`, CS455-48): every admin page calls
+  `requireAdminPage()` itself and shows `<AdminNotAllowed />` to a student, so no admin data
+  reaches them; every admin API calls `requireAdminApi()`, which answers 401 or 403 as
+  `{ error, code }`, and passes `{ write: true }` for a change to add the origin check and rate
+  limit.
+- **Admin changes** go through `withAdminAction()` (`src/lib/admin-actions.ts`): one transaction
+  that checks the role again, does the work and writes the audit row, and answers only after the
+  commit. A refused or failed attempt keeps nothing and is audited as `refused` or `failed`;
+  errors are logged, never shown. Each action uses a code from `src/lib/admin-activity.ts`, which
+  also holds how the pages name it.
+- **Admin pages** sit in `AdminPageShell` (CS455-49): the admin navigation (Home, Complaints,
+  Riders, Configuration, Profile) with the current page marked and a way to log out, then the
+  page's title with an optional back link, eyebrow, description and actions. The admin home
+  (`/dashboard` for an admin) counts open complaints (chat reports included, safety ones called
+  out), AI recommendations awaiting a decision and riders suspended now, and lists the last 10
+  audit entries, each marked Done, Refused or Failed.
+- **Admin APIs** (CS455-50, 52): each checks `requireAdminApi({ write: true })`, makes its change
+  in `withAdminAction()` and answers `{ error, code, fields?, current? }`.
+  - Configuration: `POST /api/admin/vehicle-types` and `PATCH .../[id]`, `POST /api/admin/locations`
+    and `PATCH .../[id]`, `PUT /api/admin/campus-fares`, `PUT /api/admin/external-fares`
+    (`src/lib/admin-config.ts`). Every edit sends the `version` it loaded, and a stale one gets 409
+    `version_conflict` with the item as it is now. Nothing is deleted: a vehicle type or place is
+    deactivated, leaves the forms and stays on the rides that use it.
+  - Complaints (`src/lib/complaints.ts`): `POST /api/rides/[id]/complaints` for someone on the
+    ride, until 7 days after it is completed, or about a reported chat message at any time; one per
+    person, ride and accused, at most 5 in 24 hours. `PATCH /api/admin/complaints/[id]` moves one to
+    Under review or Resolved (saying whether action was taken), tells the person who complained, and
+    closes the chat reports it came from.
+  - Riders (`src/lib/enforcement.ts`): `POST /api/admin/riders/[id]/warnings`, `.../suspensions`
+    (a number of days, or indefinite) and `.../reactivation`, each with a required reason. Lifting
+    a suspension keeps its history. The rider is notified, without the admin's own words.
+- **Configuration pages** (`/admin/configuration`, CS455-51) read everything with
+  `getConfiguration()` (`src/lib/admin-config-queries.ts`) and edit it through the configuration
+  APIs. `ConfigListEditor` (vehicle types, hubs, campus places) checks each form with the rules of
+  `admin-config-rules.ts` before sending, asks before deactivating, and on a 409 keeps the admin's
+  input and shows the other admin's version. Offer a ride shows the hub's typical fare range under
+  the fare as an estimate (SYS-FR-12).
+- **Complaint pages** (CS455-53): `/rides/[id]/complaint` is linked from the ride page for 7 days
+  after completion and from a low score on the review page; it names people by their seat, shows
+  the emergency numbers for Safety (`src/lib/emergency.ts`: the IIT Kanpur security number is still
+  to be filled in), and gives the reference. `/complaints` lists the rider's own, with status and
+  whether action was taken. Admins get one queue, the complaint with its original words and the
+  accused's other complaints, rider search and records, and a read-only ride
+  (`admin-complaint-queries.ts`, `admin-rider-queries.ts`). Avoid `<blockquote>` in our pages:
+  `src/index.css` styles it as a large landing-page quote.
+- **Suspended riders** cannot offer a ride or rate others: those APIs answer 403 `suspended` with
+  the end time and reason category. They can still file complaints (FR-RD-01.5).
 
 ## Conventions
 

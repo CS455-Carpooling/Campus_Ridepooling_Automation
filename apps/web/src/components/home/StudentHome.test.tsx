@@ -16,6 +16,10 @@ describe('StudentHome', () => {
       '/rides/new',
     );
     expect(screen.getByRole('link', { name: 'Profile' })).toHaveAttribute('href', '/profile');
+    expect(screen.getByRole('link', { name: 'Your complaints' })).toHaveAttribute(
+      'href',
+      '/complaints',
+    );
   });
 
   it('explains empty lists', () => {

@@ -11,6 +11,8 @@ export type FareInputProps = {
   /** Capacity of the chosen vehicle, the owner included; unknown until one is chosen. */
   capacity?: number;
   error?: string;
+  /** The operations team's typical fare for the chosen hub and vehicle (SYS-FR-12), if set. */
+  typicalRange?: { minFare: number; maxFare: number } | null;
 };
 
 /** What each person pays, worked out with the same rule as the real shares (Table T-2). */
@@ -27,7 +29,7 @@ function shareText(fare: number | null, capacity: number | undefined): string {
  * The estimated total fare for the whole vehicle, in whole rupees, with each
  * person's share shown as it is typed.
  */
-export function FareInput({ value, onChange, capacity, error }: FareInputProps) {
+export function FareInput({ value, onChange, capacity, error, typicalRange }: FareInputProps) {
   const text = shareText(fareFromText(value), capacity);
 
   return (
@@ -42,6 +44,12 @@ export function FareInput({ value, onChange, capacity, error }: FareInputProps) 
         onChange={(event) => onChange(event.target.value)}
         error={error}
       />
+      {typicalRange && (
+        <p className="text-sm text-ink-muted">
+          Typical fare for this trip: {formatRupees(typicalRange.minFare)} to{' '}
+          {formatRupees(typicalRange.maxFare)}. An estimate only; you set the fare.
+        </p>
+      )}
       <p aria-live="polite" className="min-h-5 text-sm text-ink-muted">
         {text}
       </p>

@@ -80,6 +80,22 @@ function Fare({ capacity, error }: { capacity?: number; error?: string }) {
 }
 
 describe('FareInput', () => {
+  it("shows the operations team's typical fare as an estimate only (SYS-FR-12)", () => {
+    render(
+      <FareInput value="" onChange={() => {}} typicalRange={{ minFare: 450, maxFare: 700 }} />,
+    );
+    expect(
+      screen.getByText(
+        'Typical fare for this trip: ₹450 to ₹700. An estimate only; you set the fare.',
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('says nothing about a typical fare when none is set', () => {
+    render(<Fare />);
+    expect(screen.queryByText(/Typical fare/)).not.toBeInTheDocument();
+  });
+
   it('asks for the estimated total fare in whole rupees', () => {
     render(<Fare />);
     const fare = screen.getByLabelText('Estimated total fare (₹)');

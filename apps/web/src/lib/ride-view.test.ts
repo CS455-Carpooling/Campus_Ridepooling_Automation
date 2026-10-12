@@ -391,6 +391,29 @@ describe('getRideView: rating the people on a completed ride (CS455-43)', () => 
       review: null,
     });
   });
+
+  it('lets people on the ride report a problem for 7 days after completion (CS455-53)', async () => {
+    respond(completed({ viewer_is_rider: true }), [owner, { ...rider, is_viewer: true }]);
+    await expect(getRideView(RIDE_ID, VIEWER_ID, during)).resolves.toMatchObject({
+      canComplain: true,
+    });
+    const weekLater = new Date('2026-10-17T08:05:00+05:30');
+    respond(completed({ viewer_is_rider: true }), [owner, { ...rider, is_viewer: true }]);
+    await expect(getRideView(RIDE_ID, VIEWER_ID, weekLater)).resolves.toMatchObject({
+      canComplain: false,
+    });
+  });
+
+  it('offers no complaint before completion, to a visitor, or with nobody else on the ride', async () => {
+    respond(rideRow({ viewer_is_owner: true }), [{ ...owner, is_viewer: true }, rider]);
+    await expect(getRideView(RIDE_ID, VIEWER_ID, during)).resolves.toMatchObject({
+      canComplain: false,
+    });
+    respond(completed({ viewer_is_owner: true }), [{ ...owner, is_viewer: true }]);
+    await expect(getRideView(RIDE_ID, VIEWER_ID, during)).resolves.toMatchObject({
+      canComplain: false,
+    });
+  });
 });
 
 describe('ratings on the ride page and in history (CS455-44)', () => {

@@ -16,18 +16,26 @@ export type Session = {
  * The signed-in user, or null.
  *
  * This is the account signed in through /login: getCurrentUser() in auth.ts
- * reads it from the session cookie. Accounts have no roles yet, so every
- * account is a student.
+ * reads it from the session cookie, with its role from the database. Every
+ * account is a student unless an operator made it an admin with
+ * `npm run admin:grant` (CS455-48); the role is read again on every request,
+ * so a revoked admin loses access at once.
  *
  * Under `next dev` only, when nobody is signed in, DEV_SESSION_ROLE=student or
  * admin in apps/web/.env.local still gives a test user with that role (the
- * optional DEV_SESSION_EMAIL sets its address). Until admin accounts exist, it
- * is the only way to see the admin screens. Production builds ignore it.
+ * optional DEV_SESSION_EMAIL sets its address). The test admin can look at the
+ * admin screens but not change anything, since changes are audited against a
+ * real account. Production builds ignore it.
  */
 export const getSession = cache(async (): Promise<Session | null> => {
   const user = await getCurrentUser();
   if (user) {
-    return { userId: user.id, email: user.email, displayName: user.full_name, role: 'student' };
+    return {
+      userId: user.id,
+      email: user.email,
+      displayName: user.full_name,
+      role: user.role === 'admin' ? 'admin' : 'student',
+    };
   }
   return developmentSession();
 });

@@ -10,7 +10,9 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run --coverage",
     "test:watch": "vitest",
-    "db:migrate": "node scripts/migrate.mjs"
+    "db:migrate": "node scripts/migrate.mjs",
+    "admin:grant": "node scripts/admin-role.mjs grant",
+    "admin:revoke": "node scripts/admin-role.mjs revoke"
   },
   "dependencies": {
     "next": "16.3.8",

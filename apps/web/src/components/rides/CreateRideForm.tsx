@@ -199,6 +199,9 @@ export function CreateRideForm({
           onChange={(expectedTotalFare) => update({ expectedTotalFare })}
           capacity={capacity}
           error={errors.expectedTotalFare}
+          typicalRange={options.fareRanges?.find(
+            (range) => range.hubId === draft.hubId && range.vehicleTypeId === draft.vehicleTypeId,
+          )}
         />
 
         <div className="flex flex-wrap items-center gap-4 border-t border-line pt-6">
