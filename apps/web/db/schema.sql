@@ -820,3 +820,28 @@ CREATE INDEX IF NOT EXISTS ride_recommendation_rate_events_user_created_idx
   ON ride_recommendation_rate_events(user_id, created_at DESC);
 
 ALTER TABLE ride_recommendation_audits ADD COLUMN IF NOT EXISTS suggested_ride_ids UUID[] NOT NULL DEFAULT '{}';
+
+
+-- Every persisted notification can be delivered live. PostgreSQL emits this only after the
+-- inserting transaction commits, so consumers never receive a notification for a rolled-back row.
+CREATE OR REPLACE FUNCTION notify_notification_inserted() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+  PERFORM pg_notify('notification_inserted', NEW.id::text);
+  RETURN NEW;
+END;
+$$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgname = 'notifications_realtime_insert'
+      AND tgrelid = 'notifications'::regclass
+      AND NOT tgisinternal
+  ) THEN
+    CREATE TRIGGER notifications_realtime_insert
+      AFTER INSERT ON notifications
+      FOR EACH ROW EXECUTE FUNCTION notify_notification_inserted();
+  END IF;
+END $$;

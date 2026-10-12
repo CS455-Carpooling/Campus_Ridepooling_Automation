@@ -601,3 +601,50 @@ During verification, the checked-in `apps/web/db/schema.sql` constraint and API 
 ### Verification
 - Changes were committed to `CS455-59-notification-ui`, the head branch of PR #54.
 - The repository's CI workflow is the authoritative place to verify lint, formatting, type-check, tests, and build. These checks have not yet been confirmed for the updated head; check the latest workflow run before merging.
+
+## 2026-10-12 — Real-time Notification Centre delivery and offline-safe sync (CS455-59)
+
+### User prompt
+Continue the Notification Centre work and implement real-time delivery and offline-safe synchronization on a new stacked branch, `CS455-59-notification-realtime`, based on the current head of PR #54, without changing PR #54 or opening a new pull request. Audit existing Socket.IO, PostgreSQL, authentication, API, UI, and test infrastructure first. Reuse existing infrastructure; persist notifications before emitting, securely deliver them only to their authenticated recipient, update the UI without refresh, reconcile from the database after reconnect/resume, deduplicate by notification ID, handle disconnects/reconnects/errors, add auth/delivery/reconnect/refetch/deduplication tests, and avoid duplicate notification records or new business notification producers. Commit only on the new branch and document this work in the AI log.
+
+### Audit and branch
+- Inspected PR #54 metadata and its head commit `8672ad2d65e5a08437380a46fa02a413f94f4568`, the custom Socket.IO server, existing ride-chat event handler/test patterns, notification API/schema/UI, package scripts, and this AI log.
+- Found an authenticated Socket.IO connection middleware that verifies the session cookie with the database, existing `socket.io`/`socket.io-client` dependencies, a PostgreSQL `notifications` table, and the Notification Centre's persisted listing endpoint.
+- Existing Socket.IO rooms were ride-scoped. There was no authenticated user notification room, notification insert listener, or UI socket subscription.
+- Created `CS455-59-notification-realtime` directly from PR #54's exact head commit. PR #54 was not modified by this work; no new pull request was opened.
+- The execution environment has no full local checkout; attempting to clone the branch failed because the runtime could not resolve `github.com`. As a result, the local worktree/unstaged state could not be independently inspected.
+
+### Changes
+- `apps/web/db/schema.sql`: added a re-runnable `AFTER INSERT` trigger on `notifications` that publishes only the inserted UUID using PostgreSQL `pg_notify`. PostgreSQL releases notifications only after the transaction commits; rolled-back inserts therefore do not emit live events. No notification rows are created by this trigger.
+- `apps/web/src/lib/notification-realtime.mjs`: added server helpers for joining a notification room from the server-authenticated socket identity and for handling insert notices. The listener payload is treated only as an ID; the helper reloads the persisted row and derives the recipient room from that row. The live payload omits the recipient user ID.
+- `apps/web/server.mjs`: authenticated sockets join only their server-derived user notification room. A dedicated PostgreSQL `Client` issues `LISTEN notification_inserted`, reloads committed rows via the existing database pool before emitting `notification:new`, retries the listener after connection loss, and emits `notification:sync` after the database listener is restored so connected clients reconcile missed events.
+- `apps/web/src/components/notifications/NotificationsCentre.tsx`: subscribed to `notification:new` and `notification:sync`; immediately merges new saved notifications by ID, sorts and limits the list, preserves already-read state against delayed INSERT events, reconnects through Socket.IO's existing reconnect behavior, refetches on socket connection and tab visibility resume, and surfaces connection/fetch errors with retry.
+- Added `apps/web/src/lib/notification-realtime.test.ts` covering authenticated room assignment, rejection of missing identity, recipient isolation from client-supplied IDs, persisted-row reload, delivery serialization, malformed/missing notifications, database error handling, and the commit-aware schema trigger.
+- Expanded `apps/web/src/components/notifications/NotificationsCentre.test.tsx` to cover real-time insertion and deduplication, reconnect refetch, server-triggered resync, tab-resume refetch, connection errors, and socket cleanup while preserving the existing UI tests.
+
+### Scope boundaries
+- Did not add notification producer workflows, manually insert notifications, or duplicate notification records. Existing notification inserts become eligible for live delivery through the database trigger.
+- The Socket.IO room membership is based on `socket.data.userId` assigned only by server-side session authentication; neither client-supplied room names nor client-supplied user IDs are used.
+- The existing API remains the source of truth when fetching/reconciling persisted notifications. Socket payloads are validated and deduplicated by notification ID.
+
+
+### Additional reliability hardening
+- If a notification's canonical row cannot be reloaded for its insert event, the listener now broadcasts a sync signal. Active Notification Centre clients refetch the persisted list; API failures remain visible and retryable in the UI.
+
+### Verification and limitations
+- Reviewed the resulting source changes through the repository API. The local Git clone attempt failed at DNS resolution, and a complete local dependency installation/check environment was not available; therefore Vitest, ESLint, TypeScript typecheck, formatter check, build, and a live PostgreSQL migration were **not run** here.
+- The schema trigger needs to be installed by the project's existing schema migration/deployment process before PostgreSQL notifications can be delivered in that environment.
+- No claim is made that runtime tests or live-database integration have passed. No pull request was opened.
+
+
+
+## 2026-10-12 — Rebase notification realtime work for CS455-69
+
+### User prompt
+“PR #54 has been edited and merged. Rebase the current realtime notification branch accurately onto current `master`, and open a PR referencing https://cs455project.atlassian.net/browse/CS455-69.”
+
+### Rebase handling
+- Confirmed PR #54 is merged, with merge commit `6824be6ac3882bc9e7114dad0f82517aeabdb7a6` at current `master`.
+- Rebuilt the realtime notification change on the merged master tree, avoiding the old UI branch's ancestry and retaining the latest merged UI behavior.
+- Preserved unknown-notification-type tolerance, unavailable unread-count wording, accessible mark-read labels, shared timestamp and UUID utilities, plus realtime sync behavior and regression tests.
+- No local test commands could be run in this environment; the final PR CI should verify lint, formatting, typecheck, tests and build.

@@ -1,10 +1,15 @@
 import crypto from 'node:crypto';
 import { createServer } from 'node:http';
 import { parse } from 'node:url';
-import { Pool } from 'pg';
+import { Client, Pool } from 'pg';
 import next from 'next';
 import { Server } from 'socket.io';
 import { registerRideChatMessageHandler } from './src/lib/ride-chat-realtime.mjs';
+import {
+  NOTIFICATION_CHANNEL,
+  joinAuthenticatedNotificationRoom,
+  registerNotificationInsertHandler,
+} from './src/lib/notification-realtime.mjs';
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = '0.0.0.0';
@@ -378,6 +383,12 @@ app.prepare().then(() => {
   };
 
   io.on('connection', (socket) => {
+    // The only notification room a socket may join is derived from its server-verified session.
+    if (!joinAuthenticatedNotificationRoom(socket)) {
+      socket.disconnect(true);
+      return;
+    }
+
     const sessionCheck = setInterval(async () => {
       try {
         const user = await getSessionUser(socket.handshake.headers.cookie ?? '');
@@ -448,6 +459,72 @@ app.prepare().then(() => {
 
   void runChatMaintenance();
   setInterval(() => void runChatMaintenance(), 30_000);
+
+  // PostgreSQL delivers NOTIFY only after the inserting transaction commits. The payload is
+  // merely the UUID; the notification row (including its recipient) is re-read from PostgreSQL.
+  const deliverNotificationInsert = registerNotificationInsertHandler(io, {
+    loadNotification: async (notificationId) => {
+      const { rows } = await pool.query(
+        `SELECT id, user_id, type, title, body, related_ride_id, related_chat_id,
+                related_message_id, read_at, created_at
+         FROM notifications
+         WHERE id = $1`,
+        [notificationId],
+      );
+      return rows[0] ?? null;
+    },
+    logger: console,
+  });
+
+  const delay = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+  const runNotificationListener = async () => {
+    while (true) {
+      const listener = new Client({
+        connectionString: databaseUrl,
+        ssl: databaseUrl?.includes('.render.com') ? { rejectUnauthorized: false } : undefined,
+      });
+
+      const ended = new Promise((resolve) => {
+        listener.once('end', resolve);
+        listener.on('error', (error) => {
+          console.error('Notification LISTEN connection failed:', error);
+          resolve();
+        });
+      });
+
+      listener.on('notification', (event) => {
+        if (event.channel === NOTIFICATION_CHANNEL && typeof event.payload === 'string') {
+          void deliverNotificationInsert(event.payload).then((delivered) => {
+            if (!delivered) {
+              // The persisted API can recover a row when an insert event couldn't be delivered.
+              io.emit('notification:sync');
+            }
+          });
+        }
+      });
+
+      try {
+        await listener.connect();
+        await listener.query(`LISTEN ${NOTIFICATION_CHANNEL}`);
+        console.log('> Listening for committed notification inserts');
+        // Cover inserts missed during a listener outage for currently connected browser clients.
+        io.emit('notification:sync');
+        await ended;
+      } catch (error) {
+        console.error('Notification LISTEN setup failed:', error);
+      } finally {
+        try {
+          await listener.end();
+        } catch {
+          // The socket may already have ended after a connection error.
+        }
+      }
+
+      await delay(2_000);
+    }
+  };
+
+  void runNotificationListener();
 
   httpServer.listen(port, hostname, () => {
     console.log(`> Ready on http://${hostname}:${port} (${dev ? 'dev' : 'prod'})`);
