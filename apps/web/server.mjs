@@ -4,7 +4,10 @@ import { parse } from 'node:url';
 import { Pool } from 'pg';
 import next from 'next';
 import { Server } from 'socket.io';
-import { registerRideChatMessageHandler } from './src/lib/ride-chat-realtime.mjs';
+import {
+  registerRideChatMessageHandler,
+  rideChatAvailable,
+} from './src/lib/ride-chat-realtime.mjs';
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = '0.0.0.0';
@@ -65,12 +68,6 @@ async function isRideMember(rideId, userId) {
     [rideId],
   );
   return rows.some((row) => row.user_id === userId);
-}
-
-function rideChatAvailable(ride, now) {
-  if (ride.state !== 'scheduled') return true;
-  const lockAt = new Date(ride.departure_start.getTime() - 60 * 60 * 1000);
-  return now.getTime() >= lockAt.getTime();
 }
 
 function rideChatReadOnly(ride, now) {
@@ -144,7 +141,7 @@ async function createChatMessageForSocket(rideId, senderId, rawMessage, now = ne
   }
 
   const rideQuery = await pool.query(
-    `SELECT id, owner_id, state, departure_start, completed_at, cancelled_at
+    `SELECT id, owner_id, state, departure_start, locked_at, completed_at, cancelled_at
      FROM rides WHERE id = $1`,
     [rideId],
   );
@@ -317,10 +314,13 @@ app.prepare().then(() => {
   const runChatMaintenance = async () => {
     try {
       const lockedRides = await pool.query(
-        `SELECT id, state, departure_start, completed_at, cancelled_at
+        `SELECT id, state, departure_start, locked_at, completed_at, cancelled_at
          FROM rides
         WHERE (
-            (state = 'scheduled' AND departure_start <= now() + interval '1 hour')
+            (state = 'scheduled' AND (
+              locked_at IS NOT NULL
+              OR departure_start <= now() + interval '1 hour'
+            ))
             OR state IN ('pickup_in_progress', 'in_transit')
             OR (state = 'completed'
               AND completed_at >= now() - interval '24 hours')

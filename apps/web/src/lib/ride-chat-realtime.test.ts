@@ -2,7 +2,34 @@ import { createServer, type Server as HttpServer } from 'node:http';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Server as SocketServer } from 'socket.io';
 import { io as createSocketClient, type Socket } from 'socket.io-client';
-import { registerRideChatMessageHandler } from './ride-chat-realtime.mjs';
+import { registerRideChatMessageHandler, rideChatAvailable } from './ride-chat-realtime.mjs';
+
+describe('rideChatAvailable for realtime messaging', () => {
+  const departureStart = new Date('2026-10-10T06:30:00+05:30');
+  const beforeScheduledLock = new Date('2026-10-10T01:00:00+05:30');
+
+  it('allows a manually locked ride to use chat before the scheduled lock time', () => {
+    expect(
+      rideChatAvailable(
+        {
+          state: 'scheduled',
+          departure_start: departureStart,
+          locked_at: new Date('2026-10-10T00:30:00+05:30'),
+        },
+        beforeScheduledLock,
+      ),
+    ).toBe(true);
+  });
+
+  it('keeps an unlocked ride unavailable before its scheduled lock time', () => {
+    expect(
+      rideChatAvailable(
+        { state: 'scheduled', departure_start: departureStart, locked_at: null },
+        beforeScheduledLock,
+      ),
+    ).toBe(false);
+  });
+});
 
 function waitForEvent<T>(socket: Socket, event: string): Promise<T> {
   return new Promise((resolve) => socket.once(event, (payload: T) => resolve(payload)));

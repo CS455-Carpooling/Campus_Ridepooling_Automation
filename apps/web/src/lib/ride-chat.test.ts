@@ -22,6 +22,12 @@ describe('ride-chat domain helpers', () => {
     const ride = { state: 'scheduled', departure_start: new Date('2026-10-10T06:30:00+05:30') };
     expect(rideChatAvailable(ride as never, new Date('2026-10-10T00:00:00+05:30'))).toBe(false);
     expect(rideChatAvailable(ride as never, new Date('2026-10-10T05:30:00+05:30'))).toBe(true);
+    expect(
+      rideChatAvailable(
+        { ...ride, locked_at: new Date('2026-10-10T00:30:00+05:30') } as never,
+        new Date('2026-10-10T01:00:00+05:30'),
+      ),
+    ).toBe(true);
 
     expect(
       rideChatReadOnly(
@@ -50,7 +56,7 @@ describe('ride-chat domain helpers', () => {
   it('loads the pool chat only for current members and returns the thread', async () => {
     const rideId = '0b9a7c1e-1111-4000-8000-000000000001';
     const viewerId = '6f1c2a5e-2222-4000-8000-000000000002';
-    const now = new Date('2026-10-10T06:00:00+05:30');
+    const now = new Date('2026-10-10T01:00:00+05:30');
     let count = 0;
 
     query.mockImplementation(() => {
@@ -63,6 +69,7 @@ describe('ride-chat domain helpers', () => {
               owner_id: 'owner-1',
               state: 'scheduled',
               departure_start: new Date('2026-10-10T06:30:00+05:30'),
+              locked_at: new Date('2026-10-10T00:30:00+05:30'),
               completed_at: null,
               cancelled_at: null,
             },
@@ -101,12 +108,13 @@ describe('ride-chat domain helpers', () => {
       messages: [{ senderName: 'Ananya', body: 'On my way' }],
       canWrite: true,
     });
+    expect(query.mock.calls[0][0]).toContain('locked_at');
   });
 
   it('stores a valid message, rejects oversized text and rate-limited posts, and blocks read-only chat', async () => {
     const rideId = '0b9a7c1e-1111-4000-8000-000000000001';
     const senderId = '6f1c2a5e-2222-4000-8000-000000000002';
-    const now = new Date('2026-10-10T06:20:00+05:30');
+    const now = new Date('2026-10-10T01:00:00+05:30');
 
     query.mockImplementation((sql: string) => {
       const statement = String(sql).toLowerCase();
@@ -124,6 +132,7 @@ describe('ride-chat domain helpers', () => {
               owner_id: 'owner-1',
               state: 'scheduled',
               departure_start: new Date('2026-10-10T06:30:00+05:30'),
+              locked_at: new Date('2026-10-10T00:30:00+05:30'),
               completed_at: null,
               cancelled_at: null,
             },
@@ -207,7 +216,7 @@ describe('ride-chat domain helpers', () => {
     const reporterId = '8c57f0d3-2222-4000-8000-000000000002';
     const senderId = '6f1c2a5e-3333-4000-8000-000000000003';
     const messageId = '44ca86d4-4444-4000-8000-000000000004';
-    const now = new Date('2026-10-10T06:20:00+05:30');
+    const now = new Date('2026-10-10T01:00:00+05:30');
 
     query.mockResolvedValueOnce({
       rows: [
@@ -216,6 +225,7 @@ describe('ride-chat domain helpers', () => {
           owner_id: 'owner-1',
           state: 'scheduled',
           departure_start: new Date('2026-10-10T06:30:00+05:30'),
+          locked_at: new Date('2026-10-10T00:30:00+05:30'),
           completed_at: null,
           cancelled_at: null,
         },
@@ -235,6 +245,7 @@ describe('ride-chat domain helpers', () => {
       ok: true,
       reference: `chat-${messageId.slice(0, 8)}`,
     });
+    expect(query.mock.calls[0][0]).toContain('locked_at');
 
     query.mockResolvedValueOnce({
       rows: [
