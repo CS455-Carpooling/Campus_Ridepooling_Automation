@@ -117,7 +117,10 @@ describe('PATCH /api/rides/[id]', () => {
     expect(refused.status).toBe(409);
     expect((await refused.json()).error).toBe('Confirm.');
     expect(h.clientQuery.mock.calls.map(([sql]) => sql)).toEqual([
-      'BEGIN', 'COMMIT', 'BEGIN', 'ROLLBACK',
+      'BEGIN',
+      'COMMIT',
+      'BEGIN',
+      'ROLLBACK',
     ]);
   });
 

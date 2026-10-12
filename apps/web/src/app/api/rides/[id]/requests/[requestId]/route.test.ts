@@ -51,7 +51,9 @@ describe('PATCH /api/rides/[id]/requests/[requestId]', () => {
     expect((await call()).status).toBe(429);
     h.getCurrentUser.mockResolvedValueOnce(null);
     expect((await call()).status).toBe(401);
-    expect((await call({ action: 'accept' }, { id: 'bad', requestId: REQUEST_ID })).status).toBe(404);
+    expect((await call({ action: 'accept' }, { id: 'bad', requestId: REQUEST_ID })).status).toBe(
+      404,
+    );
     expect((await call({ action: 'accept' }, { id: RIDE_ID, requestId: 'bad' })).status).toBe(404);
     expect(h.connect).not.toHaveBeenCalled();
   });
@@ -90,7 +92,10 @@ describe('PATCH /api/rides/[id]/requests/[requestId]', () => {
     expect(conflict.status).toBe(409);
     expect(await conflict.json()).toEqual({ error: 'Custom refusal.', code: 'conflict' });
     expect(h.clientQuery.mock.calls.map(([sql]) => sql)).toEqual([
-      'BEGIN', 'ROLLBACK', 'BEGIN', 'ROLLBACK',
+      'BEGIN',
+      'ROLLBACK',
+      'BEGIN',
+      'ROLLBACK',
     ]);
   });
 

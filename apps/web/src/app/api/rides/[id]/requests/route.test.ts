@@ -77,10 +77,9 @@ describe('GET /api/rides/[id]/requests', () => {
   });
 
   it('returns owner requests with the submitted snapshot as fallback for current terms', async () => {
-    h.query
-      .mockResolvedValueOnce({ rows: [{ owner_id: USER_ID }] })
-      .mockResolvedValueOnce({
-        rows: [{
+    h.query.mockResolvedValueOnce({ rows: [{ owner_id: USER_ID }] }).mockResolvedValueOnce({
+      rows: [
+        {
           id: REQUEST_ID,
           status: 'pending',
           reason_code: null,
@@ -92,23 +91,26 @@ describe('GET /api/rides/[id]/requests', () => {
           rider_name: 'Rider',
           pickup_name: 'Hall 3',
           visible_tags: null,
-        }],
-      });
+        },
+      ],
+    });
 
     const response = await GET(new Request('http://localhost'), context());
     expect(await response.json()).toMatchObject({
       role: 'owner',
-      requests: [{
-        id: REQUEST_ID,
-        riderName: 'Rider',
-        visibleTags: [],
-        agreed: { estimatedShare: 200 },
-        current: {
-          departureStart: at.toISOString(),
-          pickupAt: at.toISOString(),
-          estimatedShare: 200,
+      requests: [
+        {
+          id: REQUEST_ID,
+          riderName: 'Rider',
+          visibleTags: [],
+          agreed: { estimatedShare: 200 },
+          current: {
+            departureStart: at.toISOString(),
+            pickupAt: at.toISOString(),
+            estimatedShare: 200,
+          },
         },
-      }],
+      ],
     });
     expect(h.query).toHaveBeenCalledTimes(2);
   });
@@ -117,39 +119,45 @@ describe('GET /api/rides/[id]/requests', () => {
     h.query
       .mockResolvedValueOnce({ rows: [{ owner_id: 'another-owner' }] })
       .mockResolvedValueOnce({
-        rows: [{
-          id: REQUEST_ID,
-          status: 'needs_reconfirmation',
-          reason_code: 'changed_terms',
-          submitted_at: at,
-          accepted_at: null,
-          ...snapshot,
-          current_departure_start: new Date(at.getTime() + 60_000),
-          current_pickup_at: new Date(at.getTime() + 120_000),
-          current_estimated_share: 250,
-          late_cancellation: false,
-          locked_share: null,
-        }],
+        rows: [
+          {
+            id: REQUEST_ID,
+            status: 'needs_reconfirmation',
+            reason_code: 'changed_terms',
+            submitted_at: at,
+            accepted_at: null,
+            ...snapshot,
+            current_departure_start: new Date(at.getTime() + 60_000),
+            current_pickup_at: new Date(at.getTime() + 120_000),
+            current_estimated_share: 250,
+            late_cancellation: false,
+            locked_share: null,
+          },
+        ],
       })
       .mockResolvedValueOnce({
-        rows: [{
-          request_id: REQUEST_ID,
-          from_status: 'pending',
-          to_status: 'needs_reconfirmation',
-          reason_code: 'changed_terms',
-          details: {},
-          created_at: at,
-        }],
+        rows: [
+          {
+            request_id: REQUEST_ID,
+            from_status: 'pending',
+            to_status: 'needs_reconfirmation',
+            reason_code: 'changed_terms',
+            details: {},
+            created_at: at,
+          },
+        ],
       });
 
     const response = await GET(new Request('http://localhost'), context());
     expect(await response.json()).toMatchObject({
       role: 'rider',
-      requests: [{
-        acceptedAt: null,
-        current: { estimatedShare: 250 },
-        history: [{ from: 'pending', to: 'needs_reconfirmation', at: at.toISOString() }],
-      }],
+      requests: [
+        {
+          acceptedAt: null,
+          current: { estimatedShare: 250 },
+          history: [{ from: 'pending', to: 'needs_reconfirmation', at: at.toISOString() }],
+        },
+      ],
     });
     expect(h.query).toHaveBeenCalledTimes(3);
   });
@@ -201,7 +209,10 @@ describe('POST /api/rides/[id]/requests', () => {
     expect(refused.status).toBe(409);
     expect((await refused.json()).code).toBe('ride_full');
     expect(h.clientQuery.mock.calls.map(([sql]) => sql)).toEqual([
-      'BEGIN', 'COMMIT', 'BEGIN', 'ROLLBACK',
+      'BEGIN',
+      'COMMIT',
+      'BEGIN',
+      'ROLLBACK',
     ]);
   });
 
@@ -214,7 +225,10 @@ describe('POST /api/rides/[id]/requests', () => {
     h.submitJoinRequest.mockRejectedValueOnce(new Error('database unavailable'));
     expect((await POST(request(), context())).status).toBe(500);
     expect(h.clientQuery.mock.calls.map(([sql]) => sql)).toEqual([
-      'BEGIN', 'COMMIT', 'BEGIN', 'ROLLBACK',
+      'BEGIN',
+      'COMMIT',
+      'BEGIN',
+      'ROLLBACK',
     ]);
     expect(h.release).toHaveBeenCalledTimes(2);
     quiet.mockRestore();
