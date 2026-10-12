@@ -55,7 +55,7 @@ describe('NotificationsCentre', () => {
       'href',
       '/rides/11111111-1111-4111-8111-111111111111',
     );
-    expect(screen.getByText(/12 Oct 2026/)).toBeInTheDocument();
+    expect(screen.getByText(/12 Oct, 15:30/)).toBeInTheDocument();
   });
 
   it('marks a notification read only after the API confirms and reflects persisted state', async () => {
@@ -68,9 +68,9 @@ describe('NotificationsCentre', () => {
         Response.json({ notification: { id: 'n1', readAt: '2026-10-12T10:05:00.000Z' } }),
       );
     render(<NotificationsCentre />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Mark as read' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Mark as read: Ride updated' }));
     expect(await screen.findByText('Read')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Mark as read' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Mark as read: Ride updated' })).not.toBeInTheDocument();
     expect(fetch).toHaveBeenLastCalledWith(
       '/api/notifications/n1',
       expect.objectContaining({ method: 'PATCH' }),
@@ -82,6 +82,8 @@ describe('NotificationsCentre', () => {
     render(<NotificationsCentre />);
     expect(await screen.findByRole('alert')).toHaveTextContent('Could not load notifications.');
     expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
+    expect(screen.getByText('Unread count unavailable')).toBeInTheDocument();
+    expect(screen.queryByText('0 unread notifications')).not.toBeInTheDocument();
   });
 
   it('keeps unread state when marking read fails', async () => {
@@ -130,6 +132,30 @@ describe('NotificationsCentre', () => {
     }
     expect(screen.getByRole('heading', { name: 'Ride updated' })).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('keeps notifications visible when the API adds an unknown type', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      Response.json({
+        notifications: [
+          notification,
+          {
+            ...notification,
+            id: 'n-trip',
+            type: 'trip_update',
+            title: 'Trip updated',
+            relatedRideId: null,
+          },
+        ],
+        pagination: { hasMore: false },
+      }),
+    );
+
+    render(<NotificationsCentre />);
+
+    expect(await screen.findByRole('heading', { name: 'Ride updated' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Trip updated' })).toBeInTheDocument();
+    expect(screen.queryByText('The notifications response was invalid.')).not.toBeInTheDocument();
   });
 
   it('does not link malformed related ride identifiers', async () => {
