@@ -11,14 +11,23 @@ vi.mock('@/lib/db', () => ({ pool: { query: h.query } }));
 
 import { PATCH } from './route';
 
-const request = () => new Request('http://localhost/api/notifications/11111111-1111-4111-8111-111111111111', { method: 'PATCH' });
-const context = (id = '11111111-1111-4111-8111-111111111111') => ({ params: Promise.resolve({ id }) });
+const request = () =>
+  new Request('http://localhost/api/notifications/11111111-1111-4111-8111-111111111111', {
+    method: 'PATCH',
+  });
+const context = (id = '11111111-1111-4111-8111-111111111111') => ({
+  params: Promise.resolve({ id }),
+});
 
 beforeEach(() => {
   vi.clearAllMocks();
   h.getCurrentUser.mockResolvedValue({ id: 'user-1' });
   h.guard.mockResolvedValue(null);
-  h.query.mockResolvedValue({ rows: [{ id: '11111111-1111-4111-8111-111111111111', read_at: new Date('2026-10-12T10:00:00.000Z') }] });
+  h.query.mockResolvedValue({
+    rows: [
+      { id: '11111111-1111-4111-8111-111111111111', read_at: new Date('2026-10-12T10:00:00.000Z') },
+    ],
+  });
 });
 
 describe('PATCH /api/notifications/[id]', () => {
@@ -43,11 +52,15 @@ describe('PATCH /api/notifications/[id]', () => {
     const response = await PATCH(request(), context());
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
-      notification: { id: '11111111-1111-4111-8111-111111111111', readAt: '2026-10-12T10:00:00.000Z' },
+      notification: {
+        id: '11111111-1111-4111-8111-111111111111',
+        readAt: '2026-10-12T10:00:00.000Z',
+      },
     });
-    expect(h.query).toHaveBeenCalledWith(expect.stringContaining('WHERE id = $1 AND user_id = $2'), [
-      '11111111-1111-4111-8111-111111111111', 'user-1',
-    ]);
+    expect(h.query).toHaveBeenCalledWith(
+      expect.stringContaining('WHERE id = $1 AND user_id = $2'),
+      ['11111111-1111-4111-8111-111111111111', 'user-1'],
+    );
     expect(h.query.mock.calls[0][0]).toContain('COALESCE(read_at, now())');
   });
 

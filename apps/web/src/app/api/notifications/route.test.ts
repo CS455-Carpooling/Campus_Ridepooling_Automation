@@ -24,31 +24,61 @@ describe('GET /api/notifications', () => {
   });
 
   it('lists only the current user notifications newest first with default pagination', async () => {
-    h.query.mockResolvedValue({ rows: [{
-      id: 'n1', type: 'ride_update', title: 'Ride updated', body: 'Your ride changed',
-      related_ride_id: null, related_chat_id: null, related_message_id: null,
-      read_at: null, created_at: new Date('2026-10-12T10:00:00.000Z'),
-    }] });
+    h.query.mockResolvedValue({
+      rows: [
+        {
+          id: 'n1',
+          type: 'ride_update',
+          title: 'Ride updated',
+          body: 'Your ride changed',
+          related_ride_id: null,
+          related_chat_id: null,
+          related_message_id: null,
+          read_at: null,
+          created_at: new Date('2026-10-12T10:00:00.000Z'),
+        },
+      ],
+    });
     const response = await GET(new Request('http://localhost/api/notifications'));
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
-      notifications: [{
-        id: 'n1', type: 'ride_update', title: 'Ride updated', body: 'Your ride changed',
-        relatedRideId: null, relatedChatId: null, relatedMessageId: null,
-        readAt: null, createdAt: '2026-10-12T10:00:00.000Z',
-      }],
+      notifications: [
+        {
+          id: 'n1',
+          type: 'ride_update',
+          title: 'Ride updated',
+          body: 'Your ride changed',
+          relatedRideId: null,
+          relatedChatId: null,
+          relatedMessageId: null,
+          readAt: null,
+          createdAt: '2026-10-12T10:00:00.000Z',
+        },
+      ],
       pagination: { limit: 20, offset: 0, hasMore: false },
     });
-    expect(h.query).toHaveBeenCalledWith(expect.stringContaining('WHERE user_id = $1'), ['user-1', 21, 0]);
+    expect(h.query).toHaveBeenCalledWith(expect.stringContaining('WHERE user_id = $1'), [
+      'user-1',
+      21,
+      0,
+    ]);
     expect(h.query.mock.calls[0][0]).toContain('ORDER BY created_at DESC, id DESC');
   });
 
   it('supports validated pagination and detects another page', async () => {
-    h.query.mockResolvedValue({ rows: Array.from({ length: 3 }, (_, i) => ({
-      id: `n${i}`, type: 'ride_update', title: 'Title', body: 'Body',
-      related_ride_id: null, related_chat_id: null, related_message_id: null,
-      read_at: null, created_at: new Date('2026-10-12T10:00:00.000Z'),
-    })) });
+    h.query.mockResolvedValue({
+      rows: Array.from({ length: 3 }, (_, i) => ({
+        id: `n${i}`,
+        type: 'ride_update',
+        title: 'Title',
+        body: 'Body',
+        related_ride_id: null,
+        related_chat_id: null,
+        related_message_id: null,
+        read_at: null,
+        created_at: new Date('2026-10-12T10:00:00.000Z'),
+      })),
+    });
     const response = await GET(new Request('http://localhost/api/notifications?limit=2&offset=4'));
     expect(response.status).toBe(200);
     expect((await response.json()).pagination).toEqual({ limit: 2, offset: 4, hasMore: true });
@@ -56,7 +86,9 @@ describe('GET /api/notifications', () => {
   });
 
   it.each(['0', '101', '-1', 'abc', '1.5'])('rejects invalid limit %s', async (limit) => {
-    expect((await GET(new Request(`http://localhost/api/notifications?limit=${limit}`))).status).toBe(400);
+    expect(
+      (await GET(new Request(`http://localhost/api/notifications?limit=${limit}`))).status,
+    ).toBe(400);
     expect(h.query).not.toHaveBeenCalled();
   });
 

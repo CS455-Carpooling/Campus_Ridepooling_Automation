@@ -13,7 +13,13 @@ type NotificationRow = {
   created_at: Date;
 };
 
-function integerParam(params: URLSearchParams, name: string, fallback: number, min: number, max: number) {
+function integerParam(
+  params: URLSearchParams,
+  name: string,
+  fallback: number,
+  min: number,
+  max: number,
+) {
   const raw = params.get(name);
   if (raw === null) return fallback;
   if (!/^\d+$/.test(raw)) return null;

@@ -2,10 +2,7 @@ import { getCurrentUser, guard, json } from '@/lib/auth';
 import { pool } from '@/lib/db';
 import { isUuid } from '@/lib/ids';
 
-export async function PATCH(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function PATCH(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const blocked = await guard('notification-read', 30, 900);
     if (blocked) return blocked;
@@ -24,7 +21,9 @@ export async function PATCH(
       [id, user.id],
     );
     if (!rows[0]) return json({ error: 'Notification not found.' }, 404);
-    return json({ notification: { id: rows[0].id, readAt: rows[0].read_at?.toISOString() ?? null } });
+    return json({
+      notification: { id: rows[0].id, readAt: rows[0].read_at?.toISOString() ?? null },
+    });
   } catch (error) {
     console.error('Mark notification read failed:', error);
     return json({ error: 'Unable to update notification right now.' }, 500);
