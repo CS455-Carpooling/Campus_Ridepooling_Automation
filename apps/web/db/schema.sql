@@ -157,6 +157,104 @@ ALTER TABLE riders ADD COLUMN IF NOT EXISTS left_at TIMESTAMPTZ;
 -- "My rides" looks rides up by person; the unique (ride_id, user_id) index cannot serve that.
 CREATE INDEX IF NOT EXISTS riders_user_idx ON riders(user_id);
 
+
+-- Rider requests to join an existing ride.
+CREATE TABLE IF NOT EXISTS ride_join_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  ride_id UUID NOT NULL
+    REFERENCES rides(id) ON DELETE CASCADE,
+
+  rider_id UUID NOT NULL
+    REFERENCES users(id) ON DELETE CASCADE,
+
+  pickup_point_id TEXT NOT NULL
+    REFERENCES locations(id),
+
+  status TEXT NOT NULL DEFAULT 'pending'
+    CHECK (
+      status IN (
+        'pending',
+        'needs_reconfirmation',
+        'accepted',
+        'rejected',
+        'withdrawn',
+        'expired',
+        'ride_cancelled'
+      )
+    ),
+
+  idempotency_key UUID NOT NULL,
+
+  departure_snapshot TIMESTAMPTZ NOT NULL,
+  pickup_time_snapshot TIMESTAMPTZ NOT NULL,
+
+  estimated_share_snapshot INTEGER NOT NULL
+    CHECK (estimated_share_snapshot > 0),
+
+  reason_code TEXT,
+
+  submitted_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Find requests belonging to a ride.
+CREATE INDEX IF NOT EXISTS ride_join_requests_ride_status_idx
+  ON ride_join_requests (ride_id, status, submitted_at);
+
+-- Count a rider's active requests efficiently.
+CREATE INDEX IF NOT EXISTS ride_join_requests_rider_status_idx
+  ON ride_join_requests (rider_id, status, submitted_at);
+
+-- A rider can have only one pending, reconfirmation, or accepted
+-- request for the same ride.
+CREATE UNIQUE INDEX IF NOT EXISTS ride_join_requests_one_active_per_ride
+  ON ride_join_requests (ride_id, rider_id)
+  WHERE status IN ('pending', 'needs_reconfirmation', 'accepted');
+
+-- Record every request-state transition for the audit/history view.
+CREATE TABLE IF NOT EXISTS ride_join_request_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  request_id UUID NOT NULL
+    REFERENCES ride_join_requests(id) ON DELETE CASCADE,
+
+  previous_status TEXT
+    CHECK (
+      previous_status IS NULL OR previous_status IN (
+        'pending',
+        'needs_reconfirmation',
+        'accepted',
+        'rejected',
+        'withdrawn',
+        'expired',
+        'ride_cancelled'
+      )
+    ),
+
+  new_status TEXT NOT NULL
+    CHECK (
+      new_status IN (
+        'pending',
+        'needs_reconfirmation',
+        'accepted',
+        'rejected',
+        'withdrawn',
+        'expired',
+        'ride_cancelled'
+      )
+    ),
+
+  reason_code TEXT,
+
+  changed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  changed_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS ride_join_request_history_request_idx
+  ON ride_join_request_history (request_id, changed_at);
+
+
 -- Initial configurable locations. Stable IDs match the current Create Ride form
 -- values so the UI can later read these records directly from the database.
 INSERT INTO locations (id, name, detail, type, sort_order, is_active)
