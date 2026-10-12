@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { RideCard } from '@/components/rides/RideCard';
+import { AskAiRecommendations } from '@/components/rides/AskAiRecommendations';
 import { DesignSystem } from '@/components/ui/DesignSystem';
 import { ButtonLink } from '@/components/ui/ButtonLink';
 import { getCurrentUser } from '@/lib/auth';
@@ -76,6 +77,8 @@ export default async function RideResultsPage({ searchParams }: Props) {
             : `${rides.length} ride${rides.length === 1 ? '' : 's'} match your search.`}
         </p>
       </header>
+
+      <AskAiRecommendations filters={filters} />
 
       {rides.length === 0 ? (
         <div className="mt-8">
