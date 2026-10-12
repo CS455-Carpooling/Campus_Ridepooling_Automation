@@ -8,6 +8,7 @@ import { SelectField } from '@/components/ui/SelectField';
 import { DepartureWindowPicker } from './DepartureWindowPicker';
 import { RoutePicker, type RouteValue } from './RoutePicker';
 import type { RideFormOptions } from '@/lib/ride-options';
+import type { SearchDefaults } from '@/lib/ride-search';
 import { minDepartureLocal, toIstIso } from '@/lib/ride-rules';
 
 type SearchFilters = {
@@ -35,14 +36,36 @@ type SearchErrors = Partial<Record<keyof SearchFilters, string>>;
 /** The max-fare-share options offered in the dropdown. */
 const FARE_SHARE_OPTIONS = [50, 100, 150, 200, 300, 500, 750, 1000];
 
+/** The profile's saved vehicle type and fare share, where the form can offer them. */
+function initialFilters(options: RideFormOptions, defaults?: SearchDefaults): SearchFilters {
+  const vehicleTypeId = options.vehicleTypes.some((v) => v.id === defaults?.vehicleTypeId)
+    ? (defaults?.vehicleTypeId ?? '')
+    : '';
+  const maxFareShare =
+    defaults?.maxFareShare && defaults.maxFareShare > 0 ? String(defaults.maxFareShare) : '';
+  return { ...emptyFilters, vehicleTypeId, maxFareShare };
+}
+
 /**
  * Client component for /rides. Validates the filters, then navigates to
  * /rides/results?... so the results page can be a server component with
- * its own loading.tsx skeleton.
+ * its own loading.tsx skeleton. The optional filters start from the rider's
+ * saved preferences (FR-RD-02.5); choosing Any removes them for this search.
  */
-export function SearchRideForm({ options }: { options: RideFormOptions }) {
+export function SearchRideForm({
+  options,
+  defaults,
+}: {
+  options: RideFormOptions;
+  defaults?: SearchDefaults;
+}) {
   const router = useRouter();
-  const [filters, setFilters] = useState<SearchFilters>(emptyFilters);
+  const saved = initialFilters(options, defaults);
+  const [filters, setFilters] = useState<SearchFilters>(saved);
+  // A saved amount that is not one of the usual choices is still offered.
+  const fareShareOptions = [...new Set([...FARE_SHARE_OPTIONS, Number(saved.maxFareShare)])]
+    .filter((amount) => amount > 0)
+    .sort((a, b) => a - b);
   const [errors, setErrors] = useState<SearchErrors>({});
   const [formError, setFormError] = useState('');
 
@@ -164,7 +187,11 @@ export function SearchRideForm({ options }: { options: RideFormOptions }) {
           {/* Vehicle type */}
           <SelectField
             label="Vehicle type"
-            hint="Filter by vehicle type, or leave as Any to see all."
+            hint={
+              saved.vehicleTypeId && filters.vehicleTypeId === saved.vehicleTypeId
+                ? 'From your profile. Choose Any vehicle to see all.'
+                : 'Filter by vehicle type, or leave as Any to see all.'
+            }
             name="vehicleTypeId"
             value={filters.vehicleTypeId}
             onChange={(e) => update({ vehicleTypeId: e.target.value })}
@@ -181,13 +208,17 @@ export function SearchRideForm({ options }: { options: RideFormOptions }) {
           {/* Max fare share */}
           <SelectField
             label="Maximum fare share"
-            hint="Only show rides where your estimated share is at most this amount."
+            hint={
+              saved.maxFareShare && filters.maxFareShare === saved.maxFareShare
+                ? 'From your profile. Choose Any amount to see all.'
+                : 'Only show rides where your estimated share is at most this amount.'
+            }
             name="maxFareShare"
             value={filters.maxFareShare}
             onChange={(e) => update({ maxFareShare: e.target.value })}
           >
             <option value="">Any amount</option>
-            {FARE_SHARE_OPTIONS.map((amount) => (
+            {fareShareOptions.map((amount) => (
               <option key={amount} value={String(amount)}>
                 ₹{amount}
               </option>

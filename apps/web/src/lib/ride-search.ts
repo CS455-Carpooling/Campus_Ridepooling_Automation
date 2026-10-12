@@ -110,7 +110,7 @@ const SEARCH_SQL = `
       OR CEIL(
            r.expected_total_fare::numeric
            / (
-               (SELECT COUNT(*)::int FROM riders o WHERE o.ride_id = r.id) + 2
+               (SELECT COUNT(*)::int FROM riders o WHERE o.ride_id = r.id) + 1
              )
          ) <= $7::int
     )
@@ -130,6 +130,34 @@ const OCCUPANT_NAMES_SQL = `
   WHERE m.ride_id = ANY($1::uuid[])
   ORDER BY m.ride_id, (m.user_id = r.owner_id) DESC, m.joined_at, m.id`;
 
+/** The rider's saved search preferences; null where none is saved. */
+export type SearchDefaults = {
+  vehicleTypeId: string | null;
+  maxFareShare: number | null;
+};
+
+/**
+ * The preferred vehicle type and maximum fare share saved on the rider's profile, which
+ * pre-fill the search form (FR-RD-02.5). The rider sees them there and can change them,
+ * "Any" included, so searchRides() applies only the filters the form sends.
+ */
+export async function getSearchDefaults(viewerId: string): Promise<SearchDefaults> {
+  if (!isUuid(viewerId)) return { vehicleTypeId: null, maxFareShare: null };
+  const { rows } = await pool.query<{
+    preferred_vehicle_type_id: string | null;
+    max_acceptable_fare_share: number | null;
+  }>(
+    `SELECT preferred_vehicle_type_id, max_acceptable_fare_share
+     FROM user_profiles
+     WHERE user_id = $1`,
+    [viewerId],
+  );
+  return {
+    vehicleTypeId: rows[0]?.preferred_vehicle_type_id ?? null,
+    maxFareShare: rows[0]?.max_acceptable_fare_share ?? null,
+  };
+}
+
 /**
  * Searches for open, unlocked rides matching the given filters as seen by
  * `viewerId`. Excludes rides the viewer already belongs to, rides that have
@@ -138,7 +166,6 @@ const OCCUPANT_NAMES_SQL = `
 export async function searchRides(
   viewerId: string,
   filters: SearchRideRequest,
-  _now: Date = new Date(),
 ): Promise<SearchRideResult[]> {
   if (!isUuid(viewerId)) return [];
 

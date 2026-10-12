@@ -19,7 +19,10 @@ const profile: ProfileData = {
   mobileNumber: null,
   locations: [{ id: 'hall-3', name: 'Hall 3' }],
   vehicles: [{ id: 'car', name: 'Car' }],
-  tags: [{ id: 'quiet-ride', name: 'Quiet ride', selected: false, visible: true }],
+  tags: [
+    { id: 'quiet-ride', name: 'Quiet ride', selected: false, visible: true },
+    { id: 'rubiks-cube', name: 'Rubik’s Cube', selected: false, visible: true },
+  ],
   completedTrips: 2,
   rating: { count: 0, average: null, comments: [] },
 };
@@ -54,7 +57,7 @@ describe('ProfileEditor', () => {
     const user = userEvent.setup();
     render(<ProfileEditor profile={profile} />);
 
-    await user.click(screen.getByRole('checkbox', { name: 'Quiet ride' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Rubik’s Cube' }));
     expect(screen.getByRole('checkbox', { name: 'Show this tag to other riders' })).toBeChecked();
     await user.click(screen.getByRole('button', { name: 'Save profile' }));
 
@@ -62,7 +65,7 @@ describe('ProfileEditor', () => {
       '/api/profile',
       expect.objectContaining({
         method: 'PUT',
-        body: expect.stringContaining('"visible":true'),
+        body: expect.stringContaining('"id":"rubiks-cube","visible":true'),
       }),
     );
     expect(await screen.findByRole('status')).toHaveTextContent('Profile saved.');

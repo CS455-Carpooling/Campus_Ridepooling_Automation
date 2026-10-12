@@ -80,7 +80,7 @@ function daysInMonth(year: number, month: number): number {
  * 1 December) and accepts offsets up to 23:59, but PostgreSQL rejects both, so
  * such a time would fail the insert instead of being reported here.
  */
-function parseTime(value: unknown): Date | null {
+export function parseTime(value: unknown): Date | null {
   if (typeof value !== 'string') return null;
   const match = ISO_WITH_OFFSET.exec(value);
   if (!match) return null;
