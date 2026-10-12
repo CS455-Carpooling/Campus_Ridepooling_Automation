@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { RideOccupant, RideView } from '@/lib/ride-view';
 import { RideDetails } from './RideDetails';
+import { tripView } from './trip-test-data';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
@@ -139,7 +140,7 @@ describe('RideDetails', () => {
       />,
     );
     expect(screen.getByRole('region', { name: 'Your share' })).toHaveTextContent(
-      'The ride is locked, so this share is fixed.',
+      'The ride is locked: this share changes only if someone is marked a no-show',
     );
     expect(screen.getByText(/Locked since Sat 10 Oct, 05:30/)).toBeInTheDocument();
   });
@@ -218,13 +219,83 @@ describe('RideDetails', () => {
 });
 
 describe('RideDetails: completing a ride (FR-RO-09.4)', () => {
-  it('offers the owner "Mark ride completed" only when the server allows it', () => {
+  it('gives the owner the trip controls from the lock, and Complete once the trip started (CS455-63)', () => {
     const { rerender } = render(
-      <RideDetails ride={rideView({ viewerRole: 'owner', canComplete: true })} />,
+      <RideDetails
+        ride={rideView({ viewerRole: 'owner', trip: tripView({ canStartPickup: true }) })}
+      />,
     );
-    expect(screen.getByRole('button', { name: 'Mark ride completed' })).toBeInTheDocument();
-    rerender(<RideDetails ride={rideView({ viewerRole: 'owner', canComplete: false })} />);
-    expect(screen.queryByRole('button', { name: 'Mark ride completed' })).not.toBeInTheDocument();
+    // Before the lock there is no trip to run yet.
+    expect(screen.queryByRole('heading', { name: 'Run the trip' })).not.toBeInTheDocument();
+    rerender(
+      <RideDetails
+        ride={rideView({
+          viewerRole: 'owner',
+          isLocked: true,
+          isOpen: false,
+          trip: tripView({ canStartPickup: true }),
+        })}
+      />,
+    );
+    expect(screen.getByRole('heading', { name: 'Run the trip' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Start pickup' })).toBeInTheDocument();
+    rerender(
+      <RideDetails
+        ride={rideView({
+          viewerRole: 'owner',
+          state: 'pickup_in_progress',
+          isLocked: true,
+          isOpen: false,
+          canComplete: true,
+          trip: tripView({ pickupStartedAt: '2026-10-10T00:50:00.000Z' }),
+        })}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'Complete the ride' })).toBeInTheDocument();
+    expect(screen.getByText('Pickup started Sat 10 Oct, 06:20')).toBeInTheDocument();
+  });
+
+  it('lets a rider follow the trip, says when it is on its way, and marks a no-show', () => {
+    render(
+      <RideDetails
+        ride={rideView({
+          viewerRole: 'rider',
+          state: 'in_transit',
+          isLocked: true,
+          isOpen: false,
+          trip: tripView({ tripStartedAt: '2026-10-10T01:10:00.000Z' }),
+          occupants: [owner, { ...rider, isViewer: true, share: null, status: 'no_show' }],
+          viewerShare: null,
+          estimatedShare: null,
+        })}
+      />,
+    );
+    expect(screen.getByRole('heading', { name: 'Your trip' })).toBeInTheDocument();
+    expect(screen.getByText('On the way since Sat 10 Oct, 06:40')).toBeInTheDocument();
+    const people = within(screen.getByRole('region', { name: 'People on this ride' })).getAllByRole(
+      'listitem',
+    );
+    expect(people[1]).toHaveTextContent('No-show');
+    expect(people[1]).toHaveTextContent('No share');
+  });
+
+  it('tells a no-show they owe nothing', () => {
+    render(
+      <RideDetails
+        ride={rideView({
+          viewerRole: 'rider',
+          state: 'pickup_in_progress',
+          isLocked: true,
+          isOpen: false,
+          trip: tripView({ viewerNoShow: true }),
+          viewerShare: null,
+          estimatedShare: null,
+        })}
+      />,
+    );
+    expect(screen.getByRole('region', { name: 'Nothing to pay' })).toHaveTextContent(
+      'You were marked as a no-show',
+    );
   });
 
   it('says when a completed ride was marked completed', () => {

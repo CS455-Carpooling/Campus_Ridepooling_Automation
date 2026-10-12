@@ -14,11 +14,13 @@ import { campusPlaceLabel, directionLabels, rideTitle } from '@/lib/ride-status'
 import type { RideView } from '@/lib/ride-view';
 import type { Place } from '@/lib/ride-options';
 import { routes } from '@/lib/routes';
-import { CompleteRideButton } from './CompleteRideButton';
+import { isTripActive, seatStatusLabels } from '@/lib/trip-rules';
 import { JoinRequestControls } from './JoinRequestControls';
 import { RideManagementControls } from './RideManagementControls';
 import { RideChat } from './RideChat';
 import { RideStateLabel } from './RideStateLabel';
+import { TripRefresh } from './trip-hooks';
+import { TripPanel, TripStatus } from './TripPanel';
 
 /**
  * One ride (CS455-29): where and when it goes, its state, seats, fare split
@@ -37,6 +39,10 @@ export function RideDetails({
   defaultPickupLocationId?: string | null;
 }) {
   const cancelled = ride.state === 'cancelled';
+  // From the lock until the ride is completed, the people on it follow the trip live (CS455-63).
+  const liveTrip =
+    ride.trip !== null &&
+    (isTripActive(ride.state) || (ride.state === 'scheduled' && ride.isLocked));
 
   return (
     <DesignSystem className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
@@ -61,7 +67,9 @@ export function RideDetails({
         </div>
       </header>
 
-      {ride.canComplete && <CompleteRideButton rideId={ride.id} />}
+      <TripRefresh rideId={ride.id} active={liveTrip} />
+      {liveTrip &&
+        (ride.viewerRole === 'owner' ? <TripPanel ride={ride} /> : <TripStatus ride={ride} />)}
       <RateLink ride={ride} />
       {ride.canComplain && (
         <p className="mt-4 text-sm text-ink-muted">
@@ -123,6 +131,20 @@ function TimingNote({ ride }: { ride: RideView }) {
       <p className="text-sm text-ink-muted">Marked completed {formatDeparture(ride.completedAt)}</p>
     );
   }
+  if (ride.state === 'pickup_in_progress' && ride.trip?.pickupStartedAt) {
+    return (
+      <p className="text-sm text-ink-muted">
+        Pickup started {formatDeparture(ride.trip.pickupStartedAt)}
+      </p>
+    );
+  }
+  if (ride.state === 'in_transit' && ride.trip?.tripStartedAt) {
+    return (
+      <p className="text-sm text-ink-muted">
+        On the way since {formatDeparture(ride.trip.tripStartedAt)}
+      </p>
+    );
+  }
   if (ride.state !== 'scheduled') return null;
   const text = ride.windowEnded
     ? `Departure window ended ${formatDeparture(ride.departureEnd)}`
@@ -166,7 +188,7 @@ function SharePanel({ ride }: { ride: RideView }) {
     amount = ride.viewerShare;
     note = ride.isOpen
       ? 'It changes as people join or leave, until the ride locks.'
-      : 'The ride is locked, so this share is fixed.';
+      : 'The ride is locked: this share changes only if someone is marked a no-show, when the fare is split again between the rest.';
   } else if (ride.estimatedShare !== null) {
     label = 'Estimated share if you join';
     amount = ride.estimatedShare;
@@ -174,6 +196,9 @@ function SharePanel({ ride }: { ride: RideView }) {
   } else if (ride.viewerRole === 'visitor' && ride.seatsLeft === 0) {
     label = 'This ride is full';
     note = 'Every seat is taken.';
+  } else if (ride.trip?.viewerNoShow) {
+    label = 'Nothing to pay';
+    note = 'You were marked as a no-show, so the fare is split between the others.';
   } else {
     return null;
   }
@@ -233,6 +258,9 @@ function People({ ride, showShares }: { ride: RideView; showShares: boolean }) {
                 <p className="text-sm text-ink-muted">
                   {person.isOwner ? 'Owner' : 'Rider'}, {placeLabel.toLowerCase()} at{' '}
                   {person.campusPlace}
+                  {person.status === 'no_show' && (
+                    <span className="font-semibold text-danger">, {seatStatusLabels.no_show}</span>
+                  )}
                 </p>
                 <p className="mt-1 text-sm text-ink-muted">
                   {person.completedTrips} completed {person.completedTrips === 1 ? 'trip' : 'trips'}

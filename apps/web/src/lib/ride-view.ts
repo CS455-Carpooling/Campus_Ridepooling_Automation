@@ -61,6 +61,8 @@ export type TripStop = {
   place: string;
   /** An estimate from the campus travel times, or null when there is none. */
   estimatedAt: string | null;
+  /** The seats (riders.id) that stop here, and the names of the people in them, in seat order. */
+  occupantIds: string[];
   people: string[];
 };
 
@@ -331,6 +333,7 @@ export async function getRideView(
           stops: itinerary.stops.map((stop) => ({
             place: stop.place,
             estimatedAt: stop.estimatedAt ? stop.estimatedAt.toISOString() : null,
+            occupantIds: stop.seatIds,
             people: stop.seatIds.map(nameOf),
           })),
           viewerPickupAt:

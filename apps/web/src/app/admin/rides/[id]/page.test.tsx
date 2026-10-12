@@ -32,6 +32,8 @@ const ride = {
   totalFare: 400,
   createdAt: '2026-10-09T10:00:00.000Z',
   completedAt: '2026-10-10T03:00:00.000Z',
+  pickupStartedAt: '2026-10-10T00:55:00.000Z',
+  tripStartedAt: '2026-10-10T01:10:00.000Z',
   occupants: [
     {
       userId: 'u1',
@@ -39,6 +41,8 @@ const ride = {
       isOwner: true,
       campusPlace: 'Hall 6',
       joinedAt: '2026-10-09T10:00:00.000Z',
+      status: 'waiting',
+      finalShare: 250,
     },
     {
       userId: 'u2',
@@ -46,6 +50,8 @@ const ride = {
       isOwner: false,
       campusPlace: 'Hall 1',
       joinedAt: '2026-10-09T11:00:00.000Z',
+      status: 'no_show',
+      finalShare: null,
     },
   ],
   complaints: [{ id: 'c1', reference: 'CMP-1A2B3C4D', category: 'tardiness', status: 'resolved' }],
@@ -75,6 +81,10 @@ describe('/admin/rides/[id] (CS455-53, SYS-FR-17)', () => {
       '/admin/riders/u1',
     );
     expect(people[0]).toHaveTextContent('Owner, Hall 6');
+    // CS455-63: the trip's times, who was a no-show, and the final shares.
+    expect(people[0]).toHaveTextContent('Final share ₹250');
+    expect(people[1]).toHaveTextContent('No-show');
+    expect(screen.getByText('Sat 10 Oct, 06:25')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'CMP-1A2B3C4D' })).toHaveAttribute(
       'href',
       '/admin/complaints/c1',
@@ -83,10 +93,16 @@ describe('/admin/rides/[id] (CS455-53, SYS-FR-17)', () => {
   });
 
   it('says when there are no complaints, and is not found for an unknown ride', async () => {
-    mocks.getAdminRide.mockResolvedValue({ ...ride, complaints: [], completedAt: null });
+    mocks.getAdminRide.mockResolvedValue({
+      ...ride,
+      complaints: [],
+      completedAt: null,
+      pickupStartedAt: null,
+      tripStartedAt: null,
+    });
     render(await open());
     expect(screen.getByText('None.')).toBeInTheDocument();
-    expect(screen.getByText('Not yet')).toBeInTheDocument();
+    expect(screen.getAllByText('Not yet')).toHaveLength(3);
     mocks.getAdminRide.mockResolvedValue(null);
     await expect(open('x')).rejects.toThrow('NEXT_NOT_FOUND');
   });
