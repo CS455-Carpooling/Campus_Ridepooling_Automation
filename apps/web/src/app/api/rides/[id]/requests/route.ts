@@ -1,13 +1,9 @@
-
 import { pool } from '@/lib/db';
 import { getCurrentUser, guard, json, readJson } from '@/lib/auth';
 import { estimateShare } from '@/lib/fare';
 import { getActiveSuspension } from '@/lib/suspensions';
 import { suspendedMessage } from '@/lib/enforcement-rules';
-import {
-  RIDE_REQUEST_RULES,
-  validateJoinRequest,
-} from '@/lib/ride-request-rules';
+import { RIDE_REQUEST_RULES, validateJoinRequest } from '@/lib/ride-request-rules';
 import type { PoolClient } from 'pg';
 
 type RideRow = {
@@ -37,10 +33,7 @@ function errorResponse(message: string, status: number, code: string) {
   return json({ error: message, code }, status);
 }
 
-export async function POST(
-  req: Request,
-  context: { params: Promise<{ id: string }> },
-) {
+export async function POST(req: Request, context: { params: Promise<{ id: string }> }) {
   const blocked = await guard('submit-join-request', 20, 900);
   if (blocked) return blocked;
 
@@ -53,11 +46,7 @@ export async function POST(
   const { id: rideId } = await context.params;
 
   // Validate the route ID before using it in a database query.
-  if (
-    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-      rideId,
-    )
-  ) {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(rideId)) {
     return errorResponse('Invalid ride ID.', 400, 'invalid_ride_id');
   }
 
@@ -108,11 +97,7 @@ export async function POST(
       );
     }
 
-    const suspension = await getActiveSuspension(
-      user.id,
-      new Date(),
-      client,
-    );
+    const suspension = await getActiveSuspension(user.id, new Date(), client);
 
     if (suspension) {
       await client.query('ROLLBACK');
@@ -138,11 +123,7 @@ export async function POST(
          AND idempotency_key = $2
          AND submitted_at >= now() - make_interval(hours => $3)
        LIMIT 1`,
-      [
-        user.id,
-        idempotencyKey,
-        RIDE_REQUEST_RULES.idempotencyWindowHours,
-      ],
+      [user.id, idempotencyKey, RIDE_REQUEST_RULES.idempotencyWindowHours],
     );
 
     if (previousRequest.rows[0]) {
@@ -196,17 +177,12 @@ export async function POST(
 
     if (ride.state !== 'scheduled') {
       await client.query('ROLLBACK');
-      return errorResponse(
-        'This ride is no longer open for requests.',
-        409,
-        'ride_not_open',
-      );
+      return errorResponse('This ride is no longer open for requests.', 409, 'ride_not_open');
     }
 
     const now = new Date();
     const lockTime =
-      ride.departure_start.getTime() -
-      RIDE_REQUEST_RULES.minimumDepartureLeadMinutes * MINUTE_MS;
+      ride.departure_start.getTime() - RIDE_REQUEST_RULES.minimumDepartureLeadMinutes * MINUTE_MS;
 
     if (now.getTime() >= lockTime) {
       await client.query('ROLLBACK');
@@ -229,16 +205,9 @@ export async function POST(
       [pickupPointId],
     );
 
-    if (
-      pickupResult.rows.length === 0 ||
-      pickupResult.rows[0].type !== 'campus'
-    ) {
+    if (pickupResult.rows.length === 0 || pickupResult.rows[0].type !== 'campus') {
       await client.query('ROLLBACK');
-      return errorResponse(
-        'Choose an active campus pickup point.',
-        400,
-        'invalid_pickup_point',
-      );
+      return errorResponse('Choose an active campus pickup point.', 400, 'invalid_pickup_point');
     }
 
     // A confirmed rider already occupies a seat.
@@ -337,10 +306,7 @@ export async function POST(
      */
     const pickupTimeSnapshot = ride.departure_start;
 
-    const estimatedShare = estimateShare(
-      ride.expected_total_fare,
-      occupants,
-    );
+    const estimatedShare = estimateShare(ride.expected_total_fare, occupants);
 
     const inserted = await client.query<RequestRow>(
       `INSERT INTO ride_join_requests (
