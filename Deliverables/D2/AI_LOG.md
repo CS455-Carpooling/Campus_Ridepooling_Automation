@@ -580,3 +580,24 @@ During verification, the checked-in `apps/web/db/schema.sql` constraint and API 
 ### Verification
 - Inspected PR #54 CI run and found the failing step was **Check formatting**; lint and type-check had not failed in that run.
 - A new CI run is required to confirm the formatting fix passes.
+
+
+## 2026-10-12 — Address PR #54 Notification Centre review
+
+### User prompt
+“make these edits to PR 54 and also ensure lint checks are all correct”
+
+### Changes
+- Changed notification response validation to accept any string notification type, so a newly introduced type such as `trip_update` no longer invalidates and hides the entire list.
+- Added `apps/web/src/lib/notification-types.ts` as the shared notification type definition and reused it in the notifications GET API route; the UI intentionally tolerates unknown string values.
+- Removed the conflicting `block` class from notification timestamps by wrapping `time` in a paragraph.
+- Hid the unread count when the initial list cannot be loaded, reused `isUuid()` and `formatDeparture()`, improved the empty-state copy, and gave each mark-as-read button a notification-specific accessible name.
+- Added regression coverage for unknown notification types, the error-state unread count, timestamp formatting, accessible button names, and the notifications page session guard.
+
+### Scope decisions
+- “Mark all as read” is a separate feature and was not added because the current API only supports marking one notification at a time.
+- Header live updates and the 30-day retention limit remain follow-up work, as the review permits.
+
+### Verification
+- Changes were committed to `CS455-59-notification-ui`, the head branch of PR #54.
+- The repository's CI workflow is the authoritative place to verify lint, formatting, type-check, tests, and build. These checks have not yet been confirmed for the updated head; check the latest workflow run before merging.
