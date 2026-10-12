@@ -566,3 +566,17 @@ During verification, the checked-in `apps/web/db/schema.sql` constraint and API 
 - Inspected open PR #54 and its source branch `CS455-59-notification-ui` before editing.
 - Confirmed the current source declaration was limited to the original three types.
 - Formatting, lint, typecheck, and tests were not run in this environment; the user reports having run checks locally for PR #54.
+
+
+## 2026-10-12 — Fix notification API type formatting after PR lint check
+
+### User prompt
+“ I made the correction to the PR but the lint check is now failing; fix that, commit directly to the PR, and make it so the check passes.”
+
+### Changes
+- Reformatted the seven-value `NotificationRow.type` union in `apps/web/src/app/api/notifications/route.ts` into the repository's Prettier-compatible multiline layout.
+- No API behavior or database schema was changed.
+
+### Verification
+- Inspected PR #54 CI run and found the failing step was **Check formatting**; lint and type-check had not failed in that run.
+- A new CI run is required to confirm the formatting fix passes.
