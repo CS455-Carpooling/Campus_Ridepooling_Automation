@@ -68,7 +68,7 @@ export default async function RideResultsPage({ searchParams }: Props) {
           <ol className="mt-8 flex flex-col gap-6" aria-label="Search results">
             {rides.map((ride) => (
               <li key={ride.id}>
-                <RideCard ride={ride} />
+                <RideCard ride={ride} pickupPointId={filters.campusLocationId} />
               </li>
             ))}
           </ol>

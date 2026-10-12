@@ -1,6 +1,15 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SearchRideResult } from '@/lib/ride-search';
+
+const { refresh } = vi.hoisted(() => ({
+  refresh: vi.fn(),
+}));
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ refresh }),
+}));
+
 import { RideCard } from './RideCard';
 
 const mockRide: SearchRideResult = {
@@ -21,19 +30,27 @@ const mockRide: SearchRideResult = {
 };
 
 describe('RideCard', () => {
+  beforeEach(() => {
+    refresh.mockClear();
+  });
+
   it('renders ride details correctly', () => {
-    render(<RideCard ride={mockRide} />);
+    render(<RideCard ride={mockRide} pickupPointId="hall-6" />);
 
     expect(screen.getByText('To Kanpur Central')).toBeInTheDocument();
     expect(screen.getByText('Leaving campus')).toBeInTheDocument();
     expect(screen.getByText('Rahul Sharma')).toBeInTheDocument();
     expect(screen.getByText('and 1 other')).toBeInTheDocument();
     expect(screen.getByText('2 seats left')).toBeInTheDocument();
+
+    expect(screen.getByRole('button', { name: 'Request to Join' })).toBeInTheDocument();
   });
 
-  it('shows Full badge when no seats are left', () => {
-    render(<RideCard ride={{ ...mockRide, seatsLeft: 0 }} />);
+  it('shows Full badge and disables joining when no seats are left', () => {
+    render(<RideCard ride={{ ...mockRide, seatsLeft: 0 }} pickupPointId="hall-6" />);
 
     expect(screen.getByText('Full')).toBeInTheDocument();
+
+    expect(screen.getByRole('button', { name: 'Request to Join' })).toBeDisabled();
   });
 });
