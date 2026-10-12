@@ -18,6 +18,7 @@ const mockRide: SearchRideResult = {
   seatsLeft: 2,
   totalFare: 400,
   estimatedShare: 134,
+  requestState: null,
 };
 
 describe('RideCard', () => {

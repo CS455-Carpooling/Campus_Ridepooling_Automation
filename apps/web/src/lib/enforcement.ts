@@ -9,6 +9,7 @@ import {
 } from './enforcement-rules';
 import { formatDeparture } from './format';
 import { getActiveSuspension } from './suspensions';
+import { withdrawWaitingRequestsForSuspendedRider } from './join-requests';
 
 /**
  * An admin's warnings, suspensions and reactivations (OA-FR-21 to 28, SYS-FR-24 to 27,
@@ -151,6 +152,7 @@ export async function suspendRider(
     'Your account is suspended',
     `Your account is suspended ${until} (reason: ${complaintCategoryLabels[request.reasonCategory]}). You cannot offer rides or rate others until then. You can still file a complaint and see your rides.`,
   );
+  await withdrawWaitingRequestsForSuspendedRider(client, userId, now);
   return {
     kind: 'done',
     record: {

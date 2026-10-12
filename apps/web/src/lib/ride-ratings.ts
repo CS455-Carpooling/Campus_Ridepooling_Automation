@@ -62,7 +62,7 @@ const PAGE_RIDE_SQL = `
   SELECT r.id, r.direction, r.state, r.departure_start, r.departure_end, r.completed_at,
          hub.name AS hub_name, (r.owner_id = $2) AS viewer_is_owner
   FROM rides r
-  JOIN riders me ON me.ride_id = r.id AND me.user_id = $2
+  JOIN riders me ON me.ride_id = r.id AND me.user_id = $2 AND me.left_at IS NULL
   JOIN locations hub ON hub.id = r.hub_id
   WHERE r.id = $1`;
 
@@ -79,7 +79,7 @@ const PAGE_PEOPLE_SQL = `
   JOIN users u ON u.id = m.user_id
   LEFT JOIN user_profiles profile ON profile.user_id = u.id
   JOIN locations place ON place.id = m.campus_location_id
-  WHERE m.ride_id = $1 AND m.user_id <> $2
+  WHERE m.ride_id = $1 AND m.user_id <> $2 AND m.left_at IS NULL
   ORDER BY (m.user_id = r.owner_id) DESC, m.joined_at, m.id`;
 
 /**
@@ -134,12 +134,12 @@ const RATER_SQL = `
   SELECT me.id AS seat_id, r.state, r.completed_at
   FROM riders me
   JOIN rides r ON r.id = me.ride_id
-  WHERE me.ride_id = $1 AND me.user_id = $2
+  WHERE me.ride_id = $1 AND me.user_id = $2 AND me.left_at IS NULL
   FOR NO KEY UPDATE OF me`;
 
 const SEATS_SQL = `
   SELECT id AS occupant_id, user_id FROM riders
-  WHERE ride_id = $1 AND id = ANY($2::uuid[])`;
+  WHERE ride_id = $1 AND id = ANY($2::uuid[]) AND left_at IS NULL`;
 
 const ALREADY_RATED_SQL = `
   SELECT 1 FROM ride_ratings

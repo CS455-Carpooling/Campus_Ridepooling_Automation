@@ -4,6 +4,7 @@ import { pool } from '@/lib/db';
 import { isUuid } from '@/lib/ids';
 import { completeRideRefusal, ratingClosesAt, type CompleteRideRefusal } from '@/lib/rating-rules';
 import { canViewRide, type RideState, type ViewerRole } from '@/lib/ride-status';
+import { completeAcceptedJoinRequests } from '@/lib/join-requests';
 
 type RideRow = {
   state: RideState;
@@ -82,6 +83,7 @@ export async function POST(_req: Request, ctx: RouteContext<'/api/rides/[id]/com
       id,
       now,
     ]);
+    await completeAcceptedJoinRequests(client, id, now);
     await client.query('COMMIT');
     const completedAt = rows[0].completed_at;
     return json({

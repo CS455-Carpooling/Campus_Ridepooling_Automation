@@ -16,10 +16,12 @@ function rideRow(change: Record<string, unknown> = {}) {
   return {
     id: RIDE_ID,
     direction: 'to_hub',
+    hub_id: 'kanpur-central',
     state: 'scheduled',
     departure_start: new Date('2026-10-10T06:30:00+05:30'),
     departure_end: new Date('2026-10-10T07:30:00+05:30'),
     completed_at: null,
+    locked_at: null,
     capacity_snapshot: 4,
     expected_total_fare: 350,
     hub_name: 'Kanpur Central',
@@ -189,6 +191,8 @@ describe('getRideView: what the page shows', () => {
     const occupantSql = query.mock.calls[1][0] as string;
     expect(occupantSql).toContain('selected.is_visible = true');
     expect(occupantSql).toContain('profile.display_name');
+    expect(occupantSql).toContain('m.left_at IS NULL');
+    expect(occupantSql).toContain('completed.left_at IS NULL');
     expect(occupantSql).not.toMatch(/email|roll_number|password|mobile_number/);
   });
 });
@@ -246,6 +250,8 @@ describe('getUpcomingRides (FR-RD-06.4)', () => {
     expect(UPCOMING_LIMIT).toBe(20);
     expect(sql).toContain("r.state IN ('pickup_in_progress', 'in_transit')");
     expect(sql).toContain("r.state = 'scheduled' AND r.departure_end > $2");
+    expect(sql).toContain('me.left_at IS NULL');
+    expect(sql).toContain('o.ride_id = r.id AND o.left_at IS NULL');
     expect(sql).toContain('ORDER BY r.departure_start');
     expect(sql).toContain('COUNT(*)::int');
   });

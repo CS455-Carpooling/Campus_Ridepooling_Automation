@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { RideDetails } from '@/components/rides/RideDetails';
 import { getCurrentUser } from '@/lib/auth';
+import { getRideProfileDefaults } from '@/lib/profile-data';
+import { getRideFormOptions } from '@/lib/ride-options';
 import { getRideView } from '@/lib/ride-view';
 import { routes } from '@/lib/routes';
 
@@ -17,8 +19,19 @@ export default async function RidePage({ params }: PageProps<'/rides/[id]'>) {
   if (!user) redirect(routes.login);
 
   const { id } = await params;
-  const ride = await getRideView(id, user.id);
+  const [ride, options, defaults] = await Promise.all([
+    getRideView(id, user.id),
+    getRideFormOptions(),
+    getRideProfileDefaults(user.id),
+  ]);
   if (!ride) notFound();
 
-  return <RideDetails ride={ride} />;
+  return (
+    <RideDetails
+      ride={ride}
+      pickupPlaces={options.campusPlaces}
+      hubs={options.hubs}
+      defaultPickupLocationId={defaults.defaultPickupPointId}
+    />
+  );
 }

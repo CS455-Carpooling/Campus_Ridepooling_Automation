@@ -4,6 +4,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   getCurrentUser: vi.fn(),
   getRideView: vi.fn(),
+  getRideFormOptions: vi.fn(),
+  getRideProfileDefaults: vi.fn(),
   redirect: vi.fn((url: string) => {
     throw new Error(`REDIRECT:${url}`);
   }),
@@ -14,6 +16,8 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('@/lib/auth', () => ({ getCurrentUser: mocks.getCurrentUser }));
 vi.mock('@/lib/ride-view', () => ({ getRideView: mocks.getRideView }));
+vi.mock('@/lib/ride-options', () => ({ getRideFormOptions: mocks.getRideFormOptions }));
+vi.mock('@/lib/profile-data', () => ({ getRideProfileDefaults: mocks.getRideProfileDefaults }));
 vi.mock('next/navigation', () => ({
   redirect: mocks.redirect,
   notFound: mocks.notFound,
@@ -38,6 +42,7 @@ const props = (id = RIDE_ID) => ({
 const view = {
   id: RIDE_ID,
   direction: 'to_hub',
+  hubId: 'kanpur-central',
   hub: { name: 'Kanpur Central', detail: null },
   departureStart: '2026-10-10T01:00:00.000Z',
   departureEnd: '2026-10-10T02:00:00.000Z',
@@ -75,6 +80,8 @@ const view = {
 beforeEach(() => {
   mocks.getCurrentUser.mockReset();
   mocks.getRideView.mockReset();
+  mocks.getRideFormOptions.mockResolvedValue({ campusPlaces: [], hubs: [] });
+  mocks.getRideProfileDefaults.mockResolvedValue({ defaultPickupPointId: null });
   mocks.redirect.mockClear();
   mocks.notFound.mockClear();
 });

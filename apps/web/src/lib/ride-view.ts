@@ -46,6 +46,7 @@ export type RideOccupant = {
 export type RideView = {
   id: string;
   direction: Direction;
+  hubId: string;
   hub: { name: string; detail: string | null };
   /** ISO 8601 instants. */
   departureStart: string;
@@ -92,10 +93,12 @@ export type RideView = {
 type RideRow = {
   id: string;
   direction: Direction;
+  hub_id: string;
   state: RideState;
   departure_start: Date;
   departure_end: Date;
   completed_at: Date | null;
+  locked_at: Date | null;
   capacity_snapshot: number;
   expected_total_fare: number;
   hub_name: string;
@@ -115,13 +118,14 @@ type OccupantRow = {
   completed_trips: number;
   rating_count: number | null;
   rating_average: number | null;
+  locked_share: number | null;
 };
 
 // Inactive hubs and vehicle types still show: they were valid when the ride was offered.
 const RIDE_SQL = `
-  SELECT r.id, r.direction, r.state, r.departure_start, r.departure_end, r.completed_at,
+  SELECT r.id, r.direction, r.state, r.departure_start, r.departure_end, r.completed_at, r.locked_at,
          r.capacity_snapshot, r.expected_total_fare,
-         hub.name AS hub_name, hub.detail AS hub_detail, v.name AS vehicle_name,
+         hub.id AS hub_id, hub.name AS hub_name, hub.detail AS hub_detail, v.name AS vehicle_name,
          (r.owner_id = $2) AS viewer_is_owner,
          EXISTS (SELECT 1 FROM riders m WHERE m.ride_id = r.id AND m.user_id = $2) AS viewer_is_rider,
          (SELECT count(*)::int FROM ride_ratings given
@@ -140,9 +144,11 @@ const OCCUPANTS_SQL = `
          (SELECT count(DISTINCT completed.ride_id)::int
           FROM riders completed
           JOIN rides completed_ride ON completed_ride.id = completed.ride_id
-          WHERE completed.user_id = m.user_id AND completed_ride.state = 'completed')
+          WHERE completed.user_id = m.user_id AND completed.left_at IS NULL
+            AND completed_ride.state = 'completed')
            AS completed_trips,
          public_rating.rating_count, public_rating.rating_average
+         , m.locked_share
   FROM riders m
   JOIN rides r ON r.id = m.ride_id
   JOIN users u ON u.id = m.user_id
@@ -155,7 +161,7 @@ const OCCUPANTS_SQL = `
   ) public_tags ON true
   ${publicRatingJoin('m.user_id', '$3')}
   JOIN locations place ON place.id = m.campus_location_id
-  WHERE m.ride_id = $1
+  WHERE m.ride_id = $1 AND m.left_at IS NULL
   ORDER BY (m.user_id = r.owner_id) DESC, m.joined_at, m.id`;
 
 /**
@@ -180,7 +186,11 @@ export async function getRideView(
     : ride.viewer_is_rider
       ? 'rider'
       : 'visitor';
-  if (!canViewRide(viewerRole, ride.state, ride.departure_start, now)) return null;
+  if (
+    !canViewRide(viewerRole, ride.state, ride.departure_start, now) ||
+    (viewerRole === 'visitor' && ride.locked_at !== null)
+  )
+    return null;
 
   const { rows: people } = await pool.query<OccupantRow>(OCCUPANTS_SQL, [rideId, viewerId, now]);
   const totalFare = ride.expected_total_fare;
@@ -192,7 +202,7 @@ export async function getRideView(
     isViewer: person.is_viewer,
     visibleTags: person.visible_tags ?? [],
     completedTrips: person.completed_trips ?? 0,
-    share: shares[index],
+    share: person.locked_share ?? shares[index],
     rating:
       person.rating_count !== null && person.rating_average !== null
         ? { average: person.rating_average, count: person.rating_count }
@@ -200,19 +210,20 @@ export async function getRideView(
   }));
 
   const seatsLeft = Math.max(ride.capacity_snapshot - people.length, 0);
-  const isOpen = isOpenToJoin(ride.state, ride.departure_start, now);
+  const isOpen = ride.locked_at === null && isOpenToJoin(ride.state, ride.departure_start, now);
   const rating = ratingWindow(ride.state, ride.completed_at, now);
   const canAskToJoin = viewerRole === 'visitor' && isOpen && seatsLeft > 0;
 
   return {
     id: ride.id,
     direction: ride.direction,
+    hubId: ride.hub_id,
     hub: { name: ride.hub_name, detail: ride.hub_detail },
     departureStart: ride.departure_start.toISOString(),
     departureEnd: ride.departure_end.toISOString(),
     lockAt: lockTime(ride.departure_start).toISOString(),
     state: ride.state,
-    isLocked: isLocked(ride.departure_start, now),
+    isLocked: ride.locked_at !== null || isLocked(ride.departure_start, now),
     isOpen,
     windowEnded: now.getTime() >= ride.departure_end.getTime(),
     completedAt: ride.completed_at ? ride.completed_at.toISOString() : null,
@@ -301,11 +312,13 @@ const UPCOMING_SQL = `
   SELECT r.id, r.direction, hub.name AS hub_name, r.departure_start, r.state,
          (r.owner_id = $1) AS is_owner,
          GREATEST(r.capacity_snapshot
-           - (SELECT COUNT(*)::int FROM riders o WHERE o.ride_id = r.id), 0) AS seats_left
+           - (SELECT COUNT(*)::int FROM riders o
+              WHERE o.ride_id = r.id AND o.left_at IS NULL), 0) AS seats_left
   FROM riders me
   JOIN rides r ON r.id = me.ride_id
   JOIN locations hub ON hub.id = r.hub_id
   WHERE me.user_id = $1
+    AND me.left_at IS NULL
     AND (r.state IN ('pickup_in_progress', 'in_transit')
          OR (r.state = 'scheduled' AND r.departure_end > $2))
   ORDER BY r.departure_start, r.id
