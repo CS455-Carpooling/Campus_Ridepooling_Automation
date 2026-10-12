@@ -39,12 +39,14 @@ const ride: SearchRideResult = {
 
 const response: RideRecommendationResponse = {
   source: 'ai',
-  suggestions: [{
-    ride,
-    pros: ['Estimated share fits the selected budget'],
-    cons: ['Departure is near the end of your window'],
-    factors: ['fare', 'departure', 'seats'],
-  }],
+  suggestions: [
+    {
+      ride,
+      pros: ['Estimated share fits the selected budget'],
+      cons: ['Departure is near the end of your window'],
+      factors: ['fare', 'departure', 'seats'],
+    },
+  ],
 };
 
 describe('AskAiRecommendations', () => {
@@ -55,7 +57,15 @@ describe('AskAiRecommendations', () => {
 
   it('shows loading and then trusted ride details with explanations', async () => {
     let resolveFetch!: (value: Response) => void;
-    vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>((resolve) => { resolveFetch = resolve; })));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        () =>
+          new Promise<Response>((resolve) => {
+            resolveFetch = resolve;
+          }),
+      ),
+    );
     render(<AskAiRecommendations filters={filters} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Ask AI to Suggest' }));
@@ -69,9 +79,19 @@ describe('AskAiRecommendations', () => {
   });
 
   it('shows empty and fallback states', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({
-      source: 'fallback', suggestions: [], message: 'No eligible rides match these filters.',
-    }), { status: 200 })));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            source: 'fallback',
+            suggestions: [],
+            message: 'No eligible rides match these filters.',
+          }),
+          { status: 200 },
+        ),
+      ),
+    );
     render(<AskAiRecommendations filters={filters} />);
     fireEvent.click(screen.getByRole('button', { name: 'Ask AI to Suggest' }));
     await screen.findByText('No eligible rides found');
@@ -79,7 +99,12 @@ describe('AskAiRecommendations', () => {
   });
 
   it('shows a retryable error state', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: 'Unavailable' }), { status: 503 })));
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValue(new Response(JSON.stringify({ error: 'Unavailable' }), { status: 503 })),
+    );
     render(<AskAiRecommendations filters={filters} />);
     fireEvent.click(screen.getByRole('button', { name: 'Ask AI to Suggest' }));
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Unavailable'));

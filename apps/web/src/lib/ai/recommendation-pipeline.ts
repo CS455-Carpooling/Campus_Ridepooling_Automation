@@ -1,8 +1,8 @@
-import "server-only";
-import { pool } from "@/lib/db";
-import { searchRides, type SearchRideRequest, type SearchRideResult } from "@/lib/ride-search";
-import { enrichSharedInterests } from "./shared-interest-enrichment";
-import { calculatePickupOrderImpact } from "./pickup-order-impact";
+import 'server-only';
+import { pool } from '@/lib/db';
+import { searchRides, type SearchRideRequest, type SearchRideResult } from '@/lib/ride-search';
+import { enrichSharedInterests } from './shared-interest-enrichment';
+import { calculatePickupOrderImpact } from './pickup-order-impact';
 import {
   MAX_RIDE_RECOMMENDATIONS,
   type AiRankedRide,
@@ -10,11 +10,15 @@ import {
   type RideRecommendationResponse,
   type RideSuggestion,
   type RecommendationRequest,
-} from "./types";
-import { validateAiRanking } from "./validate-ranking";
+} from './types';
+import { validateAiRanking } from './validate-ranking';
 
 type PickupStopRow = { ride_id: string; location_name: string };
-type AggregateRatingRow = { ride_id: string; average_score: string | number | null; rating_count: string | number };
+type AggregateRatingRow = {
+  ride_id: string;
+  average_score: string | number | null;
+  rating_count: string | number;
+};
 
 /** Load only stop labels; occupant identities are not needed for route impact. */
 async function loadExistingStops(rideIds: readonly string[]): Promise<Map<string, string[]>> {
@@ -41,8 +45,8 @@ async function loadExistingStops(rideIds: readonly string[]): Promise<Map<string
 /** Aggregate ratings only; never selects comments or individual rating identities. */
 async function loadAggregateRatings(
   rideIds: readonly string[],
-): Promise<Map<string, RecommendationCandidate["aggregateRating"]>> {
-  const result = new Map<string, RecommendationCandidate["aggregateRating"]>();
+): Promise<Map<string, RecommendationCandidate['aggregateRating']>> {
+  const result = new Map<string, RecommendationCandidate['aggregateRating']>();
   for (const id of rideIds) result.set(id, null);
   if (!rideIds.length) return result;
 
@@ -63,7 +67,8 @@ async function loadAggregateRatings(
   for (const row of rows) {
     const count = Number(row.rating_count);
     const average = row.average_score === null ? null : Number(row.average_score);
-    result.set(row.ride_id,
+    result.set(
+      row.ride_id,
       count > 0 && average !== null && Number.isFinite(average)
         ? { average: Math.round(average * 100) / 100, count }
         : null,
@@ -77,7 +82,7 @@ function buildCandidate(
   pickupStops: readonly string[],
   proposedPickupName: string,
   sharedTags: string[] | null,
-  aggregateRating: RecommendationCandidate["aggregateRating"],
+  aggregateRating: RecommendationCandidate['aggregateRating'],
 ): RecommendationCandidate {
   const pickupImpact = calculatePickupOrderImpact(pickupStops, proposedPickupName);
   return {
@@ -88,7 +93,10 @@ function buildCandidate(
     vehicleType: ride.vehicleName,
     availableSeats: ride.seatsLeft,
     pickupOrderChange: pickupImpact
-      ? { changesPickupOrder: pickupImpact.changesPickupOrder, affectedStops: pickupImpact.affectedStops }
+      ? {
+          changesPickupOrder: pickupImpact.changesPickupOrder,
+          affectedStops: pickupImpact.affectedStops,
+        }
       : null,
     sharedInterestTags: sharedTags,
     aggregateRating,
@@ -117,12 +125,12 @@ export async function buildRecommendationCandidates(
     enrichSharedInterests(viewerId, ids),
     loadAggregateRatings(ids),
     pool.query<{ name: string }>(
-      "SELECT name FROM locations WHERE id = $1 AND type = $2 AND is_active = TRUE",
-      [filters.campusLocationId, "campus"],
+      'SELECT name FROM locations WHERE id = $1 AND type = $2 AND is_active = TRUE',
+      [filters.campusLocationId, 'campus'],
     ),
   ]);
 
-  const proposedPickupName = proposedPickup.rows[0]?.name ?? "";
+  const proposedPickupName = proposedPickup.rows[0]?.name ?? '';
   const candidates = rides.map((ride) => {
     const shared = sharedByRide.get(ride.id);
     return buildCandidate(
@@ -149,7 +157,8 @@ export function departureWindowDistanceMinutes(
   const re = Date.parse(rideEnd);
   const qs = Date.parse(requestedStart);
   const qe = Date.parse(requestedEnd);
-  if (![rs, re, qs, qe].every(Number.isFinite) || rs >= re || qs >= qe) return Number.POSITIVE_INFINITY;
+  if (![rs, re, qs, qe].every(Number.isFinite) || rs >= re || qs >= qe)
+    return Number.POSITIVE_INFINITY;
   if (re < qs) return (qs - re) / 60_000;
   if (rs > qe) return (rs - qe) / 60_000;
   return 0;
@@ -161,11 +170,19 @@ export function rankFallbackRides(
   filters: SearchRideRequest,
 ): SearchRideResult[] {
   return [...rides].sort((a, b) => {
-    const distance = departureWindowDistanceMinutes(
-      a.departureStart, a.departureEnd, filters.departureStart, filters.departureEnd,
-    ) - departureWindowDistanceMinutes(
-      b.departureStart, b.departureEnd, filters.departureStart, filters.departureEnd,
-    );
+    const distance =
+      departureWindowDistanceMinutes(
+        a.departureStart,
+        a.departureEnd,
+        filters.departureStart,
+        filters.departureEnd,
+      ) -
+      departureWindowDistanceMinutes(
+        b.departureStart,
+        b.departureEnd,
+        filters.departureStart,
+        filters.departureEnd,
+      );
     if (distance !== 0) return distance;
     const fare = a.estimatedShare - b.estimatedShare;
     if (fare !== 0) return fare;
@@ -185,12 +202,16 @@ export async function rankRideRecommendations(
 ): Promise<RideRecommendationResponse> {
   const initial = await buildRecommendationCandidates(viewerId, filters);
   if (!initial.rides.length) {
-    return { source: "fallback", suggestions: [], message: "No eligible rides match these filters." };
+    return {
+      source: 'fallback',
+      suggestions: [],
+      message: 'No eligible rides match these filters.',
+    };
   }
 
   let ranking: AiRankedRide[] = [];
   try {
-    ranking = validateAiRanking(await runRanking({
+    const raw = await runRanking({
       filters: {
         direction: filters.direction,
         departureStart: filters.departureStart,
@@ -199,8 +220,16 @@ export async function rankRideRecommendations(
         maxFareShare: filters.maxFareShare,
       },
       candidates: initial.candidates,
-    }), initial.candidates);
-  } catch {
+    });
+
+    ranking = validateAiRanking(raw, initial.candidates);
+
+    if (ranking.length === 0) {
+      console.error('[AI recommendations] Ranking validation returned no eligible results.');
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[AI recommendations] Ranking request failed:', message);
     ranking = [];
   }
 
@@ -220,20 +249,24 @@ export async function rankRideRecommendations(
 
   // Deterministic fallback uses only trusted current search fields, never model fields.
   if (!suggestions.length) {
-    for (const ride of rankFallbackRides(currentRides, filters).slice(0, MAX_RIDE_RECOMMENDATIONS)) {
+    for (const ride of rankFallbackRides(currentRides, filters).slice(
+      0,
+      MAX_RIDE_RECOMMENDATIONS,
+    )) {
       suggestions.push({
         ride,
         pros: [],
         cons: [],
-        factors: ["fare", "departure", "vehicle", "seats"],
+        factors: ['fare', 'departure', 'vehicle', 'seats'],
       });
     }
     return {
-      source: "fallback",
+      source: 'fallback',
       suggestions,
-      message: "AI ranking was unavailable or invalid; showing eligible rides in the default order.",
+      message:
+        'AI ranking was unavailable or invalid; showing eligible rides in the default order.',
     };
   }
 
-  return { source: "ai", suggestions };
+  return { source: 'ai', suggestions };
 }

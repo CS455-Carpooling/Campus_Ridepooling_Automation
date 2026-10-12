@@ -1,6 +1,6 @@
-import "server-only";
-import { pool } from "@/lib/db";
-import { resolveSharedInterestTags } from "./shared-interest-tags";
+import 'server-only';
+import { pool } from '@/lib/db';
+import { resolveSharedInterestTags } from './shared-interest-tags';
 
 export type SharedInterestData = {
   /** Common visible tag labels safe to include in a model prompt, or null if unavailable. */
@@ -19,7 +19,7 @@ type SharedInterestRow = {
  *
  * Consent is required from the requesting rider and every current occupant
  * of a candidate ride. Only active, visible tags are considered. The query
- * returns labels only—never profile/user identifiers or per-person tag lists.
+ * returns labels only, never profile/user identifiers or per-person tag lists.
  * Missing consent or visible tags yields null; no common tag yields an empty array.
  */
 export async function enrichSharedInterests(

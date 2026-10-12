@@ -2,7 +2,7 @@
  * Temporary, hardcoded campus driving-time estimates for IIT Kanpur.
  *
  * Values are minutes between the named pickup points, intended for ranking/
- * comparing pickup-order changes—not for navigation or ETA promises. They are
+ * comparing pickup-order changes, not for navigation or ETA promises. They are
  * rough symmetric placeholder estimates informed by the published IITK campus
  * map; individual pairwise driving routes/times have NOT been verified against
  * Google Maps. Do not treat these as measured travel times. Replace this
@@ -13,21 +13,21 @@
  */
 
 export const CAMPUS_TRAVEL_TIME_LOCATIONS = [
-  "Hall 1",
-  "Hall 2",
-  "Hall 3",
-  "Hall 4",
-  "Hall 5",
-  "Hall 6",
-  "Hall 7",
-  "Hall 8",
-  "Hall 9",
-  "Hall 10",
-  "Hall 11",
-  "Hall 12",
-  "Hall 13",
-  "Hall 14",
-  "Main Gate",
+  'Hall 1',
+  'Hall 2',
+  'Hall 3',
+  'Hall 4',
+  'Hall 5',
+  'Hall 6',
+  'Hall 7',
+  'Hall 8',
+  'Hall 9',
+  'Hall 10',
+  'Hall 11',
+  'Hall 12',
+  'Hall 13',
+  'Hall 14',
+  'Main Gate',
 ] as const;
 
 export type CampusTravelTimeLocation = (typeof CAMPUS_TRAVEL_TIME_LOCATIONS)[number];
@@ -68,7 +68,9 @@ export function getCampusTravelTimeMinutes(from: string, to: string): number | n
 }
 
 /** Exposes a read-only lookup table for deterministic consumers and tests. */
-export function getCampusTravelTimeMatrix(): Readonly<Record<CampusTravelTimeLocation, Readonly<Record<CampusTravelTimeLocation, number>>>> {
+export function getCampusTravelTimeMatrix(): Readonly<
+  Record<CampusTravelTimeLocation, Readonly<Record<CampusTravelTimeLocation, number>>>
+> {
   return Object.fromEntries(
     CAMPUS_TRAVEL_TIME_LOCATIONS.map((from, fromIndex) => [
       from,
@@ -79,5 +81,7 @@ export function getCampusTravelTimeMatrix(): Readonly<Record<CampusTravelTimeLoc
         ]),
       ),
     ]),
-  ) as Readonly<Record<CampusTravelTimeLocation, Readonly<Record<CampusTravelTimeLocation, number>>>>;
+  ) as Readonly<
+    Record<CampusTravelTimeLocation, Readonly<Record<CampusTravelTimeLocation, number>>>
+  >;
 }

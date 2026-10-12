@@ -16,7 +16,9 @@ vi.mock('@/lib/auth', () => ({
   json: h.json,
   readJson: h.readJson,
 }));
-vi.mock('@/lib/db', () => ({ pool: { connect: vi.fn(async () => ({ query: h.clientQuery, release: vi.fn() })) } }));
+vi.mock('@/lib/db', () => ({
+  pool: { connect: vi.fn(async () => ({ query: h.clientQuery, release: vi.fn() })) },
+}));
 vi.mock('@/lib/ai/recommendations', () => ({
   getRideRecommendations: h.getRideRecommendations,
 }));
@@ -39,19 +41,27 @@ describe('POST /api/rides/recommendations', () => {
     h.getCurrentUser.mockResolvedValue({ id: 'user-1' });
     h.readJson.mockResolvedValue(validFilters);
     h.getRideRecommendations.mockResolvedValue({ source: 'fallback', suggestions: [] });
-    h.clientQuery.mockImplementation((sql: string) => sql.includes('COUNT(*)') ? Promise.resolve({ rows: [{ count: '0' }] }) : Promise.resolve({ rows: [], rowCount: 1 }));
+    h.clientQuery.mockImplementation((sql: string) =>
+      sql.includes('COUNT(*)')
+        ? Promise.resolve({ rows: [{ count: '0' }] })
+        : Promise.resolve({ rows: [], rowCount: 1 }),
+    );
   });
 
   it('requires authentication', async () => {
     h.getCurrentUser.mockResolvedValue(null);
-    const response = await POST(new Request('http://localhost/api/rides/recommendations', { method: 'POST' }));
+    const response = await POST(
+      new Request('http://localhost/api/rides/recommendations', { method: 'POST' }),
+    );
     expect(response.status).toBe(401);
     expect(h.getRideRecommendations).not.toHaveBeenCalled();
   });
 
   it('rejects invalid search filters', async () => {
     h.readJson.mockResolvedValue({ ...validFilters, direction: 'anywhere' });
-    const response = await POST(new Request('http://localhost/api/rides/recommendations', { method: 'POST' }));
+    const response = await POST(
+      new Request('http://localhost/api/rides/recommendations', { method: 'POST' }),
+    );
     expect(response.status).toBe(400);
     expect(h.getRideRecommendations).not.toHaveBeenCalled();
   });
@@ -59,7 +69,9 @@ describe('POST /api/rides/recommendations', () => {
   it('calls the recommendation service with authenticated user and validated filters', async () => {
     const result = { source: 'fallback', suggestions: [] };
     h.getRideRecommendations.mockResolvedValue(result);
-    const response = await POST(new Request('http://localhost/api/rides/recommendations', { method: 'POST' }));
+    const response = await POST(
+      new Request('http://localhost/api/rides/recommendations', { method: 'POST' }),
+    );
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual(result);
     expect(h.getRideRecommendations).toHaveBeenCalledWith('user-1', validFilters);
@@ -67,8 +79,12 @@ describe('POST /api/rides/recommendations', () => {
 
   it('returns a safe error when the service fails', async () => {
     h.getRideRecommendations.mockRejectedValue(new Error('internal detail'));
-    const response = await POST(new Request('http://localhost/api/rides/recommendations', { method: 'POST' }));
+    const response = await POST(
+      new Request('http://localhost/api/rides/recommendations', { method: 'POST' }),
+    );
     expect(response.status).toBe(500);
-    expect(await response.json()).toEqual({ error: 'Unable to generate ride recommendations right now.' });
+    expect(await response.json()).toEqual({
+      error: 'Unable to generate ride recommendations right now.',
+    });
   });
 });

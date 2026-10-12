@@ -1,4 +1,4 @@
-import { getCampusTravelTimeMinutes } from "./campus-travel-times";
+import { getCampusTravelTimeMinutes } from './campus-travel-times';
 
 export type TravelTimeLookup = (from: string, to: string) => number | null;
 
@@ -22,10 +22,7 @@ type Route = { minutes: number; order: number[] };
  * Held–Karp dynamic programming is practical for campus rides (the matrix has
  * at most 15 locations). Ties are deterministic: original input order wins.
  */
-function shortestStopOrder(
-  stops: readonly string[],
-  travelTime: TravelTimeLookup,
-): Route | null {
+function shortestStopOrder(stops: readonly string[], travelTime: TravelTimeLookup): Route | null {
   if (stops.length <= 1) return { minutes: 0, order: stops.length ? [0] : [] };
 
   const memo = new Map<string, Route | null>();
@@ -33,7 +30,7 @@ function shortestStopOrder(
     const key = `${mask}:${last}`;
     if (memo.has(key)) return memo.get(key)!;
 
-    if (mask === (1 << last)) {
+    if (mask === 1 << last) {
       const base = { minutes: 0, order: [last] };
       memo.set(key, base);
       return base;

@@ -11,9 +11,13 @@ export async function POST(req: Request) {
 
   const body = await readJson(req);
   const { requestId, rideId, value } = body;
-  if (typeof requestId !== 'string' || !UUID.test(requestId) ||
-      typeof rideId !== 'string' || !UUID.test(rideId) ||
-      (value !== 'helpful' && value !== 'not_helpful')) {
+  if (
+    typeof requestId !== 'string' ||
+    !UUID.test(requestId) ||
+    typeof rideId !== 'string' ||
+    !UUID.test(rideId) ||
+    (value !== 'helpful' && value !== 'not_helpful')
+  ) {
     return json({ error: 'Please provide a valid recommendation and feedback value.' }, 400);
   }
 
@@ -30,7 +34,10 @@ export async function POST(req: Request) {
       [requestId, user.id, rideId, value],
     );
     if (!result.rowCount) {
-      return json({ error: 'This recommendation is unavailable or feedback was already submitted.' }, 409);
+      return json(
+        { error: 'This recommendation is unavailable or feedback was already submitted.' },
+        409,
+      );
     }
     return json({ success: true }, 201);
   } catch {

@@ -11,7 +11,9 @@ const h = vi.hoisted(() => ({
 vi.mock('@/lib/db', () => ({ pool: { query: h.query } }));
 vi.mock('@/lib/ride-search', () => ({ searchRides: h.searchRides }));
 vi.mock('./shared-interest-enrichment', () => ({ enrichSharedInterests: h.enrichSharedInterests }));
-vi.mock('./pickup-order-impact', () => ({ calculatePickupOrderImpact: h.calculatePickupOrderImpact }));
+vi.mock('./pickup-order-impact', () => ({
+  calculatePickupOrderImpact: h.calculatePickupOrderImpact,
+}));
 
 import { rankRideRecommendations } from './recommendation-pipeline';
 
@@ -45,7 +47,8 @@ describe('rankRideRecommendations fallback', () => {
     vi.clearAllMocks();
     h.searchRides.mockResolvedValue([ride]);
     h.query.mockImplementation((sql: string) => {
-      if (sql.includes('SELECT name FROM locations')) return Promise.resolve({ rows: [{ name: 'Hall 3' }] });
+      if (sql.includes('SELECT name FROM locations'))
+        return Promise.resolve({ rows: [{ name: 'Hall 3' }] });
       return Promise.resolve({ rows: [] });
     });
     h.enrichSharedInterests.mockResolvedValue(new Map([['ride-1', { sharedInterestTags: null }]]));

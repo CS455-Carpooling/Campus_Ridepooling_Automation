@@ -182,7 +182,7 @@ Deliverable: a reliable backend pipeline that separates trusted ride data from u
 ### Integrate Gemini
 
 - Add a server-side Gemini client and structured ranking prompt.
-- Send only the enriched candidate payload—not direct database access, raw profiles or complaint data.
+- Send only the enriched candidate payload, not direct database access, raw profiles or complaint data.
 - Ask Gemini to rank candidate IDs and explain the ranking with concise pros and cons.
 - Validate the response and use a deterministic fallback if the model fails or returns invalid output.
 - Keep the API key in server-side environment configuration, never in client code or Git.

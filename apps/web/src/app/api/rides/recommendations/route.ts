@@ -12,16 +12,21 @@ async function consumeRiderQuota(userId: string): Promise<boolean> {
   try {
     await client.query('BEGIN');
     await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [userId]);
-    await client.query('DELETE FROM ride_recommendation_rate_events WHERE created_at <= now() - interval \'1 hour\'');
+    await client.query(
+      "DELETE FROM ride_recommendation_rate_events WHERE created_at <= now() - interval '1 hour'",
+    );
     const { rows } = await client.query<{ count: string }>(
-      'SELECT COUNT(*)::text AS count FROM ride_recommendation_rate_events WHERE user_id=$1 AND created_at > now() - interval \'1 hour\'',
+      "SELECT COUNT(*)::text AS count FROM ride_recommendation_rate_events WHERE user_id=$1 AND created_at > now() - interval '1 hour'",
       [userId],
     );
     if (Number(rows[0]?.count ?? 0) >= RIDER_HOURLY_LIMIT) {
       await client.query('ROLLBACK');
       return false;
     }
-    await client.query('INSERT INTO ride_recommendation_rate_events (request_id, user_id) VALUES ($1, $2)', [randomUUID(), userId]);
+    await client.query(
+      'INSERT INTO ride_recommendation_rate_events (request_id, user_id) VALUES ($1, $2)',
+      [randomUUID(), userId],
+    );
     await client.query('COMMIT');
     return true;
   } catch (error) {
@@ -36,20 +41,37 @@ const ISO_WITH_OFFSET =
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})$/;
 
 function parseFilters(body: Record<string, unknown>): SearchRideRequest | null {
-  const { direction, hubId, campusLocationId, departureStart, departureEnd, vehicleTypeId, maxFareShare } = body;
+  const {
+    direction,
+    hubId,
+    campusLocationId,
+    departureStart,
+    departureEnd,
+    vehicleTypeId,
+    maxFareShare,
+  } = body;
   if (
-    typeof direction !== 'string' || !VALID_DIRECTIONS.has(direction) ||
-    typeof hubId !== 'string' || !hubId.trim() ||
-    typeof campusLocationId !== 'string' || !campusLocationId.trim() ||
-    typeof departureStart !== 'string' || !ISO_WITH_OFFSET.test(departureStart) ||
-    typeof departureEnd !== 'string' || !ISO_WITH_OFFSET.test(departureEnd) ||
+    typeof direction !== 'string' ||
+    !VALID_DIRECTIONS.has(direction) ||
+    typeof hubId !== 'string' ||
+    !hubId.trim() ||
+    typeof campusLocationId !== 'string' ||
+    !campusLocationId.trim() ||
+    typeof departureStart !== 'string' ||
+    !ISO_WITH_OFFSET.test(departureStart) ||
+    typeof departureEnd !== 'string' ||
+    !ISO_WITH_OFFSET.test(departureEnd) ||
     !Number.isFinite(Date.parse(departureStart)) ||
     !Number.isFinite(Date.parse(departureEnd)) ||
     new Date(departureStart) >= new Date(departureEnd) ||
     (vehicleTypeId !== undefined && vehicleTypeId !== '' && typeof vehicleTypeId !== 'string') ||
-    (maxFareShare !== undefined && maxFareShare !== null &&
-      (typeof maxFareShare !== 'number' || !Number.isSafeInteger(maxFareShare) || maxFareShare <= 0))
-  ) return null;
+    (maxFareShare !== undefined &&
+      maxFareShare !== null &&
+      (typeof maxFareShare !== 'number' ||
+        !Number.isSafeInteger(maxFareShare) ||
+        maxFareShare <= 0))
+  )
+    return null;
 
   return {
     direction: direction as SearchRideRequest['direction'],
@@ -74,12 +96,18 @@ export async function POST(req: Request) {
 
   try {
     if (!(await consumeRiderQuota(user.id))) {
-      return json({ error: 'You have reached the limit of 20 recommendation requests per hour.' }, 429);
+      return json(
+        { error: 'You have reached the limit of 20 recommendation requests per hour.' },
+        429,
+      );
     }
     const recommendations = await getRideRecommendations(user.id, filters);
     return json(recommendations);
   } catch (error) {
-    console.error('Ride recommendations failed:', error instanceof Error ? error.message : 'Unknown error');
+    console.error(
+      'Ride recommendations failed:',
+      error instanceof Error ? error.message : 'Unknown error',
+    );
     return json({ error: 'Unable to generate ride recommendations right now.' }, 500);
   }
 }
