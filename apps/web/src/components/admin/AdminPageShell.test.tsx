@@ -21,7 +21,15 @@ describe('AdminPageShell (CS455-49)', () => {
       within(nav)
         .getAllByRole('link')
         .map((link) => link.textContent),
-    ).toEqual(['Home', 'Complaints', 'AI decisions', 'Riders', 'Configuration', 'Profile']);
+    ).toEqual([
+      'Home',
+      'SOS incidents',
+      'Complaints',
+      'AI decisions',
+      'Riders',
+      'Configuration',
+      'Profile',
+    ]);
     expect(within(nav).getByRole('link', { name: 'Complaints' })).toHaveAttribute(
       'aria-current',
       'page',

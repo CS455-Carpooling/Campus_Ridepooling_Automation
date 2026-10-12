@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   requireAdminPage: vi.fn(),
   getAdminRide: vi.fn(),
+  listRideIncidents: vi.fn(),
   notFound: vi.fn(() => {
     throw new Error('NEXT_NOT_FOUND');
   }),
@@ -15,6 +16,7 @@ vi.mock('next/navigation', () => ({
 }));
 vi.mock('@/lib/admin-auth', () => ({ requireAdminPage: mocks.requireAdminPage }));
 vi.mock('@/lib/admin-rider-queries', () => ({ getAdminRide: mocks.getAdminRide }));
+vi.mock('@/lib/admin-incident-queries', () => ({ listRideIncidents: mocks.listRideIncidents }));
 
 import AdminRidePage from './page';
 
@@ -61,6 +63,11 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.requireAdminPage.mockResolvedValue({ userId: 'a1', role: 'admin' });
   mocks.getAdminRide.mockResolvedValue(ride);
+  mocks.listRideIncidents.mockResolvedValue([]);
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async () => Response.json({ unacknowledged: 0, newest: null })),
+  );
 });
 
 describe('/admin/rides/[id] (CS455-53, SYS-FR-17)', () => {
@@ -90,6 +97,34 @@ describe('/admin/rides/[id] (CS455-53, SYS-FR-17)', () => {
       '/admin/complaints/c1',
     );
     expect(screen.queryByRole('button', { name: /edit|cancel|complete/i })).not.toBeInTheDocument();
+  });
+
+  it('lists the SOS alerts raised on the ride (CS455-65)', async () => {
+    expect(screen.queryByRole('list', { name: 'SOS alerts on this ride' })).not.toBeInTheDocument();
+    mocks.listRideIncidents.mockResolvedValue([
+      {
+        id: 'i1',
+        reference: 'SOS-1A2B3C4D',
+        status: 'acknowledged',
+        raisedAt: '2026-10-10T01:20:00.000Z',
+        raiserName: 'Aditi',
+        raisedRole: 'rider',
+        rideTitle: 'Hall 6 to Kanpur Central',
+        falseAlarm: true,
+        locationShared: false,
+      },
+    ]);
+    render(await open());
+    const alerts = within(
+      screen.getByRole('list', { name: 'SOS alerts on this ride' }),
+    ).getAllByRole('listitem');
+    expect(within(alerts[0]).getByRole('link', { name: 'SOS-1A2B3C4D' })).toHaveAttribute(
+      'href',
+      '/admin/incidents/i1',
+    );
+    expect(alerts[0]).toHaveTextContent('by Aditi');
+    expect(alerts[0]).toHaveTextContent('marked a false alarm');
+    expect(within(alerts[0]).getByText('Acknowledged')).toBeInTheDocument();
   });
 
   it('says when there are no complaints, and is not found for an unknown ride', async () => {
