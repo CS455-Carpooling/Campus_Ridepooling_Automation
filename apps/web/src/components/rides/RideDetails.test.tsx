@@ -278,6 +278,23 @@ describe('RideDetails: completing a ride (FR-RO-09.4)', () => {
     expect(people[1]).toHaveTextContent('No share');
   });
 
+  it('offers SOS to someone on the ride while the trip is under way (CS455-64)', () => {
+    const { rerender } = render(
+      <RideDetails
+        ride={rideView({
+          viewerRole: 'rider',
+          state: 'in_transit',
+          isLocked: true,
+          isOpen: false,
+          trip: tripView({ canRaiseSos: true }),
+        })}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'SOS' })).toBeInTheDocument();
+    rerender(<RideDetails ride={rideView({ viewerRole: 'rider', trip: tripView() })} />);
+    expect(screen.queryByRole('button', { name: 'SOS' })).not.toBeInTheDocument();
+  });
+
   it('tells a no-show they owe nothing', () => {
     render(
       <RideDetails

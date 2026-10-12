@@ -115,6 +115,8 @@ describe.each(Object.entries(schemes))('colour contrast, %s scheme (NFR-RD-15)',
     for (const fill of ['accent', 'accent-strong']) {
       expect(contrast(t['on-accent'], t[fill]), fill).toBeGreaterThanOrEqual(TEXT);
     }
+    // The danger button (SOS, CS455-64) puts on-primary text on the danger colour.
+    expect(contrast(t['on-primary'], t.danger), 'danger').toBeGreaterThanOrEqual(TEXT);
   });
 
   it('text on brand panels is at least 4.5:1, and the accent at least 3:1', () => {

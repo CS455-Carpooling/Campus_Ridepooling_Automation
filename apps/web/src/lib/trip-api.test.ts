@@ -110,6 +110,25 @@ describe('runTripChange', () => {
     logged.mockRestore();
   });
 
+  it('can answer another success status and name what was not found (CS455-64)', async () => {
+    const created = await runTripChange(
+      'Test',
+      messages,
+      async () => ({ kind: 'done', value: { id: 'i1' } }),
+      body,
+      { status: () => 201 },
+    );
+    expect(created.status).toBe(201);
+    const missing = await runTripChange(
+      'Test',
+      messages,
+      async () => ({ kind: 'not_found' }),
+      body,
+      { notFound: 'SOS alert not found.' },
+    );
+    expect(await missing.json()).toEqual({ error: 'SOS alert not found.', code: 'not_found' });
+  });
+
   it('answers 500 when no connection can be had', async () => {
     const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     h.connect.mockRejectedValue(new Error('pool exhausted'));

@@ -92,6 +92,15 @@ export function parseIncidentAction(
   return { ok: true, value: { action: 'close', note } };
 }
 
+/** Why someone cannot raise or update an SOS now. */
+export type SosRefusal = 'not_active' | 'closed';
+
+export const sosRefusalMessages: Record<SosRefusal, string> = {
+  not_active:
+    'SOS is available while the trip is under way. If you are in danger, call 112 or campus security now.',
+  closed: 'An operations admin has closed this alert, so it cannot change any more.',
+};
+
 /** Why an admin cannot take this action on an incident in this status, or null when they can. */
 export function incidentActionRefusal(
   status: IncidentStatus,
