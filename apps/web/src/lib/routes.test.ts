@@ -16,6 +16,7 @@ describe('navigationFor', () => {
   it('gives operations admins their queues, riders and configuration (CS455-49)', () => {
     expect(navigationFor('admin').map((item) => item.label)).toEqual([
       'Home',
+      'SOS incidents',
       'Complaints',
       'AI decisions',
       'Riders',

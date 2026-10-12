@@ -50,8 +50,10 @@ export type AdminActivity = {
 
 /** The admin home (CS455-49): what needs attention, then the latest admin actions. */
 export type AdminHomeData = {
-  /** SOS alerts (FR-RD-15) do not exist yet, so this stays null: "Not available yet". */
+  /** SOS alerts not closed yet (CS455-65, FR-RD-15). */
   openIncidents: number | null;
+  /** Of those, the ones no admin has acknowledged. */
+  unacknowledgedIncidents: number;
   /** Submitted or under review, chat reports included. */
   complaintsToReview: number;
   safetyComplaintsToReview: number;
@@ -88,7 +90,9 @@ const ADMIN_COUNTS_SQL = `
        WHERE a.outcome = 'ai_validated' AND a.recommended_action <> 'none'
          AND NOT EXISTS (SELECT 1 FROM ai_enforcement_decisions d WHERE d.analysis_id = a.id))
       AS recommendations,
-    (SELECT count(DISTINCT user_id)::int FROM active_rider_suspensions) AS suspended
+    (SELECT count(DISTINCT user_id)::int FROM active_rider_suspensions) AS suspended,
+    (SELECT count(*)::int FROM sos_incidents WHERE status <> 'closed') AS incidents,
+    (SELECT count(*)::int FROM sos_incidents WHERE status = 'open') AS unacknowledged
   FROM complaints`;
 
 // Names the subject of each entry from its own table; entity_id is text, so it never blocks
@@ -100,13 +104,21 @@ const RECENT_ACTIONS_SQL = `
       WHEN 'vehicle_type' THEN (SELECT name FROM vehicle_types WHERE id = l.entity_id)
       WHEN 'location' THEN (SELECT name FROM locations WHERE id = l.entity_id)
       WHEN 'complaint' THEN (SELECT reference FROM complaints WHERE id::text = l.entity_id)
+      WHEN 'sos_incident' THEN (SELECT reference FROM sos_incidents WHERE id::text = l.entity_id)
     END AS subject
   FROM admin_audit_log l
   LEFT JOIN users u ON u.id = l.admin_id
   ORDER BY l.created_at DESC, l.id DESC
   LIMIT 10`;
 
-type CountsRow = { complaints: number; safety: number; recommendations: number; suspended: number };
+type CountsRow = {
+  complaints: number;
+  safety: number;
+  recommendations: number;
+  suspended: number;
+  incidents: number;
+  unacknowledged: number;
+};
 
 type ActivityRow = {
   id: string;
@@ -119,9 +131,9 @@ type ActivityRow = {
 };
 
 /**
- * Data for the admin home page (CS455-49): the open complaints (chat reports are complaints
- * too), the AI recommendations waiting for a decision, the riders suspended now, and the
- * latest admin actions. SOS incidents do not exist yet.
+ * Data for the admin home page (CS455-49): SOS alerts not closed (CS455-65), the open complaints
+ * (chat reports are complaints too), the AI recommendations waiting for a decision, the riders
+ * suspended now, and the latest admin actions.
  */
 export async function getAdminHome(): Promise<AdminHomeData> {
   const [counts, recent] = await Promise.all([
@@ -130,7 +142,8 @@ export async function getAdminHome(): Promise<AdminHomeData> {
   ]);
   const row = counts.rows[0];
   return {
-    openIncidents: null,
+    openIncidents: row?.incidents ?? 0,
+    unacknowledgedIncidents: row?.unacknowledged ?? 0,
     complaintsToReview: row?.complaints ?? 0,
     safetyComplaintsToReview: row?.safety ?? 0,
     recommendationsToDecide: row?.recommendations ?? 0,

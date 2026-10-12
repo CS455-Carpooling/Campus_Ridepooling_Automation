@@ -6,6 +6,8 @@ import { AdminPageShell } from '@/components/admin/AdminPageShell';
 import { ComplaintStatusLabel } from '@/components/complaints/ComplaintStatusLabel';
 import { RideStateLabel } from '@/components/rides/RideStateLabel';
 import { requireAdminPage } from '@/lib/admin-auth';
+import { IncidentStatusLabel } from '@/components/admin/incidents/IncidentStatusLabel';
+import { listRideIncidents } from '@/lib/admin-incident-queries';
 import { getAdminRide } from '@/lib/admin-rider-queries';
 import { complaintCategoryLabels } from '@/lib/complaint-rules';
 import { formatDeparture, formatDepartureWindow, formatRupees } from '@/lib/format';
@@ -23,7 +25,7 @@ export default async function AdminRidePage({ params }: PageProps<'/admin/rides/
   if (!admin) return <AdminNotAllowed />;
 
   const { id } = await params;
-  const ride = await getAdminRide(id);
+  const [ride, incidents] = await Promise.all([getAdminRide(id), listRideIncidents(id)]);
   if (!ride) notFound();
 
   const facts: Array<[string, string]> = [
@@ -100,6 +102,39 @@ export default async function AdminRidePage({ params }: PageProps<'/admin/rides/
             ))}
           </ul>
         </section>
+
+        {incidents.length > 0 && (
+          <section aria-labelledby="ride-incidents-heading" className="lg:col-span-2">
+            <h2 id="ride-incidents-heading" className="text-xl font-bold tracking-tight">
+              SOS alerts on this ride
+            </h2>
+            <ul
+              aria-label="SOS alerts on this ride"
+              className="mt-3 divide-y divide-line border-y border-line"
+            >
+              {incidents.map((incident) => (
+                <li
+                  key={incident.id}
+                  className="flex flex-wrap items-center justify-between gap-2 py-3"
+                >
+                  <span>
+                    <Link
+                      href={routes.adminIncident(incident.id)}
+                      className="font-mono font-semibold"
+                    >
+                      {incident.reference}
+                    </Link>{' '}
+                    <span className="text-sm text-ink-muted">
+                      by {incident.raiserName}, {formatDeparture(incident.raisedAt)}
+                      {incident.falseAlarm && ', marked a false alarm'}
+                    </span>
+                  </span>
+                  <IncidentStatusLabel status={incident.status} />
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         <section aria-labelledby="ride-complaints-heading">
           <h2 id="ride-complaints-heading" className="text-xl font-bold tracking-tight">

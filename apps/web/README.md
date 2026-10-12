@@ -56,14 +56,14 @@ exist yet shows the 404 page until the page is built.
 | `/rides/new` | Offer a ride: route, vehicle, departure window, fare | Built (CS455-22 to 25) |
 | `/rides/[id]` | Ride details: route, departure window, state and lock time, seats, fare split, people; from the lock, the trip: pickup order, arrivals, no-shows, live updates | Built (CS455-28, 29, 63) |
 | `/rides/[id]/review` | Rate the people on a completed ride, for 72 hours after it is completed | Built (CS455-40 to 43) |
-| `/rides` | Find a ride | Not started |
+| `/rides`, `/rides/results` | Find a ride: search and results, with AI recommendations | Built |
 | `/notifications` | Notifications | Not started |
 | `/admin` | Sends an admin to their home; tells a student the admin pages are not for them | Built (CS455-49) |
 | `/admin/complaints` | One complaint queue, from the form and from chat reports, Safety first | Built (CS455-45, 53) |
 | `/admin/complaints/[id]`, `/admin/riders`, `/admin/riders/[id]`, `/admin/rides/[id]` | Complaint detail, rider search and record, a read-only ride | Built (CS455-53) |
 | `/rides/[id]/complaint`, `/complaints` | File a complaint about someone on a ride; your complaints | Built (CS455-53) |
 | `/admin/configuration/...` | Vehicle types, hubs and pickup points, fares | Built (CS455-51) |
-| `/admin/incidents` | SOS incidents | Not started (needs in-trip ride states) |
+| `/admin/incidents`, `/admin/incidents/[id]` | SOS alerts, open first; one alert with the trip as it was, the mobile number and location, Acknowledge and Close | Built (CS455-65) |
 
 ## Signed-in pages and roles
 
@@ -139,8 +139,8 @@ exist yet shows the 404 page until the page is built.
   commit. A refused or failed attempt keeps nothing and is audited as `refused` or `failed`;
   errors are logged, never shown. Each action uses a code from `src/lib/admin-activity.ts`, which
   also holds how the pages name it.
-- **Admin pages** sit in `AdminPageShell` (CS455-49): the admin navigation (Home, Complaints,
-  Riders, Configuration, Profile) with the current page marked and a way to log out, then the
+- **Admin pages** sit in `AdminPageShell` (CS455-49): the admin navigation (Home, SOS incidents,
+  Complaints, AI decisions, Riders, Configuration, Profile) with the current page marked and a way to log out, then the
   page's title with an optional back link, eyebrow, description and actions. The admin home
   (`/dashboard` for an admin) counts open complaints (chat reports included, safety ones called
   out), AI recommendations awaiting a decision and riders suspended now, and lists the last 10
@@ -242,6 +242,18 @@ exist yet shows the 404 page until the page is built.
     view reads only the viewer's own alert.
   - **Location:** `next.config.ts` allows it for our own pages only (`geolocation=(self)`).
   - **Complaint form:** a Safety complaint during a trip points to SOS on the ride page.
+- **SOS for admins** (CS455-65).
+  - **Pages:** `/admin/incidents` lists every alert, open first
+    (`admin-incident-queries.ts`). `/admin/incidents/[id]` shows the trip as it was, who was on
+    it, the mobile number and the location (with a map link), and Acknowledge, then Close with a
+    note.
+  - **API:** `PATCH /api/admin/incidents/[id]` goes through `withAdminAction()` and is audited as
+    `incident.acknowledge` or `incident.close`.
+  - **Alert bar:** every admin page shows it (`IncidentAlert` in `AdminPageShell`). It asks
+    `GET /api/admin/incidents/open` every 3 seconds, so a new alert shows within 5 (P-22), and
+    stays until someone acknowledges it.
+  - **Elsewhere:** the admin home counts alerts not closed, and the admin ride view lists a
+    ride's alerts.
 
 ## Conventions
 

@@ -20,8 +20,9 @@ export const routes = {
   myComplaints: '/complaints',
   notifications: '/notifications',
   admin: '/admin',
-  /** SOS alerts (FR-RD-15) wait for in-trip ride states; nothing links here until then. */
+  /** SOS alerts raised during trips (CS455-65, FR-RD-15). */
   adminIncidents: '/admin/incidents',
+  adminIncident: (incidentId: string) => `/admin/incidents/${encodeURIComponent(incidentId)}`,
   adminComplaints: '/admin/complaints',
   adminComplaint: (complaintId: string) => `/admin/complaints/${encodeURIComponent(complaintId)}`,
   adminAiDecisions: '/admin/ai-decisions',
@@ -47,6 +48,7 @@ const navigation: Record<Role, NavItem[]> = {
   // Recommendations are decided on their complaint; the separate page preserves decision history.
   admin: [
     { href: routes.home, label: 'Home' },
+    { href: routes.adminIncidents, label: 'SOS incidents' },
     { href: routes.adminComplaints, label: 'Complaints' },
     { href: routes.adminAiDecisions, label: 'AI decisions' },
     { href: routes.adminRiders, label: 'Riders' },

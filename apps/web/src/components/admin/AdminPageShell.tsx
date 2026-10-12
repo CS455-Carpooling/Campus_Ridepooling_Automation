@@ -5,6 +5,7 @@ import { DesignSystem } from '@/components/ui/DesignSystem';
 import { LogoutButton } from '@/components/ui/LogoutButton';
 import { cx } from '@/lib/cx';
 import { navigationFor } from '@/lib/routes';
+import { IncidentAlert } from './incidents/IncidentAlert';
 
 export type AdminPageShellProps = {
   title: string;
@@ -20,8 +21,8 @@ export type AdminPageShellProps = {
 
 /**
  * The frame of every operations admin page (CS455-49): the admin navigation with the current
- * page marked, logging out, then the page's title and content. It only displays: each page
- * checks access itself with requireAdminPage() before rendering it.
+ * page marked, logging out, the SOS alert bar (CS455-65), then the page's title and content. It
+ * only displays: each page checks access itself with requireAdminPage() before rendering it.
  */
 export function AdminPageShell({
   title,
@@ -39,6 +40,7 @@ export function AdminPageShell({
         </nav>
         <LogoutButton />
       </div>
+      <IncidentAlert />
 
       <main>
         {back && (

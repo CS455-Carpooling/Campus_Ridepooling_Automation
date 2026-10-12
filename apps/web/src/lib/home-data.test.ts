@@ -53,10 +53,22 @@ describe('home data', () => {
               },
             ],
           }
-        : { rows: [{ complaints: 4, safety: 1, recommendations: 2, suspended: 3 }] },
+        : {
+            rows: [
+              {
+                complaints: 4,
+                safety: 1,
+                recommendations: 2,
+                suspended: 3,
+                incidents: 2,
+                unacknowledged: 1,
+              },
+            ],
+          },
     );
     await expect(getAdminHome()).resolves.toEqual({
-      openIncidents: null,
+      openIncidents: 2,
+      unacknowledgedIncidents: 1,
       complaintsToReview: 4,
       safetyComplaintsToReview: 1,
       recommendationsToDecide: 2,

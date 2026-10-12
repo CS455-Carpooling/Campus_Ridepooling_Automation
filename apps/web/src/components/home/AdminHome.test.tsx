@@ -6,7 +6,8 @@ import { AdminHome } from './AdminHome';
 vi.mock('next/navigation', () => ({ usePathname: () => '/dashboard' }));
 
 const empty: AdminHomeData = {
-  openIncidents: null,
+  openIncidents: 0,
+  unacknowledgedIncidents: 0,
   complaintsToReview: 0,
   safetyComplaintsToReview: 0,
   recommendationsToDecide: 0,
@@ -39,6 +40,8 @@ describe('AdminHome (CS455-49)', () => {
       <AdminHome
         data={{
           ...empty,
+          openIncidents: 2,
+          unacknowledgedIncidents: 1,
           complaintsToReview: 4,
           safetyComplaintsToReview: 1,
           recommendationsToDecide: 2,
@@ -47,30 +50,36 @@ describe('AdminHome (CS455-49)', () => {
       />,
     );
     const rows = within(screen.getByRole('table')).getAllByRole('row');
+    // SOS first (CS455-65), then complaints, AI recommendations and suspensions.
+    expect(within(rows[1]).getByRole('link', { name: 'SOS incidents not closed' })).toHaveAttribute(
+      'href',
+      '/admin/incidents',
+    );
+    expect(within(rows[1]).getByText('2')).toBeInTheDocument();
+    expect(within(rows[1]).getByText('1 not acknowledged')).toBeInTheDocument();
     expect(
-      within(rows[1]).getByRole('link', { name: 'Complaints awaiting review' }),
+      within(rows[2]).getByRole('link', { name: 'Complaints awaiting review' }),
     ).toHaveAttribute('href', '/admin/complaints');
-    expect(within(rows[1]).getByText('4')).toBeInTheDocument();
-    expect(within(rows[1]).getByText('1 about safety')).toBeInTheDocument();
+    expect(within(rows[2]).getByText('4')).toBeInTheDocument();
+    expect(within(rows[2]).getByText('1 about safety')).toBeInTheDocument();
     expect(
-      within(rows[2]).getByRole('link', { name: 'AI recommendations awaiting your decision' }),
+      within(rows[3]).getByRole('link', { name: 'AI recommendations awaiting your decision' }),
     ).toHaveAttribute('href', '/admin/complaints');
-    expect(within(rows[2]).getByText('2')).toBeInTheDocument();
-    expect(within(rows[3]).getByRole('link', { name: 'Riders suspended now' })).toHaveAttribute(
+    expect(within(rows[3]).getByText('2')).toBeInTheDocument();
+    expect(within(rows[4]).getByRole('link', { name: 'Riders suspended now' })).toHaveAttribute(
       'href',
       '/admin/riders',
     );
-    expect(within(rows[3]).getByText('3')).toBeInTheDocument();
+    expect(within(rows[4]).getByText('3')).toBeInTheDocument();
   });
 
-  it('shows a true zero, and says SOS is not available yet without linking to it', () => {
+  it('shows a true zero, without notes, and nothing is "not available" any more', () => {
     render(<AdminHome data={empty} />);
     const rows = within(screen.getByRole('table')).getAllByRole('row');
     expect(within(rows[1]).getByText('0')).toBeInTheDocument();
-    expect(within(rows[1]).queryByText(/about safety/)).not.toBeInTheDocument();
-    expect(within(rows[4]).getByText('SOS incidents')).toBeInTheDocument();
-    expect(within(rows[4]).queryByRole('link')).not.toBeInTheDocument();
-    expect(screen.getAllByText('Not available yet')).toHaveLength(1);
+    expect(within(rows[1]).queryByText(/not acknowledged/)).not.toBeInTheDocument();
+    expect(within(rows[2]).queryByText(/about safety/)).not.toBeInTheDocument();
+    expect(screen.queryByText('Not available yet')).not.toBeInTheDocument();
   });
 
   it('lists recent admin actions with who, when and the outcome (SYS-NFR-12)', () => {
