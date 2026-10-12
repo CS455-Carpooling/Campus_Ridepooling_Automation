@@ -241,6 +241,19 @@ exist yet shows the 404 page until the page is built.
     (P-13).
   - **Admin ride view:** `/admin/rides/[id]` adds the trip's times, each person's pickup status
     and the final shares.
+- **SOS** (`src/lib/sos.ts`, CS455-64).
+  - **Who:** anyone with a seat, rider or owner, while the trip is under way, suspended or not.
+  - **On the ride page,** `SosPanel` asks once, then sends the alert straight away
+    (`POST /api/rides/[id]/sos`). Only after that does it ask for the location and add it
+    (`PATCH /api/sos/[id]`), so a slow or refused location never delays the alert.
+  - **The SOS screen** shows the emergency numbers and the no-dispatch note from the question on,
+    and the reference once sent. The person who raised it can mark it a false alarm.
+  - **What is stored:** a snapshot of the trip and the raiser's mobile number. One active alert
+    per person per ride, so pressing SOS again returns it.
+  - **Privacy:** nothing about it reaches the rest of the pool: no notification, and the ride
+    view reads only the viewer's own alert.
+  - **Location:** `next.config.ts` allows it for our own pages only (`geolocation=(self)`).
+  - **Complaint form:** a Safety complaint during a trip points to SOS on the ride page.
 
 ## Conventions
 

@@ -15,6 +15,8 @@ import {
   type RideState,
   type ViewerRole,
 } from './ride-status';
+import type { SosIncident } from './sos';
+import { canRaiseSos } from './sos-rules';
 import { AGREED_PICKUP_SQL, activeShares } from './trip';
 import { pickupTimeFor, tripItinerary } from './trip-itinerary';
 import {
@@ -83,6 +85,10 @@ export type TripView = {
   canCheckIn: boolean;
   /** The viewer was marked a no-show on this ride (FR-RD-10.3). */
   viewerNoShow: boolean;
+  /** The viewer may raise an SOS now: they have a seat and the trip is under way (FR-RD-15.1). */
+  canRaiseSos: boolean;
+  /** The viewer's own alert on this ride, while it is not closed; never anyone else's (FR-RD-15.4). */
+  viewerSos: SosIncident | null;
 };
 
 /**
@@ -158,6 +164,14 @@ type RideRow = {
   viewer_is_owner: boolean;
   viewer_is_rider: boolean;
   viewer_ratings_given: number;
+  viewer_sos: {
+    id: string;
+    reference: string;
+    raised_at: string;
+    status: SosIncident['status'];
+    location_shared: boolean;
+    false_alarm: boolean;
+  } | null;
 };
 
 type OccupantRow = {
@@ -186,7 +200,14 @@ const RIDE_SQL = `
          EXISTS (SELECT 1 FROM riders m
                  WHERE m.ride_id = r.id AND m.user_id = $2 AND m.left_at IS NULL) AS viewer_is_rider,
          (SELECT count(*)::int FROM ride_ratings given
-          WHERE given.ride_id = r.id AND given.rater_id = $2) AS viewer_ratings_given
+          WHERE given.ride_id = r.id AND given.rater_id = $2) AS viewer_ratings_given,
+         -- The viewer's own SOS only (raised_by = the viewer): nobody else's is ever read here.
+         (SELECT json_build_object('id', s.id, 'reference', s.reference, 'raised_at', s.raised_at,
+                                   'status', s.status, 'location_shared', s.located_at IS NOT NULL,
+                                   'false_alarm', s.false_alarm_at IS NOT NULL)
+          FROM sos_incidents s
+          WHERE s.ride_id = r.id AND s.raised_by = $2 AND s.status <> 'closed'
+          ORDER BY s.raised_at DESC LIMIT 1) AS viewer_sos
   FROM rides r
   JOIN locations hub ON hub.id = r.hub_id
   JOIN vehicle_types v ON v.id = r.vehicle_type_id
@@ -353,6 +374,17 @@ export async function getRideView(
               ride.locked_at,
             ) === null,
           viewerNoShow,
+          canRaiseSos: canRaiseSos(ride.state, viewerRow !== undefined),
+          viewerSos: ride.viewer_sos
+            ? {
+                id: ride.viewer_sos.id,
+                reference: ride.viewer_sos.reference,
+                raisedAt: new Date(ride.viewer_sos.raised_at).toISOString(),
+                status: ride.viewer_sos.status,
+                locationShared: ride.viewer_sos.location_shared,
+                falseAlarm: ride.viewer_sos.false_alarm,
+              }
+            : null,
         };
 
   return {

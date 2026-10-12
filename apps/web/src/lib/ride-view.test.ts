@@ -680,3 +680,62 @@ describe('getRideView after the lock (CS455-75 with CS455-62)', () => {
     });
   });
 });
+
+describe('getRideView: SOS (CS455-64)', () => {
+  const me = {
+    occupant_id: 's-me',
+    full_name: 'Kabir Shah',
+    campus_place: 'Hall 2',
+    is_owner: false,
+    is_viewer: true,
+    checked_in_at: null,
+    arrived_at: null,
+    no_show_at: null,
+  };
+  const ownerSeat = {
+    ...me,
+    occupant_id: 's-owner',
+    full_name: 'Ananya Rao',
+    is_owner: true,
+    is_viewer: false,
+  };
+
+  it('offers SOS to someone with a seat while the trip is under way, with their own alert', async () => {
+    respond(
+      rideRow({
+        state: 'in_transit',
+        pickup_started_at: locked,
+        trip_started_at: locked,
+        viewer_is_rider: true,
+        viewer_sos: {
+          id: 'i1',
+          reference: 'SOS-1A2B3C4D',
+          raised_at: '2026-10-10T00:40:00+00:00',
+          status: 'open',
+          location_shared: true,
+          false_alarm: false,
+        },
+      }),
+      [ownerSeat, me],
+    );
+    const view = await getRideView(RIDE_ID, VIEWER_ID, locked);
+    expect(view?.trip).toMatchObject({
+      canRaiseSos: true,
+      viewerSos: {
+        id: 'i1',
+        reference: 'SOS-1A2B3C4D',
+        raisedAt: '2026-10-10T00:40:00.000Z',
+        status: 'open',
+        locationShared: true,
+        falseAlarm: false,
+      },
+    });
+  });
+
+  it("reads only the viewer's own alert, and offers no SOS before the trip", async () => {
+    respond(rideRow({ viewer_is_rider: true }), [ownerSeat, me]);
+    const view = await getRideView(RIDE_ID, VIEWER_ID, locked);
+    expect(view?.trip).toMatchObject({ canRaiseSos: false, viewerSos: null });
+    expect(query.mock.calls[0][0]).toContain('s.raised_by = $2');
+  });
+});

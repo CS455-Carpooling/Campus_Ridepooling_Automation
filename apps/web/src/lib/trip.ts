@@ -5,6 +5,7 @@ import { applyDueLock, completeAcceptedJoinRequests, markRequestNoShow } from '.
 import type { Direction } from './ride-rules';
 import { canViewRide, rideTitle, type RideState, type ViewerRole } from './ride-status';
 import { pickupTimeFor, tripItinerary, type Itinerary } from './trip-itinerary';
+import type { SosRefusal } from './sos-rules';
 import {
   arrivalRefusal,
   checkInRefusal,
@@ -29,7 +30,7 @@ export type TripResult<T> =
   | { kind: 'done'; value: T }
   | { kind: 'not_found' }
   | { kind: 'seat_not_found' }
-  | { kind: 'refused'; code: TripRefusal | SeatRefusal; availableAt?: string };
+  | { kind: 'refused'; code: TripRefusal | SeatRefusal | SosRefusal; availableAt?: string };
 
 type RideRow = {
   id: string;

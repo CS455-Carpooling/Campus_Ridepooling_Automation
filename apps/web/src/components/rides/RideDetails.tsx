@@ -19,6 +19,7 @@ import { JoinRequestControls } from './JoinRequestControls';
 import { RideManagementControls } from './RideManagementControls';
 import { RideChat } from './RideChat';
 import { RideStateLabel } from './RideStateLabel';
+import { SosPanel } from './SosPanel';
 import { TripRefresh } from './trip-hooks';
 import { TripPanel, TripStatus } from './TripPanel';
 
@@ -68,6 +69,13 @@ export function RideDetails({
       </header>
 
       <TripRefresh rideId={ride.id} active={liveTrip} />
+      {ride.trip && (ride.trip.canRaiseSos || ride.trip.viewerSos) && (
+        <SosPanel
+          rideId={ride.id}
+          incident={ride.trip.viewerSos}
+          canRaise={ride.trip.canRaiseSos}
+        />
+      )}
       {liveTrip &&
         (ride.viewerRole === 'owner' ? <TripPanel ride={ride} /> : <TripStatus ride={ride} />)}
       <RateLink ride={ride} />

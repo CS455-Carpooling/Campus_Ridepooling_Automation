@@ -27,7 +27,8 @@ const nextConfig: NextConfig = {
           { key: 'Referrer-Policy', value: 'same-origin' },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
+            // Location only for our own pages: the SOS screen asks for it (CS455-64, FR-RD-15.2).
+            value: 'camera=(), microphone=(), geolocation=(self)',
           },
           ...(isProd
             ? [

@@ -66,6 +66,8 @@ export function tripView(change: Partial<TripView> = {}): TripView {
     canStartTrip: false,
     canCheckIn: false,
     viewerNoShow: false,
+    canRaiseSos: false,
+    viewerSos: null,
     ...change,
   };
 }

@@ -15,6 +15,7 @@ export async function runTripChange<T>(
   messages: Record<string, string>,
   run: (client: PoolClient) => Promise<TripResult<T>>,
   body: (value: T) => object,
+  options: { status?: (value: T) => number; notFound?: string } = {},
 ): Promise<Response> {
   let client: PoolClient | null = null;
   try {
@@ -22,9 +23,9 @@ export async function runTripChange<T>(
     await client.query('BEGIN');
     const result = await run(client);
     await client.query(result.kind === 'done' ? 'COMMIT' : 'ROLLBACK');
-    if (result.kind === 'done') return json(body(result.value));
+    if (result.kind === 'done') return json(body(result.value), options.status?.(result.value));
     if (result.kind === 'not_found') {
-      return json({ error: 'Ride not found.', code: 'not_found' }, 404);
+      return json({ error: options.notFound ?? 'Ride not found.', code: 'not_found' }, 404);
     }
     if (result.kind === 'seat_not_found') {
       return json({ error: 'That person is not on this ride.', code: 'seat_not_found' }, 404);
