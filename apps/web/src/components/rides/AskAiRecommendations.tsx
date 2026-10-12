@@ -153,7 +153,7 @@ export function AskAiRecommendations({ filters }: { filters: SearchRideRequest }
                     )}
                   </div>
                   {/* RideCard renders only trusted SearchRideResult fields from the server. */}
-                  <RideCard ride={suggestion.ride} />
+                  <RideCard ride={suggestion.ride} pickupPointId={filters.campusLocationId} />
                   <div className="mt-4 grid gap-4 sm:grid-cols-2">
                     <div>
                       <h4 className="text-sm font-semibold">Why it may suit you</h4>
