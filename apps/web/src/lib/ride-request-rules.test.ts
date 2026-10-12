@@ -1,4 +1,3 @@
-
 import { describe, expect, it } from 'vitest';
 import { validateJoinRequest } from './ride-request-rules';
 

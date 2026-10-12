@@ -1,4 +1,3 @@
-
 /**
  * Shared rules for rider join requests.
  * Keep this file independent of the database and Next.js.
@@ -11,10 +10,7 @@ export const RIDE_REQUEST_RULES = {
   idempotencyWindowHours: 24,
 } as const;
 
-export const ACTIVE_REQUEST_STATUSES = [
-  'pending',
-  'needs_reconfirmation',
-] as const;
+export const ACTIVE_REQUEST_STATUSES = ['pending', 'needs_reconfirmation'] as const;
 
 export const REQUEST_STATUSES = [
   ...ACTIVE_REQUEST_STATUSES,
@@ -33,11 +29,9 @@ export type JoinRequestInput = {
 };
 
 export type JoinRequestValidation =
-  | { ok: true; value: JoinRequestInput }
-  | { ok: false; message: string };
+  { ok: true; value: JoinRequestInput } | { ok: false; message: string };
 
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 /** Validate a UUID received from an untrusted request. */
 export function isUuid(value: unknown): value is string {
@@ -48,9 +42,7 @@ export function isUuid(value: unknown): value is string {
  * Validate the request body.
  * Pickup point IDs are text IDs, such as "hall-9", not UUIDs.
  */
-export function validateJoinRequest(
-  input: Record<string, unknown>,
-): JoinRequestValidation {
+export function validateJoinRequest(input: Record<string, unknown>): JoinRequestValidation {
   const pickupPointId = input.pickupPointId;
   const idempotencyKey = input.idempotencyKey;
 

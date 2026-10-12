@@ -1,4 +1,3 @@
-
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -17,8 +16,7 @@ vi.mock('@/lib/auth', () => ({
   getCurrentUser: mocks.getCurrentUser,
   guard: mocks.guard,
   readJson: mocks.readJson,
-  json: (body: unknown, status = 200) =>
-    Response.json(body, { status }),
+  json: (body: unknown, status = 200) => Response.json(body, { status }),
 }));
 
 vi.mock('@/lib/db', () => ({
@@ -62,14 +60,11 @@ type DatabaseScenario = {
 };
 
 function makeRequest(body: unknown) {
-  return new Request(
-    `http://localhost:3000/api/rides/${rideId}/requests`,
-    {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(body),
-    },
-  );
+  return new Request(`http://localhost:3000/api/rides/${rideId}/requests`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
 }
 
 function makeContext(id = rideId) {
@@ -85,8 +80,7 @@ function setupValidUser() {
 }
 
 function setupDatabase(scenario: DatabaseScenario = {}) {
-  const departure =
-    scenario.departure ?? new Date(Date.now() + 3 * 60 * 60 * 1000);
+  const departure = scenario.departure ?? new Date(Date.now() + 3 * 60 * 60 * 1000);
 
   const requestRow = {
     id: requestId,
@@ -117,17 +111,13 @@ function setupDatabase(scenario: DatabaseScenario = {}) {
         rows: [
           {
             id: riderId,
-            email_verified_at:
-              scenario.emailVerified === false ? null : new Date(),
+            email_verified_at: scenario.emailVerified === false ? null : new Date(),
           },
         ],
       };
     }
 
-    if (
-      query.includes('FROM ride_join_requests') &&
-      query.includes('idempotency_key')
-    ) {
+    if (query.includes('FROM ride_join_requests') && query.includes('idempotency_key')) {
       return { rows: [] };
     }
 
@@ -153,27 +143,17 @@ function setupDatabase(scenario: DatabaseScenario = {}) {
 
     if (query.includes('FROM locations')) {
       return {
-        rows:
-          scenario.pickupValid === false
-            ? []
-            : [{ id: 'hall-1', type: 'campus' }],
+        rows: scenario.pickupValid === false ? [] : [{ id: 'hall-1', type: 'campus' }],
       };
     }
 
-    if (
-      query.includes('FROM riders AS confirmed')
-    ) {
+    if (query.includes('FROM riders AS confirmed')) {
       return {
-        rows: scenario.acceptedRideConflict
-          ? [{ id: 'another-ride-id' }]
-          : [],
+        rows: scenario.acceptedRideConflict ? [{ id: 'another-ride-id' }] : [],
       };
     }
 
-    if (
-      query.includes('FROM riders') &&
-      query.includes('COUNT(*)')
-    ) {
+    if (query.includes('FROM riders') && query.includes('COUNT(*)')) {
       return {
         rows: [{ count: String(scenario.occupants ?? 1) }],
       };
@@ -188,10 +168,7 @@ function setupDatabase(scenario: DatabaseScenario = {}) {
       };
     }
 
-    if (
-      query.includes('FROM ride_join_requests') &&
-      query.includes('COUNT(*)')
-    ) {
+    if (query.includes('FROM ride_join_requests') && query.includes('COUNT(*)')) {
       return {
         rows: [{ count: String(scenario.activeRequests ?? 0) }],
       };
@@ -242,10 +219,7 @@ describe('POST /api/rides/[id]/requests', () => {
   });
 
   it('rejects a missing pickup point', async () => {
-    const response = await POST(
-      makeRequest({ idempotencyKey }),
-      makeContext(),
-    );
+    const response = await POST(makeRequest({ idempotencyKey }), makeContext());
 
     expect(response.status).toBe(400);
     expect((await response.json()).code).toBe('invalid_request');
@@ -390,9 +364,7 @@ describe('POST /api/rides/[id]/requests', () => {
     );
 
     expect(response.status).toBe(409);
-    expect((await response.json()).code).toBe(
-      'active_request_limit_reached',
-    );
+    expect((await response.json()).code).toBe('active_request_limit_reached');
   });
 
   it('rejects a ride that conflicts with another accepted ride', async () => {
@@ -404,9 +376,7 @@ describe('POST /api/rides/[id]/requests', () => {
     );
 
     expect(response.status).toBe(409);
-    expect((await response.json()).code).toBe(
-      'accepted_ride_time_conflict',
-    );
+    expect((await response.json()).code).toBe('accepted_ride_time_conflict');
   });
 
   it('creates a pending join request', async () => {
@@ -453,10 +423,7 @@ describe('POST /api/rides/[id]/requests', () => {
         };
       }
 
-      if (
-        query.includes('FROM ride_join_requests') &&
-        query.includes('idempotency_key')
-      ) {
+      if (query.includes('FROM ride_join_requests') && query.includes('idempotency_key')) {
         return { rows: [previousRequest] };
       }
 
