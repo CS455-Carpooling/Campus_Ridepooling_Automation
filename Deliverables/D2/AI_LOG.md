@@ -511,3 +511,27 @@ Implement the first small, reviewable pull request for the Notification Centre b
 - Remote branch files were created through GitHub API operations, which each create a commit; these changes are committed on `CS455-59-notification-api`, not `master`.
 - Earlier local patch validation reported `git apply --check` and `git diff --check` passed in a synthetic checkout, but project Vitest, ESLint, and TypeScript checks were not run against a real checkout because GitHub could not be resolved from the local runtime.
 - A PR must explicitly reference CS455-67. No UI, ride lifecycle, schema, notification creation, or realtime architecture changes were intended.
+
+
+## 2026-10-12 — Notification Centre UI (PR 2, CS455-59-notification-ui)
+
+### User prompt
+Implement PR 2, the Notification Centre UI, assuming PR 1 is merged into master. Inspect current repository/branch/worktree/history and PR 1 status, fetch latest changes, create and work only on `CS455-59-notification-ui`, preserve unrelated work, and inspect the existing page, navigation, design system, API client patterns, authentication, and merged API. Build the existing `/notifications` route to fetch signed-in-user notifications, display title/body/timestamp/read state, support loading/empty/error states, persist mark-as-read, navigate only to existing valid destinations using related IDs, gracefully handle malformed resources, and follow responsive/accessibility conventions. Do not implement real-time delivery or ride/chat/complaint/SOS workflows. Add UI tests, run available checks, report results and integration needs, do not open a PR without authorization, and update this AI log with the prompt and commit on this branch.
+
+### Audit
+- Confirmed PR #53 (Notification API) is merged into `master`; current master head is merge commit `6fd4632e17e5d892087c3511c2f19b64a3cfb893`.
+- Created branch `CS455-59-notification-ui` from the latest master. The remote GitHub API does not expose a local working tree, so local uncommitted status cannot be independently verified.
+- Confirmed `routes.notifications` and the student navigation entry already exist, but `apps/web/src/app/notifications/page.tsx` did not exist before this change.
+- Reused Next.js server page authentication via `verifySession()`, the existing `DesignSystem`, shared `Button`/`ButtonLink`, `Skeleton`/`LoadingRegion`, route constants, and existing Vitest/React Testing Library setup.
+- Confirmed the merged API contract: `GET /api/notifications?limit=100&offset=0` returns `notifications` and pagination metadata; `PATCH /api/notifications/{id}` returns `notification.id` and persisted `readAt`.
+- Existing ride detail route is `routes.ride(id)`. Related chat/message IDs alone do not establish a distinct supported navigation route, so this UI only links to a syntactically valid related ride UUID; otherwise it displays the notification without a link.
+
+### Changes
+- Added `apps/web/src/app/notifications/page.tsx`, protected by `verifySession()`.
+- Added `apps/web/src/components/notifications/NotificationsCentre.tsx` with persisted fetch, input shape validation, loading skeletons, empty/error states and retry, read/unread display, timestamp formatting in IST, API-confirmed mark-as-read, and valid related ride links.
+- Added `apps/web/src/components/notifications/NotificationsCentre.test.tsx` covering loading, empty, populated content/timestamp/read state/link, successful mark-read, list failure/retry, failed mark-read, and malformed related IDs.
+
+### Verification status
+- Remote source changes were prepared as Git objects for a single commit on `CS455-59-notification-ui`; no PR is opened as requested.
+- UI tests, ESLint, typecheck, and build have not been run in a real local checkout in this environment. They remain required before review.
+- No Socket.IO work, database/schema changes, ride lifecycle changes, or ride/chat/complaint/SOS workflows were added.
