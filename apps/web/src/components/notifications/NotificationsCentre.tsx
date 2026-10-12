@@ -10,7 +10,7 @@ import { routes } from '@/lib/routes';
 
 type Notification = {
   id: string;
-  type: 'pool_chat_opened' | 'pool_chat_message' | 'ride_update';
+  type: 'pool_chat_opened' | 'pool_chat_message' | 'ride_update' | 'account_warning' | 'account_suspended' | 'account_reactivated' | 'complaint_update';
   title: string;
   body: string;
   relatedRideId: string | null;
@@ -28,7 +28,7 @@ function isNotification(value: unknown): value is Notification {
   return typeof item.id === 'string' && typeof item.title === 'string' &&
     typeof item.body === 'string' && typeof item.createdAt === 'string' &&
     (item.readAt === null || typeof item.readAt === 'string') &&
-    ['pool_chat_opened', 'pool_chat_message', 'ride_update'].includes(String(item.type)) &&
+    ['pool_chat_opened', 'pool_chat_message', 'ride_update', 'account_warning', 'account_suspended', 'account_reactivated', 'complaint_update'].includes(String(item.type)) &&
     (item.relatedRideId === null || typeof item.relatedRideId === 'string') &&
     (item.relatedChatId === null || typeof item.relatedChatId === 'string') &&
     (item.relatedMessageId === null || typeof item.relatedMessageId === 'string');

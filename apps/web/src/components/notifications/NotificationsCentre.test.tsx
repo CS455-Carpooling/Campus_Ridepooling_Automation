@@ -67,6 +67,38 @@ describe('NotificationsCentre', () => {
     expect(screen.getByText('Unread')).toBeInTheDocument();
   });
 
+  it('accepts all supported notification types in the same response', async () => {
+    const additionalTypes = [
+      'account_warning',
+      'account_suspended',
+      'account_reactivated',
+      'complaint_update',
+    ] as const;
+    const notifications = [
+      notification,
+      ...additionalTypes.map((type, index) => ({
+        ...notification,
+        id: `n-${type}`,
+        type,
+        title: `Notice: ${type}`,
+        relatedRideId: null,
+        createdAt: `2026-10-12T10:0${index + 1}:00.000Z`,
+      })),
+    ];
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(Response.json({
+      notifications,
+      pagination: { hasMore: false },
+    }));
+
+    render(<NotificationsCentre />);
+
+    for (const type of additionalTypes) {
+      expect(await screen.findByRole('heading', { name: `Notice: ${type}` })).toBeInTheDocument();
+    }
+    expect(screen.getByRole('heading', { name: 'Ride updated' })).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   it('does not link malformed related ride identifiers', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(Response.json({
       notifications: [{ ...notification, relatedRideId: 'not-a-uuid', relatedChatId: 'stale-chat' }],

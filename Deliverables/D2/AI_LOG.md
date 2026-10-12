@@ -535,3 +535,19 @@ Implement PR 2, the Notification Centre UI, assuming PR 1 is merged into master.
 - Remote source changes were prepared as Git objects for a single commit on `CS455-59-notification-ui`; no PR is opened as requested.
 - UI tests, ESLint, typecheck, and build have not been run in a real local checkout in this environment. They remain required before review.
 - No Socket.IO work, database/schema changes, ride lifecycle changes, or ride/chat/complaint/SOS workflows were added.
+
+
+## 2026-10-12 — Accept all supported notification types in the UI
+
+### User prompt
+“The UI currently rejects four valid notification types supported by the database and API. The component recognizes only `'pool_chat_opened' | 'pool_chat_message' | 'ride_update'`. But the database schema also allows `account_warning`, `account_suspended`, `account_reactivated`, and `complaint_update`. The validation function `isNotification()` rejects any item with one of those types. Because the page validates the entire response with `data.notifications.every(isNotification)`, one such notification causes the entire list to be treated as an invalid response, hiding otherwise valid notifications too. Fix this. Update the AI log with this prompt.”
+
+### Changes
+- Expanded the UI notification type union and runtime allow-list to include `account_warning`, `account_suspended`, `account_reactivated`, and `complaint_update` alongside the existing three types.
+- Added a UI test that returns all four additional types together with an existing ride notification and asserts every item renders without an invalid-response error. This specifically guards against one unsupported type hiding the whole list.
+
+### Repository consistency note
+During verification, the checked-in `apps/web/db/schema.sql` constraint and API `NotificationRow.type` annotation on both this branch and `master` still list only the original three types. The UI now accepts all seven as requested, but the repository's SQL constraint/API compile-time annotation should be reconciled separately before claiming the database/API already persist and emit the four additional types. No database migration or API behavior was changed in this UI-focused fix.
+
+### Verification status
+- Added regression coverage; automated tests, lint, typecheck, and build have not been run in a local checkout in this environment.
