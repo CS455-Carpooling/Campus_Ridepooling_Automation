@@ -57,12 +57,36 @@ CREATE TABLE IF NOT EXISTS interest_tags (
   is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
-INSERT INTO interest_tags (id, name)
+-- Retire the generic placeholder without deleting it: existing user_profile_tags
+-- rows reference this ID, so keeping it preserves referential integrity.
+UPDATE interest_tags SET is_active = FALSE WHERE id = 'hobbies';
+
+-- Interest tags are data-driven in the profile editor. Keep these IDs stable because
+-- user_profile_tags stores them as foreign keys.
+INSERT INTO interest_tags (id, name, is_active)
 VALUES
-  ('academic-tracks', 'Academic tracks'),
-  ('hobbies', 'Hobbies'),
-  ('quiet-ride', 'Quiet ride')
-ON CONFLICT (id) DO NOTHING;
+  ('academic-tracks', 'Academic tracks', TRUE),
+  ('hobbies', 'Hobbies', FALSE),
+  ('quiet-ride', 'Quiet ride', TRUE),
+  ('cricket', 'Cricket', TRUE),
+  ('football', 'Football', TRUE),
+  ('tennis', 'Tennis', TRUE),
+  ('badminton', 'Badminton', TRUE),
+  ('chess', 'Chess', TRUE),
+  ('rubiks-cube', 'Rubik’s Cube', TRUE),
+  ('playing-music', 'Playing Music', TRUE),
+  ('singing', 'Singing', TRUE),
+  ('reading', 'Reading', TRUE),
+  ('gaming', 'Gaming', TRUE),
+  ('photography', 'Photography', TRUE),
+  ('running', 'Running', TRUE),
+  ('swimming', 'Swimming', TRUE),
+  ('dancing', 'Dancing', TRUE),
+  ('drawing-painting', 'Drawing & Painting', TRUE),
+  ('movies-films', 'Movies & Films', TRUE)
+ON CONFLICT (id) DO UPDATE
+SET name = EXCLUDED.name,
+    is_active = EXCLUDED.is_active;
 
 CREATE TABLE IF NOT EXISTS user_profiles (
   user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
