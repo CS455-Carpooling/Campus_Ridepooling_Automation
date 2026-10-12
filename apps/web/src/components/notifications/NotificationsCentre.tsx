@@ -6,18 +6,13 @@ import { Button } from '@/components/ui/Button';
 import { ButtonLink } from '@/components/ui/ButtonLink';
 import { DesignSystem } from '@/components/ui/DesignSystem';
 import { LoadingRegion, Skeleton } from '@/components/ui/Skeleton';
+import { formatDeparture } from '@/lib/format';
+import { isUuid } from '@/lib/ids';
 import { routes } from '@/lib/routes';
 
 type Notification = {
   id: string;
-  type:
-    | 'pool_chat_opened'
-    | 'pool_chat_message'
-    | 'ride_update'
-    | 'account_warning'
-    | 'account_suspended'
-    | 'account_reactivated'
-    | 'complaint_update';
+  type: string;
   title: string;
   body: string;
   relatedRideId: string | null;
@@ -41,15 +36,7 @@ function isNotification(value: unknown): value is Notification {
     typeof item.body === 'string' &&
     typeof item.createdAt === 'string' &&
     (item.readAt === null || typeof item.readAt === 'string') &&
-    [
-      'pool_chat_opened',
-      'pool_chat_message',
-      'ride_update',
-      'account_warning',
-      'account_suspended',
-      'account_reactivated',
-      'complaint_update',
-    ].includes(String(item.type)) &&
+    typeof item.type === 'string' &&
     (item.relatedRideId === null || typeof item.relatedRideId === 'string') &&
     (item.relatedChatId === null || typeof item.relatedChatId === 'string') &&
     (item.relatedMessageId === null || typeof item.relatedMessageId === 'string')
@@ -59,25 +46,13 @@ function isNotification(value: unknown): value is Notification {
 function formatTimestamp(value: string): string {
   const date = new Date(value);
   if (!Number.isFinite(date.getTime())) return 'Time unavailable';
-  return (
-    new Intl.DateTimeFormat('en-IN', {
-      timeZone: 'Asia/Kolkata',
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    }).format(date) + ' IST'
-  );
+  return formatDeparture(date.toISOString());
 }
 
 function rideDestination(id: string | null): string | null {
   // A notification may contain stale or malformed related-resource identifiers.
   // Only UUID ride IDs are supported by the existing ride detail route.
-  if (
-    !id ||
-    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)
-  ) {
-    return null;
-  }
-  return routes.ride(id);
+  return id && isUuid(id) ? routes.ride(id) : null;
 }
 
 export function NotificationsCentre() {
@@ -172,7 +147,9 @@ export function NotificationsCentre() {
           </p>
           <h1 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Notifications</h1>
           <p className="mt-2 text-ink-muted">
-            {unreadCount} unread {unreadCount === 1 ? 'notification' : 'notifications'}
+            {error && items.length === 0
+              ? 'Unread count unavailable'
+              : `${unreadCount} unread ${unreadCount === 1 ? 'notification' : 'notifications'}`}
           </p>
         </div>
         <ButtonLink href={routes.home} variant="secondary">
@@ -214,7 +191,7 @@ export function NotificationsCentre() {
           <h2 id="empty-heading" className="text-xl font-bold">
             You&apos;re all caught up
           </h2>
-          <p className="mt-2 text-ink-muted">New ride and chat notifications will appear here.</p>
+          <p className="mt-2 text-ink-muted">New notifications will appear here.</p>
         </section>
       ) : items.length > 0 ? (
         <ul
@@ -244,9 +221,9 @@ export function NotificationsCentre() {
                       </span>
                     </div>
                     <p className="mt-2 whitespace-pre-wrap text-ink-muted">{item.body}</p>
-                    <time className="mt-3 block text-sm text-ink-muted" dateTime={item.createdAt}>
-                      {formatTimestamp(item.createdAt)}
-                    </time>
+                    <p className="mt-3 text-sm text-ink-muted">
+                      <time dateTime={item.createdAt}>{formatTimestamp(item.createdAt)}</time>
+                    </p>
                     {destination && (
                       <Link
                         href={destination}
@@ -261,6 +238,7 @@ export function NotificationsCentre() {
                       variant="secondary"
                       className="shrink-0 self-start"
                       disabled={marking !== null}
+                      aria-label={`Mark as read: ${item.title}`}
                       onClick={() => void markRead(item)}
                     >
                       {marking === item.id ? 'Marking read…' : 'Mark as read'}
