@@ -284,6 +284,20 @@ docker compose exec db psql -U crp -d crp -c "UPDATE rides SET departure_start =
 docker compose exec db psql -U crp -d crp -c "UPDATE rides SET completed_at = now() - interval '73 hours' WHERE id = '<ride id>';"
 ```
 
+### Trying a trip locally
+
+A trip can start only once its ride is locked, an hour before departure. To try pickup, arrivals,
+no-shows and SOS without waiting, move a ride you offered into its lock window, after putting
+people on it as above:
+
+```bash
+# departure in 30 minutes: locked, so its owner can start pickup on the ride page
+docker compose exec db psql -U crp -d crp -c "UPDATE rides SET departure_start = now() + interval '30 minutes', departure_end = now() + interval '90 minutes' WHERE id = '<ride id>';"
+
+# departure 20 minutes ago: the 5-minute no-show grace period is already over
+docker compose exec db psql -U crp -d crp -c "UPDATE rides SET departure_start = now() - interval '20 minutes', departure_end = now() + interval '40 minutes' WHERE id = '<ride id>';"
+```
+
 ### Making an operations admin
 
 Admins are ordinary accounts with the admin role. Register and verify the account in the app
