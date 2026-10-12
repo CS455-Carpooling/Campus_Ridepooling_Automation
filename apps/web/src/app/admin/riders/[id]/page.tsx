@@ -133,6 +133,9 @@ export default async function AdminRiderPage({ params }: PageProps<'/admin/rider
                       {' '}
                       {ride.asOwner ? 'Owner' : 'Rider'}, {formatDeparture(ride.departureStart)}
                     </span>
+                    {ride.noShow && (
+                      <span className="text-sm font-semibold text-danger"> No-show</span>
+                    )}
                   </span>
                   <RideStateLabel state={ride.state} />
                 </li>

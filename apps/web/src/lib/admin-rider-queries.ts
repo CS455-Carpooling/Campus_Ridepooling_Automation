@@ -63,6 +63,8 @@ export type RiderRide = {
   departureStart: string;
   state: RideState;
   asOwner: boolean;
+  /** The owner marked them a no-show on this ride (FR-RO-10.3), for review. */
+  noShow: boolean;
 };
 
 export type RiderWarning = {
@@ -163,9 +165,10 @@ export async function getRiderRecord(
       departure_start: Date;
       state: RideState;
       as_owner: boolean;
+      no_show: boolean;
     }>(
       `SELECT r.id, r.direction, hub.name AS hub_name, r.departure_start, r.state,
-              (r.owner_id = $1) AS as_owner
+              (r.owner_id = $1) AS as_owner, (m.no_show_at IS NOT NULL) AS no_show
        FROM riders m
        JOIN rides r ON r.id = m.ride_id
        JOIN locations hub ON hub.id = r.hub_id
@@ -233,6 +236,7 @@ export async function getRiderRecord(
       departureStart: ride.departure_start.toISOString(),
       state: ride.state,
       asOwner: ride.as_owner,
+      noShow: ride.no_show,
     })),
     complaintsFiled: filed.rows.map(toComplaint),
     complaintsReceived: received.rows.map(toComplaint),

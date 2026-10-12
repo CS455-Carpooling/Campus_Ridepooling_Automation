@@ -6,10 +6,13 @@ vi.mock('./db', () => ({ pool: { query: db.query, connect: db.connect } }));
 
 import {
   actOnJoinRequest,
+  applyDueLock,
   cancelRideForOwner,
+  completeAcceptedJoinRequests,
   editRideForOwner,
   expireDueJoinRequests,
   lockRideForOwner,
+  markRequestNoShow,
   submitJoinRequest,
 } from './join-requests';
 
@@ -534,5 +537,57 @@ describe('owner ride lifecycle integration', () => {
       kind: 'trip_started',
     });
     expect(query.mock.calls.some(([sql]) => sql.includes("SET state = 'cancelled'"))).toBe(false);
+  });
+});
+
+describe('trip hand-offs (CS455-60)', () => {
+  it('applyDueLock applies a due lock once, and leaves an unlocked or started ride alone', async () => {
+    const atLock = new Date(DEPARTURE.getTime() - 30 * 60_000);
+    const { client, query } = makeClient((sql) => {
+      if (sql.includes('FROM rides WHERE id = $1 FOR NO KEY UPDATE')) return [ride];
+      if (sql.includes('FROM riders WHERE ride_id = $1')) return [ownerSeat, riderSeat];
+      return [];
+    });
+    await applyDueLock(client, RIDE_ID, atLock);
+    const sql = query.mock.calls.map(([text]) => String(text));
+    expect(sql.some((text) => text.includes('UPDATE rides SET locked_at = $2'))).toBe(true);
+    expect(sql.filter((text) => text.includes('UPDATE riders SET locked_share'))).toHaveLength(2);
+
+    const early = makeClient((text) => (text.includes('FOR NO KEY UPDATE') ? [ride] : []));
+    await applyDueLock(early.client, RIDE_ID, NOW);
+    expect(early.query).toHaveBeenCalledTimes(1);
+
+    const started = makeClient((text) =>
+      text.includes('FOR NO KEY UPDATE') ? [{ ...ride, state: 'pickup_in_progress' }] : [],
+    );
+    await applyDueLock(started.client, RIDE_ID, atLock);
+    expect(started.query).toHaveBeenCalledTimes(1);
+  });
+
+  it('markRequestNoShow ends the accepted request as No-show, with its history', async () => {
+    const { client, query } = makeClient((sql) =>
+      sql.includes('FROM ride_join_requests') && sql.includes("status = 'accepted'")
+        ? [requestRow('accepted')]
+        : [],
+    );
+    await markRequestNoShow(client, RIDE_ID, RIDER_ID, NOW);
+    const update = query.mock.calls.find(([sql]) =>
+      String(sql).includes('UPDATE ride_join_requests'),
+    );
+    expect(update?.[1]).toEqual([REQUEST_ID, 'no_show', 'owner_marked_no_show', NOW]);
+    const event = query.mock.calls.find(([sql]) =>
+      String(sql).includes('ride_join_request_events'),
+    );
+    expect(event?.[1]?.slice(1, 4)).toEqual(['accepted', 'no_show', 'owner_marked_no_show']);
+  });
+
+  it('completeAcceptedJoinRequests can leave the notice to the trip step', async () => {
+    const { client, query } = makeClient((sql) =>
+      sql.includes('FROM ride_join_requests') ? [requestRow('accepted')] : [],
+    );
+    await completeAcceptedJoinRequests(client, RIDE_ID, NOW, { notify: false });
+    const sql = query.mock.calls.map(([text]) => String(text));
+    expect(sql.some((text) => text.includes("SET status = 'completed'"))).toBe(true);
+    expect(sql.some((text) => text.includes('INSERT INTO notifications'))).toBe(false);
   });
 });

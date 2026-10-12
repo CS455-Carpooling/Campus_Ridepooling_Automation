@@ -90,15 +90,16 @@ exist yet shows the 404 page until the page is built.
   an hour before departure. `getRideView()` in `src/lib/ride-view.ts` applies it on the server and
   answers "Ride not found" for every other case, so a link never reveals whether a ride exists.
 - **Completing and rating a ride** (`src/lib/rating-rules.ts`, CS455-39): only the owner marks a
-  ride completed, from the start of its departure window, never a cancelled ride and never twice.
+  ride completed, once its trip has started (Pickup in Progress or In Transit, CS455-62), never a
+  cancelled ride; asking twice changes nothing.
   Everyone with a seat on a completed ride may then rate each other person on it from 1 to 5, once,
   with an optional comment of up to 500 characters, for 72 hours (P-16). The `ride_ratings` table
   enforces in PostgreSQL that both people had a seat on that ride, that nobody rates themselves and
   that each person rates each other person once. A rating counts only after its ride's 72 hours are
   over; others see an average only from 3 ratings up, comments go only to the person rated, and
   nobody is ever shown who gave a rating (P-24).
-  `POST /api/rides/[id]/complete` marks a ride completed, and the owner's ride page offers it as
-  "Mark ride completed", with a confirmation.
+  `POST /api/rides/[id]/complete` marks a ride completed and stores the final shares; it is the
+  same step as `POST /api/rides/[id]/trip` with `to: 'completed'`.
 - **Join requests** (`src/lib/join-requests.ts`, FR-RD-06/07 and FR-RO-05/06) are a separate,
   durable state machine from confirmed `riders` seats. A rider can submit an idempotent request,
   withdraw it, review its history, and reconfirm materially changed terms. Owners can accept or
@@ -107,8 +108,10 @@ exist yet shows the 404 page until the page is built.
   retained for an ordinary post-lock departure. Owner edits require confirmation when confirmed
   riders are affected; cancellations release fare liability and notify riders. The ride page shows
   rider and owner controls, and `/home` lists sent and received waiting requests.
-- **In-trip outcomes** such as arrival tracking and marking a rider no-show depend on the separate
-  pickup/trip-state workflow and are not part of this request/seat lifecycle change.
+- **In-trip outcomes** (arrivals, no-shows, completion) are the trip APIs below (CS455-60). They
+  build on the join requests: starting pickup applies the lock if it has not been applied yet, a
+  no-show moves the rider's request to No-show, and completing moves accepted requests to
+  Completed.
 - **Page data** comes from server-only modules in `src/lib`. `ride-view.ts` reads rides from
   PostgreSQL for the ride page and for the Upcoming list on `/home` (rides you offered or joined,
   through `home-data.ts`). The request transition history is stored in
@@ -211,6 +214,21 @@ exist yet shows the 404 page until the page is built.
 
   A no-show leaves the pool: the fare is split between the seats that neither left nor were
   no-shows (FR-RO-10.2).
+- **Trip APIs** (`src/lib/trip.ts`, CS455-62): each change runs in one transaction with the ride
+  locked, through `runTripChange()` in `src/lib/trip-api.ts`, and refusals come as
+  `{ error, code }`. The APIs are:
+  - `POST /api/rides/[id]/trip` with `{ to }`: the owner starts pickup (once locked), starts the
+    trip or completes the ride. Leaving pickup marks riders not yet marked as on board, and
+    completing writes `ride_final_shares`. Riders are notified (`trip_update`).
+  - `POST /api/rides/[id]/arrivals` with `{ occupantId, status }`: during pickup the owner marks a
+    seat `arrived`, `not_arrived` or `no_show`. A no-show is allowed from 5 minutes after the
+    rider's estimated pickup time; before then the answer is 409 `grace_period` with
+    `availableAt`. The rider is notified (`no_show_recorded`), may report it for 7 days, and is
+    left out of the fare split and ratings.
+  - `POST /api/rides/[id]/check-in`: a rider says they are at their pickup point, from the lock
+    until the trip starts.
+  - `GET /api/rides/[id]/trip`: `{ state, stamp }` for people on the ride, so the page can refresh
+    when anything on the trip changes.
 
 ## Conventions
 

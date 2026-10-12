@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   RATING_RULES,
-  completeRideRefusal,
   offersComplaint,
   parseRatingsRequest,
   ratingClosesAt,
@@ -9,10 +8,8 @@ import {
   ratingWindow,
   scoreChoices,
 } from './rating-rules';
-import { RIDE_STATES } from './ride-status';
 
-// Departure 06:30 IST on Saturday 10 October 2026; the owner marks it completed at 08:05.
-const departure = new Date('2026-10-10T06:30:00+05:30');
+// The owner marks the ride completed at 08:05 IST on Saturday 10 October 2026.
 const completedAt = new Date('2026-10-10T08:05:00+05:30');
 const closesAt = new Date('2026-10-13T08:05:00+05:30');
 const HOUR = 3_600_000;
@@ -50,31 +47,6 @@ describe('the rating window (P-16)', () => {
 
   it('treats a completed ride without a completion time as not completed', () => {
     expect(ratingWindow('completed', null, completedAt)).toBe('not_completed');
-  });
-});
-
-describe('completeRideRefusal (FR-RO-09.4)', () => {
-  it('lets only the owner complete a ride', () => {
-    for (const state of RIDE_STATES) {
-      expect(completeRideRefusal('rider', state, departure, completedAt)).toBe('not_owner');
-      expect(completeRideRefusal('visitor', state, departure, completedAt)).toBe('not_owner');
-    }
-  });
-
-  it('lets the owner complete it from the start of the departure window', () => {
-    expect(
-      completeRideRefusal('owner', 'scheduled', departure, new Date(departure.getTime() - 1)),
-    ).toBe('too_early');
-    expect(completeRideRefusal('owner', 'scheduled', departure, departure)).toBeNull();
-    expect(completeRideRefusal('owner', 'pickup_in_progress', departure, completedAt)).toBeNull();
-    expect(completeRideRefusal('owner', 'in_transit', departure, completedAt)).toBeNull();
-  });
-
-  it('never completes a cancelled ride, nor a completed one again', () => {
-    expect(completeRideRefusal('owner', 'cancelled', departure, completedAt)).toBe('cancelled');
-    expect(completeRideRefusal('owner', 'completed', departure, completedAt)).toBe(
-      'already_completed',
-    );
   });
 });
 

@@ -319,16 +319,20 @@ describe('getHistoricalRides', () => {
 describe('getRideView: completing a ride (FR-RO-09.4)', () => {
   const started = new Date('2026-10-10T06:30:00+05:30');
 
-  it('lets the owner complete it from the start of the departure window', async () => {
+  it('lets the owner complete it once the trip has started, not straight from Scheduled (CS455-62)', async () => {
     respond(rideRow({ viewer_is_owner: true }), [{ ...owner, is_viewer: true }]);
     await expect(getRideView(RIDE_ID, VIEWER_ID, started)).resolves.toMatchObject({
-      canComplete: true,
+      canComplete: false,
       completedAt: null,
     });
-    respond(rideRow({ viewer_is_owner: true }), [{ ...owner, is_viewer: true }]);
-    await expect(getRideView(RIDE_ID, VIEWER_ID, locked)).resolves.toMatchObject({
-      canComplete: false,
-    });
+    for (const state of ['pickup_in_progress', 'in_transit']) {
+      respond(rideRow({ viewer_is_owner: true, state, pickup_started_at: locked }), [
+        { ...owner, is_viewer: true },
+      ]);
+      await expect(getRideView(RIDE_ID, VIEWER_ID, started)).resolves.toMatchObject({
+        canComplete: true,
+      });
+    }
   });
 
   it('never offers it to a rider, nor on a cancelled ride', async () => {
@@ -480,5 +484,199 @@ describe('ratings on the ride page and in history (CS455-44)', () => {
     await expect(getHistoricalRides(VIEWER_ID, during)).resolves.toMatchObject([
       { completedAt: null, ratingClosesAt: null, canRate: false },
     ]);
+  });
+});
+
+describe('getRideView: the trip under way (CS455-62, CS455-63)', () => {
+  // Leaving campus from Hall 1 (the owner) with riders at Hall 2 and Hall 3.
+  const seat = (id: string, change: Record<string, unknown> = {}) => ({
+    occupant_id: id,
+    full_name: `Person ${id}`,
+    campus_place: 'Hall 1',
+    is_owner: false,
+    is_viewer: false,
+    checked_in_at: null,
+    arrived_at: null,
+    no_show_at: null,
+    ...change,
+  });
+  const ownerSeat = seat('s-owner', { full_name: 'Ananya Rao', is_owner: true });
+  const nearSeat = seat('s-near', { full_name: 'Kabir Shah', campus_place: 'Hall 2' });
+  const farSeat = seat('s-far', { full_name: 'Meera Iyer', campus_place: 'Hall 4' });
+  const departure = new Date('2026-10-10T06:30:00+05:30');
+  const minutesAfter = (count: number) => new Date(departure.getTime() + count * 60_000);
+  const inPickup = rideRow({
+    state: 'pickup_in_progress',
+    pickup_started_at: new Date('2026-10-10T06:20:00+05:30'),
+  });
+
+  it('gives no trip to a visitor', async () => {
+    respond(rideRow(), [ownerSeat, nearSeat]);
+    await expect(getRideView(RIDE_ID, VIEWER_ID, open)).resolves.toMatchObject({ trip: null });
+  });
+
+  it("lists the stops in order with estimated times, from the owner's place (FR-RD-10.2)", async () => {
+    respond({ ...inPickup, viewer_is_rider: true }, [
+      ownerSeat,
+      { ...farSeat, is_viewer: true },
+      nearSeat,
+    ]);
+    const view = await getRideView(RIDE_ID, VIEWER_ID, departure);
+    // Hall 1 to Hall 2 is 4 minutes, then Hall 2 to Hall 4 is 7 more (campus estimates).
+    expect(view?.trip).toMatchObject({
+      pickupStartedAt: '2026-10-10T00:50:00.000Z',
+      tripStartedAt: null,
+      stopKind: 'pickup',
+      stops: [
+        { place: 'Hall 1', estimatedAt: departure.toISOString(), people: ['Ananya Rao'] },
+        { place: 'Hall 2', estimatedAt: minutesAfter(4).toISOString(), people: ['Kabir Shah'] },
+        { place: 'Hall 4', estimatedAt: minutesAfter(11).toISOString(), people: ['Meera Iyer'] },
+      ],
+      viewerPickupAt: minutesAfter(11).toISOString(),
+      canStartPickup: false,
+      canStartTrip: false,
+    });
+  });
+
+  it('splits the fare without a no-show, who owes nothing (FR-RO-10.2)', async () => {
+    respond({ ...inPickup, viewer_is_rider: true, expected_total_fare: 300 }, [
+      ownerSeat,
+      { ...nearSeat, is_viewer: true },
+      { ...farSeat, no_show_at: minutesAfter(20) },
+    ]);
+    const view = await getRideView(RIDE_ID, VIEWER_ID, minutesAfter(21));
+    expect(view?.occupants.map((person) => [person.status, person.share])).toEqual([
+      ['waiting', 150],
+      ['waiting', 150],
+      ['no_show', null],
+    ]);
+    expect(view).toMatchObject({ occupantCount: 2, viewerShare: 150 });
+  });
+
+  it('tells the owner when each rider may be marked a no-show, 5 minutes after their pickup time', async () => {
+    respond({ ...inPickup, viewer_is_owner: true }, [
+      { ...ownerSeat, is_viewer: true },
+      nearSeat,
+      { ...farSeat, arrived_at: minutesAfter(10) },
+    ]);
+    const view = await getRideView(RIDE_ID, VIEWER_ID, departure);
+    expect(view?.occupants.map((person) => person.noShowAvailableAt)).toEqual([
+      null,
+      minutesAfter(9).toISOString(),
+      null,
+    ]);
+    expect(view?.trip).toMatchObject({ canStartTrip: true, canStartPickup: false });
+    expect(view?.canComplete).toBe(true);
+  });
+
+  it('gives a rider no no-show times, and lets them check in once', async () => {
+    respond({ ...inPickup, viewer_is_rider: true }, [ownerSeat, { ...nearSeat, is_viewer: true }]);
+    const view = await getRideView(RIDE_ID, VIEWER_ID, departure);
+    expect(view?.occupants.every((person) => person.noShowAvailableAt === null)).toBe(true);
+    expect(view?.trip?.canCheckIn).toBe(true);
+
+    respond({ ...inPickup, viewer_is_rider: true }, [
+      ownerSeat,
+      { ...nearSeat, is_viewer: true, checked_in_at: departure },
+    ]);
+    const after = await getRideView(RIDE_ID, VIEWER_ID, departure);
+    expect(after?.trip?.canCheckIn).toBe(false);
+    expect(after?.occupants[1].status).toBe('checked_in');
+  });
+
+  it('offers the owner Start pickup once the ride is locked (FR-RO-09.1)', async () => {
+    respond(rideRow({ viewer_is_owner: true }), [{ ...ownerSeat, is_viewer: true }]);
+    await expect(getRideView(RIDE_ID, VIEWER_ID, open)).resolves.toMatchObject({
+      trip: { canStartPickup: false },
+    });
+    respond(rideRow({ viewer_is_owner: true }), [{ ...ownerSeat, is_viewer: true }]);
+    await expect(getRideView(RIDE_ID, VIEWER_ID, locked)).resolves.toMatchObject({
+      trip: { canStartPickup: true, canCheckIn: false },
+    });
+  });
+
+  it('lets a no-show report it for 7 days, but not rate (FR-RD-13.1, FR-RO-12.2)', async () => {
+    const completedAt = minutesAfter(60);
+    respond(rideRow({ state: 'completed', completed_at: completedAt, viewer_is_rider: true }), [
+      ownerSeat,
+      { ...nearSeat, is_viewer: true, no_show_at: minutesAfter(10) },
+    ]);
+    const view = await getRideView(RIDE_ID, VIEWER_ID, minutesAfter(120));
+    expect(view).toMatchObject({ canComplain: true, review: null });
+    expect(view?.trip?.viewerNoShow).toBe(true);
+  });
+
+  it('reads only people still on the ride, with their pickup progress', async () => {
+    respond({ ...inPickup, viewer_is_rider: true }, [ownerSeat, { ...nearSeat, is_viewer: true }]);
+    await getRideView(RIDE_ID, VIEWER_ID, departure);
+    expect(query.mock.calls[0][0]).toContain('m.left_at IS NULL');
+    expect(query.mock.calls[1][0]).toContain('m.left_at IS NULL');
+    expect(query.mock.calls[1][0]).toContain('m.no_show_at');
+  });
+});
+
+describe('getRideView after the lock (CS455-75 with CS455-62)', () => {
+  const departure = new Date('2026-10-10T06:30:00+05:30');
+  const seat = (id: string, change: Record<string, unknown> = {}) => ({
+    occupant_id: id,
+    full_name: `Person ${id}`,
+    campus_place: 'Hall 1',
+    is_owner: false,
+    is_viewer: false,
+    checked_in_at: null,
+    arrived_at: null,
+    no_show_at: null,
+    locked_share: 100,
+    agreed_pickup_at: null,
+    ...change,
+  });
+
+  it("shows the locked shares, with a no-show's share spread over the others", async () => {
+    respond(
+      rideRow({
+        state: 'pickup_in_progress',
+        pickup_started_at: departure,
+        locked_at: departure,
+        expected_total_fare: 300,
+        viewer_is_rider: true,
+      }),
+      [
+        seat('s-owner', { is_owner: true }),
+        seat('s-me', { is_viewer: true }),
+        seat('s-gone', { no_show_at: departure }),
+      ],
+    );
+    const view = await getRideView(RIDE_ID, VIEWER_ID, departure);
+    expect(view?.occupants.map((person) => person.share)).toEqual([150, 150, null]);
+    expect(view?.viewerShare).toBe(150);
+  });
+
+  it('counts the no-show grace from the pickup time the rider agreed to', async () => {
+    respond(
+      rideRow({
+        state: 'pickup_in_progress',
+        pickup_started_at: departure,
+        locked_at: departure,
+        viewer_is_owner: true,
+      }),
+      [
+        seat('s-owner', { is_owner: true, is_viewer: true }),
+        seat('s-r', { agreed_pickup_at: new Date(departure.getTime() + 12 * 60_000) }),
+      ],
+    );
+    const view = await getRideView(RIDE_ID, VIEWER_ID, departure);
+    expect(view?.occupants[1].noShowAvailableAt).toBe(
+      new Date(departure.getTime() + 17 * 60_000).toISOString(),
+    );
+    expect(query.mock.calls[1][0]).toContain('request.current_pickup_at');
+  });
+
+  it('lets the owner start pickup after an early lock, before the hour', async () => {
+    respond(rideRow({ viewer_is_owner: true, locked_at: new Date('2026-10-10T00:00:00+05:30') }), [
+      seat('s-owner', { is_owner: true, is_viewer: true, locked_share: null }),
+    ]);
+    await expect(getRideView(RIDE_ID, VIEWER_ID, open)).resolves.toMatchObject({
+      trip: { canStartPickup: true },
+    });
   });
 });

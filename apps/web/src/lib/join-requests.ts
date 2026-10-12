@@ -895,6 +895,8 @@ export async function completeAcceptedJoinRequests(
   client: PoolClient,
   rideId: string,
   now: Date,
+  // The trip step (CS455-62) tells everyone on the ride itself, with how long rating stays open.
+  options: { notify?: boolean } = {},
 ): Promise<void> {
   const { rows } = await client.query<RequestRow>(
     `${ACTIVE_REQUEST_SQL}
@@ -910,6 +912,7 @@ export async function completeAcceptedJoinRequests(
       [request.id, now],
     );
     await recordEvent(client, request.id, 'accepted', 'completed', null, {}, now);
+    if (options.notify === false) continue;
     await notify(
       client,
       request.rider_id,
@@ -919,6 +922,35 @@ export async function completeAcceptedJoinRequests(
       rideId,
       now,
     );
+  }
+}
+
+/**
+ * Applies the lock now if it is due and not applied yet (CS455-60): starting pickup needs a locked
+ * ride, and the maintenance loop may not have run since the lock time passed.
+ */
+export async function applyDueLock(client: PoolClient, rideId: string, now: Date): Promise<void> {
+  const ride = await lockRide(client, rideId);
+  if (ride && ride.state === 'scheduled' && rideIsLocked(ride, now)) {
+    await lockRideAt(client, ride, now);
+  }
+}
+
+/** The owner marked this rider a no-show (CS455-60): their accepted request ends as No-show. */
+export async function markRequestNoShow(
+  client: PoolClient,
+  rideId: string,
+  riderId: string,
+  now: Date,
+): Promise<void> {
+  const { rows } = await client.query<RequestRow>(
+    `${ACTIVE_REQUEST_SQL}
+     WHERE ride_id = $1 AND rider_id = $2 AND status = 'accepted'
+     FOR NO KEY UPDATE`,
+    [rideId, riderId],
+  );
+  for (const request of rows) {
+    await transitionRequest(client, request, 'no_show', 'owner_marked_no_show', now);
   }
 }
 

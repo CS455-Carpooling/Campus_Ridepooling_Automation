@@ -20,6 +20,7 @@ const ride: RideView = {
   windowEnded: false,
   completedAt: null,
   canComplete: false,
+  trip: null,
   canComplain: false,
   review: null,
   vehicleName: 'Car',
