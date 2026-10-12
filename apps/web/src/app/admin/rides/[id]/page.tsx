@@ -10,6 +10,7 @@ import { getAdminRide } from '@/lib/admin-rider-queries';
 import { complaintCategoryLabels } from '@/lib/complaint-rules';
 import { formatDeparture, formatDepartureWindow, formatRupees } from '@/lib/format';
 import { routes } from '@/lib/routes';
+import { seatStatusLabels } from '@/lib/trip-rules';
 
 export const metadata: Metadata = { title: 'Ride' };
 
@@ -30,6 +31,8 @@ export default async function AdminRidePage({ params }: PageProps<'/admin/rides/
     ['Vehicle', `${ride.vehicleName}, ${ride.capacity} people`],
     ['Total fare', formatRupees(ride.totalFare)],
     ['Offered', formatDeparture(ride.createdAt)],
+    ['Pickup started', ride.pickupStartedAt ? formatDeparture(ride.pickupStartedAt) : 'Not yet'],
+    ['Trip started', ride.tripStartedAt ? formatDeparture(ride.tripStartedAt) : 'Not yet'],
     ['Completed', ride.completedAt ? formatDeparture(ride.completedAt) : 'Not yet'],
   ];
 
@@ -41,7 +44,7 @@ export default async function AdminRidePage({ params }: PageProps<'/admin/rides/
       actions={<RideStateLabel state={ride.state} />}
       description="Read only. Admins can see a ride but never change it."
     >
-      <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {facts.map(([label, value]) => (
           <div key={label}>
             <dt className="text-sm text-ink-muted">{label}</dt>
@@ -68,6 +71,31 @@ export default async function AdminRidePage({ params }: PageProps<'/admin/rides/
                   {person.isOwner ? 'Owner' : 'Rider'}, {person.campusPlace}, joined{' '}
                   {formatDeparture(person.joinedAt)}
                 </p>
+                {(!person.isOwner && person.status !== 'waiting') || person.finalShare !== null ? (
+                  <p className="text-sm">
+                    {!person.isOwner && person.status !== 'waiting' && (
+                      <span
+                        className={
+                          person.status === 'no_show' ? 'font-semibold text-danger' : undefined
+                        }
+                      >
+                        {seatStatusLabels[person.status]}
+                      </span>
+                    )}
+                    {!person.isOwner &&
+                      person.status !== 'waiting' &&
+                      person.finalShare !== null &&
+                      ', '}
+                    {person.finalShare !== null && (
+                      <>
+                        Final share{' '}
+                        <span className="font-mono tabular-nums">
+                          {formatRupees(person.finalShare)}
+                        </span>
+                      </>
+                    )}
+                  </p>
+                ) : null}
               </li>
             ))}
           </ul>

@@ -54,7 +54,7 @@ exist yet shows the 404 page until the page is built.
 | `/terms` | Terms of service (community guidelines) | Built |
 | `/privacy` | Privacy policy | Built |
 | `/rides/new` | Offer a ride: route, vehicle, departure window, fare | Built (CS455-22 to 25) |
-| `/rides/[id]` | Ride details: route, departure window, state and lock time, seats, fare split, people | Built (CS455-28, 29) |
+| `/rides/[id]` | Ride details: route, departure window, state and lock time, seats, fare split, people; from the lock, the trip: pickup order, arrivals, no-shows, live updates | Built (CS455-28, 29, 63) |
 | `/rides/[id]/review` | Rate the people on a completed ride, for 72 hours after it is completed | Built (CS455-40 to 43) |
 | `/rides` | Find a ride | Not started |
 | `/notifications` | Notifications | Not started |
@@ -217,6 +217,18 @@ exist yet shows the 404 page until the page is built.
     until the trip starts.
   - `GET /api/rides/[id]/trip`: `{ state, stamp }` for people on the ride, so the page can refresh
     when anything on the trip changes.
+- **The trip on the ride page** (CS455-63) appears from the lock.
+  - **The owner** gets `TripPanel`: Start pickup, the pickup order with Arrived, Undo and No-show
+    for each rider (No-show shows when it becomes possible), then Start the trip and Complete the
+    ride. Each step asks first, in place (`TripActionButton`), and shows its result only after the
+    server confirms.
+  - **Riders** get `TripStatus`: where the trip is, their own stop and estimated time, "I am at
+    the pickup point", and a notice with a link to report it if they were marked a no-show.
+  - **Live updates:** `useTripRefresh` (`components/rides/trip-hooks.ts`) asks for the trip's
+    stamp every 2 seconds while the tab is visible, and reads the page again only when it changes
+    (P-13).
+  - **Admin ride view:** `/admin/rides/[id]` adds the trip's times, each person's pickup status
+    and the final shares.
 
 ## Conventions
 
