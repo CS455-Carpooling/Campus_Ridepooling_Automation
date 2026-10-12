@@ -551,3 +551,18 @@ During verification, the checked-in `apps/web/db/schema.sql` constraint and API 
 
 ### Verification status
 - Added regression coverage; automated tests, lint, typecheck, and build have not been run in a local checkout in this environment.
+
+
+## 2026-10-12 — Align notification API type with supported types
+
+### User prompt
+“I have run all checks and fixed formatting, lint and type check errors locally and opened a PR https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/54. The UI accepts seven types: `pool_chat_opened`, `pool_chat_message`, `ride_update`, `account_warning`, `account_suspended`, `account_reactivated`, and `complaint_update`. However, the API’s `NotificationRow` TypeScript declaration still lists only the first three. The database schema contains a later constraint extension allowing all seven, so the API declaration is inconsistent with the schema. Fix this, make sure to stay consistent with formatting, commit this and update the AI log with this prompt.”
+
+### Change made
+- Updated `NotificationRow.type` in `apps/web/src/app/api/notifications/route.ts` to match the seven types accepted by the UI and specified by the user.
+- No API runtime logic or database schema changes were made.
+
+### Verification
+- Inspected open PR #54 and its source branch `CS455-59-notification-ui` before editing.
+- Confirmed the current source declaration was limited to the original three types.
+- Formatting, lint, typecheck, and tests were not run in this environment; the user reports having run checks locally for PR #54.
