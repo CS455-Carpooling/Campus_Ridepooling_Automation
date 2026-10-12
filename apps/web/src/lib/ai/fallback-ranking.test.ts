@@ -26,6 +26,7 @@ function ride(id: string, start: string, end: string, estimatedShare: number): S
     seatsLeft: 2,
     totalFare: estimatedShare * 2,
     estimatedShare,
+    requestState: null,
   };
 }
 

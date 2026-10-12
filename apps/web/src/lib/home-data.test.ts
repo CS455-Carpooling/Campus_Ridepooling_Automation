@@ -27,6 +27,7 @@ describe('home data', () => {
     const pastRide = { rideId: 'r2', state: 'completed' };
     getUpcomingRides.mockResolvedValue([ride]);
     getHistoricalRides.mockResolvedValue([pastRide]);
+    query.mockResolvedValue({ rows: [] });
     const now = new Date('2026-10-05T12:00:00Z');
     await expect(getStudentHome('u1', now)).resolves.toEqual({
       upcoming: [ride],

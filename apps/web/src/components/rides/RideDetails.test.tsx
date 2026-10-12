@@ -31,6 +31,7 @@ function rideView(change: Partial<RideView> = {}): RideView {
   return {
     id: '0b9a7c1e-1111-4000-8000-000000000001',
     direction: 'to_hub',
+    hubId: 'kanpur-central',
     hub: { name: 'Kanpur Central', detail: 'Railway station' },
     departureStart: '2026-10-10T01:00:00.000Z',
     departureEnd: '2026-10-10T02:00:00.000Z',

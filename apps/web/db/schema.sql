@@ -153,9 +153,79 @@ CREATE TABLE IF NOT EXISTS riders (
 -- Added after the table, so existing databases get it too.
 ALTER TABLE riders ADD COLUMN IF NOT EXISTS joined_at TIMESTAMPTZ NOT NULL DEFAULT now();
 ALTER TABLE riders ADD COLUMN IF NOT EXISTS left_at TIMESTAMPTZ;
+ALTER TABLE riders ADD COLUMN IF NOT EXISTS locked_share INTEGER;
 
 -- "My rides" looks rides up by person; the unique (ride_id, user_id) index cannot serve that.
 CREATE INDEX IF NOT EXISTS riders_user_idx ON riders(user_id);
+
+-- A rider's seat request is separate from their confirmed seat. Request history is retained
+-- after withdrawal, rejection, expiry, cancellation, or leaving (FR-RD-06.10).
+CREATE TABLE IF NOT EXISTS ride_join_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ride_id UUID NOT NULL REFERENCES rides(id) ON DELETE CASCADE,
+  rider_id UUID NOT NULL REFERENCES users(id),
+  pickup_location_id TEXT NOT NULL REFERENCES locations(id),
+  status TEXT NOT NULL DEFAULT 'pending'
+    CHECK (status IN (
+      'pending', 'needs_reconfirmation', 'accepted', 'rejected', 'withdrawn',
+      'expired', 'ride_cancelled', 'left', 'no_show', 'completed'
+    )),
+  reason_code TEXT CHECK (reason_code IS NULL OR char_length(reason_code) BETWEEN 1 AND 100),
+  submitted_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  decided_at TIMESTAMPTZ,
+  accepted_at TIMESTAMPTZ,
+  snapshot_departure_start TIMESTAMPTZ NOT NULL,
+  snapshot_pickup_at TIMESTAMPTZ NOT NULL,
+  snapshot_estimated_share INTEGER NOT NULL CHECK (snapshot_estimated_share >= 0),
+  accepted_departure_start TIMESTAMPTZ,
+  accepted_pickup_at TIMESTAMPTZ,
+  current_departure_start TIMESTAMPTZ,
+  current_pickup_at TIMESTAMPTZ,
+  current_estimated_share INTEGER CHECK (current_estimated_share IS NULL OR current_estimated_share >= 0),
+  no_liability_until_trip BOOLEAN NOT NULL DEFAULT FALSE,
+  late_cancellation BOOLEAN NOT NULL DEFAULT FALSE,
+  locked_share INTEGER CHECK (locked_share IS NULL OR locked_share >= 0),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS ride_join_requests_rider_created_idx
+  ON ride_join_requests(rider_id, submitted_at DESC, id DESC);
+CREATE INDEX IF NOT EXISTS ride_join_requests_ride_status_created_idx
+  ON ride_join_requests(ride_id, status, submitted_at, id);
+CREATE UNIQUE INDEX IF NOT EXISTS ride_join_requests_one_active_per_ride_idx
+  ON ride_join_requests(ride_id, rider_id)
+  WHERE status IN ('pending', 'needs_reconfirmation', 'accepted');
+
+CREATE TABLE IF NOT EXISTS ride_join_request_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  request_id UUID NOT NULL REFERENCES ride_join_requests(id) ON DELETE CASCADE,
+  from_status TEXT,
+  to_status TEXT NOT NULL
+    CHECK (to_status IN (
+      'pending', 'needs_reconfirmation', 'accepted', 'rejected', 'withdrawn',
+      'expired', 'ride_cancelled', 'left', 'no_show', 'completed'
+    )),
+  reason_code TEXT,
+  details JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS ride_join_request_events_request_created_idx
+  ON ride_join_request_events(request_id, created_at, id);
+
+-- An idempotency key is reusable after P-20; keeping its expiry separately lets request history
+-- remain intact while a retried submission within 24 hours returns the original request.
+CREATE TABLE IF NOT EXISTS ride_join_request_keys (
+  rider_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  idempotency_key TEXT NOT NULL CHECK (char_length(idempotency_key) BETWEEN 1 AND 200),
+  request_id UUID NOT NULL REFERENCES ride_join_requests(id) ON DELETE CASCADE,
+  expires_at TIMESTAMPTZ NOT NULL,
+  PRIMARY KEY (rider_id, idempotency_key)
+);
+
+CREATE INDEX IF NOT EXISTS ride_join_request_keys_expiry_idx
+  ON ride_join_request_keys(expires_at);
 
 -- Initial configurable locations. Stable IDs match the current Create Ride form
 -- values so the UI can later read these records directly from the database.
@@ -210,6 +280,7 @@ UPDATE vehicle_types SET sort_order = CASE id
 -- column existed take the end of their departure window.
 ALTER TABLE rides ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ;
 ALTER TABLE rides ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMPTZ;
+ALTER TABLE rides ADD COLUMN IF NOT EXISTS locked_at TIMESTAMPTZ;
 
 UPDATE rides SET completed_at = departure_end
 WHERE state = 'completed' AND completed_at IS NULL;
@@ -298,6 +369,22 @@ CREATE TABLE IF NOT EXISTS notifications (
   read_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'notifications_type_check'
+      AND pg_get_constraintdef(oid) LIKE '%ride_share_update%'
+  ) THEN
+    ALTER TABLE notifications DROP CONSTRAINT IF EXISTS notifications_type_check;
+    ALTER TABLE notifications ADD CONSTRAINT notifications_type_check CHECK (type IN (
+      'pool_chat_opened', 'pool_chat_message', 'ride_update',
+      'account_warning', 'account_suspended', 'account_reactivated', 'complaint_update',
+      'join_request', 'join_request_update', 'ride_share_update'
+    ));
+  END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS notifications_user_created_idx
   ON notifications(user_id, created_at DESC);
@@ -674,23 +761,6 @@ BEGIN
     CREATE TRIGGER ai_enforcement_decisions_by_admin
       BEFORE INSERT OR UPDATE ON ai_enforcement_decisions
       FOR EACH ROW EXECUTE FUNCTION enforcement_by_admin_only();
-  END IF;
-END $$;
-
--- Notifications about a rider's own account and complaints. This block holds the full list of
--- notification types: add new types here, since it replaces the check whenever one is missing.
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint
-    WHERE conname = 'notifications_type_check'
-      AND pg_get_constraintdef(oid) LIKE '%complaint_update%'
-  ) THEN
-    ALTER TABLE notifications DROP CONSTRAINT IF EXISTS notifications_type_check;
-    ALTER TABLE notifications ADD CONSTRAINT notifications_type_check CHECK (type IN (
-      'pool_chat_opened', 'pool_chat_message', 'ride_update',
-      'account_warning', 'account_suspended', 'account_reactivated', 'complaint_update'
-    ));
   END IF;
 END $$;
 

@@ -116,6 +116,7 @@ describe('StudentHome', () => {
               rideId: 'r1',
               destination: 'Kanpur Central',
               departure: '2026-10-02T23:30:00Z',
+              state: 'pending',
             },
             {
               kind: 'received',
@@ -124,6 +125,7 @@ describe('StudentHome', () => {
               destination: 'Lucknow airport',
               departure: '2026-10-03T08:30:00Z',
               riderName: 'Rohan',
+              state: 'pending',
             },
           ],
         }}

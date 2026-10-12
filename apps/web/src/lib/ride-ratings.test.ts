@@ -66,6 +66,7 @@ describe('getRatingPage', () => {
     expect(query.mock.calls[0][0]).toContain(
       'JOIN riders me ON me.ride_id = r.id AND me.user_id = $2',
     );
+    expect(query.mock.calls[0][0]).toContain('me.left_at IS NULL');
     expect(query.mock.calls[0][1]).toEqual([RIDE_ID, VIEWER_ID]);
   });
 
@@ -103,6 +104,7 @@ describe('getRatingPage', () => {
     });
     const peopleSql = query.mock.calls[1][0] as string;
     expect(peopleSql).toContain('m.user_id <> $2');
+    expect(peopleSql).toContain('m.left_at IS NULL');
     expect(peopleSql).toContain('given.rater_id = $2');
   });
 

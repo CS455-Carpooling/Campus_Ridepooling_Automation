@@ -32,6 +32,8 @@ export type SearchRideResult = {
   totalFare: number;
   /** ceil(totalFare / (occupantCount + 1)): what the viewer would pay by joining. */
   estimatedShare: number;
+  /** A pending request stays visible in results with its state instead of another request action. */
+  requestState: 'pending' | 'needs_reconfirmation' | null;
 };
 
 type SearchRow = {
@@ -48,6 +50,7 @@ type SearchRow = {
   seats_left: number;
   expected_total_fare: number;
   owner_name: string;
+  request_state: 'pending' | 'needs_reconfirmation' | null;
 };
 
 type OccupantNameRow = {
@@ -69,12 +72,13 @@ const SEARCH_SQL = `
     vt.name             AS vehicle_name,
     r.capacity_snapshot,
     r.expected_total_fare,
-    (SELECT COUNT(*)::int FROM riders o WHERE o.ride_id = r.id) AS occupant_count,
+    (SELECT COUNT(*)::int FROM riders o WHERE o.ride_id = r.id AND o.left_at IS NULL) AS occupant_count,
     GREATEST(
       r.capacity_snapshot
-        - (SELECT COUNT(*)::int FROM riders o WHERE o.ride_id = r.id),
+        - (SELECT COUNT(*)::int FROM riders o WHERE o.ride_id = r.id AND o.left_at IS NULL),
       0
     ) AS seats_left,
+    viewer_request.status AS request_state,
     COALESCE(owner_profile.display_name, owner_user.full_name) AS owner_name
   FROM rides r
   JOIN locations   hub      ON hub.id      = r.hub_id
@@ -84,11 +88,21 @@ const SEARCH_SQL = `
   -- The owner's campus place comes from their riders row (owner always has one).
   JOIN riders       owner_rider ON owner_rider.ride_id = r.id
                                AND owner_rider.user_id = r.owner_id
+                               AND owner_rider.left_at IS NULL
   JOIN locations    campus      ON campus.id = owner_rider.campus_location_id
+  LEFT JOIN LATERAL (
+    SELECT request.status
+    FROM ride_join_requests request
+    WHERE request.ride_id = r.id AND request.rider_id = $5
+      AND request.status IN ('pending', 'needs_reconfirmation')
+    ORDER BY request.submitted_at DESC, request.id DESC
+    LIMIT 1
+  ) viewer_request ON true
   WHERE
     r.direction = $1
     AND r.hub_id = $2
     AND r.state = 'scheduled'
+    AND r.locked_at IS NULL
     -- Only rides that have not locked yet (departure > now + 60 min).
     AND r.departure_start > NOW() + INTERVAL '60 minutes'
     -- Departure window overlaps the requested window.
@@ -97,11 +111,18 @@ const SEARCH_SQL = `
     -- Exclude rides the viewer owns or has already joined.
     AND r.owner_id <> $5
     AND NOT EXISTS (
-      SELECT 1 FROM riders m WHERE m.ride_id = r.id AND m.user_id = $5
+      SELECT 1 FROM riders m
+      WHERE m.ride_id = r.id AND m.user_id = $5 AND m.left_at IS NULL
     )
-    -- Must have at least one seat left.
-    AND r.capacity_snapshot
-          - (SELECT COUNT(*)::int FROM riders o WHERE o.ride_id = r.id) > 0
+    AND NOT EXISTS (
+      SELECT 1 FROM active_rider_suspensions suspension WHERE suspension.user_id = r.owner_id
+    )
+    -- A ride with an active request remains visible even when the last seat is requested.
+    AND (
+      r.capacity_snapshot
+        - (SELECT COUNT(*)::int FROM riders o WHERE o.ride_id = r.id AND o.left_at IS NULL) > 0
+      OR viewer_request.status IS NOT NULL
+    )
     -- Optional vehicle type filter.
     AND ($6::text IS NULL OR r.vehicle_type_id = $6::text)
     -- Optional max fare-share filter: estimated share <= the user's limit.
@@ -110,7 +131,7 @@ const SEARCH_SQL = `
       OR CEIL(
            r.expected_total_fare::numeric
            / (
-               (SELECT COUNT(*)::int FROM riders o WHERE o.ride_id = r.id) + 1
+               (SELECT COUNT(*)::int FROM riders o WHERE o.ride_id = r.id AND o.left_at IS NULL) + 1
              )
          ) <= $7::int
     )
@@ -127,7 +148,7 @@ const OCCUPANT_NAMES_SQL = `
   JOIN rides r ON r.id = m.ride_id
   JOIN users  u ON u.id = m.user_id
   LEFT JOIN user_profiles p ON p.user_id = u.id
-  WHERE m.ride_id = ANY($1::uuid[])
+  WHERE m.ride_id = ANY($1::uuid[]) AND m.left_at IS NULL
   ORDER BY m.ride_id, (m.user_id = r.owner_id) DESC, m.joined_at, m.id`;
 
 /** The rider's saved search preferences; null where none is saved. */
@@ -206,6 +227,7 @@ export async function searchRides(
     occupantCount: row.occupant_count,
     seatsLeft: row.seats_left,
     totalFare: row.expected_total_fare,
+    requestState: row.request_state,
     estimatedShare:
       row.occupant_count > 0
         ? estimateShare(row.expected_total_fare, row.occupant_count)

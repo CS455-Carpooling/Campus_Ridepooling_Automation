@@ -54,7 +54,7 @@ exist yet shows the 404 page until the page is built.
 | `/terms` | Terms of service (community guidelines) | Built |
 | `/privacy` | Privacy policy | Built |
 | `/rides/new` | Offer a ride: route, vehicle, departure window, fare | Built (CS455-22 to 25) |
-| `/rides/[id]` | Ride details: route, departure window, state and lock time, seats, fare split, people | Built (CS455-28, 29) |
+| `/rides/[id]` | Ride details, join requests and history, owner decisions, fare shares, ride edit/cancel/lock | Built (CS455-28, 29) |
 | `/rides/[id]/review` | Rate the people on a completed ride, for 72 hours after it is completed | Built (CS455-40 to 43) |
 | `/rides` | Find a ride | Not started |
 | `/notifications` | Notifications | Not started |
@@ -99,10 +99,20 @@ exist yet shows the 404 page until the page is built.
   nobody is ever shown who gave a rating (P-24).
   `POST /api/rides/[id]/complete` marks a ride completed, and the owner's ride page offers it as
   "Mark ride completed", with a confirmation.
+- **Join requests** (`src/lib/join-requests.ts`, FR-RD-06/07 and FR-RO-05/06) are a separate,
+  durable state machine from confirmed `riders` seats. A rider can submit an idempotent request,
+  withdraw it, review its history, and reconfirm materially changed terms. Owners can accept or
+  reject waiting requests; acceptance is serialized with seat-capacity and rider-conflict checks.
+  Requests expire when the ride locks, and accepted riders can leave with locked-share liability
+  retained for an ordinary post-lock departure. Owner edits require confirmation when confirmed
+  riders are affected; cancellations release fare liability and notify riders. The ride page shows
+  rider and owner controls, and `/home` lists sent and received waiting requests.
+- **In-trip outcomes** such as arrival tracking and marking a rider no-show depend on the separate
+  pickup/trip-state workflow and are not part of this request/seat lifecycle change.
 - **Page data** comes from server-only modules in `src/lib`. `ride-view.ts` reads rides from
   PostgreSQL for the ride page and for the Upcoming list on `/home` (rides you offered or joined,
-  through `home-data.ts`). Join requests do not exist yet, so nothing is listed as waiting, and the
-  admin counts are null, which the page shows as "Not available yet".
+  through `home-data.ts`). The request transition history is stored in
+  `ride_join_request_events`; request and share updates are stored in `notifications`.
 - **Ratings API** (`src/lib/ride-ratings.ts`, CS455-42): `POST /api/rides/[id]/ratings` takes
   `{ ratings: [{ occupantId, score, comment? }] }`, where `occupantId` is a seat on the ride
   (`riders.id`), so no user ID reaches the browser. It stores all of the ratings or none of them

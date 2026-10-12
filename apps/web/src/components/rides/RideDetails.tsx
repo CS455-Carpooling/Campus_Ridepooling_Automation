@@ -12,8 +12,11 @@ import {
 } from '@/lib/format';
 import { campusPlaceLabel, directionLabels, rideTitle } from '@/lib/ride-status';
 import type { RideView } from '@/lib/ride-view';
+import type { Place } from '@/lib/ride-options';
 import { routes } from '@/lib/routes';
 import { CompleteRideButton } from './CompleteRideButton';
+import { JoinRequestControls } from './JoinRequestControls';
+import { RideManagementControls } from './RideManagementControls';
 import { RideChat } from './RideChat';
 import { RideStateLabel } from './RideStateLabel';
 
@@ -22,7 +25,17 @@ import { RideStateLabel } from './RideStateLabel';
  * and the people on it (FR-RD-03.6, UC-RO-04). It only formats the RideView;
  * every number is worked out on the server (src/lib/ride-view.ts).
  */
-export function RideDetails({ ride }: { ride: RideView }) {
+export function RideDetails({
+  ride,
+  pickupPlaces,
+  hubs,
+  defaultPickupLocationId = null,
+}: {
+  ride: RideView;
+  pickupPlaces?: Place[];
+  hubs?: Place[];
+  defaultPickupLocationId?: string | null;
+}) {
   const cancelled = ride.state === 'cancelled';
 
   return (
@@ -60,6 +73,18 @@ export function RideDetails({ ride }: { ride: RideView }) {
       )}
 
       {!cancelled && <SharePanel ride={ride} />}
+      {pickupPlaces && (
+        <JoinRequestControls
+          rideId={ride.id}
+          role={ride.viewerRole}
+          isOpen={ride.isOpen}
+          hasSeats={ride.seatsLeft > 0}
+          pickupPlaces={pickupPlaces}
+          defaultPickupLocationId={defaultPickupLocationId}
+          isScheduled={ride.state === 'scheduled'}
+        />
+      )}
+      {hubs && <RideManagementControls ride={ride} hubs={hubs} />}
 
       <dl className="mt-8 grid gap-x-8 gap-y-5 sm:grid-cols-2">
         <Fact term="Vehicle">{ride.vehicleName}</Fact>
