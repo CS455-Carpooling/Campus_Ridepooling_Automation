@@ -4,7 +4,8 @@ import { RideCard } from '@/components/rides/RideCard';
 import { DesignSystem } from '@/components/ui/DesignSystem';
 import { ButtonLink } from '@/components/ui/ButtonLink';
 import { getCurrentUser } from '@/lib/auth';
-import { searchRides, type SearchRideRequest } from '@/lib/ride-search';
+import { searchRides } from '@/lib/ride-search';
+import { parseSearchRequest } from '@/lib/ride-search-rules';
 import { routes } from '@/lib/routes';
 
 export const metadata: Metadata = { title: 'Ride results' };
@@ -12,17 +13,6 @@ export const metadata: Metadata = { title: 'Ride results' };
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
-
-function getString(value: string | string[] | undefined): string {
-  return typeof value === 'string' ? value : '';
-}
-
-function getOptionalInt(value: string | string[] | undefined): number | undefined {
-  const s = getString(value);
-  if (!s) return undefined;
-  const n = Number(s);
-  return Number.isInteger(n) && n > 0 ? n : undefined;
-}
 
 /**
  * /rides/results: server component that reads the search params put there by
@@ -33,31 +23,10 @@ export default async function RideResultsPage({ searchParams }: Props) {
   const user = await getCurrentUser();
   if (!user) redirect(routes.login);
 
-  const params = await searchParams;
-
-  const direction = getString(params.direction);
-  const hubId = getString(params.hubId);
-  const campusLocationId = getString(params.campusLocationId);
-  const departureStart = getString(params.departureStart);
-  const departureEnd = getString(params.departureEnd);
-  const vehicleTypeId = getString(params.vehicleTypeId) || undefined;
-  const maxFareShare = getOptionalInt(params.maxFareShare);
-
-  // If required params are missing (user navigated here directly without the
-  // form), send them back to the search page.
-  if (!direction || !hubId || !campusLocationId || !departureStart || !departureEnd) {
-    redirect(routes.findRide);
-  }
-
-  const filters: SearchRideRequest = {
-    direction: direction as 'to_hub' | 'from_hub',
-    hubId,
-    campusLocationId,
-    departureStart,
-    departureEnd,
-    vehicleTypeId,
-    maxFareShare,
-  };
+  // The URL can be edited by hand: anything missing or invalid goes back to the search form
+  // rather than reaching the database.
+  const filters = parseSearchRequest(await searchParams);
+  if (!filters) redirect(routes.findRide);
 
   const rides = await searchRides(user.id, filters);
 
