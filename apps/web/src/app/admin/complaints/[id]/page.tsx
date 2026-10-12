@@ -120,7 +120,11 @@ export default async function AdminComplaintPage({ params }: PageProps<'/admin/c
             )}
           </section>
 
-          <AiComplaintReview complaintId={complaint.id} history={complaint.aiHistory} />
+          <AiComplaintReview
+            complaintId={complaint.id}
+            history={complaint.aiHistory}
+            resolved={resolved}
+          />
         </div>
 
         <aside className="flex min-w-0 flex-col gap-10">

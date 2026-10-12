@@ -58,7 +58,7 @@ function DecisionForm({
     const parsed = parseAiDecisionRequest({
       decision,
       finalAction,
-      reason,
+      reason: reason.trim() || null,
       ...(finalAction === 'suspension'
         ? indefinite
           ? { indefinite: true }
@@ -195,9 +195,11 @@ function DecisionForm({
 export function AiComplaintReview({
   complaintId,
   history,
+  resolved,
 }: {
   complaintId: string;
   history: ComplaintAiHistoryEntry[];
+  resolved: boolean;
 }) {
   return (
     <section aria-labelledby="ai-review-heading">
@@ -269,8 +271,12 @@ export function AiComplaintReview({
                     <p className="mt-2 whitespace-pre-line">{analysis.decision.reason}</p>
                   )}
                 </div>
-              ) : analysis.outcome === 'ai_validated' ? (
+              ) : analysis.outcome === 'ai_validated' && !resolved ? (
                 <DecisionForm complaintId={complaintId} analysis={analysis} />
+              ) : analysis.outcome === 'ai_validated' ? (
+                <p className="mt-4 border-t border-line pt-4 text-sm text-ink-muted">
+                  This complaint is resolved; no further AI decision can be recorded.
+                </p>
               ) : null}
             </li>
           ))}

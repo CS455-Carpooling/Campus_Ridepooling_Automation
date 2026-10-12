@@ -32,24 +32,30 @@ export function RiderEnforcementActions({
   const [refreshing, startTransition] = useTransition();
   const [warningReason, setWarningReason] = useState('');
   const [suspensionReason, setSuspensionReason] = useState('');
-  const [category, setCategory] = useState<ComplaintCategory>('other');
+  const [category, setCategory] = useState<ComplaintCategory | ''>('');
   const [complaintId, setComplaintId] = useState('');
-  const [days, setDays] = useState('90');
+  const [days, setDays] = useState('');
   const [indefinite, setIndefinite] = useState(false);
   const [reactivationReason, setReactivationReason] = useState('');
   const [warningErrors, setWarningErrors] = useState<Record<string, string>>({});
   const [suspensionErrors, setSuspensionErrors] = useState<Record<string, string>>({});
   const [reactivationErrors, setReactivationErrors] = useState<Record<string, string>>({});
   const [message, setMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [pendingAction, setPendingAction] = useState<
+    'warning' | 'suspension' | 'reactivation' | null
+  >(null);
   const [busy, setBusy] = useState(false);
 
   async function send(
     url: string,
     body: unknown,
     setActionErrors: (fields: Record<string, string>) => void,
+    successText: string,
   ): Promise<boolean> {
     setActionErrors({});
     setMessage('');
+    setSuccessMessage('');
     setBusy(true);
     const result = await sendAdminChange<{
       warning?: unknown;
@@ -58,6 +64,7 @@ export function RiderEnforcementActions({
     }>('POST', url, body);
     setBusy(false);
     if (result.ok) {
+      setSuccessMessage(successText);
       startTransition(() => router.refresh());
       return true;
     }
@@ -77,7 +84,21 @@ export function RiderEnforcementActions({
       setWarningErrors(parsed.errors);
       return;
     }
-    if (await send(`/api/admin/riders/${riderId}/warnings`, parsed.value, setWarningErrors)) {
+    if (pendingAction !== 'warning') {
+      setPendingAction('warning');
+      setMessage('');
+      setSuccessMessage('');
+      return;
+    }
+    setPendingAction(null);
+    if (
+      await send(
+        `/api/admin/riders/${riderId}/warnings`,
+        parsed.value,
+        setWarningErrors,
+        'Warning issued.',
+      )
+    ) {
       setWarningReason('');
     }
   }
@@ -94,7 +115,21 @@ export function RiderEnforcementActions({
       setSuspensionErrors(parsed.errors);
       return;
     }
-    if (await send(`/api/admin/riders/${riderId}/suspensions`, parsed.value, setSuspensionErrors)) {
+    if (pendingAction !== 'suspension') {
+      setPendingAction('suspension');
+      setMessage('');
+      setSuccessMessage('');
+      return;
+    }
+    setPendingAction(null);
+    if (
+      await send(
+        `/api/admin/riders/${riderId}/suspensions`,
+        parsed.value,
+        setSuspensionErrors,
+        'Suspension saved.',
+      )
+    ) {
       setSuspensionReason('');
       setIndefinite(false);
     }
@@ -107,8 +142,20 @@ export function RiderEnforcementActions({
       setReactivationErrors(parsed.errors);
       return;
     }
+    if (pendingAction !== 'reactivation') {
+      setPendingAction('reactivation');
+      setMessage('');
+      setSuccessMessage('');
+      return;
+    }
+    setPendingAction(null);
     if (
-      await send(`/api/admin/riders/${riderId}/reactivation`, parsed.value, setReactivationErrors)
+      await send(
+        `/api/admin/riders/${riderId}/reactivation`,
+        parsed.value,
+        setReactivationErrors,
+        'Rider reactivated.',
+      )
     ) {
       setReactivationReason('');
     }
@@ -139,6 +186,11 @@ export function RiderEnforcementActions({
           {message}
         </p>
       )}
+      {successMessage && (
+        <p role="status" className="mt-3 text-sm font-semibold text-ink">
+          {successMessage}
+        </p>
+      )}
       <div className="mt-4 grid gap-5 lg:grid-cols-2">
         <form
           noValidate
@@ -152,13 +204,19 @@ export function RiderEnforcementActions({
             value={warningReason}
             maxLength={ENFORCEMENT_RULES.reasonMax}
             rows={3}
-            onChange={(event) => setWarningReason(event.target.value)}
+            onChange={(event) => {
+              setWarningReason(event.target.value);
+              setPendingAction(null);
+            }}
           />
           {warningErrors.reason && <p className="text-sm text-danger">{warningErrors.reason}</p>}
           <SelectField
             label="Related complaint (optional)"
             value={complaintId}
-            onChange={(event) => setComplaintId(event.target.value)}
+            onChange={(event) => {
+              setComplaintId(event.target.value);
+              setPendingAction(null);
+            }}
             error={warningErrors.complaintId}
           >
             <option value="">No linked complaint</option>
@@ -168,8 +226,22 @@ export function RiderEnforcementActions({
               </option>
             ))}
           </SelectField>
-          <Button type="submit" disabled={disabled}>
-            {busy ? 'Saving…' : 'Issue warning'}
+          {pendingAction === 'warning' && (
+            <div className="rounded-control border border-line-strong p-3">
+              <p className="font-semibold">Issue this warning?</p>
+              <p className="mt-1 text-sm text-ink-muted">
+                The warning and reason will be recorded in the rider&apos;s account history.
+              </p>
+              <Button type="button" variant="secondary" onClick={() => setPendingAction(null)}>
+                Cancel
+              </Button>
+            </div>
+          )}
+          <Button
+            type="submit"
+            disabled={disabled || (pendingAction !== null && pendingAction !== 'warning')}
+          >
+            {busy ? 'Saving…' : pendingAction === 'warning' ? 'Confirm warning' : 'Review warning'}
           </Button>
         </form>
 
@@ -189,13 +261,34 @@ export function RiderEnforcementActions({
               value={reactivationReason}
               maxLength={ENFORCEMENT_RULES.reasonMax}
               rows={3}
-              onChange={(event) => setReactivationReason(event.target.value)}
+              onChange={(event) => {
+                setReactivationReason(event.target.value);
+                setPendingAction(null);
+              }}
             />
             {reactivationErrors.reason && (
               <p className="text-sm text-danger">{reactivationErrors.reason}</p>
             )}
-            <Button type="submit" disabled={disabled}>
-              {busy ? 'Saving…' : 'Reactivate rider'}
+            {pendingAction === 'reactivation' && (
+              <div className="rounded-control border border-line-strong p-3">
+                <p className="font-semibold">Reactivate this rider?</p>
+                <p className="mt-1 text-sm text-ink-muted">
+                  The active suspension will end and remain in the rider&apos;s history.
+                </p>
+                <Button type="button" variant="secondary" onClick={() => setPendingAction(null)}>
+                  Cancel
+                </Button>
+              </div>
+            )}
+            <Button
+              type="submit"
+              disabled={disabled || (pendingAction !== null && pendingAction !== 'reactivation')}
+            >
+              {busy
+                ? 'Saving…'
+                : pendingAction === 'reactivation'
+                  ? 'Confirm reactivation'
+                  : 'Review reactivation'}
             </Button>
           </form>
         ) : (
@@ -209,9 +302,13 @@ export function RiderEnforcementActions({
             <SelectField
               label="Reason category"
               value={category}
-              onChange={(event) => setCategory(event.target.value as ComplaintCategory)}
+              onChange={(event) => {
+                setCategory(event.target.value as ComplaintCategory | '');
+                setPendingAction(null);
+              }}
               error={suspensionErrors.reasonCategory}
             >
+              <option value="">Choose a reason category</option>
               {Object.entries(complaintCategoryLabels).map(([value, label]) => (
                 <option value={value} key={value}>
                   {label}
@@ -223,7 +320,10 @@ export function RiderEnforcementActions({
               value={suspensionReason}
               maxLength={ENFORCEMENT_RULES.reasonMax}
               rows={3}
-              onChange={(event) => setSuspensionReason(event.target.value)}
+              onChange={(event) => {
+                setSuspensionReason(event.target.value);
+                setPendingAction(null);
+              }}
             />
             {suspensionErrors.reason && (
               <p className="text-sm text-danger">{suspensionErrors.reason}</p>
@@ -231,7 +331,10 @@ export function RiderEnforcementActions({
             <SelectField
               label="Related complaint (optional)"
               value={complaintId}
-              onChange={(event) => setComplaintId(event.target.value)}
+              onChange={(event) => {
+                setComplaintId(event.target.value);
+                setPendingAction(null);
+              }}
               error={suspensionErrors.complaintId}
             >
               <option value="">No linked complaint</option>
@@ -245,7 +348,10 @@ export function RiderEnforcementActions({
               <input
                 type="checkbox"
                 checked={indefinite}
-                onChange={(event) => setIndefinite(event.target.checked)}
+                onChange={(event) => {
+                  setIndefinite(event.target.checked);
+                  setPendingAction(null);
+                }}
               />
               <span className="font-semibold">Indefinite suspension</span>
             </label>
@@ -259,7 +365,10 @@ export function RiderEnforcementActions({
                   step={1}
                   required
                   value={days}
-                  onChange={(event) => setDays(event.target.value)}
+                  onChange={(event) => {
+                    setDays(event.target.value);
+                    setPendingAction(null);
+                  }}
                   aria-invalid={suspensionErrors.length ? true : undefined}
                   className="min-h-12 rounded-control border border-line-strong bg-surface px-3 text-base font-normal"
                 />
@@ -268,8 +377,28 @@ export function RiderEnforcementActions({
             {suspensionErrors.length && (
               <p className="text-sm text-danger">{suspensionErrors.length}</p>
             )}
-            <Button type="submit" disabled={disabled}>
-              {busy ? 'Saving…' : 'Suspend rider'}
+            {pendingAction === 'suspension' && (
+              <div className="rounded-control border border-line-strong p-3">
+                <p className="font-semibold">
+                  Suspend this rider {indefinite ? 'indefinitely' : `for ${days} days`}?
+                </p>
+                <p className="mt-1 text-sm text-ink-muted">
+                  The suspension and reason will be recorded in the rider&apos;s account history.
+                </p>
+                <Button type="button" variant="secondary" onClick={() => setPendingAction(null)}>
+                  Cancel
+                </Button>
+              </div>
+            )}
+            <Button
+              type="submit"
+              disabled={disabled || (pendingAction !== null && pendingAction !== 'suspension')}
+            >
+              {busy
+                ? 'Saving…'
+                : pendingAction === 'suspension'
+                  ? 'Confirm suspension'
+                  : 'Review suspension'}
             </Button>
           </form>
         )}

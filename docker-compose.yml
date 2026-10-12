@@ -38,6 +38,8 @@ services:
       APP_URL: ${APP_URL:-http://localhost:3000}
       MAIL_SCRIPT_URL: ${MAIL_SCRIPT_URL:-}
       MAIL_SCRIPT_SECRET: ${MAIL_SCRIPT_SECRET:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-}
     ports:
       - '3000:3000'
     healthcheck:

@@ -14,6 +14,7 @@ type AnalysisRow = {
   recommended_suspension_days: number | null;
   recommended_indefinite: boolean;
   complaint_id: string;
+  complaint_status: string;
   accused_id: string;
   category: string;
 };
@@ -42,7 +43,14 @@ export type AiDecisionWrite =
         recommendedIndefinite: boolean;
       };
     }
-  | { kind: 'not_found' | 'already_decided' | 'invalid_analysis' | 'recommendation_mismatch' }
+  | {
+      kind:
+        | 'not_found'
+        | 'already_decided'
+        | 'invalid_analysis'
+        | 'recommendation_mismatch'
+        | 'complaint_resolved';
+    }
   | { kind: 'enforcement_failed'; result: EnforcementWrite<unknown> };
 
 /** Apply an explicit human decision and its audit record in the caller's admin transaction. */
@@ -56,11 +64,12 @@ export async function decideComplaintAi(
 ): Promise<AiDecisionWrite> {
   const { rows } = await client.query<AnalysisRow>(
     `SELECT a.id, a.outcome, a.recommended_action, a.recommended_suspension_days,
-            a.recommended_indefinite, c.id AS complaint_id, c.accused_id, c.category
+            a.recommended_indefinite, c.id AS complaint_id, c.status AS complaint_status,
+            c.accused_id, c.category
      FROM complaint_ai_analyses a
      JOIN complaints c ON c.id = a.complaint_id
      WHERE a.id = $1 AND c.id = $2
-     FOR UPDATE OF a`,
+     FOR UPDATE OF a, c`,
     [analysisId, complaintId],
   );
   const analysis = rows[0];
@@ -75,6 +84,10 @@ export async function decideComplaintAi(
   if (previousDecision.rows.length > 0) return { kind: 'already_decided' };
 
   const finalAction = request.decision === 'rejected' ? 'none' : request.finalAction;
+  if (analysis.complaint_status === 'resolved' && finalAction !== 'none') {
+    return { kind: 'complaint_resolved' };
+  }
+
   if (request.decision === 'approved') {
     const sameLength =
       analysis.recommended_action !== 'suspension' ||

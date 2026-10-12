@@ -86,4 +86,14 @@ describe('POST /api/admin/complaints/[id]/ai-decision', () => {
     expect((await call()).status).toBe(403);
     expect(h.withAdminAction).not.toHaveBeenCalled();
   });
+
+  it('returns a conflict when enforcement is refused because the complaint is resolved', async () => {
+    h.decideComplaintAi.mockResolvedValue({ kind: 'complaint_resolved' });
+    const response = await call();
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({
+      code: 'complaint_resolved',
+      error: expect.stringContaining('resolved'),
+    });
+  });
 });

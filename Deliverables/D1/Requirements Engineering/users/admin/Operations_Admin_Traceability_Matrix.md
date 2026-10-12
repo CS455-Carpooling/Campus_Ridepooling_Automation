@@ -20,7 +20,7 @@ Verification entries describe how the requirement can be tested or inspected lat
 | OA-FR-05 | US-OA-04 — A New Destination Needs to Be Supported | UC-OA-03 | Functional test: add a hub and verify it becomes an active configured destination. |
 | OA-FR-06 | US-OA-05 — A Destination Changes or Stops Being Supported | UC-OA-03 | Functional test: modify a hub and verify existing ride references remain unchanged. |
 | OA-FR-07 | US-OA-05 — A Destination Changes or Stops Being Supported | UC-OA-03 | Functional test: deactivate a hub and verify it is unavailable for new rides while historical references remain. |
-| OA-FR-10 | US-OA-06 — Different Vehicle Types Need Different Campus Fares | UC-OA-04 | Functional test: configure fares for campus-place pairs and vehicle types, verify non-directionality, and verify the fare is consumed by ride fare calculation. |
+| OA-FR-10 | US-OA-06 — Different Vehicle Types Need Different Campus Fares | UC-OA-04 | Functional test: configure fares for campus-place pairs and vehicle types, and verify non-directionality. |
 | OA-FR-11 | US-OA-07 — Riders Need an External Fare Estimate | UC-OA-04 | Functional test: configure an external fare range for a segment and vehicle type. |
 | OA-FR-16 | US-OA-08 — An Admin Needs to Investigate a Ride Without Interfering With It | UC-OA-05 | Functional/access test: authorized Admin can view ride information. |
 | OA-FR-18 | US-OA-09, US-OA-10 — Fare-share complaint / SOS complaint | UC-OA-06 | Functional/privacy test: authorized Admin can view rider complaints. |

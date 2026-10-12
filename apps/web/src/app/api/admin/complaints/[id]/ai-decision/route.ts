@@ -58,6 +58,12 @@ export async function POST(
             'already_decided',
             'This AI recommendation already has a decision.',
           );
+        case 'complaint_resolved':
+          return adminRefusal(
+            409,
+            'complaint_resolved',
+            'This complaint is resolved; enforcement decisions can no longer be recorded.',
+          );
         case 'invalid_analysis':
           return adminRefusal(
             409,

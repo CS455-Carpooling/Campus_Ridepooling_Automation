@@ -1,4 +1,5 @@
 import type { PoolClient } from 'pg';
+import { after } from 'next/server';
 import { getCurrentUser, guard, json, readJson } from '@/lib/auth';
 import { complaintMessages, parseComplaintRequest } from '@/lib/complaint-rules';
 import { analyzeComplaint } from '@/lib/complaint-ai';
@@ -103,12 +104,14 @@ export async function POST(req: Request, ctx: RouteContext<'/api/rides/[id]/comp
     await client.query('COMMIT');
     client.release();
     client = null;
-    try {
-      await analyzeComplaint(result.id);
-    } catch (error) {
-      // The complaint is already committed; an analysis-storage failure must not undo filing.
-      console.error('Complaint AI analysis could not be recorded:', error);
-    }
+    after(async () => {
+      try {
+        await analyzeComplaint(result.id);
+      } catch (error) {
+        // The complaint is already committed; an analysis-storage failure must not undo filing.
+        console.error('Complaint AI analysis could not be recorded:', error);
+      }
+    });
     return json({ reference: result.reference }, 201);
   } catch (error) {
     if (client) await client.query('ROLLBACK').catch(() => undefined);

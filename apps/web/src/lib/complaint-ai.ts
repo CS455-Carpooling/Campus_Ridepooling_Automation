@@ -12,6 +12,10 @@ const MODEL_TIMEOUT_MS = 8_000;
 const MODEL_OUTPUT_TOKENS = 512;
 const PROMPT_VERSION = 'complaint-analysis-v1';
 const MODEL_DEFAULT = 'gemini-2.5-flash';
+const redactPersonalInfo = (text: string) =>
+  text
+    .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, '[redacted email]')
+    .replace(/\b\d{10}\b/g, '[redacted 10-digit number]');
 
 type ComplaintContext = {
   id: string;
@@ -78,11 +82,14 @@ function promptFor(context: ComplaintContext): string {
   const data = {
     complaint: {
       category: context.category,
-      description: context.description,
+      description: redactPersonalInfo(context.description),
       filedAt: context.created_at.toISOString(),
     },
     relevantContext: {
-      priorComplaints: context.prior_complaints,
+      priorComplaints: context.prior_complaints.map((complaint) => ({
+        ...complaint,
+        description: redactPersonalInfo(complaint.description),
+      })),
       warningCount: context.warning_count,
       suspensionCount: context.suspension_count,
       currentlySuspended: context.currently_suspended,

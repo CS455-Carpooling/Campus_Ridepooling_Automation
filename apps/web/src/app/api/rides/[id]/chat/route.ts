@@ -1,4 +1,5 @@
 import { pool } from '@/lib/db';
+import { after } from 'next/server';
 import { guard, getCurrentUser, json, readJson } from '@/lib/auth';
 import { isUuid } from '@/lib/ids';
 import { getRideChatThread, reportChatMessage } from '@/lib/ride-chat';
@@ -79,16 +80,18 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       return json({ error: result.error }, result.code === 'FORBIDDEN' ? 403 : 400);
     }
 
-    try {
-      const complaint = await pool.query<{ id: string }>(
-        'SELECT id FROM complaints WHERE legacy_reference = $1',
-        [result.reference],
-      );
-      if (complaint.rows[0]) await analyzeComplaint(complaint.rows[0].id);
-    } catch (error) {
-      // The chat report is already retained; AI failure must leave it available for manual review.
-      console.error('Chat complaint AI analysis could not be recorded:', error);
-    }
+    after(async () => {
+      try {
+        const complaint = await pool.query<{ id: string }>(
+          'SELECT id FROM complaints WHERE legacy_reference = $1',
+          [result.reference],
+        );
+        if (complaint.rows[0]) await analyzeComplaint(complaint.rows[0].id);
+      } catch (error) {
+        // The chat report is already retained; AI failure must leave it available for manual review.
+        console.error('Chat complaint AI analysis could not be recorded:', error);
+      }
+    });
     return json({ reference: result.reference }, 200);
   }
 

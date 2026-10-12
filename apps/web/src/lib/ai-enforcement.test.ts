@@ -19,6 +19,7 @@ const now = new Date('2026-10-11T00:00:00Z');
 function client(answer: Record<string, unknown> = {}) {
   const query = vi.fn(async (sql: string) => {
     if (sql.includes('FROM complaint_ai_analyses a')) {
+      if (answer.missing_analysis) return { rows: [] };
       return {
         rows: [
           {
@@ -28,6 +29,7 @@ function client(answer: Record<string, unknown> = {}) {
             recommended_suspension_days: null,
             recommended_indefinite: false,
             complaint_id: COMPLAINT,
+            complaint_status: 'under_review',
             accused_id: RIDER,
             category: 'safety',
             ...answer,
@@ -151,5 +153,130 @@ describe('decideComplaintAi (OA-FR-34, 36; SYS-FR-35, 37, 38)', () => {
       ),
     ).resolves.toEqual({ kind: 'already_decided' });
     expect(h.warnRider).not.toHaveBeenCalled();
+  });
+
+  it('refuses enforcement against a resolved complaint without warning the rider', async () => {
+    const { client: db, query } = client({ complaint_status: 'resolved' });
+    const result = await decideComplaintAi(
+      db,
+      COMPLAINT,
+      ANALYSIS,
+      {
+        decision: 'approved',
+        finalAction: 'warning',
+        reason: 'Approved after review.',
+        days: null,
+        indefinite: false,
+      },
+      ADMIN,
+      now,
+    );
+
+    expect(result).toEqual({ kind: 'complaint_resolved' });
+    expect(h.warnRider).not.toHaveBeenCalled();
+    expect(h.suspendRider).not.toHaveBeenCalled();
+    expect(
+      query.mock.calls.some(([sql]) =>
+        String(sql).includes('INSERT INTO ai_enforcement_decisions'),
+      ),
+    ).toBe(false);
+  });
+
+  it('distinguishes missing and non-validated analyses', async () => {
+    await expect(
+      decideComplaintAi(
+        client({ missing_analysis: true }).client,
+        COMPLAINT,
+        ANALYSIS,
+        {
+          decision: 'rejected',
+          finalAction: 'none',
+          reason: 'Not supported.',
+          days: null,
+          indefinite: false,
+        },
+        ADMIN,
+        now,
+      ),
+    ).resolves.toEqual({ kind: 'not_found' });
+    await expect(
+      decideComplaintAi(
+        client({ outcome: 'fallback_invalid', recommended_action: null }).client,
+        COMPLAINT,
+        ANALYSIS,
+        {
+          decision: 'rejected',
+          finalAction: 'none',
+          reason: 'Not supported.',
+          days: null,
+          indefinite: false,
+        },
+        ADMIN,
+        now,
+      ),
+    ).resolves.toEqual({ kind: 'invalid_analysis' });
+  });
+
+  it('executes an explicitly approved suspension using the validated recommendation', async () => {
+    const { client: db } = client({
+      recommended_action: 'suspension',
+      recommended_suspension_days: 14,
+    });
+    const result = await decideComplaintAi(
+      db,
+      COMPLAINT,
+      ANALYSIS,
+      {
+        decision: 'approved',
+        finalAction: 'suspension',
+        reason: 'Repeated safety violations.',
+        days: 14,
+        indefinite: false,
+      },
+      ADMIN,
+      now,
+    );
+    expect(result).toMatchObject({
+      kind: 'done',
+      record: { decision: 'approved', finalAction: 'suspension', suspensionId: expect.any(String) },
+    });
+    expect(h.suspendRider).toHaveBeenCalledWith(
+      db,
+      RIDER,
+      {
+        reasonCategory: 'safety',
+        reason: 'Repeated safety violations.',
+        days: 14,
+        indefinite: false,
+        complaintId: COMPLAINT,
+      },
+      ADMIN,
+      now,
+    );
+  });
+
+  it('does not save an AI decision when the enforcement write is refused', async () => {
+    const { client: db, query } = client();
+    h.warnRider.mockResolvedValue({ kind: 'not_found' });
+    const result = await decideComplaintAi(
+      db,
+      COMPLAINT,
+      ANALYSIS,
+      {
+        decision: 'approved',
+        finalAction: 'warning',
+        reason: 'Reviewed.',
+        days: null,
+        indefinite: false,
+      },
+      ADMIN,
+      now,
+    );
+    expect(result).toEqual({ kind: 'enforcement_failed', result: { kind: 'not_found' } });
+    expect(
+      query.mock.calls.some(([sql]) =>
+        String(sql).includes('INSERT INTO ai_enforcement_decisions'),
+      ),
+    ).toBe(false);
   });
 });

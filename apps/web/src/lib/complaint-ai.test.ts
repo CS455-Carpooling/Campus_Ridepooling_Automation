@@ -111,6 +111,68 @@ describe('analyzeComplaint (SYS-FR-30 to 33, 46, 47)', () => {
     expect(insert?.[1]?.[13]).toBe(40);
   });
 
+  it('redacts email addresses and 10-digit numbers from current and prior complaint text sent to Gemini', async () => {
+    const sensitiveContext = {
+      ...context,
+      description: 'Contact alex@example.com or call 9876543210 about the incident.',
+      prior_complaints: [
+        {
+          category: 'safety',
+          status: 'resolved',
+          description: 'The other rider gave me rider.name@iitk.ac.in and 9123456789.',
+          createdAt: '2026-10-01T00:00:00.000Z',
+        },
+      ],
+    };
+    h.query.mockImplementation(async (sql: string) => {
+      if (sql.includes('SELECT 1 FROM complaint_ai_analyses')) return { rows: [] };
+      if (sql.includes('FROM complaints c')) return { rows: [sensitiveContext] };
+      return { rows: [] };
+    });
+    vi.stubEnv('GEMINI_API_KEY', 'test-key');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        Response.json({
+          candidates: [
+            {
+              content: {
+                parts: [
+                  {
+                    text: JSON.stringify({
+                      summary: 'The report describes a safety concern.',
+                      severity: 'medium',
+                      behaviorTags: ['safety_risk'],
+                      recommendedAction: 'none',
+                      recommendedSuspensionDays: null,
+                      recommendedIndefinite: false,
+                      confidence: 0.9,
+                    }),
+                  },
+                ],
+              },
+            },
+          ],
+        }),
+      ),
+    );
+
+    await analyzeComplaint(COMPLAINT);
+    const [, options] = vi.mocked(fetch).mock.calls[0] as [string, RequestInit];
+    const request = JSON.parse(String(options.body)) as {
+      contents: Array<{ parts: Array<{ text: string }> }>;
+    };
+    const prompt = request.contents[0].parts[0].text;
+
+    expect(prompt).toContain('[redacted email]');
+    expect(prompt).toContain('[redacted 10-digit number]');
+    expect(prompt).not.toContain('alex@example.com');
+    expect(prompt).not.toContain('9876543210');
+    expect(prompt).not.toContain('rider.name@iitk.ac.in');
+    expect(prompt).not.toContain('9123456789');
+    expect(context.description).not.toContain('[redacted');
+  });
+
   it('does not overwrite or duplicate an already analyzed complaint', async () => {
     h.query.mockImplementation(async () => ({ rows: [{ '?column?': 1 }] }));
     await analyzeComplaint(COMPLAINT);
