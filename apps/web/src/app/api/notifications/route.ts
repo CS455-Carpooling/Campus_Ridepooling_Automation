@@ -1,9 +1,10 @@
 import { getCurrentUser, json } from '@/lib/auth';
 import { pool } from '@/lib/db';
+import type { NotificationType } from '@/lib/notification-types';
 
 type NotificationRow = {
   id: string;
-  type: 'pool_chat_opened' | 'pool_chat_message' | 'ride_update';
+  type: NotificationType;
   title: string;
   body: string;
   related_ride_id: string | null;
