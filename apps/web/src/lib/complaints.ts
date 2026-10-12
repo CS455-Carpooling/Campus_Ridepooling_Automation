@@ -19,7 +19,7 @@ import type { RideState } from './ride-status';
  */
 
 export type FileComplaintResult =
-  | { kind: 'filed'; reference: string }
+  | { kind: 'filed'; id: string; reference: string }
   | { kind: 'not_found' }
   | { kind: 'not_on_ride' }
   | { kind: 'self' }
@@ -108,7 +108,7 @@ export async function fileComplaint(
       [complaint.id, request.messageId],
     );
   }
-  return { kind: 'filed', reference: complaint.reference };
+  return { kind: 'filed', id: complaint.id, reference: complaint.reference };
 }
 
 /** A complaint's status as an admin sees it, with the version to send back when changing it. */

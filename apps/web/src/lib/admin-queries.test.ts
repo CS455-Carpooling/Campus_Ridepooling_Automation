@@ -5,7 +5,12 @@ const h = vi.hoisted(() => ({ query: vi.fn(), getActiveSuspension: vi.fn() }));
 vi.mock('./db', () => ({ pool: { query: h.query } }));
 vi.mock('./suspensions', () => ({ getActiveSuspension: h.getActiveSuspension }));
 
-import { getComplaintDetail, listComplaints, parseQueueFilters } from './admin-complaint-queries';
+import {
+  getComplaintDetail,
+  listAiDecisionHistory,
+  listComplaints,
+  parseQueueFilters,
+} from './admin-complaint-queries';
 import { getAdminRide, getRiderRecord, searchRiders } from './admin-rider-queries';
 
 const ID = 'c0c0c0c0-1111-4000-8000-000000000001';
@@ -61,10 +66,60 @@ describe('the complaint queue (CS455-53)', () => {
       createdAt: at.toISOString(),
     });
     expect(complaints[0].rideTitle).toContain('Kanpur Central');
+    expect(complaints[0].aiReview).toBe('manual');
     expect(h.query.mock.calls[0][1]).toEqual(['open', 'all', 'chat_report']);
     expect(String(h.query.mock.calls[0][0])).toContain(
       "(c.category = 'safety' AND c.status <> 'resolved') DESC",
     );
+  });
+
+  describe('listAiDecisionHistory (SYS-FR-38)', () => {
+    it('returns the original recommendation, final action, admin and complaint links', async () => {
+      h.query.mockResolvedValue({
+        rows: [
+          {
+            id: 'd1',
+            analysis_id: 'a1',
+            complaint_id: ID,
+            complaint_reference: 'CMP-1A2B3C4D',
+            accused_id: USER,
+            accused_name: 'Rohan',
+            analysis_summary: 'Repeated unsafe driving reported.',
+            recommended_action: 'warning',
+            recommended_suspension_days: null,
+            recommended_indefinite: false,
+            decision: 'overridden',
+            reason: 'A warning is proportionate.',
+            final_action: 'warning',
+            warning_id: 'w1',
+            suspension_id: null,
+            decided_at: at,
+            decided_by: 'Ops Admin',
+          },
+        ],
+      });
+      await expect(listAiDecisionHistory()).resolves.toEqual([
+        {
+          id: 'd1',
+          analysisId: 'a1',
+          complaintId: ID,
+          complaintReference: 'CMP-1A2B3C4D',
+          accusedId: USER,
+          accusedName: 'Rohan',
+          analysisSummary: 'Repeated unsafe driving reported.',
+          recommendedAction: 'warning',
+          recommendedSuspensionDays: null,
+          recommendedIndefinite: false,
+          decision: 'overridden',
+          reason: 'A warning is proportionate.',
+          finalAction: 'warning',
+          warningId: 'w1',
+          suspensionId: null,
+          decidedAt: at.toISOString(),
+          decidedBy: 'Ops Admin',
+        },
+      ]);
+    });
   });
 });
 
@@ -103,6 +158,7 @@ describe('getComplaintDetail (OA-FR-18, 20)', () => {
       if (sql.includes('complaint_chat_messages')) {
         return { rows: [{ id: 'm1', body: 'Rude words.', created_at: at, sender_name: 'Rohan' }] };
       }
+      if (sql.includes('FROM complaint_ai_analyses a')) return { rows: [] };
       return {
         rows: [
           {

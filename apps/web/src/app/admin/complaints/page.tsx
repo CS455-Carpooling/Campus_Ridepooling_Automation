@@ -58,6 +58,21 @@ export default async function AdminComplaintsPage({
                     {complaint.source === 'chat_report' && (
                       <span className="text-sm text-ink-muted">Chat report</span>
                     )}
+                    <span
+                      className={
+                        complaint.aiReview === 'manual'
+                          ? 'text-sm font-semibold text-danger'
+                          : 'text-sm text-ink-muted'
+                      }
+                    >
+                      {complaint.aiReview === 'manual'
+                        ? 'Manual review required'
+                        : complaint.aiReview === 'pending'
+                          ? 'AI recommendation awaiting decision'
+                          : complaint.aiReview === 'decided'
+                            ? 'AI decision recorded'
+                            : 'AI analysis available'}
+                    </span>
                   </p>
                   <p className="mt-1 text-sm text-ink-muted">
                     About {complaint.about}, on {complaint.rideTitle}. Filed{' '}

@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('next/navigation', () => ({
   notFound: mocks.notFound,
   usePathname: () => '/admin/riders',
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
 vi.mock('@/lib/admin-auth', () => ({ requireAdminPage: mocks.requireAdminPage }));
 vi.mock('@/lib/admin-rider-queries', () => ({
@@ -168,6 +169,8 @@ describe('/admin/riders/[id] (CS455-53, OA-FR-42, SYS-NFR-07)', () => {
     expect(screen.getByText('Late twice')).toBeInTheDocument();
     expect(screen.getByText(/Lifted .* by Ops Admin: Appeal accepted/)).toBeInTheDocument();
     expect(screen.getAllByText('None.').length).toBeGreaterThan(0);
+    expect(screen.getByRole('form', { name: 'Issue rider warning' })).toBeInTheDocument();
+    expect(screen.getByRole('form', { name: 'Reactivate rider account' })).toBeInTheDocument();
   });
 
   it('shows an active account, and is not found for an unknown rider', async () => {
@@ -180,6 +183,7 @@ describe('/admin/riders/[id] (CS455-53, OA-FR-42, SYS-NFR-07)', () => {
     });
     render(await record());
     expect(screen.getByText('Account status: Active')).toBeInTheDocument();
+    expect(screen.getByRole('form', { name: 'Suspend rider account' })).toBeInTheDocument();
     expect(screen.getByText('No warnings.')).toBeInTheDocument();
     expect(screen.getByText('No rides yet.')).toBeInTheDocument();
     mocks.getRiderRecord.mockResolvedValue(null);

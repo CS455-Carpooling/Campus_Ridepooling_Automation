@@ -85,7 +85,7 @@ const ADMIN_COUNTS_SQL = `
     (SELECT count(DISTINCT a.complaint_id)::int
        FROM complaint_ai_analyses a
        JOIN complaints c ON c.id = a.complaint_id AND c.status <> 'resolved'
-       WHERE a.outcome = 'ai_validated'
+       WHERE a.outcome = 'ai_validated' AND a.recommended_action <> 'none'
          AND NOT EXISTS (SELECT 1 FROM ai_enforcement_decisions d WHERE d.analysis_id = a.id))
       AS recommendations,
     (SELECT count(DISTINCT user_id)::int FROM active_rider_suspensions) AS suspended

@@ -8,6 +8,8 @@ const auth = vi.hoisted(() => ({
 }));
 const db = vi.hoisted(() => ({
   query: vi.fn(),
+  after: vi.fn(),
+  scheduled: [] as Array<() => unknown>,
 }));
 
 vi.mock('@/lib/auth', () => ({
@@ -23,13 +25,20 @@ vi.mock('@/lib/ride-chat', () => ({
   getRideChatThread: vi.fn(),
   reportChatMessage: vi.fn(),
 }));
+vi.mock('@/lib/complaint-ai', () => ({ analyzeComplaint: vi.fn() }));
 vi.mock('@/lib/ids', () => ({ isUuid: (value: string) => /^[0-9a-f-]{36}$/i.test(value) }));
+vi.mock('next/server', () => ({ after: db.after }));
 
 import { GET, POST } from './route';
 import { getRideChatThread, reportChatMessage } from '@/lib/ride-chat';
+import { analyzeComplaint } from '@/lib/complaint-ai';
 
 beforeEach(() => {
   vi.clearAllMocks();
+  db.scheduled.length = 0;
+  db.after.mockImplementation((callback: () => unknown) => {
+    db.scheduled.push(callback);
+  });
   auth.guard.mockResolvedValue(null);
   auth.getCurrentUser.mockResolvedValue({ id: 'user-1' });
   auth.readJson.mockResolvedValue({ message: 'hello' });
@@ -105,6 +114,8 @@ describe('POST /api/rides/[id]/chat', () => {
   it('reports a problematic message with a reference', async () => {
     auth.readJson.mockResolvedValue({ action: 'report', messageId: 'm-7', reason: 'Spam' });
     db.query.mockResolvedValue({ rows: [{ user_id: 'user-1' }] });
+    db.query.mockResolvedValueOnce({ rows: [{ user_id: 'user-1' }] });
+    db.query.mockResolvedValueOnce({ rows: [{ id: 'c0c0c0c0-1111-4000-8000-000000000001' }] });
     const response = await POST(
       new Request('http://localhost/api/rides/ride-1/chat', { method: 'POST' }),
       {
@@ -119,5 +130,29 @@ describe('POST /api/rides/[id]/chat', () => {
       'Spam',
     );
     expect((await response.json()).reference).toBe('chat-m-1');
+    expect(db.after).toHaveBeenCalledOnce();
+    expect(analyzeComplaint).not.toHaveBeenCalled();
+    await db.scheduled[0]();
+    expect(analyzeComplaint).toHaveBeenCalledWith('c0c0c0c0-1111-4000-8000-000000000001');
+  });
+
+  it('keeps a chat report successful if its AI analysis fails', async () => {
+    auth.readJson.mockResolvedValue({ action: 'report', messageId: 'm-7', reason: 'Spam' });
+    db.query.mockResolvedValueOnce({ rows: [{ user_id: 'user-1' }] });
+    db.query.mockResolvedValueOnce({ rows: [{ id: 'c0c0c0c0-1111-4000-8000-000000000001' }] });
+    vi.mocked(analyzeComplaint).mockRejectedValue(new Error('analysis table unavailable'));
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    const response = await POST(
+      new Request('http://localhost/api/rides/ride-1/chat', { method: 'POST' }),
+      { params: Promise.resolve({ id: '0b9a7c1e-1111-4000-8000-000000000001' }) },
+    );
+    expect(response.status).toBe(200);
+    expect((await response.json()).reference).toBe('chat-m-1');
+    await db.scheduled[0]();
+    expect(console.error).toHaveBeenCalledWith(
+      'Chat complaint AI analysis could not be recorded:',
+      expect.any(Error),
+    );
   });
 });

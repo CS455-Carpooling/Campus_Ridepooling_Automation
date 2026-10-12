@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { AdminNotAllowed } from '@/components/admin/AdminNotAllowed';
 import { AdminPageShell } from '@/components/admin/AdminPageShell';
 import { ComplaintStatusActions } from '@/components/admin/complaints/ComplaintStatusActions';
+import { AiComplaintReview } from '@/components/admin/complaints/AiComplaintReview';
 import { ComplaintStatusLabel } from '@/components/complaints/ComplaintStatusLabel';
 import { RideStateLabel } from '@/components/rides/RideStateLabel';
 import { requireAdminPage } from '@/lib/admin-auth';
@@ -118,6 +119,12 @@ export default async function AdminComplaintPage({ params }: PageProps<'/admin/c
               </div>
             )}
           </section>
+
+          <AiComplaintReview
+            complaintId={complaint.id}
+            history={complaint.aiHistory}
+            resolved={resolved}
+          />
         </div>
 
         <aside className="flex min-w-0 flex-col gap-10">

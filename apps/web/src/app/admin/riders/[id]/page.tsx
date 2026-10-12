@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { AdminNotAllowed } from '@/components/admin/AdminNotAllowed';
 import { AdminPageShell } from '@/components/admin/AdminPageShell';
+import { RiderEnforcementActions } from '@/components/admin/riders/RiderEnforcementActions';
 import { ComplaintStatusLabel } from '@/components/complaints/ComplaintStatusLabel';
 import { RideStateLabel } from '@/components/rides/RideStateLabel';
 import { requireAdminPage } from '@/lib/admin-auth';
@@ -92,6 +93,15 @@ export default async function AdminRiderPage({ params }: PageProps<'/admin/rider
       >
         Account status: {status}
       </p>
+
+      <div className="mt-8">
+        <RiderEnforcementActions
+          riderId={rider.id}
+          isAdmin={rider.isAdmin}
+          suspended={Boolean(rider.suspension)}
+          complaints={rider.complaintsReceived}
+        />
+      </div>
 
       <div className="mt-10 grid gap-10 lg:grid-cols-2">
         <Section id="identity-heading" title="Identity">
