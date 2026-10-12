@@ -93,7 +93,7 @@ describe('NotificationsCentre', () => {
       )
       .mockResolvedValueOnce(new Response(null, { status: 500 }));
     render(<NotificationsCentre />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Mark as read' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Mark as read: Ride updated' }));
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Could not mark this notification as read',
     );
