@@ -70,7 +70,9 @@ describe('NotificationsCentre', () => {
     render(<NotificationsCentre />);
     fireEvent.click(await screen.findByRole('button', { name: 'Mark as read: Ride updated' }));
     expect(await screen.findByText('Read')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Mark as read: Ride updated' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Mark as read: Ride updated' }),
+    ).not.toBeInTheDocument();
     expect(fetch).toHaveBeenLastCalledWith(
       '/api/notifications/n1',
       expect.objectContaining({ method: 'PATCH' }),
