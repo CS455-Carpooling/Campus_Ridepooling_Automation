@@ -223,7 +223,9 @@ describe('NotificationsCentre', () => {
 
     act(() => emitSocketEvent('notification:new', notification));
     expect(screen.getByText('Read')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Mark as read: Ride updated' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Mark as read: Ride updated' }),
+    ).not.toBeInTheDocument();
   });
 
   it('refetches persisted notifications after reconnect', async () => {
