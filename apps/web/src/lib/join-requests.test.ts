@@ -14,6 +14,7 @@ import {
   lockRideForOwner,
   markRequestNoShow,
   submitJoinRequest,
+  withdrawRequestsNearOwnRide,
 } from './join-requests';
 
 const RIDE_ID = '0b9a7c1e-1111-4000-8000-000000000001';
@@ -264,7 +265,7 @@ describe('submitJoinRequest', () => {
     ).resolves.toMatchObject({ kind: 'departure_conflict' });
   });
 
-  it('treats a ride the rider offers within two hours as a conflict too (P-08)', async () => {
+  it('treats any ride the rider travels on within two hours as a conflict, offered or joined (P-08)', async () => {
     const { client, query } = makeClient((sql) => {
       if (sql.includes('SELECT id FROM users')) return [{ id: RIDER_ID }];
       if (sql.includes('FROM ride_join_request_keys request_key')) return [];
@@ -274,17 +275,21 @@ describe('submitJoinRequest', () => {
       if (sql.includes('WHERE ride_id = $1 AND rider_id = $2')) return [];
       if (sql.includes('count(*)::int AS count')) return [{ count: 0 }];
       if (sql.includes('SELECT user_id, campus_location_id, locked_share')) return [ownerSeat];
-      if (sql.includes('FROM rides owned')) return [{ '?column?': 1 }];
+      if (sql.includes('FROM riders seat')) return [{ '?column?': 1 }];
       return [];
     });
     await expect(
       submitJoinRequest(client, RIDE_ID, RIDER_ID, 'hall-3', 'attempt-6', NOW),
     ).resolves.toMatchObject({ kind: 'departure_conflict' });
-    const owned = query.mock.calls.find(([sql]) => sql.includes('FROM rides owned'));
-    expect(owned?.[0]).toContain(
-      "owned.state IN ('scheduled', 'pickup_in_progress', 'in_transit')",
+    // One rule: every seat the rider holds (their own ride's included), not left, not a no-show,
+    // on a ride that has not finished, other than this one.
+    const travel = query.mock.calls.find(([sql]) => sql.includes('FROM riders seat'));
+    expect(travel?.[0]).toContain('seat.left_at IS NULL AND seat.no_show_at IS NULL');
+    expect(travel?.[0]).toContain(
+      "other.state IN ('scheduled', 'pickup_in_progress', 'in_transit')",
     );
-    expect(owned?.[1]).toEqual([RIDER_ID, RIDE_ID, DEPARTURE, 7200]);
+    expect(travel?.[0]).toContain('other.id IS DISTINCT FROM $2::uuid');
+    expect(travel?.[1]).toEqual([RIDER_ID, RIDE_ID, DEPARTURE, 7200]);
     expect(query.mock.calls.some(([sql]) => sql.includes('INSERT INTO ride_join_requests'))).toBe(
       false,
     );
@@ -385,7 +390,7 @@ describe('actOnJoinRequest', () => {
       }
       if (sql.includes('FROM rider_suspensions')) return [];
       if (sql.includes('SELECT user_id, campus_location_id, locked_share')) return [ownerSeat];
-      if (sql.includes('FROM rides owned')) return [{ '?column?': 1 }];
+      if (sql.includes('FROM riders seat')) return [{ '?column?': 1 }];
       return [];
     });
 
@@ -671,6 +676,35 @@ describe('trip hand-offs (CS455-60)', () => {
 });
 
 describe('owner edits and cancellation (D1 review)', () => {
+  it("withdraws the owner's own waiting requests near a ride they offer, and tells those owners", async () => {
+    const otherRide = '0b9a7c1e-1111-4000-8000-0000000000ff';
+    const { client, query } = makeClient((sql) =>
+      sql.includes("request.status IN ('pending', 'needs_reconfirmation')")
+        ? [{ id: REQUEST_ID, ride_id: otherRide, owner_id: RIDER_ID, status: 'pending' }]
+        : [],
+    );
+    await withdrawRequestsNearOwnRide(client, OWNER_ID, DEPARTURE, NOW);
+    const waiting = query.mock.calls.find(([sql]) =>
+      sql.includes("request.status IN ('pending', 'needs_reconfirmation')"),
+    );
+    expect(waiting?.[0]).toContain('request.id IS DISTINCT FROM $2::uuid');
+    expect(waiting?.[1]).toEqual([OWNER_ID, null, DEPARTURE, 7200]);
+    expect(
+      query.mock.calls.some(
+        ([sql, values]) =>
+          sql.includes("SET status = 'withdrawn'") && values?.[2] === 'own_ride_offered',
+      ),
+    ).toBe(true);
+    expect(
+      query.mock.calls.some(
+        ([sql, values]) =>
+          sql.includes('INSERT INTO notifications') &&
+          values?.[0] === RIDER_ID &&
+          values?.[3] === 'The rider is offering their own ride departing within two hours.',
+      ),
+    ).toBe(true);
+  });
+
   it('refuses an edit that moves the ride within two hours of a seat the owner holds (P-08)', async () => {
     const moved = new Date(DEPARTURE.getTime() + 30 * 60_000);
     const { client, query } = makeClient((sql) => {
@@ -681,7 +715,7 @@ describe('owner edits and cancellation (D1 review)', () => {
       if (sql.includes('SELECT capacity FROM vehicle_types')) return [{ capacity: 4 }];
       if (sql.includes("type = 'transport_hub'")) return [{ id: 'kanpur-central' }];
       if (sql.includes("WHERE ride_id = $1 AND status = 'accepted'")) return [{ count: 0 }];
-      if (sql.includes('JOIN rides accepted_ride')) return [{ '?column?': 1 }];
+      if (sql.includes('FROM riders seat')) return [{ '?column?': 1 }];
       return [];
     });
 
@@ -689,9 +723,9 @@ describe('owner edits and cancellation (D1 review)', () => {
       editRideForOwner(client, RIDE_ID, OWNER_ID, { departureStart: moved }, false, NOW),
     ).resolves.toEqual({
       kind: 'departure_conflict',
-      detail: 'You have a seat on another ride departing within two hours of this one.',
+      detail: 'You already have a ride, offered or joined, departing within two hours of this one.',
     });
-    const seatCheck = query.mock.calls.find(([sql]) => sql.includes('JOIN rides accepted_ride'));
+    const seatCheck = query.mock.calls.find(([sql]) => sql.includes('FROM riders seat'));
     expect(seatCheck?.[1]).toEqual([OWNER_ID, RIDE_ID, moved, 7200]);
     expect(query.mock.calls.some(([sql]) => sql.includes('UPDATE rides'))).toBe(false);
   });
