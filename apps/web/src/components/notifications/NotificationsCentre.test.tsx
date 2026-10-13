@@ -110,6 +110,44 @@ describe('NotificationsCentre', () => {
     );
   });
 
+  it('preserves a confirmed read state when an older refresh resolves afterward', async () => {
+    let resolveStaleRefresh!: (response: Response) => void;
+    const staleRefresh = new Promise<Response>((resolve) => {
+      resolveStaleRefresh = resolve;
+    });
+    const fetch = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(listResponse([notification]))
+      .mockImplementationOnce(() => staleRefresh)
+      .mockResolvedValueOnce(
+        Response.json({ notification: { id: 'n1', readAt: '2026-10-12T10:05:00.000Z' } }),
+      );
+
+    render(<NotificationsCentre />);
+    expect(await screen.findByRole('heading', { name: 'Ride updated' })).toBeInTheDocument();
+
+    // Start a refresh but hold its stale unread response until after PATCH succeeds.
+    act(() => emitSocketEvent('notification:sync'));
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Mark as read: Ride updated' }));
+    expect(await screen.findByText('Read')).toBeInTheDocument();
+    expect(screen.getByText('0 unread notifications')).toBeInTheDocument();
+
+    await act(async () => {
+      resolveStaleRefresh(
+        listResponse([{ ...notification, body: 'Stale refresh payload.', readAt: null }]),
+      );
+      await staleRefresh;
+    });
+
+    // Verify the stale response really applied (its body changed), but cannot revert readAt.
+    expect(await screen.findByText('Stale refresh payload.')).toBeInTheDocument();
+    expect(screen.getByText('Read')).toBeInTheDocument();
+    expect(screen.getByText('0 unread notifications')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Mark as read: Ride updated' })).not.toBeInTheDocument();
+  });
+
   it('shows an error and retry when listing fails', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response(null, { status: 500 }));
     render(<NotificationsCentre />);

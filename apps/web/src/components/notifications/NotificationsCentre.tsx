@@ -122,10 +122,21 @@ export function NotificationsCentre() {
       if (!mounted.current || requestId < latestAppliedRequest.current) return;
       latestAppliedRequest.current = requestId;
 
-      setItems(() => {
-        // The API response is canonical. Preserve only socket events that arrived while this
-        // request was in flight, covering the commit/query/subscribe race without stale rows.
-        const merged = new Map(notifications.map((item) => [item.id, item] as const));
+      setItems((currentItems) => {
+        // A refresh may have started before a successful mark-as-read PATCH and return stale
+        // readAt: null afterward. Read state is monotonic, so never undo a locally confirmed read.
+        const currentById = new Map(currentItems.map((item) => [item.id, item] as const));
+        const merged = new Map(
+          notifications.map((item) => {
+            const current = currentById.get(item.id);
+            return [
+              item.id,
+              current?.readAt ? { ...item, readAt: current.readAt } : item,
+            ] as const;
+          }),
+        );
+        // Preserve socket events that arrived while this request was in flight, covering the
+        // commit/query/subscribe race without keeping unrelated stale rows.
         for (const { notification, sequence } of socketEvents.current.values()) {
           if (sequence > sequenceAtStart && !merged.has(notification.id)) {
             merged.set(notification.id, notification);
