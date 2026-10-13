@@ -96,5 +96,7 @@ describe('POST /api/profile/delete', () => {
       false,
     );
     expect(m.destroySession).not.toHaveBeenCalled();
+    // The slow password hash is not paid for a refused attempt.
+    expect(m.hashPassword).not.toHaveBeenCalled();
   });
 });

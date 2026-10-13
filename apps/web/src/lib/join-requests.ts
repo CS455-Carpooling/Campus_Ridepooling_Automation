@@ -67,6 +67,7 @@ type FailureKind =
   | 'late_confirmation_required'
   | 'trip_started'
   | 'window_over'
+  | 'invalid_departure'
   | 'cannot_leave_owner_seat';
 
 export type JoinRequestResult =
@@ -1186,14 +1187,14 @@ export async function editRideForOwner(
     lockTime(departureStart).getTime() <= now.getTime()
   ) {
     return requestFailure(
-      'ride_closed',
+      'invalid_departure',
       'The updated departure window must be valid and leave time before lock.',
     );
   }
   // The same longest window as when the ride was offered (ride-rules.ts).
   if (departureEnd.getTime() - departureStart.getTime() > RIDE_RULES.maxWindowMinutes * 60_000) {
     return requestFailure(
-      'ride_closed',
+      'invalid_departure',
       `The departure window can be at most ${RIDE_RULES.maxWindowMinutes / 60} hours long.`,
     );
   }

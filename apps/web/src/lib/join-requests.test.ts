@@ -741,7 +741,7 @@ describe('owner edits and cancellation (D1 review)', () => {
     await expect(
       editRideForOwner(client, RIDE_ID, OWNER_ID, { departureEnd: longEnd }, true, NOW),
     ).resolves.toEqual({
-      kind: 'ride_closed',
+      kind: 'invalid_departure',
       detail: 'The departure window can be at most 3 hours long.',
     });
     expect(query.mock.calls.some(([sql]) => sql.includes('UPDATE rides'))).toBe(false);

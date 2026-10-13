@@ -31,7 +31,6 @@ export async function POST(req: Request) {
     return json({ error: 'Confirm account deletion to continue.' }, 400);
   }
 
-  const replacementPassword = await hashPassword(newToken());
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -51,6 +50,8 @@ export async function POST(req: Request) {
         409,
       );
     }
+    // Only now, once deletion will go ahead: the hash is deliberately slow.
+    const replacementPassword = await hashPassword(newToken());
     await client.query(
       `UPDATE users
        SET email = $1, full_name = 'Deleted user', roll_number = 'DELETED',

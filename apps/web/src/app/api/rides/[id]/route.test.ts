@@ -124,6 +124,19 @@ describe('PATCH /api/rides/[id]', () => {
     ]);
   });
 
+  it('answers a departure window the rules do not allow as a bad request (400)', async () => {
+    h.editRideForOwner.mockResolvedValueOnce({
+      kind: 'invalid_departure',
+      detail: 'The departure window can be at most 3 hours long.',
+    });
+    const refused = await call({ action: 'edit' });
+    expect(refused.status).toBe(400);
+    expect(await refused.json()).toEqual({
+      error: 'The departure window can be at most 3 hours long.',
+      code: 'invalid_departure',
+    });
+  });
+
   it('says why a ride past its departure window cannot be cancelled', async () => {
     h.cancelRideForOwner.mockResolvedValueOnce({ kind: 'window_over' });
     const refused = await call({ action: 'cancel' });
