@@ -125,12 +125,11 @@ describe('notification realtime delivery', () => {
   });
 
   it('checks the notification insert trigger is commit-aware', async () => {
-      const schema = await readFile(new URL('../../db/schema.sql', import.meta.url), 'utf8');
-      expect(schema).toContain(`PERFORM pg_notify('${NOTIFICATION_CHANNEL}', NEW.id::text);`);
-      expect(schema).toMatch(
-        /CREATE TRIGGER notifications_realtime_insert\s+AFTER INSERT ON notifications/,
-      );
-      expect(schema).toContain('EXECUTE FUNCTION notify_notification_inserted()');
-    },
-  );
+    const schema = await readFile(new URL('../../db/schema.sql', import.meta.url), 'utf8');
+    expect(schema).toContain(`PERFORM pg_notify('${NOTIFICATION_CHANNEL}', NEW.id::text);`);
+    expect(schema).toMatch(
+      /CREATE TRIGGER notifications_realtime_insert\s+AFTER INSERT ON notifications/,
+    );
+    expect(schema).toContain('EXECUTE FUNCTION notify_notification_inserted()');
+  });
 });
