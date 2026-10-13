@@ -2,6 +2,7 @@ import 'server-only';
 import { pool } from './db';
 import { isUuid } from './ids';
 import { lockTime, type RideState } from './ride-status';
+import { SUSPENDED_CHAT_ERROR, senderSuspended } from './ride-chat-realtime.mjs';
 
 export type RideChatMessage = {
   id: string;
@@ -284,6 +285,10 @@ export async function createChatMessage(
   const memberIds = await memberIdsForRide(rideId);
   if (!memberIds.includes(senderId)) {
     return { ok: false, code: 'FORBIDDEN', error: 'Only current pool members may post here.' };
+  }
+
+  if (await senderSuspended(pool, senderId, now)) {
+    return { ok: false, code: 'SUSPENDED', error: SUSPENDED_CHAT_ERROR };
   }
 
   if (!rideChatAvailable(ride, now)) {

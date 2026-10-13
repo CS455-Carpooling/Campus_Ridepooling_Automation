@@ -5,6 +5,25 @@ export function rideChatAvailable(ride, now) {
   return now.getTime() >= lockAt.getTime();
 }
 
+/** Shown to a suspended member who tries to post; they can still read the chat (FR-RD-01.5). */
+export const SUSPENDED_CHAT_ERROR =
+  'Your account is suspended, so you cannot post in pool chats. You can still read this chat, raise an SOS and file a complaint.';
+
+/**
+ * Whether `userId` is suspended at `now`, by the same rule as the active_rider_suspensions
+ * view. A suspended rider's pool chat messages are refused (FR-RD-01.5).
+ */
+export async function senderSuspended(db, userId, now) {
+  const { rows } = await db.query(
+    `SELECT 1 FROM rider_suspensions
+     WHERE user_id = $1 AND lifted_at IS NULL AND starts_at <= $2
+       AND (ends_at IS NULL OR ends_at > $2)
+     LIMIT 1`,
+    [userId, now],
+  );
+  return rows.length > 0;
+}
+
 export function registerRideChatMessageHandler(io, socket, dependencies) {
   const { authenticate, isMember, createMessage } = dependencies;
 

@@ -12,6 +12,7 @@ import {
   rideChatDeletionDue,
   rideChatReadOnly,
 } from './ride-chat';
+import { SUSPENDED_CHAT_ERROR } from './ride-chat-realtime.mjs';
 
 beforeEach(() => {
   query.mockReset();
@@ -209,6 +210,51 @@ describe('ride-chat domain helpers', () => {
       ok: false,
       code: 'CHAT_READ_ONLY',
     });
+  });
+
+  it('refuses a message from a suspended member and stores nothing (FR-RD-01.5)', async () => {
+    const rideId = '0b9a7c1e-1111-4000-8000-000000000001';
+    const senderId = '6f1c2a5e-2222-4000-8000-000000000002';
+    const now = new Date('2026-10-10T01:00:00+05:30');
+    query.mockImplementation((sql: string) => {
+      const statement = String(sql).toLowerCase();
+      if (statement.includes('count(*)')) return Promise.resolve({ rows: [{ count: 0 }] });
+      if (statement.includes('select owner_id as user_id')) {
+        return Promise.resolve({ rows: [{ user_id: 'owner-1' }, { user_id: senderId }] });
+      }
+      if (statement.includes('from rides where id')) {
+        return Promise.resolve({
+          rows: [
+            {
+              id: rideId,
+              owner_id: 'owner-1',
+              state: 'in_transit',
+              departure_start: new Date('2026-10-10T00:30:00+05:30'),
+              locked_at: new Date('2026-10-09T23:30:00+05:30'),
+              completed_at: null,
+              cancelled_at: null,
+            },
+          ],
+        });
+      }
+      if (statement.includes('from rider_suspensions')) {
+        return Promise.resolve({ rows: [{ '?column?': 1 }] });
+      }
+      return Promise.resolve({ rows: [] });
+    });
+
+    await expect(createChatMessage(rideId, senderId, 'Hello', now)).resolves.toEqual({
+      ok: false,
+      code: 'SUSPENDED',
+      error: SUSPENDED_CHAT_ERROR,
+    });
+    const suspensionCheck = query.mock.calls.find(([sql]) =>
+      String(sql).includes('FROM rider_suspensions'),
+    );
+    expect(suspensionCheck?.[1]).toEqual([senderId, now]);
+    expect(
+      query.mock.calls.some(([sql]) => String(sql).includes('INSERT INTO ride_chat_messages')),
+    ).toBe(false);
   });
 
   it('reports a message by reference and refuses it if the sender is the reporter', async () => {

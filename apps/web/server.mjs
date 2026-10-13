@@ -5,8 +5,10 @@ import { Client, Pool } from 'pg';
 import next from 'next';
 import { Server } from 'socket.io';
 import {
+  SUSPENDED_CHAT_ERROR,
   registerRideChatMessageHandler,
   rideChatAvailable,
+  senderSuspended,
 } from './src/lib/ride-chat-realtime.mjs';
 import {
   NOTIFICATION_CHANNEL,
@@ -156,6 +158,10 @@ async function createChatMessageForSocket(rideId, senderId, rawMessage, now = ne
   const isMember = await isRideMember(rideId, senderId);
   if (!isMember) {
     return { ok: false, code: 'FORBIDDEN', error: 'Only current pool members may post here.' };
+  }
+
+  if (await senderSuspended(pool, senderId, now)) {
+    return { ok: false, code: 'SUSPENDED', error: SUSPENDED_CHAT_ERROR };
   }
 
   if (!rideChatAvailable(ride, now)) {

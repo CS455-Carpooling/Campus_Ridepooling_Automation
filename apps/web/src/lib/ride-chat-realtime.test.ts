@@ -2,7 +2,38 @@ import { createServer, type Server as HttpServer } from 'node:http';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Server as SocketServer } from 'socket.io';
 import { io as createSocketClient, type Socket } from 'socket.io-client';
-import { registerRideChatMessageHandler, rideChatAvailable } from './ride-chat-realtime.mjs';
+import {
+  SUSPENDED_CHAT_ERROR,
+  registerRideChatMessageHandler,
+  rideChatAvailable,
+  senderSuspended,
+} from './ride-chat-realtime.mjs';
+
+describe('senderSuspended (FR-RD-01.5)', () => {
+  const userId = '6f1c2a5e-2222-4000-8000-000000000002';
+  const now = new Date('2026-10-13T12:00:00.000Z');
+
+  it('finds a suspension in force at the given time, by the active_rider_suspensions rule', async () => {
+    const calls: Array<[string, unknown[]]> = [];
+    const db = {
+      query: async (sql: string, values: unknown[]) => {
+        calls.push([sql, values]);
+        return { rows: [{ '?column?': 1 }] };
+      },
+    };
+    await expect(senderSuspended(db, userId, now)).resolves.toBe(true);
+    expect(calls[0][0]).toContain('FROM rider_suspensions');
+    expect(calls[0][0]).toContain('lifted_at IS NULL AND starts_at <= $2');
+    expect(calls[0][0]).toContain('(ends_at IS NULL OR ends_at > $2)');
+    expect(calls[0][1]).toEqual([userId, now]);
+  });
+
+  it('lets anyone without a suspension in force post', async () => {
+    const db = { query: async () => ({ rows: [] }) };
+    await expect(senderSuspended(db, userId, now)).resolves.toBe(false);
+    expect(SUSPENDED_CHAT_ERROR).toMatch(/suspended.*cannot post.*still read/);
+  });
+});
 
 describe('rideChatAvailable for realtime messaging', () => {
   const departureStart = new Date('2026-10-10T06:30:00+05:30');
