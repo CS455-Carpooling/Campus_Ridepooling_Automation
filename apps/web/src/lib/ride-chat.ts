@@ -191,7 +191,8 @@ export async function getRideChatThread(
     const deleted = await pool.query<{ id: string }>(
       `DELETE FROM ride_chats chat
        WHERE chat.ride_id = $1
-         AND NOT ${CHAT_KEPT_FOR_COMPLAINT_SQL}`,
+         AND NOT ${CHAT_KEPT_FOR_COMPLAINT_SQL}
+       RETURNING chat.id`,
       [ride.id],
     );
     if (deleted.rows[0]) return null;

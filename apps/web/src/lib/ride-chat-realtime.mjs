@@ -7,14 +7,18 @@ export function rideChatAvailable(ride, now) {
 
 /**
  * A pool chat (aliased `chat`) is kept past its 30 days while an unresolved complaint refers to
- * it (FR-RD-09.5): an open chat report, or any complaint on the ride that is not resolved yet,
- * whether filed from a reported message or from the complaint form.
+ * it (FR-RD-09.5): an open chat report, or a complaint that is not resolved and cites one of its
+ * messages, whether reported from the chat or filed from the form with a message. A complaint
+ * that cites no message does not keep the chat. Indexed through ride_chat_messages(chat_id) and
+ * complaint_chat_messages(message_id).
  */
 export const CHAT_KEPT_FOR_COMPLAINT_SQL = `(
   EXISTS (SELECT 1 FROM ride_chat_complaints report
           WHERE report.chat_id = chat.id AND report.status = 'open')
-  OR EXISTS (SELECT 1 FROM complaints complaint
-             WHERE complaint.ride_id = chat.ride_id AND complaint.status <> 'resolved')
+  OR EXISTS (SELECT 1 FROM ride_chat_messages message
+             JOIN complaint_chat_messages cited ON cited.message_id = message.id
+             JOIN complaints complaint ON complaint.id = cited.complaint_id
+             WHERE message.chat_id = chat.id AND complaint.status <> 'resolved')
 )`;
 
 /** Shown to a suspended member who tries to post; they can still read the chat (FR-RD-01.5). */
