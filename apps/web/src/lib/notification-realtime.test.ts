@@ -109,7 +109,7 @@ describe('notification realtime delivery', () => {
   });
 
   it('contains database errors rather than crashing the listener callback', async () => {
-    const logger = { error: vi.fn() } as unknown as Pick<Console, 'error'>;
+    const logger = { error: vi.fn() } as unknown as Console;
     const deliver = registerNotificationInsertHandler(
       { to: vi.fn() },
       {
