@@ -3,6 +3,7 @@ import {
   complaintFormClosesAt,
   complaintWindow,
   complaintWindowStart,
+  leftBeforeTrip,
   type ComplaintCategory,
   type ComplaintStatus,
   type ComplaintWindow,
@@ -59,11 +60,13 @@ type RideRow = {
   hub_name: string;
   viewer_no_show_at: Date | null;
   viewer_left_at: Date | null;
+  viewer_locked_share: number | null;
 };
 
 type PersonRow = {
   occupant_id: string;
   left_at: Date | null;
+  locked_share: number | null;
   name: string;
   is_owner: boolean;
   campus_place: string;
@@ -75,14 +78,16 @@ type MessageRow = { id: string; body: string; created_at: Date; sender_occupant_
 // The join on the viewer's seat is the access check: only the people on a ride see this page.
 const RIDE_SQL = `
   SELECT r.id, r.direction, r.state, r.departure_start, r.departure_end, r.completed_at,
-         hub.name AS hub_name, me.no_show_at AS viewer_no_show_at, me.left_at AS viewer_left_at
+         hub.name AS hub_name, me.no_show_at AS viewer_no_show_at, me.left_at AS viewer_left_at,
+         me.locked_share AS viewer_locked_share
   FROM rides r
   JOIN riders me ON me.ride_id = r.id AND me.user_id = $2
   JOIN locations hub ON hub.id = r.hub_id
   WHERE r.id = $1`;
 
 const PEOPLE_SQL = `
-  SELECT m.id AS occupant_id, m.left_at, COALESCE(profile.display_name, u.full_name) AS name,
+  SELECT m.id AS occupant_id, m.left_at, m.locked_share,
+         COALESCE(profile.display_name, u.full_name) AS name,
          (m.user_id = r.owner_id) AS is_owner, place.name AS campus_place,
          (SELECT c.reference FROM complaints c
           WHERE c.ride_id = m.ride_id AND c.complainant_id = $2 AND c.accused_id = m.user_id)
@@ -125,12 +130,19 @@ export async function getComplaintFormPage(
       : Promise.resolve({ rows: [] as MessageRow[] }),
   ]);
   const reported = message.rows[0];
-  // A trip complaint is only between people who stayed on the ride (FR-RD-13.1): someone who
-  // left sees the form only to report a chat message, and people who left are not listed,
-  // except the sender of the message being reported.
-  if (ride.viewer_left_at && !reported) return null;
+  // A trip complaint is only between people who were part of the trip (FR-RD-13.1): someone who
+  // left owing nothing sees the form only to report a chat message, and is listed only as the
+  // sender of a reported message. A late leaver, who still owes their share, stays.
+  if (
+    leftBeforeTrip({ leftAt: ride.viewer_left_at, lockedShare: ride.viewer_locked_share }) &&
+    !reported
+  ) {
+    return null;
+  }
   const onTrip = people.rows.filter(
-    (person) => !person.left_at || person.occupant_id === reported?.sender_occupant_id,
+    (person) =>
+      !leftBeforeTrip({ leftAt: person.left_at, lockedShare: person.locked_share }) ||
+      person.occupant_id === reported?.sender_occupant_id,
   );
   const windowStart = complaintWindowStart(
     ride.state === 'completed' ? ride.completed_at : null,

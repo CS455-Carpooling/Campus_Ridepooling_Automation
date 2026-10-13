@@ -127,9 +127,14 @@ describe('getComplaintFormPage (FR-RD-13.1, 09.6)', () => {
       campus_place: 'Hall 1',
       filed_reference: null,
     });
-    answer([rideRow], [person('stayed', null), person('left', left), person('sender', left)]);
+    const lateLeaver = { ...person('late', left), locked_share: 150 };
+    answer(
+      [rideRow],
+      [person('stayed', null), person('left', left), person('sender', left), lateLeaver],
+    );
     const page = await getComplaintFormPage(RIDE, VIEWER, null, now);
-    expect(page?.people.map((p) => p.occupantId)).toEqual(['stayed']);
+    // A late leaver still owes their locked share, so they stay on the list (FR-RD-07.3).
+    expect(page?.people.map((p) => p.occupantId)).toEqual(['stayed', 'late']);
     expect(query.mock.calls.find(([sql]) => String(sql).includes('m.left_at'))).toBeTruthy();
 
     answer(
@@ -145,6 +150,11 @@ describe('getComplaintFormPage (FR-RD-13.1, 09.6)', () => {
     const left = { ...rideRow, viewer_left_at: new Date('2026-10-09T18:00:00+05:30') };
     answer([left], []);
     await expect(getComplaintFormPage(RIDE, VIEWER, null, now)).resolves.toBeNull();
+    // Someone who left after the lock still owes their share, so the form is theirs.
+    answer([{ ...left, viewer_locked_share: 150 }], []);
+    await expect(getComplaintFormPage(RIDE, VIEWER, null, now)).resolves.toMatchObject({
+      window: 'open',
+    });
 
     answer(
       [left],
