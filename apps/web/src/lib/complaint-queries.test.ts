@@ -117,6 +117,45 @@ describe('getComplaintFormPage (FR-RD-13.1, 09.6)', () => {
     expect(query).not.toHaveBeenCalled();
   });
 
+  it('lists only people who stayed on the ride, besides the sender of a reported message', async () => {
+    const left = new Date('2026-10-09T18:00:00+05:30');
+    const person = (occupant_id: string, left_at: Date | null) => ({
+      occupant_id,
+      left_at,
+      name: occupant_id,
+      is_owner: false,
+      campus_place: 'Hall 1',
+      filed_reference: null,
+    });
+    answer([rideRow], [person('stayed', null), person('left', left), person('sender', left)]);
+    const page = await getComplaintFormPage(RIDE, VIEWER, null, now);
+    expect(page?.people.map((p) => p.occupantId)).toEqual(['stayed']);
+    expect(query.mock.calls.find(([sql]) => String(sql).includes('m.left_at'))).toBeTruthy();
+
+    answer(
+      [rideRow],
+      [person('stayed', null), person('left', left), person('sender', left)],
+      [{ id: MESSAGE, body: 'Hurry up.', created_at: left, sender_occupant_id: 'sender' }],
+    );
+    const reporting = await getComplaintFormPage(RIDE, VIEWER, MESSAGE, now);
+    expect(reporting?.people.map((p) => p.occupantId)).toEqual(['stayed', 'sender']);
+  });
+
+  it('is null for a viewer who left the ride, unless they are reporting a chat message', async () => {
+    const left = { ...rideRow, viewer_left_at: new Date('2026-10-09T18:00:00+05:30') };
+    answer([left], []);
+    await expect(getComplaintFormPage(RIDE, VIEWER, null, now)).resolves.toBeNull();
+
+    answer(
+      [left],
+      [],
+      [{ id: MESSAGE, body: 'Hurry up.', created_at: now, sender_occupant_id: 's2' }],
+    );
+    await expect(getComplaintFormPage(RIDE, VIEWER, MESSAGE, now)).resolves.toMatchObject({
+      message: { id: MESSAGE },
+    });
+  });
+
   it('ignores a message ID that is not a UUID, and has no closing time before completion', async () => {
     answer([{ ...rideRow, state: 'scheduled', completed_at: null }], []);
     const page = await getComplaintFormPage(RIDE, VIEWER, 'not-an-id', now);
@@ -138,10 +177,9 @@ describe('getComplaintFormPage during a trip (CS455-64)', () => {
     await expect(getComplaintFormPage(RIDE, VIEWER, null, now)).resolves.toMatchObject({
       sosAvailable: true,
     });
+    // Someone who left is not on the trip, so the form is not theirs at all.
     answer([{ ...rideRow, state: 'in_transit', completed_at: null, viewer_left_at: now }], []);
-    await expect(getComplaintFormPage(RIDE, VIEWER, null, now)).resolves.toMatchObject({
-      sosAvailable: false,
-    });
+    await expect(getComplaintFormPage(RIDE, VIEWER, null, now)).resolves.toBeNull();
   });
 
   it('opens the form for a no-show from the no-show, and says until when', async () => {

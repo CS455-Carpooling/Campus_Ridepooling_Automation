@@ -28,13 +28,19 @@ export type FileComplaintResult =
   | { kind: 'already_filed'; reference: string }
   | { kind: 'daily_limit' };
 
-type RideRow = { state: RideState; completed_at: Date | null; no_show_at: Date | null };
+type RideRow = {
+  state: RideState;
+  completed_at: Date | null;
+  no_show_at: Date | null;
+  left_at: Date | null;
+};
 
 /**
  * Files `request` for `userId` about someone on ride `rideId` (FR-RD-13.1 to 13.4). Only the
  * people on a ride can see it (the ride is "not found" to anyone else), the accused is named
  * by their seat, and a complaint is filed within 7 days of the trip's completion, or, about a
- * reported chat message, whenever that message is still in the ride's chat (FR-RD-09.6).
+ * reported chat message, whenever that message is still in the ride's chat (FR-RD-09.6). A trip
+ * complaint is only between people still on the ride: neither side left it.
  * The complainant's row is locked first, so two complaints sent at once count against the
  * daily limit one after the other.
  */
@@ -48,7 +54,7 @@ export async function fileComplaint(
   await client.query('SELECT 1 FROM users WHERE id = $1 FOR NO KEY UPDATE', [userId]);
 
   const ride = await client.query<RideRow>(
-    `SELECT r.state, r.completed_at, me.no_show_at
+    `SELECT r.state, r.completed_at, me.no_show_at, me.left_at
      FROM rides r
      JOIN riders me ON me.ride_id = r.id AND me.user_id = $2
      WHERE r.id = $1`,
@@ -56,8 +62,8 @@ export async function fileComplaint(
   );
   if (ride.rows.length === 0) return { kind: 'not_found' };
 
-  const accused = await client.query<{ user_id: string }>(
-    'SELECT user_id FROM riders WHERE id = $1 AND ride_id = $2',
+  const accused = await client.query<{ user_id: string; left_at: Date | null }>(
+    'SELECT user_id, left_at FROM riders WHERE id = $1 AND ride_id = $2',
     [request.occupantId, rideId],
   );
   if (accused.rows.length === 0) return { kind: 'not_on_ride' };
@@ -74,6 +80,10 @@ export async function fileComplaint(
     );
     if (message.rows.length === 0) return { kind: 'message_not_found' };
   } else {
+    // A trip complaint is between people who were on the trip (FR-RD-13.1): someone who left
+    // the ride before it ran was not, whichever side of the complaint they are on.
+    if (ride.rows[0].left_at) return { kind: 'not_found' };
+    if (accused.rows[0].left_at) return { kind: 'not_on_ride' };
     const { state, completed_at, no_show_at } = ride.rows[0];
     const window = complaintWindow(state, completed_at, now, no_show_at);
     if (window !== 'open') return { kind: 'window', window };

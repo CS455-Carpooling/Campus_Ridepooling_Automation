@@ -63,6 +63,7 @@ type RideRow = {
 
 type PersonRow = {
   occupant_id: string;
+  left_at: Date | null;
   name: string;
   is_owner: boolean;
   campus_place: string;
@@ -81,7 +82,7 @@ const RIDE_SQL = `
   WHERE r.id = $1`;
 
 const PEOPLE_SQL = `
-  SELECT m.id AS occupant_id, COALESCE(profile.display_name, u.full_name) AS name,
+  SELECT m.id AS occupant_id, m.left_at, COALESCE(profile.display_name, u.full_name) AS name,
          (m.user_id = r.owner_id) AS is_owner, place.name AS campus_place,
          (SELECT c.reference FROM complaints c
           WHERE c.ride_id = m.ride_id AND c.complainant_id = $2 AND c.accused_id = m.user_id)
@@ -124,6 +125,13 @@ export async function getComplaintFormPage(
       : Promise.resolve({ rows: [] as MessageRow[] }),
   ]);
   const reported = message.rows[0];
+  // A trip complaint is only between people who stayed on the ride (FR-RD-13.1): someone who
+  // left sees the form only to report a chat message, and people who left are not listed,
+  // except the sender of the message being reported.
+  if (ride.viewer_left_at && !reported) return null;
+  const onTrip = people.rows.filter(
+    (person) => !person.left_at || person.occupant_id === reported?.sender_occupant_id,
+  );
   const windowStart = complaintWindowStart(
     ride.state === 'completed' ? ride.completed_at : null,
     ride.viewer_no_show_at,
@@ -142,7 +150,7 @@ export async function getComplaintFormPage(
       isActiveSeat({ leftAt: ride.viewer_left_at, noShowAt: ride.viewer_no_show_at }),
     ),
     closesAt: windowStart ? complaintFormClosesAt(windowStart).toISOString() : null,
-    people: people.rows.map((person) => ({
+    people: onTrip.map((person) => ({
       occupantId: person.occupant_id,
       name: person.name,
       isOwner: person.is_owner,
