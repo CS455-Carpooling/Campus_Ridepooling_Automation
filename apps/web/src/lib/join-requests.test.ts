@@ -527,97 +527,78 @@ describe('owner ride lifecycle integration', () => {
     expect(query.mock.calls.some(([sql]) => sql.includes('UPDATE rides'))).toBe(false);
   });
 
-  it(
-    'notifies waiting requesters and avoids duplicates for reconfirmation transitions',
-    async () => {
-      let currentRide = { ...ride, direction: 'from_hub' as 'to_hub' | 'from_hub' };
-      const waitingRequest = {
-        ...requestRow(),
-        snapshot_departure_start: DEPARTURE,
-        snapshot_pickup_at: DEPARTURE,
-        snapshot_estimated_share: 200,
-      };
-      const secondRiderId = '9c4d5e6f-5555-4000-8000-000000000005';
-      const driftedRequest = {
-        ...requestRow(),
-        id: secondRiderId,
-        rider_id: secondRiderId,
-        snapshot_departure_start: new Date(DEPARTURE.getTime() - 20 * 60_000),
-        snapshot_pickup_at: new Date(DEPARTURE.getTime() - 15 * 60_000),
-      };
-      const { client, query } = makeClient((sql, values) => {
-        if (sql.includes('SELECT id FROM users')) return [{ id: OWNER_ID }];
-        if (sql.includes('FROM rides WHERE id = $1 FOR NO KEY UPDATE')) return [currentRide];
-        if (sql.includes('SELECT hub_id FROM rides')) return [{ hub_id: 'kanpur-central' }];
-        if (sql.includes('SELECT user_id, campus_location_id, locked_share')) {
-          return [ownerSeat, riderSeat];
-        }
-        if (sql.includes('SELECT capacity FROM vehicle_types')) return [{ capacity: 4 }];
-        if (sql.includes("type = 'transport_hub'")) return [{ id: 'kanpur-central' }];
-        if (sql.includes('SELECT count(*)::int AS count')) return [{ count: 0 }];
-        if (sql.includes('SELECT 1 FROM rides')) return [];
-        if (String(sql).startsWith('UPDATE rides')) {
-          currentRide = {
-            ...currentRide,
-            departure_start: values?.[1] as Date,
-            departure_end: values?.[2] as Date,
-            capacity_snapshot: values?.[3] as number,
-            expected_total_fare: values?.[4] as number,
-            direction: values?.[5] as 'to_hub' | 'from_hub',
-          };
-          return [];
-        }
-        if (
-          sql.includes('SELECT rider_id FROM ride_join_requests') &&
-          sql.includes("status = 'accepted'")
-        ) {
-          return [];
-        }
-        if (sql.includes('SELECT DISTINCT rider_id FROM ride_join_requests')) {
-          return [{ rider_id: RIDER_ID }, { rider_id: secondRiderId }];
-        }
-        if (
-          sql.includes("WHERE ride_id = $1 AND status IN ('pending', 'needs_reconfirmation')")
-        ) {
-          return [waitingRequest, driftedRequest];
-        }
+  it('notifies waiting requesters and avoids duplicates for reconfirmation transitions', async () => {
+    let currentRide = { ...ride, direction: 'from_hub' as 'to_hub' | 'from_hub' };
+    const waitingRequest = {
+      ...requestRow(),
+      snapshot_departure_start: DEPARTURE,
+      snapshot_pickup_at: DEPARTURE,
+      snapshot_estimated_share: 200,
+    };
+    const secondRiderId = '9c4d5e6f-5555-4000-8000-000000000005';
+    const driftedRequest = {
+      ...requestRow(),
+      id: secondRiderId,
+      rider_id: secondRiderId,
+      snapshot_departure_start: new Date(DEPARTURE.getTime() - 20 * 60_000),
+      snapshot_pickup_at: new Date(DEPARTURE.getTime() - 15 * 60_000),
+    };
+    const { client, query } = makeClient((sql, values) => {
+      if (sql.includes('SELECT id FROM users')) return [{ id: OWNER_ID }];
+      if (sql.includes('FROM rides WHERE id = $1 FOR NO KEY UPDATE')) return [currentRide];
+      if (sql.includes('SELECT hub_id FROM rides')) return [{ hub_id: 'kanpur-central' }];
+      if (sql.includes('SELECT user_id, campus_location_id, locked_share')) {
+        return [ownerSeat, riderSeat];
+      }
+      if (sql.includes('SELECT capacity FROM vehicle_types')) return [{ capacity: 4 }];
+      if (sql.includes("type = 'transport_hub'")) return [{ id: 'kanpur-central' }];
+      if (sql.includes('SELECT count(*)::int AS count')) return [{ count: 0 }];
+      if (sql.includes('SELECT 1 FROM rides')) return [];
+      if (String(sql).startsWith('UPDATE rides')) {
+        currentRide = {
+          ...currentRide,
+          departure_start: values?.[1] as Date,
+          departure_end: values?.[2] as Date,
+          capacity_snapshot: values?.[3] as number,
+          expected_total_fare: values?.[4] as number,
+          direction: values?.[5] as 'to_hub' | 'from_hub',
+        };
         return [];
-      });
-      const updatedDeparture = new Date(DEPARTURE.getTime() + 60_000);
+      }
+      if (
+        sql.includes('SELECT rider_id FROM ride_join_requests') &&
+        sql.includes("status = 'accepted'")
+      ) {
+        return [];
+      }
+      if (sql.includes('SELECT DISTINCT rider_id FROM ride_join_requests')) {
+        return [{ rider_id: RIDER_ID }, { rider_id: secondRiderId }];
+      }
+      if (sql.includes("WHERE ride_id = $1 AND status IN ('pending', 'needs_reconfirmation')")) {
+        return [waitingRequest, driftedRequest];
+      }
+      return [];
+    });
+    const updatedDeparture = new Date(DEPARTURE.getTime() + 60_000);
 
-      await expect(
-        editRideForOwner(
-          client,
-          RIDE_ID,
-          OWNER_ID,
-          { departureStart: updatedDeparture },
-          false,
-          NOW,
-        ),
-      ).resolves.toEqual({ kind: 'edited', rideId: RIDE_ID });
+    await expect(
+      editRideForOwner(client, RIDE_ID, OWNER_ID, { departureStart: updatedDeparture }, false, NOW),
+    ).resolves.toEqual({ kind: 'edited', rideId: RIDE_ID });
 
-      const notificationInserts = () =>
-        query.mock.calls.filter(([sql]) => String(sql).includes('INSERT INTO notifications'));
-      expect(notificationInserts()).toHaveLength(2);
-      expect(notificationInserts().map(([, values]) => values?.slice(0, 2))).toEqual([
-        [secondRiderId, 'join_request_update'],
-        [RIDER_ID, 'ride_update'],
-      ]);
+    const notificationInserts = () =>
+      query.mock.calls.filter(([sql]) => String(sql).includes('INSERT INTO notifications'));
+    expect(notificationInserts()).toHaveLength(2);
+    expect(notificationInserts().map(([, values]) => values?.slice(0, 2))).toEqual([
+      [secondRiderId, 'join_request_update'],
+      [RIDER_ID, 'ride_update'],
+    ]);
 
-      // A retry of the same edit is a no-op because the saved values already match.
-      await expect(
-        editRideForOwner(
-          client,
-          RIDE_ID,
-          OWNER_ID,
-          { departureStart: updatedDeparture },
-          false,
-          NOW,
-        ),
-      ).resolves.toEqual({ kind: 'edited', rideId: RIDE_ID });
-      expect(notificationInserts()).toHaveLength(2);
-    },
-  );
+    // A retry of the same edit is a no-op because the saved values already match.
+    await expect(
+      editRideForOwner(client, RIDE_ID, OWNER_ID, { departureStart: updatedDeparture }, false, NOW),
+    ).resolves.toEqual({ kind: 'edited', rideId: RIDE_ID });
+    expect(notificationInserts()).toHaveLength(2);
+  });
 
   it('does not allow cancellation once pickup time has started', async () => {
     const { client, query } = makeClient((sql) => {

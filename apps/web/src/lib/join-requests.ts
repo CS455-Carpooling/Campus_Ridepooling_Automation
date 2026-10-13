@@ -14,6 +14,7 @@ import {
 } from './join-request-rules';
 import { isUuid } from './ids';
 import { lockTime, type RideState } from './ride-status';
+import type { NotificationType } from './notification-types';
 
 type RideRow = {
   id: string;
@@ -108,7 +109,7 @@ async function recordEvent(
 async function notify(
   client: PoolClient,
   userId: string,
-  type: 'join_request' | 'join_request_update' | 'ride_share_update' | 'ride_update',
+  type: NotificationType,
   title: string,
   body: string,
   rideId: string,
