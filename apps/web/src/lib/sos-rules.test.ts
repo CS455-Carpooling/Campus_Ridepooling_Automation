@@ -11,7 +11,7 @@ import {
 } from './sos-rules';
 
 describe('who may raise an SOS (FR-RD-15.1, FR-RO-13.2)', () => {
-  it('is anyone with a seat, only while the trip is under way', () => {
+  it('is an active occupant, only while the trip is under way', () => {
     expect(RIDE_STATES.filter((state) => canRaiseSos(state, true))).toEqual([
       'pickup_in_progress',
       'in_transit',

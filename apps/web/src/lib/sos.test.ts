@@ -26,6 +26,7 @@ function sosClient(
   options: {
     ride?: Record<string, unknown> | null;
     riderLeft?: boolean;
+    riderNoShow?: boolean;
     inserted?: boolean;
     existing?: Record<string, unknown> | null;
   } = {},
@@ -72,7 +73,7 @@ function sosClient(
             left_at: options.riderLeft ? now : null,
             checked_in_at: now,
             arrived_at: now,
-            no_show_at: null,
+            no_show_at: options.riderNoShow ? now : null,
           },
         ],
       };
@@ -157,6 +158,18 @@ describe('raiseSos (FR-RD-15.1, 15.2, FR-RO-13.2)', () => {
     await raiseSos(client, RIDE, OWNER, now);
     expect(calls(query, 'notifications')).toHaveLength(0);
     expect(calls(query, 'INSERT INTO sos_incidents')[0][1]?.[2]).toBe('owner');
+  });
+
+  it('does not allow a no-show to raise SOS or include them as an occupant', async () => {
+    await expect(
+      raiseSos(sosClient({ riderNoShow: true }).client, RIDE, RIDER, now),
+    ).resolves.toEqual({ kind: 'not_found' });
+
+    const { client, query } = sosClient({ riderNoShow: true });
+    await raiseSos(client, RIDE, OWNER, now);
+    const [insert] = calls(query, 'INSERT INTO sos_incidents');
+    const context = JSON.parse(String(insert[1]?.[5])) as SosContext;
+    expect(context.occupants.map((occupant) => occupant.userId)).toEqual([OWNER]);
   });
 
   it('returns the alert already active when pressed again', async () => {

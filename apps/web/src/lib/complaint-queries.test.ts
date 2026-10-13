@@ -154,6 +154,7 @@ describe('getComplaintFormPage during a trip (CS455-64)', () => {
     expect(page).toMatchObject({
       window: 'open',
       closesAt: new Date(noShowAt.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      sosAvailable: false,
     });
   });
 });

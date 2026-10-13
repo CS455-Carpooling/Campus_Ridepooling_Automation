@@ -12,6 +12,7 @@ import { isUuid } from './ids';
 import type { Direction } from './ride-rules';
 import { rideTitle, type RideState } from './ride-status';
 import { canRaiseSos } from './sos-rules';
+import { isActiveSeat } from './trip-rules';
 
 /** Someone the viewer may complain about, named by their seat, never by account (CS455-53). */
 export type ComplaintPerson = {
@@ -136,7 +137,10 @@ export async function getComplaintFormPage(
     departureEnd: ride.departure_end.toISOString(),
     state: ride.state,
     window: complaintWindow(ride.state, ride.completed_at, now, ride.viewer_no_show_at),
-    sosAvailable: canRaiseSos(ride.state, !ride.viewer_left_at),
+    sosAvailable: canRaiseSos(
+      ride.state,
+      isActiveSeat({ leftAt: ride.viewer_left_at, noShowAt: ride.viewer_no_show_at }),
+    ),
     closesAt: windowStart ? complaintFormClosesAt(windowStart).toISOString() : null,
     people: people.rows.map((person) => ({
       occupantId: person.occupant_id,
