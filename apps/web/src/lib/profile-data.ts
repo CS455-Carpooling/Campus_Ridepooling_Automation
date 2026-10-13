@@ -77,7 +77,8 @@ export async function getProfileData(userId: string): Promise<ProfileData | null
       `SELECT count(DISTINCT r.id)::text AS count
        FROM rides r
        JOIN riders m ON m.ride_id = r.id
-       WHERE m.user_id = $1 AND r.state = 'completed'`,
+       WHERE m.user_id = $1 AND r.state = 'completed'
+         AND m.left_at IS NULL AND m.no_show_at IS NULL`,
       [userId],
     ),
     getOwnRating(userId),

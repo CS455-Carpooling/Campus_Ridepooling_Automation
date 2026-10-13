@@ -62,6 +62,8 @@ describe('GET /api/notifications', () => {
       21,
       0,
     ]);
+    expect(h.query.mock.calls[0][0]).toContain("created_at >= now() - interval '30 days'");
+    expect(h.query.mock.calls[0][0]).toContain('created_at <= now()');
     expect(h.query.mock.calls[0][0]).toContain('ORDER BY created_at DESC, id DESC');
   });
 

@@ -1,10 +1,20 @@
 import crypto from 'node:crypto';
 import { createServer } from 'node:http';
 import { parse } from 'node:url';
-import { Pool } from 'pg';
+import { Client, Pool } from 'pg';
 import next from 'next';
 import { Server } from 'socket.io';
-import { registerRideChatMessageHandler } from './src/lib/ride-chat-realtime.mjs';
+import {
+  CHAT_KEPT_FOR_COMPLAINT_SQL,
+  chatSendRefusal,
+  registerRideChatMessageHandler,
+  rideChatAvailable,
+} from './src/lib/ride-chat-realtime.mjs';
+import {
+  NOTIFICATION_CHANNEL,
+  joinAuthenticatedNotificationRoom,
+  registerNotificationInsertHandler,
+} from './src/lib/notification-realtime.mjs';
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = '0.0.0.0';
@@ -65,12 +75,6 @@ async function isRideMember(rideId, userId) {
     [rideId],
   );
   return rows.some((row) => row.user_id === userId);
-}
-
-function rideChatAvailable(ride, now) {
-  if (ride.state !== 'scheduled') return true;
-  const lockAt = new Date(ride.departure_start.getTime() - 60 * 60 * 1000);
-  return now.getTime() >= lockAt.getTime();
 }
 
 function rideChatReadOnly(ride, now) {
@@ -144,7 +148,7 @@ async function createChatMessageForSocket(rideId, senderId, rawMessage, now = ne
   }
 
   const rideQuery = await pool.query(
-    `SELECT id, owner_id, state, departure_start, completed_at, cancelled_at
+    `SELECT id, owner_id, state, departure_start, locked_at, completed_at, cancelled_at
      FROM rides WHERE id = $1`,
     [rideId],
   );
@@ -155,6 +159,9 @@ async function createChatMessageForSocket(rideId, senderId, rawMessage, now = ne
   if (!isMember) {
     return { ok: false, code: 'FORBIDDEN', error: 'Only current pool members may post here.' };
   }
+
+  const refusal = await chatSendRefusal(pool, ride, senderId, now);
+  if (refusal) return refusal;
 
   if (!rideChatAvailable(ride, now)) {
     return { ok: false, code: 'CHAT_UNAVAILABLE', error: 'Pool chat opens once the ride locks.' };
@@ -317,10 +324,13 @@ app.prepare().then(() => {
   const runChatMaintenance = async () => {
     try {
       const lockedRides = await pool.query(
-        `SELECT id, state, departure_start, completed_at, cancelled_at
+        `SELECT id, state, departure_start, locked_at, completed_at, cancelled_at
          FROM rides
         WHERE (
-            (state = 'scheduled' AND departure_start <= now() + interval '1 hour')
+            (state = 'scheduled' AND (
+              locked_at IS NOT NULL
+              OR departure_start <= now() + interval '1 hour'
+            ))
             OR state IN ('pickup_in_progress', 'in_transit')
             OR (state = 'completed'
               AND completed_at >= now() - interval '24 hours')
@@ -367,10 +377,7 @@ app.prepare().then(() => {
          WHERE ride.id = chat.ride_id
            AND ((ride.state = 'completed' AND ride.completed_at <= now() - interval '31 days')
              OR (ride.state = 'cancelled' AND ride.cancelled_at <= now() - interval '31 days'))
-           AND NOT EXISTS (
-             SELECT 1 FROM ride_chat_complaints complaint
-             WHERE complaint.chat_id = chat.id AND complaint.status = 'open'
-           )`,
+           AND NOT ${CHAT_KEPT_FOR_COMPLAINT_SQL}`,
       );
     } catch (error) {
       console.error('Ride chat maintenance failed:', error);
@@ -378,6 +385,12 @@ app.prepare().then(() => {
   };
 
   io.on('connection', (socket) => {
+    // Notification rooms are derived only from the server-verified session identity.
+    if (!joinAuthenticatedNotificationRoom(socket)) {
+      socket.disconnect(true);
+      return;
+    }
+
     const sessionCheck = setInterval(async () => {
       try {
         const user = await getSessionUser(socket.handshake.headers.cookie ?? '');
@@ -448,6 +461,72 @@ app.prepare().then(() => {
 
   void runChatMaintenance();
   setInterval(() => void runChatMaintenance(), 30_000);
+
+  // PostgreSQL delivers NOTIFY only after the inserting transaction commits. The payload is
+  // merely the UUID; the notification row (including its recipient) is re-read from PostgreSQL.
+  const deliverNotificationInsert = registerNotificationInsertHandler(io, {
+    loadNotification: async (notificationId) => {
+      const { rows } = await pool.query(
+        `SELECT id, user_id, type, title, body, related_ride_id, related_chat_id,
+                related_message_id, read_at, created_at
+         FROM notifications
+         WHERE id = $1`,
+        [notificationId],
+      );
+      return rows[0] ?? null;
+    },
+    logger: console,
+  });
+
+  const delay = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+  const runNotificationListener = async () => {
+    while (true) {
+      const listener = new Client({
+        connectionString: databaseUrl,
+        ssl: databaseUrl?.includes('.render.com') ? { rejectUnauthorized: false } : undefined,
+      });
+
+      const ended = new Promise((resolve) => {
+        listener.once('end', resolve);
+        listener.on('error', (error) => {
+          console.error('Notification LISTEN connection failed:', error);
+          resolve();
+        });
+      });
+
+      listener.on('notification', (event) => {
+        if (event.channel === NOTIFICATION_CHANNEL && typeof event.payload === 'string') {
+          void deliverNotificationInsert(event.payload).then((delivered) => {
+            if (!delivered) {
+              // The persisted API can recover a row when an insert event couldn't be delivered.
+              io.emit('notification:sync');
+            }
+          });
+        }
+      });
+
+      try {
+        await listener.connect();
+        await listener.query(`LISTEN ${NOTIFICATION_CHANNEL}`);
+        console.log('> Listening for committed notification inserts');
+        // Cover inserts missed during a listener outage for currently connected browser clients.
+        io.emit('notification:sync');
+        await ended;
+      } catch (error) {
+        console.error('Notification LISTEN setup failed:', error);
+      } finally {
+        try {
+          await listener.end();
+        } catch {
+          // The socket may already have ended after a connection error.
+        }
+      }
+
+      await delay(2_000);
+    }
+  };
+
+  void runNotificationListener();
 
   httpServer.listen(port, hostname, () => {
     console.log(`> Ready on http://${hostname}:${port} (${dev ? 'dev' : 'prod'})`);

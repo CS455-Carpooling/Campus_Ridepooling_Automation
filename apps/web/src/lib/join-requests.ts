@@ -13,7 +13,10 @@ import {
   type RequestSnapshot,
 } from './join-request-rules';
 import { isUuid } from './ids';
+import { RIDE_RULES } from './ride-rules';
+import { ACTIVE_SUSPENSION_SQL } from './suspension-rule.mjs';
 import { lockTime, type RideState } from './ride-status';
+import type { NotificationType } from './notification-types';
 
 type RideRow = {
   id: string;
@@ -64,6 +67,8 @@ type FailureKind =
   | 'request_not_reconfirming'
   | 'late_confirmation_required'
   | 'trip_started'
+  | 'window_over'
+  | 'invalid_departure'
   | 'cannot_leave_owner_seat';
 
 export type JoinRequestResult =
@@ -108,7 +113,7 @@ async function recordEvent(
 async function notify(
   client: PoolClient,
   userId: string,
-  type: 'join_request' | 'join_request_update' | 'ride_share_update',
+  type: NotificationType,
   title: string,
   body: string,
   rideId: string,
@@ -129,14 +134,40 @@ async function lockUser(client: PoolClient, userId: string): Promise<boolean> {
   return rows.length > 0;
 }
 
+// The one suspension rule (suspension-rule.mjs), read inside this transaction.
 async function hasSuspension(client: PoolClient, userId: string, now: Date): Promise<boolean> {
-  const { rows } = await client.query(
-    `SELECT 1 FROM rider_suspensions
-     WHERE user_id = $1 AND lifted_at IS NULL AND starts_at <= $2
-       AND (ends_at IS NULL OR ends_at > $2)
-     LIMIT 1`,
-    [userId, now],
-  );
+  const { rows } = await client.query(ACTIVE_SUSPENSION_SQL, [userId, now]);
+  return rows.length > 0;
+}
+
+// One pool at a time (FR-RD-06.2, FR-RO-03.2, P-08): a seat held on another ride that has not
+// finished (the owner holds a seat on their own ride) departing within two hours. Seats the
+// person left, or was a no-show on, do not count.
+const TRAVEL_CONFLICT_SQL = `
+  SELECT 1 FROM riders seat
+  JOIN rides other ON other.id = seat.ride_id
+  WHERE seat.user_id = $1 AND seat.left_at IS NULL AND seat.no_show_at IS NULL
+    AND other.id IS DISTINCT FROM $2::uuid
+    AND other.state IN ('scheduled', 'pickup_in_progress', 'in_transit')
+    AND abs(extract(epoch FROM (other.departure_start - $3::timestamptz))) < $4
+  LIMIT 1`;
+
+/**
+ * Whether `userId` is already travelling within two hours of `departureStart`, on a ride other
+ * than `exceptRideId`. The one rule for requesting, accepting, offering and editing a ride.
+ */
+export async function travelConflict(
+  client: PoolClient,
+  userId: string,
+  departureStart: Date | string,
+  exceptRideId: string | null = null,
+): Promise<boolean> {
+  const { rows } = await client.query(TRAVEL_CONFLICT_SQL, [
+    userId,
+    exceptRideId,
+    departureStart,
+    REQUEST_CONFLICT_WINDOW_MS / 1000,
+  ]);
   return rows.length > 0;
 }
 
@@ -297,7 +328,8 @@ async function refreshPendingSnapshots(
   ride: RideRow,
   now: Date,
   seats: SeatRow[],
-) {
+): Promise<Set<string>> {
+  const notifiedRiderIds = new Set<string>();
   const { rows } = await client.query<RequestRow>(
     `${ACTIVE_REQUEST_SQL}
      WHERE ride_id = $1 AND status IN ('pending', 'needs_reconfirmation')
@@ -357,9 +389,11 @@ async function refreshPendingSnapshots(
           ride.id,
           now,
         );
+        notifiedRiderIds.add(request.rider_id);
       }
     }
   }
+  return notifiedRiderIds;
 }
 
 async function refreshAcceptedItinerary(
@@ -383,7 +417,7 @@ async function refreshAcceptedItinerary(
     const timeChanged =
       Math.abs(ride.departure_start.getTime() - acceptedDeparture.getTime()) > 10 * 60_000 ||
       Math.abs(pickupAt.getTime() - acceptedPickup.getTime()) > 10 * 60_000;
-    const conflict = await acceptedRideConflict(client, request.rider_id, ride);
+    const conflict = await travelConflict(client, request.rider_id, ride.departure_start, ride.id);
     const newlyExempt = (timeChanged || conflict) && !request.no_liability_until_trip;
     const share = shares[seats.findIndex((seat) => seat.user_id === request.rider_id)] ?? 0;
     await client.query(
@@ -521,16 +555,9 @@ export async function submitJoinRequest(
   const seats = await seatsForRide(client, rideId);
   if (seats.length >= ride.capacity_snapshot) return requestFailure('ride_full');
 
-  const conflict = await client.query(
-    `SELECT 1
-     FROM ride_join_requests request
-     JOIN rides accepted_ride ON accepted_ride.id = request.ride_id
-     WHERE request.rider_id = $1 AND request.status = 'accepted'
-       AND abs(extract(epoch FROM (accepted_ride.departure_start - $2))) < $3
-     LIMIT 1`,
-    [riderId, ride.departure_start, REQUEST_CONFLICT_WINDOW_MS / 1000],
-  );
-  if (conflict.rows.length > 0) return requestFailure('departure_conflict');
+  if (await travelConflict(client, riderId, ride.departure_start, ride.id)) {
+    return requestFailure('departure_conflict');
+  }
 
   const snapshot = await requestSnapshot(client, ride, pickupLocationId, seats);
   if (!snapshot) return requestFailure('pickup_estimate_unavailable');
@@ -646,15 +673,7 @@ export async function actOnJoinRequest(
     if (await hasSuspension(client, request.rider_id, now)) return requestFailure('suspended');
     const before = await seatsForRide(client, rideId);
     if (before.length >= ride.capacity_snapshot) return requestFailure('ride_full');
-    const conflict = await client.query(
-      `SELECT 1 FROM ride_join_requests request
-       JOIN rides accepted_ride ON accepted_ride.id = request.ride_id
-       WHERE request.rider_id = $1 AND request.status = 'accepted'
-         AND abs(extract(epoch FROM (accepted_ride.departure_start - $2))) < $3
-       LIMIT 1`,
-      [request.rider_id, ride.departure_start, REQUEST_CONFLICT_WINDOW_MS / 1000],
-    );
-    if (conflict.rows.length > 0) {
+    if (await travelConflict(client, request.rider_id, ride.departure_start, ride.id)) {
       await client.query(
         `UPDATE ride_join_requests
          SET status = 'rejected', reason_code = 'departure_conflict', decided_at = $2, updated_at = $2
@@ -667,7 +686,7 @@ export async function actOnJoinRequest(
         request.rider_id,
         'join_request_update',
         'Request not accepted',
-        'You already have an accepted ride departing within two hours.',
+        'You already have a ride, offered or joined, departing within two hours.',
         rideId,
         now,
       );
@@ -786,6 +805,16 @@ export async function actOnJoinRequest(
       { snapshot: snapshotJson(snapshot) },
       now,
     );
+    // The owner hears the outcome either way (S-2): the request can be decided again.
+    await notify(
+      client,
+      ride.owner_id,
+      'join_request',
+      'A rider confirmed the new terms',
+      'A rider accepted the changed ride terms. Their request is waiting for your decision again.',
+      rideId,
+      now,
+    );
     return { kind: 'reconfirmed', requestId };
   }
 
@@ -818,7 +847,7 @@ export async function actOnJoinRequest(
       Math.abs(ride.departure_start.getTime() - acceptedDeparture.getTime()) > 10 * 60_000 ||
       (currentPickup !== null &&
         Math.abs(currentPickup.getTime() - acceptedPickup.getTime()) > 10 * 60_000);
-    const conflictNow = await acceptedRideConflict(client, actorId, ride);
+    const conflictNow = await travelConflict(client, actorId, ride.departure_start, ride.id);
     const exempt = termsChanged || conflictNow || request.no_liability_until_trip;
     const late = rideIsLocked(ride, now) && !exempt;
     if (late && !confirmLate) return requestFailure('late_confirmation_required');
@@ -987,29 +1016,16 @@ export async function withdrawWaitingRequestsForSuspendedRider(
   }
 }
 
-async function acceptedRideConflict(
-  client: PoolClient,
-  riderId: string,
-  ride: RideRow,
-): Promise<boolean> {
-  const { rows } = await client.query(
-    `SELECT 1 FROM ride_join_requests request
-     JOIN rides accepted_ride ON accepted_ride.id = request.ride_id
-     WHERE request.rider_id = $1 AND request.status = 'accepted'
-       AND request.ride_id <> $2
-       AND abs(extract(epoch FROM (accepted_ride.departure_start - $3))) < $4
-     LIMIT 1`,
-    [riderId, ride.id, ride.departure_start, REQUEST_CONFLICT_WINDOW_MS / 1000],
-  );
-  return rows.length > 0;
-}
-
 async function withdrawConflictingRequests(
   client: PoolClient,
   riderId: string,
-  acceptedRide: RideRow,
-  acceptedRequestId: string,
+  acceptedRide: Pick<RideRow, 'departure_start'>,
+  acceptedRequestId: string | null,
   now: Date,
+  cause = {
+    reasonCode: 'conflicting_ride_accepted',
+    ownerMessage: 'The rider was accepted on a ride departing within two hours.',
+  },
 ) {
   const { rows } = await client.query<{
     id: string;
@@ -1020,7 +1036,7 @@ async function withdrawConflictingRequests(
     `SELECT request.id, request.ride_id, ride.owner_id, request.status
      FROM ride_join_requests request
      JOIN rides ride ON ride.id = request.ride_id
-     WHERE request.rider_id = $1 AND request.id <> $2
+     WHERE request.rider_id = $1 AND request.id IS DISTINCT FROM $2::uuid
        AND request.status IN ('pending', 'needs_reconfirmation')
        AND abs(extract(epoch FROM (ride.departure_start - $3))) < $4
      FOR NO KEY UPDATE OF request`,
@@ -1029,30 +1045,46 @@ async function withdrawConflictingRequests(
   for (const request of rows) {
     await client.query(
       `UPDATE ride_join_requests
-       SET status = 'withdrawn', reason_code = 'conflicting_ride_accepted',
+       SET status = 'withdrawn', reason_code = $3,
            decided_at = $2, updated_at = $2
        WHERE id = $1`,
-      [request.id, now],
+      [request.id, now, cause.reasonCode],
     );
-    await recordEvent(
-      client,
-      request.id,
-      request.status,
-      'withdrawn',
-      'conflicting_ride_accepted',
-      {},
-      now,
-    );
+    await recordEvent(client, request.id, request.status, 'withdrawn', cause.reasonCode, {}, now);
     await notify(
       client,
       request.owner_id,
       'join_request_update',
       'A pending request was withdrawn',
-      'The rider was accepted on a ride departing within two hours.',
+      cause.ownerMessage,
       request.ride_id,
       now,
     );
   }
+}
+
+/**
+ * Someone who offers a ride, or moves their own ride, cannot also travel on another ride
+ * departing within two hours of it (P-08). Their requests still waiting on such rides are
+ * withdrawn and those owners told, as when a request is accepted elsewhere (FR-RD-06.8).
+ */
+export async function withdrawRequestsNearOwnRide(
+  client: PoolClient,
+  ownerId: string,
+  departureStart: Date,
+  now: Date,
+): Promise<void> {
+  await withdrawConflictingRequests(
+    client,
+    ownerId,
+    { departure_start: departureStart },
+    null,
+    now,
+    {
+      reasonCode: 'own_ride_offered',
+      ownerMessage: 'The rider is offering their own ride departing within two hours.',
+    },
+  );
 }
 
 export async function cancelRideForOwner(
@@ -1065,8 +1097,12 @@ export async function cancelRideForOwner(
   const ride = await lockRide(client, rideId);
   if (!ride) return requestFailure('not_found');
   if (ride.owner_id !== ownerId) return requestFailure('not_owner');
+  if (ride.state === 'pickup_in_progress' || ride.state === 'in_transit') {
+    return requestFailure('trip_started');
+  }
   if (ride.state !== 'scheduled') return requestFailure('ride_closed');
-  if (now.getTime() >= ride.departure_start.getTime()) return requestFailure('trip_started');
+  // A locked ride may still be cancelled, but only until its departure window ends.
+  if (now.getTime() >= ride.departure_end.getTime()) return requestFailure('window_over');
 
   await client.query(`UPDATE rides SET state = 'cancelled', cancelled_at = $2 WHERE id = $1`, [
     rideId,
@@ -1151,8 +1187,15 @@ export async function editRideForOwner(
     lockTime(departureStart).getTime() <= now.getTime()
   ) {
     return requestFailure(
-      'ride_closed',
+      'invalid_departure',
       'The updated departure window must be valid and leave time before lock.',
+    );
+  }
+  // The same longest window as when the ride was offered (ride-rules.ts).
+  if (departureEnd.getTime() - departureStart.getTime() > RIDE_RULES.maxWindowMinutes * 60_000) {
+    return requestFailure(
+      'invalid_departure',
+      `The departure window can be at most ${RIDE_RULES.maxWindowMinutes / 60} hours long.`,
     );
   }
   if (!Number.isInteger(expectedTotalFare) || expectedTotalFare < 1 || expectedTotalFare > 50_000) {
@@ -1214,6 +1257,12 @@ export async function editRideForOwner(
   if (ownerConflict.rows.length > 0) {
     return requestFailure('departure_conflict', 'This departure overlaps another ride you own.');
   }
+  if (await travelConflict(client, ownerId, departureStart, rideId)) {
+    return requestFailure(
+      'departure_conflict',
+      'You already have a ride, offered or joined, departing within two hours of this one.',
+    );
+  }
 
   await client.query(
     `UPDATE rides
@@ -1222,6 +1271,9 @@ export async function editRideForOwner(
      WHERE id = $1`,
     [rideId, departureStart, departureEnd, capacity, expectedTotalFare, direction, hubId],
   );
+  if (departureStart.getTime() !== ride.departure_start.getTime()) {
+    await withdrawRequestsNearOwnRide(client, ownerId, departureStart, now);
+  }
   const updatedRide: RideRow = {
     ...ride,
     departure_start: departureStart,
@@ -1255,7 +1307,31 @@ export async function editRideForOwner(
     ride.expected_total_fare,
   );
   await refreshAcceptedItinerary(client, updatedRide, now, beforeSeats);
-  await refreshPendingSnapshots(client, updatedRide, now, beforeSeats);
+  const notifiedWaitingRiders = await refreshPendingSnapshots(
+    client,
+    updatedRide,
+    now,
+    beforeSeats,
+  );
+  const { rows: waitingRiders } = await client.query<{ rider_id: string }>(
+    `SELECT DISTINCT rider_id FROM ride_join_requests
+     WHERE ride_id = $1 AND status IN ('pending', 'needs_reconfirmation')`,
+    [rideId],
+  );
+  for (const waitingRider of waitingRiders) {
+    // The state-transition notice already explains a material change. Otherwise, every waiting
+    // requester still needs to know that the terms they are reviewing have changed.
+    if (notifiedWaitingRiders.has(waitingRider.rider_id)) continue;
+    await notify(
+      client,
+      waitingRider.rider_id,
+      'ride_update',
+      'Ride details changed',
+      'The owner changed the ride details. Review the updated departure, pickup, destination, and fare on the ride page.',
+      rideId,
+      now,
+    );
+  }
   return { kind: 'edited', rideId };
 }
 

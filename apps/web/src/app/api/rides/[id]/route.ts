@@ -110,7 +110,13 @@ export async function PATCH(req: Request, ctx: RouteContext<'/api/rides/[id]'>) 
       not_owner: { status: 403, error: 'Only the ride owner can change this ride.' },
       not_rider: { status: 403, error: 'This action is not available to this account.' },
       trip_started: { status: 409, error: 'A ride cannot be cancelled after pickup has started.' },
+      window_over: {
+        status: 409,
+        error: "This ride's departure window is over, so it can no longer be cancelled.",
+      },
       ride_closed: { status: 409, error: detail ?? 'This ride can no longer be changed.' },
+      // A departure window the rules do not allow is a bad request, not a conflict.
+      invalid_departure: { status: 400, error: detail ?? 'Enter a valid departure window.' },
       ride_locked: { status: 409, error: 'A locked ride cannot be edited.' },
       ride_full: { status: 409, error: detail ?? 'The requested capacity is not available.' },
       invalid_pickup: { status: 400, error: detail ?? 'Choose an active destination hub.' },

@@ -1,54 +1,85 @@
+// @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const session = vi.hoisted(() => vi.fn());
-const queryHelpers = vi.hoisted(() => ({
+const h = vi.hoisted(() => ({
+  requireAdminApi: vi.fn(),
+  readJson: vi.fn(),
+  withAdminAction: vi.fn(),
   listOpenChatComplaints: vi.fn(),
   resolveChatComplaint: vi.fn(),
 }));
-const auth = vi.hoisted(() => ({
-  json: vi.fn((body: unknown, status = 200) => Response.json(body, { status })),
-  readJson: vi.fn(),
-}));
 
-vi.mock('@/lib/session', () => ({ getSession: session }));
-vi.mock('@/lib/ride-chat', () => queryHelpers);
-vi.mock('@/lib/auth', () => auth);
+vi.mock('@/lib/admin-auth', () => ({ requireAdminApi: h.requireAdminApi }));
+vi.mock('@/lib/auth', () => ({
+  readJson: h.readJson,
+  json: (body: object, status = 200) => Response.json(body, { status }),
+}));
+vi.mock('@/lib/admin-actions', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/admin-actions')>()),
+  withAdminAction: h.withAdminAction,
+}));
+vi.mock('@/lib/ride-chat', () => ({
+  listOpenChatComplaints: h.listOpenChatComplaints,
+  resolveChatComplaint: h.resolveChatComplaint,
+}));
 
 import { GET, PATCH } from './route';
 
+const admin = { userId: '6f1c2a5e-0000-4000-8000-0000000000aa', role: 'admin' };
+const CLIENT = { query: vi.fn() };
+const patch = () => PATCH(new Request('http://localhost', { method: 'PATCH' }));
+
 beforeEach(() => {
   vi.clearAllMocks();
-  session.mockResolvedValue({ userId: 'admin-1', role: 'admin' });
-  auth.readJson.mockResolvedValue({ reference: 'chat-12345678' });
-  queryHelpers.listOpenChatComplaints.mockResolvedValue([]);
-  queryHelpers.resolveChatComplaint.mockResolvedValue(true);
+  h.requireAdminApi.mockResolvedValue({ admin });
+  h.withAdminAction.mockImplementation(async (_admin, _meta, run) => run(CLIENT));
+  h.readJson.mockResolvedValue({ reference: 'chat-12345678' });
+  h.listOpenChatComplaints.mockResolvedValue([]);
+  h.resolveChatComplaint.mockResolvedValue(true);
 });
 
 describe('/api/admin/chat-reports', () => {
-  it('requires authentication and administrator role', async () => {
-    session
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({ userId: 'student-1', role: 'student' });
+  it('answers with the admin check refusal for anyone else', async () => {
+    h.requireAdminApi
+      .mockResolvedValueOnce({ response: Response.json({}, { status: 401 }) })
+      .mockResolvedValueOnce({ response: Response.json({}, { status: 403 }) });
     expect((await GET()).status).toBe(401);
-    expect((await GET()).status).toBe(403);
+    expect((await patch()).status).toBe(403);
+    expect(h.requireAdminApi).toHaveBeenNthCalledWith(1);
+    expect(h.requireAdminApi).toHaveBeenNthCalledWith(2, { write: true });
+    expect(h.resolveChatComplaint).not.toHaveBeenCalled();
   });
 
   it('lists open reports for administrators', async () => {
-    queryHelpers.listOpenChatComplaints.mockResolvedValue([{ reference: 'chat-12345678' }]);
+    h.listOpenChatComplaints.mockResolvedValue([{ reference: 'chat-12345678' }]);
     const response = await GET();
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ reports: [{ reference: 'chat-12345678' }] });
   });
 
-  it('validates, resolves, and reports missing complaint references', async () => {
-    auth.readJson.mockResolvedValueOnce({ reference: 'invalid' });
-    expect((await PATCH(new Request('http://localhost', { method: 'PATCH' }))).status).toBe(400);
-
-    queryHelpers.resolveChatComplaint.mockResolvedValueOnce(false);
-    expect((await PATCH(new Request('http://localhost', { method: 'PATCH' }))).status).toBe(404);
-
-    const response = await PATCH(new Request('http://localhost', { method: 'PATCH' }));
+  it('resolves a report in the audited transaction (SYS-FR-45)', async () => {
+    const response = await patch();
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ reference: 'chat-12345678', status: 'resolved' });
+    expect(h.withAdminAction.mock.calls[0][1]).toEqual({
+      action: 'chat_report.resolve',
+      entityType: 'chat_report',
+      entityId: 'chat-12345678',
+    });
+    expect(h.resolveChatComplaint).toHaveBeenCalledWith('chat-12345678', CLIENT);
+  });
+
+  it('refuses an invalid reference before any change, and a report that is not open', async () => {
+    h.readJson.mockResolvedValueOnce({ reference: 'invalid' });
+    expect((await patch()).status).toBe(400);
+    expect(h.withAdminAction).not.toHaveBeenCalled();
+
+    h.resolveChatComplaint.mockResolvedValueOnce(false);
+    const response = await patch();
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({
+      error: 'Open complaint not found.',
+      code: 'not_found',
+    });
   });
 });

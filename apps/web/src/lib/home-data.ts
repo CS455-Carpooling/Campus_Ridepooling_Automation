@@ -298,6 +298,7 @@ const RECENT_ACTIONS_SQL = `
       WHEN 'location' THEN (SELECT name FROM locations WHERE id = l.entity_id)
       WHEN 'complaint' THEN (SELECT reference FROM complaints WHERE id::text = l.entity_id)
       WHEN 'sos_incident' THEN (SELECT reference FROM sos_incidents WHERE id::text = l.entity_id)
+      WHEN 'chat_report' THEN l.entity_id
     END AS subject
   FROM admin_audit_log l
   LEFT JOIN users u ON u.id = l.admin_id

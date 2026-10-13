@@ -38,6 +38,7 @@ type RideRow = {
   state: RideState;
   direction: Direction;
   departure_start: Date;
+  departure_end: Date;
   expected_total_fare: number;
   hub_name: string;
   pickup_started_at: Date | null;
@@ -62,7 +63,8 @@ export type SeatRow = {
 };
 
 const RIDE_SQL = `
-  SELECT r.id, r.owner_id, r.state, r.direction, r.departure_start, r.expected_total_fare,
+  SELECT r.id, r.owner_id, r.state, r.direction, r.departure_start, r.departure_end,
+         r.expected_total_fare,
          hub.name AS hub_name, r.pickup_started_at, r.trip_started_at, r.completed_at,
          r.locked_at
   FROM rides r
@@ -165,13 +167,13 @@ export function activeShares(
 export function itineraryFor(
   direction: Direction,
   departureStart: Date,
-  seats: ReadonlyArray<Pick<SeatRow, 'id' | 'place' | 'is_owner' | 'left_at'>>,
+  seats: ReadonlyArray<Pick<SeatRow, 'id' | 'place' | 'is_owner' | 'left_at' | 'no_show_at'>>,
 ): Itinerary {
   return tripItinerary(
     direction,
     departureStart,
     seats
-      .filter((seat) => !seat.left_at)
+      .filter((seat) => isActiveSeat({ leftAt: seat.left_at, noShowAt: seat.no_show_at }))
       .map((seat) => ({ seatId: seat.id, place: seat.place, isOwner: seat.is_owner })),
   );
 }
@@ -257,6 +259,7 @@ export async function changeTripState(
     ride.departure_start,
     now,
     ride.locked_at,
+    ride.departure_end,
   );
   if (refusal) return { kind: 'refused', code: refusal };
   if (ride.state === to) return { kind: 'done', value: tripState(ride) };

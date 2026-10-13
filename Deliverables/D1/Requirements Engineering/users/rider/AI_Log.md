@@ -168,7 +168,7 @@ suggestion, the difference is noted in italics.
 
 | ID | Severity | Finding | Change made | Decision |
 |---|---|---|---|---|
-| R-01 | High | Owner cancelling a ride after lock is unspecified for accepted riders | Added **FR-RD-06.11**: the request becomes Ride Cancelled, no fare liability remains, the pool chat closes and the rider is notified within 2 s; chat retention (FR-RD-09.5) now runs from completion or cancellation | *To be completed by the author* |
+| R-01 | High | Owner cancelling a ride after lock is unspecified for accepted riders | FR-RD-06.11 specifies owner cancellation before or after lock, until the departure window ends; FR-RO-04.5 and P-06 prohibit editing after lock while allowing this explicit cancellation exception | Resolved: FR-RD-06.11 governs cancellation after lock, and the Ride Owner requirements now state the same exception |
 | R-02 | High | Free-text display names could carry instructions into AI prompts (indirect prompt injection) | **AI-RD-09** now treats all free-text profile fields as data; failure scenario **F-8** added; adversarial display names added to the AI-RD-14 evaluation set; US-RD-10-AC5 | *To be completed by the author* |
 | R-03 | High | Availability (NFR-RD-07) covered only 06:00–24:00, missing early-morning departures | NFR-RD-07 now requires ≥ 99 % availability 24 hours a day. *The reviewer's alternative was 04:00–24:00* | *To be completed by the author* |
 | R-04 | Medium | The search filter hid full rides on which the rider already holds a request | **FR-RD-03.2** reworded to list such rides with the request's state; US-RD-07-AC5 | *To be completed by the author* |

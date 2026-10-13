@@ -193,6 +193,8 @@ describe('getRideView: what the page shows', () => {
     expect(occupantSql).toContain('profile.display_name');
     expect(occupantSql).toContain('m.left_at IS NULL');
     expect(occupantSql).toContain('completed.left_at IS NULL');
+    // A ride someone left or was a no-show on is not a trip they completed.
+    expect(occupantSql).toContain('completed.no_show_at IS NULL');
     expect(occupantSql).not.toMatch(/email|roll_number|password|mobile_number/);
   });
 });
@@ -484,6 +486,15 @@ describe('ratings on the ride page and in history (CS455-44)', () => {
     await expect(getHistoricalRides(VIEWER_ID, during)).resolves.toMatchObject([
       { completedAt: null, ratingClosesAt: null, canRate: false },
     ]);
+
+    // Someone who left the ride before it ran has nobody to rate on it (FR-RD-12.2).
+    query.mockResolvedValueOnce({
+      rows: [{ ...historyRow, viewer_left_at: new Date('2026-10-10T04:00:00+05:30') }],
+    });
+    await expect(getHistoricalRides(VIEWER_ID, during)).resolves.toMatchObject([
+      { canRate: false },
+    ]);
+    expect(query.mock.calls.at(-1)?.[0]).toContain('me.left_at AS viewer_left_at');
   });
 });
 
@@ -551,6 +562,7 @@ describe('getRideView: the trip under way (CS455-62, CS455-63)', () => {
       ['no_show', null],
     ]);
     expect(view).toMatchObject({ occupantCount: 2, viewerShare: 150 });
+    expect(view?.trip?.stops.flatMap((stop) => stop.people)).not.toContain('Meera Iyer');
   });
 
   it('tells the owner when each rider may be marked a no-show, 5 minutes after their pickup time', async () => {
@@ -737,5 +749,19 @@ describe('getRideView: SOS (CS455-64)', () => {
     const view = await getRideView(RIDE_ID, VIEWER_ID, locked);
     expect(view?.trip).toMatchObject({ canRaiseSos: false, viewerSos: null });
     expect(query.mock.calls[0][0]).toContain('s.raised_by = $2');
+  });
+
+  it('does not offer SOS to a rider already removed from the pool as a no-show', async () => {
+    respond(
+      rideRow({
+        state: 'in_transit',
+        pickup_started_at: locked,
+        trip_started_at: locked,
+        viewer_is_rider: true,
+      }),
+      [ownerSeat, { ...me, no_show_at: locked }],
+    );
+    const view = await getRideView(RIDE_ID, VIEWER_ID, locked);
+    expect(view?.trip).toMatchObject({ canRaiseSos: false, viewerNoShow: true });
   });
 });

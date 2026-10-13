@@ -61,6 +61,10 @@ describe('RideManagementControls', () => {
       />,
     );
     expect(screen.queryByRole('heading', { name: 'Manage this ride' })).not.toBeInTheDocument();
+
+    // A ride still Scheduled after its departure window did not run: nothing left to manage.
+    rerender(<RideManagementControls ride={{ ...ride, windowEnded: true }} hubs={hubs} />);
+    expect(screen.queryByRole('heading', { name: 'Manage this ride' })).not.toBeInTheDocument();
   });
 
   it('requires confirmation for an edit affecting riders and saves after confirmation', async () => {
@@ -100,16 +104,20 @@ describe('RideManagementControls', () => {
     expect(screen.getByRole('status')).toHaveTextContent('The ride was cancelled.');
   });
 
-  it('hides edit fields after lock while retaining cancellation and reporting server errors', async () => {
-    const fetch = vi.fn().mockResolvedValue(response(409, { error: 'Pickup has started.' }));
+  it('hides editing but keeps cancellation available after lock', async () => {
+    const fetch = vi.fn().mockResolvedValue(response(200, {}));
     vi.stubGlobal('fetch', fetch);
     render(<RideManagementControls ride={{ ...ride, isLocked: true }} hubs={hubs} />);
 
     expect(screen.queryByLabelText('Direction')).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'This ride is locked and can no longer be edited. You may still cancel it before its departure window ends.',
+      ),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Cancel ride' }));
     fireEvent.click(screen.getByRole('button', { name: 'Yes, cancel ride' }));
-
-    expect(await screen.findByRole('alert')).toHaveTextContent('Pickup has started.');
-    expect(router.refresh).not.toHaveBeenCalled();
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledOnce());
+    expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({ action: 'cancel' });
   });
 });

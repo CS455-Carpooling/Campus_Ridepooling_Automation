@@ -13,7 +13,7 @@ type LocationState = 'idle' | 'asking' | 'shared' | 'not_shared';
 const sendFailed = 'The alert could not be sent. Call 112 or campus security now.';
 
 /**
- * SOS on the ride page (CS455-64: FR-RD-15, FR-RO-13.2), for anyone with a seat while the trip is
+ * SOS on the ride page (CS455-64: FR-RD-15, FR-RO-13.2), for active occupants while the trip is
  * under way. It asks once, then sends the alert straight away; only after that does it ask for
  * the location, so a slow or refused location never delays the alert. The emergency numbers and
  * the no-dispatch note are on screen from the question on (FR-RD-15.3). The rest of the pool is

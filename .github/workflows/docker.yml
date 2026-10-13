@@ -11,8 +11,14 @@ on:
       - apps/web/package.json
       - apps/web/db/**
       - apps/web/server.mjs
+      - apps/web/src/lib/suspension-rule.mjs
       - apps/web/scripts/**
       - apps/web/src/lib/ride-chat-realtime.mjs
+      - apps/web/src/lib/notification-realtime.mjs
+      - apps/web/src/lib/join-requests.ts
+      - apps/web/src/lib/enforcement.ts
+      - apps/web/src/app/api/notifications/route.ts
+      - apps/web/src/lib/notification-types.ts
       - package-lock.json
       - .github/workflows/docker.yml
   push:
@@ -24,8 +30,14 @@ on:
       - apps/web/package.json
       - apps/web/db/**
       - apps/web/server.mjs
+      - apps/web/src/lib/suspension-rule.mjs
       - apps/web/scripts/**
       - apps/web/src/lib/ride-chat-realtime.mjs
+      - apps/web/src/lib/notification-realtime.mjs
+      - apps/web/src/lib/join-requests.ts
+      - apps/web/src/lib/enforcement.ts
+      - apps/web/src/app/api/notifications/route.ts
+      - apps/web/src/lib/notification-types.ts
       - package-lock.json
       - .github/workflows/docker.yml
   workflow_dispatch:
