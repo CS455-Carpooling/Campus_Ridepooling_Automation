@@ -8,6 +8,7 @@ describe('navigationFor', () => {
       'Home',
       'Profile',
       'Find a ride',
+      'AI Assistant',
       'Offer a ride',
       'Notifications',
     ]);
