@@ -212,7 +212,7 @@ describe('NotificationsCentre', () => {
     },
   );
 
-  it('does not revert a notification to unread when its delayed insert event arrives', async () => {
+  it('preserves read state for delayed insert events', async () => {
     const readNotification = {
       ...notification,
       readAt: '2026-10-12T10:05:00.000Z',
