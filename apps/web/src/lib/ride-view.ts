@@ -225,7 +225,7 @@ const OCCUPANTS_SQL = `
           FROM riders completed
           JOIN rides completed_ride ON completed_ride.id = completed.ride_id
           WHERE completed.user_id = m.user_id AND completed.left_at IS NULL
-            AND completed_ride.state = 'completed')
+            AND completed.no_show_at IS NULL AND completed_ride.state = 'completed')
            AS completed_trips,
          public_rating.rating_count, public_rating.rating_average,
          m.locked_share, m.checked_in_at, m.arrived_at, m.no_show_at,
@@ -545,6 +545,7 @@ type HistoricalRow = {
   completed_at: Date | null;
   ratings_given: number;
   viewer_no_show_at: Date | null;
+  viewer_left_at: Date | null;
 };
 
 const HISTORY_SQL = `
@@ -555,7 +556,7 @@ const HISTORY_SQL = `
          (SELECT COUNT(*)::int FROM riders occupants
           WHERE occupants.ride_id = r.id AND occupants.left_at IS NULL
             AND occupants.no_show_at IS NULL) AS occupant_count,
-         me.no_show_at AS viewer_no_show_at,
+         me.no_show_at AS viewer_no_show_at, me.left_at AS viewer_left_at,
          r.completed_at,
          (SELECT count(*)::int FROM ride_ratings given
           WHERE given.ride_id = r.id AND given.rater_id = $1) AS ratings_given
@@ -592,8 +593,10 @@ export async function getHistoricalRides(
     completedAt: row.completed_at ? row.completed_at.toISOString() : null,
     ratingsGiven: row.ratings_given ?? 0,
     ratingClosesAt: row.completed_at ? ratingClosesAt(row.completed_at).toISOString() : null,
+    // Only people who were on the trip rate it (FR-RD-12.2): not a no-show, not someone who left.
     canRate:
       !row.viewer_no_show_at &&
+      !row.viewer_left_at &&
       ratingWindow(row.state, row.completed_at, now) === 'open' &&
       (row.ratings_given ?? 0) < row.occupant_count - 1,
   }));
