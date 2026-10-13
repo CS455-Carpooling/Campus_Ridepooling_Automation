@@ -100,7 +100,9 @@ describe('NotificationsCentre', () => {
       render(<NotificationsCentre />);
       fireEvent.click(await screen.findByRole('button', { name: 'Mark as read: Ride updated' }));
       expect(await screen.findByText('Read')).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: 'Mark as read: Ride updated' })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Mark as read: Ride updated' }),
+      ).not.toBeInTheDocument();
       expect(fetch).toHaveBeenLastCalledWith(
         '/api/notifications/n1',
         expect.objectContaining({ method: 'PATCH' }),
@@ -156,7 +158,6 @@ describe('NotificationsCentre', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
-
   it('keeps notifications visible when the API adds an unknown type', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       listResponse([
@@ -180,7 +181,9 @@ describe('NotificationsCentre', () => {
 
   it('does not link malformed related ride identifiers', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      listResponse([{ ...notification, relatedRideId: 'not-a-uuid', relatedChatId: 'stale-chat' }]),
+      listResponse([
+        { ...notification, relatedRideId: 'not-a-uuid', relatedChatId: 'stale-chat' },
+      ]),
     );
     render(<NotificationsCentre />);
     await screen.findByRole('heading', { name: 'Ride updated' });
@@ -280,7 +283,10 @@ describe('NotificationsCentre', () => {
       if (previousVisibility) {
         Object.defineProperty(document, 'visibilityState', previousVisibility);
       } else {
-        delete (document as Partial<Document>).visibilityState;
+        Object.defineProperty(document, 'visibilityState', {
+          configurable: true,
+          value: 'hidden',
+        });
       }
     }
   });
