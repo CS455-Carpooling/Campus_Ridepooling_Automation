@@ -2,6 +2,8 @@ import { pool } from '@/lib/db';
 import { destroySession, getCurrentUser, guard, hashPassword, json, newToken } from '@/lib/auth';
 
 // A ride counts until it has happened: under way, or scheduled with its window not over yet.
+// An elapsed scheduled window is historical (and cannot still run), even if its stored state has
+// not been advanced; its ride records remain linked when the account is anonymized.
 const ACTIVE_RIDES_SQL = `
   SELECT EXISTS (
     SELECT 1 FROM riders seat

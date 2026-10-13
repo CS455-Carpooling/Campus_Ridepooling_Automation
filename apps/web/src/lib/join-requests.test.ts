@@ -841,7 +841,7 @@ describe('owner edits and cancellation (D1 review)', () => {
     },
   );
 
-  it('still cancels a scheduled ride after its departure time, as the trip has not started', async () => {
+  it('cancels a scheduled ride after lock but before its departure window ends', async () => {
     const { client, query } = makeClient((sql) => {
       if (sql.includes('SELECT id FROM users')) return [{ id: OWNER_ID }];
       if (sql.includes('FROM rides WHERE id = $1 FOR NO KEY UPDATE')) {
@@ -855,12 +855,24 @@ describe('owner edits and cancellation (D1 review)', () => {
       rideId: RIDE_ID,
     });
     expect(query.mock.calls.some(([sql]) => sql.includes("SET state = 'cancelled'"))).toBe(true);
-    expect(
-      query.mock.calls.some(([sql]) => sql.includes('UPDATE riders SET locked_share = NULL')),
-    ).toBe(true);
   });
 
-  it('refuses to cancel a ride still Scheduled after its departure window ended', async () => {
+  it('cancels a manually locked ride before its departure window ends', async () => {
+    const { client, query } = makeClient((sql) => {
+      if (sql.includes('SELECT id FROM users')) return [{ id: OWNER_ID }];
+      if (sql.includes('FROM rides WHERE id = $1 FOR NO KEY UPDATE')) {
+        return [{ ...ride, locked_at: new Date(NOW.getTime() - 1_000) }];
+      }
+      return [];
+    });
+    await expect(cancelRideForOwner(client, RIDE_ID, OWNER_ID, NOW)).resolves.toEqual({
+      kind: 'cancelled',
+      rideId: RIDE_ID,
+    });
+    expect(query.mock.calls.some(([sql]) => sql.includes("SET state = 'cancelled'"))).toBe(true);
+  });
+
+  it('refuses to cancel a ride after its departure window ends', async () => {
     const { client, query } = makeClient((sql) => {
       if (sql.includes('SELECT id FROM users')) return [{ id: OWNER_ID }];
       if (sql.includes('FROM rides WHERE id = $1 FOR NO KEY UPDATE')) {
@@ -879,7 +891,6 @@ describe('owner edits and cancellation (D1 review)', () => {
       kind: 'window_over',
     });
     expect(query.mock.calls.some(([sql]) => sql.includes("SET state = 'cancelled'"))).toBe(false);
-    expect(query.mock.calls.some(([sql]) => sql.includes('locked_share = NULL'))).toBe(false);
   });
 
   it('refuses to cancel a ride that is already completed or cancelled', async () => {

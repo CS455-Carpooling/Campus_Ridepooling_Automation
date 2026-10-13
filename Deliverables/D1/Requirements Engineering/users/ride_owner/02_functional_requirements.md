@@ -20,7 +20,7 @@ This document refines the Ride Owner user requirements in `01_requirements_speci
 | FR-RO-04.2 | The system shall notify accepted Riders when an edit to their ride is saved. | UR-RO-04 |
 | FR-RO-04.3 | The system shall require the Ride Owner to confirm an edit that may affect already accepted Riders. | UR-RO-04 |
 | FR-RO-04.4 | The system shall allow a Ride Owner to cancel a ride that has not started and shall notify all accepted Riders of the cancellation. | UR-RO-04 |
-| FR-RO-04.5 | The system shall prevent normal edit and cancellation actions after a ride is locked, in accordance with P-06. | UR-RO-04 |
+| FR-RO-04.5 | The system shall prevent normal edit actions after a ride is locked. A locked ride may still be cancelled before its departure window ends and before the trip starts, in accordance with FR-RD-06.11. | UR-RO-04 |
 
 ## 3. Join-Request and Pool Management
 
