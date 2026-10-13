@@ -648,3 +648,17 @@ Continue the Notification Centre work and implement real-time delivery and offli
 - Rebuilt the realtime notification change on the merged master tree, avoiding the old UI branch's ancestry and retaining the latest merged UI behavior.
 - Preserved unknown-notification-type tolerance, unavailable unread-count wording, accessible mark-read labels, shared timestamp and UUID utilities, plus realtime sync behavior and regression tests.
 - No local test commands could be run in this environment; the final PR CI should verify lint, formatting, typecheck, tests and build.
+
+
+## 2026-10-13 — Fix failing CI checks on PR #61 (CS455-69)
+
+### User prompt
+“[PR #61] The two checks on it are failing; look into and fix it by committing to this PR.”
+
+### CI diagnosis
+- The CI job failed at `npm run format:check`, with Prettier reporting three files: `NotificationsCentre.test.tsx`, `notification-realtime.mjs`, and `notification-realtime.test.ts`.
+- The Docker job failed during the Next.js production build's TypeScript stage. Reported errors were: deleting the read-only `Document.visibilityState` property in a test; potentially undefined `data.notifications` after runtime validation; a mock logger not satisfying the `Console` type; and an ES2018-only regex dotAll modifier under the project's configured target.
+- Fixes are limited to formatting, narrowing the validated notification list before use, restoring the document visibility test state without `delete`, and making the logger/regex test compatible with the project's TypeScript target.
+
+### Verification
+- After committing these changes, inspect the replacement CI and Docker runs for PR #61. Do not mark either check as passing until GitHub reports success.
