@@ -10,6 +10,7 @@ import {
 import { formatDeparture } from './format';
 import { getActiveSuspension } from './suspensions';
 import { withdrawWaitingRequestsForSuspendedRider } from './join-requests';
+import type { NotificationType } from './notification-types';
 
 /**
  * An admin's warnings, suspensions and reactivations (OA-FR-21 to 28, SYS-FR-24 to 27,
@@ -69,7 +70,7 @@ async function complaintIsAbout(
 async function notify(
   client: PoolClient,
   userId: string,
-  type: string,
+  type: NotificationType,
   title: string,
   body: string,
 ) {
