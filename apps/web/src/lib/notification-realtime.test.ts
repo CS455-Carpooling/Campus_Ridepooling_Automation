@@ -124,9 +124,7 @@ describe('notification realtime delivery', () => {
     expect(logger.error).toHaveBeenCalledOnce();
   });
 
-  it(
-    'uses an AFTER INSERT trigger and commit-aware PostgreSQL NOTIFY for each new row',
-    async () => {
+  it('checks the notification insert trigger is commit-aware', async () => {
       const schema = await readFile(new URL('../../db/schema.sql', import.meta.url), 'utf8');
       expect(schema).toContain(`PERFORM pg_notify('${NOTIFICATION_CHANNEL}', NEW.id::text);`);
       expect(schema).toMatch(
