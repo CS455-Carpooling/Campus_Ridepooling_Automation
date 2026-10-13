@@ -145,7 +145,9 @@ describe('NotificationsCentre', () => {
     expect(await screen.findByText('Stale refresh payload.')).toBeInTheDocument();
     expect(screen.getByText('Read')).toBeInTheDocument();
     expect(screen.getByText('0 unread notifications')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Mark as read: Ride updated' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Mark as read: Ride updated' }),
+    ).not.toBeInTheDocument();
   });
 
   it('shows an error and retry when listing fails', async () => {

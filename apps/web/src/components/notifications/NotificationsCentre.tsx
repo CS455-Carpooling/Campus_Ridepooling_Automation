@@ -129,10 +129,7 @@ export function NotificationsCentre() {
         const merged = new Map(
           notifications.map((item) => {
             const current = currentById.get(item.id);
-            return [
-              item.id,
-              current?.readAt ? { ...item, readAt: current.readAt } : item,
-            ] as const;
+            return [item.id, current?.readAt ? { ...item, readAt: current.readAt } : item] as const;
           }),
         );
         // Preserve socket events that arrived while this request was in flight, covering the
