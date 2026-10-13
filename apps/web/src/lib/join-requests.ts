@@ -13,6 +13,7 @@ import {
   type RequestSnapshot,
 } from './join-request-rules';
 import { isUuid } from './ids';
+import { RIDE_RULES } from './ride-rules';
 import { lockTime, type RideState } from './ride-status';
 
 type RideRow = {
@@ -1173,6 +1174,13 @@ export async function editRideForOwner(
     return requestFailure(
       'ride_closed',
       'The updated departure window must be valid and leave time before lock.',
+    );
+  }
+  // The same longest window as when the ride was offered (ride-rules.ts).
+  if (departureEnd.getTime() - departureStart.getTime() > RIDE_RULES.maxWindowMinutes * 60_000) {
+    return requestFailure(
+      'ride_closed',
+      `The departure window can be at most ${RIDE_RULES.maxWindowMinutes / 60} hours long.`,
     );
   }
   if (!Number.isInteger(expectedTotalFare) || expectedTotalFare < 1 || expectedTotalFare > 50_000) {

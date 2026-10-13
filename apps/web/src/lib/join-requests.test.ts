@@ -615,6 +615,23 @@ describe('owner ride lifecycle integration', () => {
     expect(query.mock.calls.some(([sql]) => sql.includes('UPDATE rides'))).toBe(false);
   });
 
+  it('keeps an edited departure window within the 3 hours allowed when offering', async () => {
+    const { client, query } = makeClient((sql) => {
+      if (sql.includes('SELECT id FROM users')) return [{ id: OWNER_ID }];
+      if (sql.includes('FROM rides WHERE id = $1 FOR NO KEY UPDATE')) return [ride];
+      if (sql.includes('SELECT hub_id FROM rides')) return [{ hub_id: 'kanpur-central' }];
+      return [];
+    });
+    const longEnd = new Date(DEPARTURE.getTime() + 181 * 60_000);
+    await expect(
+      editRideForOwner(client, RIDE_ID, OWNER_ID, { departureEnd: longEnd }, true, NOW),
+    ).resolves.toEqual({
+      kind: 'ride_closed',
+      detail: 'The departure window can be at most 3 hours long.',
+    });
+    expect(query.mock.calls.some(([sql]) => sql.includes('UPDATE rides'))).toBe(false);
+  });
+
   it('does not allow cancellation once pickup time has started', async () => {
     const { client, query } = makeClient((sql) => {
       if (sql.includes('SELECT id FROM users')) return [{ id: OWNER_ID }];
