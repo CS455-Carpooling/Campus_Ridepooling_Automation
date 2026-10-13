@@ -339,8 +339,15 @@ export async function getRideView(
   const viewerNoShow = Boolean(viewerRow?.no_show_at);
   const canMoveTo = (to: TripTarget) =>
     ride.state !== to &&
-    tripTransitionRefusal(viewerRole, ride.state, to, ride.departure_start, now, ride.locked_at) ===
-      null;
+    tripTransitionRefusal(
+      viewerRole,
+      ride.state,
+      to,
+      ride.departure_start,
+      now,
+      ride.locked_at,
+      ride.departure_end,
+    ) === null;
   const nameOf = (seatId: string) =>
     people.find((person) => person.occupant_id === seatId)?.full_name ?? '';
   const viewerStop = viewerRow

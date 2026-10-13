@@ -65,6 +65,7 @@ type FailureKind =
   | 'request_not_reconfirming'
   | 'late_confirmation_required'
   | 'trip_started'
+  | 'window_over'
   | 'cannot_leave_owner_seat';
 
 export type JoinRequestResult =
@@ -1102,6 +1103,9 @@ export async function cancelRideForOwner(
     return requestFailure('trip_started');
   }
   if (ride.state !== 'scheduled') return requestFailure('ride_closed');
+  // ...and no later than the end of its departure window. A ride still Scheduled after that did
+  // not run; cancelling it weeks later would undo the shares fixed at lock (code review).
+  if (now.getTime() >= ride.departure_end.getTime()) return requestFailure('window_over');
 
   await client.query(`UPDATE rides SET state = 'cancelled', cancelled_at = $2 WHERE id = $1`, [
     rideId,

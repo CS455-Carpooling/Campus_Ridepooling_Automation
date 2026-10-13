@@ -61,6 +61,10 @@ describe('RideManagementControls', () => {
       />,
     );
     expect(screen.queryByRole('heading', { name: 'Manage this ride' })).not.toBeInTheDocument();
+
+    // A ride still Scheduled after its departure window did not run: nothing left to manage.
+    rerender(<RideManagementControls ride={{ ...ride, windowEnded: true }} hubs={hubs} />);
+    expect(screen.queryByRole('heading', { name: 'Manage this ride' })).not.toBeInTheDocument();
   });
 
   it('requires confirmation for an edit affecting riders and saves after confirmation', async () => {

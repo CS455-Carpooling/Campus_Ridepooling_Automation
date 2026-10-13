@@ -124,6 +124,16 @@ describe('PATCH /api/rides/[id]', () => {
     ]);
   });
 
+  it('says why a ride past its departure window cannot be cancelled', async () => {
+    h.cancelRideForOwner.mockResolvedValueOnce({ kind: 'window_over' });
+    const refused = await call({ action: 'cancel' });
+    expect(refused.status).toBe(409);
+    expect(await refused.json()).toEqual({
+      error: "This ride's departure window is over, so it can no longer be cancelled.",
+      code: 'window_over',
+    });
+  });
+
   it('returns server errors and rolls back a failed transaction', async () => {
     const quiet = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     h.editRideForOwner.mockRejectedValueOnce(new Error('database unavailable'));

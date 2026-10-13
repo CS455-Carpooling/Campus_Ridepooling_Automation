@@ -40,7 +40,13 @@ const MOVES_FROM: Record<TripTarget, readonly RideState[]> = {
 
 /** Why a ride cannot move to the state asked for. */
 export type TripRefusal =
-  'not_owner' | 'cancelled' | 'completed' | 'not_locked' | 'not_started' | 'invalid_transition';
+  | 'not_owner'
+  | 'cancelled'
+  | 'completed'
+  | 'not_locked'
+  | 'not_started'
+  | 'invalid_transition'
+  | 'window_over';
 
 export const tripRefusalMessages: Record<TripRefusal, string> = {
   not_owner: 'Only the ride owner can change the trip.',
@@ -49,6 +55,7 @@ export const tripRefusalMessages: Record<TripRefusal, string> = {
   not_locked: 'Pickup can start once the ride locks, an hour before departure.',
   not_started: 'Start pickup before completing the ride.',
   invalid_transition: 'The trip cannot move to that step from where it is now.',
+  window_over: 'The departure window is over, so this ride can no longer start.',
 };
 
 /**
@@ -76,6 +83,7 @@ export function tripTransitionRefusal(
   departureStart: Date,
   now: Date,
   lockedAt: Date | string | null = null,
+  departureEnd: Date | null = null,
 ): TripRefusal | null {
   if (role !== 'owner') return 'not_owner';
   if (state === to) return null;
@@ -86,6 +94,10 @@ export function tripTransitionRefusal(
   }
   if (to === 'pickup_in_progress' && !rideLocked(lockedAt, departureStart, now))
     return 'not_locked';
+  // A ride starts within its departure window. One still Scheduled after it did not run, and
+  // starting it later would make shares due for a trip nobody took (see cancelRideForOwner).
+  if (to === 'pickup_in_progress' && departureEnd && now.getTime() >= departureEnd.getTime())
+    return 'window_over';
   return null;
 }
 

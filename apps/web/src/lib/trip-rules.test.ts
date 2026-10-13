@@ -69,6 +69,36 @@ describe('trip states (FR-RO-09.1, FR-RO-09.4, FR-RD-10.1)', () => {
     ).toBeNull();
   });
 
+  it('starts a ride only within its departure window', () => {
+    const end = minutes(60);
+    expect(
+      tripTransitionRefusal(
+        'owner',
+        'scheduled',
+        'pickup_in_progress',
+        departure,
+        minutes(59),
+        null,
+        end,
+      ),
+    ).toBeNull();
+    expect(
+      tripTransitionRefusal('owner', 'scheduled', 'pickup_in_progress', departure, end, null, end),
+    ).toBe('window_over');
+    // A trip already under way is never cut off by the clock.
+    expect(
+      tripTransitionRefusal(
+        'owner',
+        'pickup_in_progress',
+        'completed',
+        departure,
+        minutes(300),
+        null,
+        end,
+      ),
+    ).toBeNull();
+  });
+
   it('allows exactly the D1 order of steps, In Transit being optional', () => {
     const allowed: Array<[RideState, (typeof TRIP_TARGETS)[number]]> = [];
     for (const state of RIDE_STATES) {
