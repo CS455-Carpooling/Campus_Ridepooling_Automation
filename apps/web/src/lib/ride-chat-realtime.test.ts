@@ -2,7 +2,53 @@ import { createServer, type Server as HttpServer } from 'node:http';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Server as SocketServer } from 'socket.io';
 import { io as createSocketClient, type Socket } from 'socket.io-client';
-import { registerRideChatMessageHandler, rideChatAvailable } from './ride-chat-realtime.mjs';
+import {
+  chatSendRefusal,
+  registerRideChatMessageHandler,
+  rideChatAvailable,
+} from './ride-chat-realtime.mjs';
+
+describe('chatSendRefusal: who may post (FR-RD-01.5)', () => {
+  const owner = '6f1c2a5e-2222-4000-8000-000000000001';
+  const rider = '6f1c2a5e-2222-4000-8000-000000000002';
+  const ride = { owner_id: owner };
+  const now = new Date('2026-10-13T12:00:00.000Z');
+  const suspended = () => {
+    const calls: Array<[string, unknown[]]> = [];
+    const db = {
+      query: async (sql: string, values: unknown[]) => {
+        calls.push([sql, values]);
+        return {
+          rows: [{ reason_category: 'harassment', ends_at: new Date('2026-10-15T12:30:00.000Z') }],
+        };
+      },
+    };
+    return { db, calls };
+  };
+
+  it('refuses a suspended rider, saying until when and why', async () => {
+    const { db, calls } = suspended();
+    const refusal = await chatSendRefusal(db, ride, rider, now);
+    expect(refusal).toMatchObject({ ok: false, code: 'SUSPENDED' });
+    expect(refusal?.error).toMatch(
+      /^Your account is suspended until .* \(IST\) \(reason: Harassment\), so you cannot post in pool chats\./,
+    );
+    expect(calls[0][0]).toContain('FROM rider_suspensions');
+    expect(calls[0][1]).toEqual([rider, now]);
+  });
+
+  it("lets the ride's owner post even when suspended: their ride keeps running", async () => {
+    const { db, calls } = suspended();
+    await expect(chatSendRefusal(db, ride, owner, now)).resolves.toBeNull();
+    expect(calls).toHaveLength(0);
+  });
+
+  it('lets anyone without a suspension in force post', async () => {
+    await expect(
+      chatSendRefusal({ query: async () => ({ rows: [] }) }, ride, rider, now),
+    ).resolves.toBeNull();
+  });
+});
 
 describe('rideChatAvailable for realtime messaging', () => {
   const departureStart = new Date('2026-10-10T06:30:00+05:30');

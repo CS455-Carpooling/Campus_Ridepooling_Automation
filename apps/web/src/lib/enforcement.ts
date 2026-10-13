@@ -150,7 +150,7 @@ export async function suspendRider(
     userId,
     'account_suspended',
     'Your account is suspended',
-    `Your account is suspended ${until} (reason: ${complaintCategoryLabels[request.reasonCategory]}). You cannot offer rides or rate others until then. You can still file a complaint and see your rides.`,
+    `Your account is suspended ${until} (reason: ${complaintCategoryLabels[request.reasonCategory]}). You cannot offer or join rides, post in pool chats or rate others until then. You can still file a complaint, raise an SOS and see your rides.`,
   );
   await withdrawWaitingRequestsForSuspendedRider(client, userId, now);
   return {

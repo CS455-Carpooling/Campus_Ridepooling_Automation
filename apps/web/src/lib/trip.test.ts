@@ -186,6 +186,15 @@ describe('changeTripState (FR-RO-09.1, 09.4, FR-RD-10.1)', () => {
     expect(sqlOf(query, ' SET ')).toHaveLength(0);
   });
 
+  it('refuses to start a ride whose departure window is over, and changes nothing', async () => {
+    const { client, query } = tripClient({ departure_end: at(60) });
+    await expect(
+      changeTripState(client, RIDE, OWNER, 'pickup_in_progress', at(60)),
+    ).resolves.toEqual({ kind: 'refused', code: 'window_over' });
+    expect(sqlOf(query, ' SET ')).toHaveLength(0);
+    expect(sqlOf(query, 'FOR NO KEY UPDATE OF r')[0][0]).toContain('r.departure_end');
+  });
+
   it('starts pickup, keeping its time, and tells the riders but not the owner (FR-RO-09.2)', async () => {
     const { client, query } = tripClient({});
     const result = await changeTripState(client, RIDE, OWNER, 'pickup_in_progress', at(-30));

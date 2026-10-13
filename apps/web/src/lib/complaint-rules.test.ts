@@ -11,6 +11,7 @@ import {
   complaintStatusLabels,
   complaintStatusMessages,
   complaintWindow,
+  leftBeforeTrip,
   complaintWindowStart,
   parseComplaintRequest,
   parseComplaintStatusChange,
@@ -93,6 +94,16 @@ describe('complaintWindow (FR-RD-13.1)', () => {
     expect(complaintWindowStart(null, null)).toBeNull();
     // A completion time on a ride not completed does not count.
     expect(complaintWindow('in_transit', completedAt, completedAt, null)).toBe('not_completed');
+  });
+});
+
+describe('leftBeforeTrip (FR-RD-13.1, 07.3)', () => {
+  it('counts only someone who left owing nothing as off the trip', () => {
+    const left = new Date('2026-10-10T07:00:00+05:30');
+    expect(leftBeforeTrip({ leftAt: null, lockedShare: null })).toBe(false);
+    expect(leftBeforeTrip({ leftAt: left, lockedShare: null })).toBe(true);
+    // A late leaver keeps their locked share payable, so they were part of the trip.
+    expect(leftBeforeTrip({ leftAt: left, lockedShare: 150 })).toBe(false);
   });
 });
 

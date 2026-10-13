@@ -34,7 +34,8 @@ export function RideManagementControls({ ride, hubs }: { ride: RideView; hubs: P
   const [confirmEdit, setConfirmEdit] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
 
-  if (ride.viewerRole !== 'owner' || ride.state !== 'scheduled') return null;
+  // Nothing to manage once the departure window is over: such a ride did not run (code review).
+  if (ride.viewerRole !== 'owner' || ride.state !== 'scheduled' || ride.windowEnded) return null;
 
   async function save(form: HTMLFormElement, confirmAffectedRiders: boolean) {
     const data = new FormData(form);

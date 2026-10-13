@@ -73,6 +73,19 @@ export function complaintWindowStart(
 }
 
 /**
+ * Whether someone left a ride owing nothing: before the lock, or after it on changed terms
+ * (FR-RD-07.2, 07.4). They were not part of the trip, so a trip complaint is not theirs to file
+ * or to answer (FR-RD-13.1). Someone who left after the lock still owes their locked share
+ * (FR-RD-07.3), so complaints by and about them stay possible, a payment complaint included.
+ */
+export function leftBeforeTrip(seat: {
+  leftAt: Date | string | null;
+  lockedShare: number | null;
+}): boolean {
+  return (seat.leftAt ?? null) !== null && (seat.lockedShare ?? null) === null;
+}
+
+/**
  * Whether the complaint form is open for a ride (FR-RD-13.1): from completion, or from the
  * viewer's own no-show so they can dispute it, until 7 days later. Reporting a chat message
  * (FR-RD-09.6) follows the pool chat's own rules instead.

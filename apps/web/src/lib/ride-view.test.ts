@@ -193,6 +193,8 @@ describe('getRideView: what the page shows', () => {
     expect(occupantSql).toContain('profile.display_name');
     expect(occupantSql).toContain('m.left_at IS NULL');
     expect(occupantSql).toContain('completed.left_at IS NULL');
+    // A ride someone left or was a no-show on is not a trip they completed.
+    expect(occupantSql).toContain('completed.no_show_at IS NULL');
     expect(occupantSql).not.toMatch(/email|roll_number|password|mobile_number/);
   });
 });
@@ -484,6 +486,15 @@ describe('ratings on the ride page and in history (CS455-44)', () => {
     await expect(getHistoricalRides(VIEWER_ID, during)).resolves.toMatchObject([
       { completedAt: null, ratingClosesAt: null, canRate: false },
     ]);
+
+    // Someone who left the ride before it ran has nobody to rate on it (FR-RD-12.2).
+    query.mockResolvedValueOnce({
+      rows: [{ ...historyRow, viewer_left_at: new Date('2026-10-10T04:00:00+05:30') }],
+    });
+    await expect(getHistoricalRides(VIEWER_ID, during)).resolves.toMatchObject([
+      { canRate: false },
+    ]);
+    expect(query.mock.calls.at(-1)?.[0]).toContain('me.left_at AS viewer_left_at');
   });
 });
 

@@ -176,7 +176,7 @@ const errorByKind: Record<string, { status: number; error: string }> = {
   },
   departure_conflict: {
     status: 409,
-    error: 'This ride departs within two hours of another ride you have joined.',
+    error: 'This ride departs within two hours of another ride you offered or joined.',
   },
 };
 

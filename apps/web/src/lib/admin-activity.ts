@@ -13,6 +13,7 @@ export const adminActionLabels = {
   'campus_fare.set': 'Set a campus fare',
   'external_fare.set': 'Set a fare range',
   'complaint.status': 'Changed a complaint status',
+  'chat_report.resolve': 'Resolved a chat report',
   'rider.warn': 'Warned a rider',
   'rider.suspend': 'Suspended a rider',
   'rider.reactivate': 'Lifted a suspension',

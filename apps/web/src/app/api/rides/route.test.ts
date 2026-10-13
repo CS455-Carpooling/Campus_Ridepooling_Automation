@@ -146,6 +146,11 @@ describe('POST /api/rides', () => {
       String(sql).includes('INSERT INTO rides'),
     );
     expect(rideInsert?.[1][4]).toBe(4);
+    // The owner's own requests still waiting near this departure are withdrawn (P-08).
+    const withdraw = h.clientQuery.mock.calls.find(([sql]) =>
+      String(sql).includes("request.status IN ('pending', 'needs_reconfirmation')"),
+    );
+    expect(withdraw?.[1]).toEqual(['user-1', null, new Date(validBody.departureStart), 7200]);
   });
 
   it('rejects overlapping active rides', async () => {
@@ -166,6 +171,36 @@ describe('POST /api/rides', () => {
       error: 'You already have a scheduled or active ride that overlaps this departure window.',
     });
     expect(h.clientQuery).toHaveBeenCalledWith('ROLLBACK');
+  });
+
+  it('refuses a ride departing within two hours of a seat held on another ride (P-08)', async () => {
+    h.clientQuery.mockImplementation((sql: string) => {
+      if (sql.includes('FROM locations')) return Promise.resolve({ rows: locations });
+      if (sql.includes('FROM vehicle_types')) return Promise.resolve({ rows: vehicles });
+      if (sql === 'SELECT id FROM users WHERE id=$1 FOR NO KEY UPDATE') {
+        return Promise.resolve({ rows: [{ id: 'user-1' }] });
+      }
+      if (sql.includes('SELECT 1 FROM riders seat')) {
+        return Promise.resolve({ rows: [{ '?column?': 1 }] });
+      }
+      return Promise.resolve({ rows: [] });
+    });
+    const response = await POST(new Request('http://localhost/api/rides', { method: 'POST' }));
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({
+      error: 'You already have a ride, offered or joined, departing within two hours of this one.',
+      code: 'departure_conflict',
+    });
+    // The same rule as joining a ride (travelConflict): no-shows and seats left do not count.
+    const seatCheck = h.clientQuery.mock.calls.find(([sql]) =>
+      String(sql).includes('SELECT 1 FROM riders seat'),
+    );
+    expect(seatCheck?.[0]).toContain('seat.left_at IS NULL AND seat.no_show_at IS NULL');
+    expect(seatCheck?.[1]).toEqual(['user-1', null, validBody.departureStart, 7200]);
+    expect(h.clientQuery).toHaveBeenCalledWith('ROLLBACK');
+    expect(
+      h.clientQuery.mock.calls.some(([sql]) => String(sql).includes('INSERT INTO rides')),
+    ).toBe(false);
   });
 
   it('rolls back and returns 500 when persistence fails', async () => {

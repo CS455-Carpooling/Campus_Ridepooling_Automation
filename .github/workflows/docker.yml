@@ -11,6 +11,7 @@ on:
       - apps/web/package.json
       - apps/web/db/**
       - apps/web/server.mjs
+      - apps/web/src/lib/suspension-rule.mjs
       - apps/web/scripts/**
       - apps/web/src/lib/ride-chat-realtime.mjs
       - apps/web/src/lib/notification-realtime.mjs
@@ -25,6 +26,7 @@ on:
       - apps/web/package.json
       - apps/web/db/**
       - apps/web/server.mjs
+      - apps/web/src/lib/suspension-rule.mjs
       - apps/web/scripts/**
       - apps/web/src/lib/ride-chat-realtime.mjs
       - apps/web/src/lib/notification-realtime.mjs
