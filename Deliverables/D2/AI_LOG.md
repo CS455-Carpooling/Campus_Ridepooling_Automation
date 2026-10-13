@@ -679,3 +679,16 @@ Continue the Notification Centre work and implement real-time delivery and offli
 ### Verification
 - The merged tree retains current master files and layers the realtime changes into the conflicting server, schema, and AI log files.
 - The new CI/Docker runs must complete before the PR can be considered ready to merge.
+
+
+## 2026-10-13 — Finish PR #61 conflict and validation fixes
+
+### Additional failures found after the clean master merge
+- Prettier's CI formatter identified the exact layout changes required in the UI component tests; those edits have been applied directly to the test file, and the temporary diagnostic step has been removed from `.github/workflows/ci.yml`.
+- The realtime trigger test failed under Vitest because its transformed `import.meta.url` was not a `file:` URL. It now reads `db/schema.sql` from the web workspace path via `resolve(process.cwd(), 'db/schema.sql')`.
+- The Docker run failed because the production runtime image copied `ride-chat-realtime.mjs` but omitted the newly imported `notification-realtime.mjs`. The Dockerfile now copies the helper as well, and the Docker workflow path filters include it for pull requests and master pushes.
+
+### Verification
+- On the temporary diagnostic run, format-check, lint and type-check passed. The test run reported 1 failure among 1,294 tests, isolated to the schema-path issue above; the rest of the tests passed.
+- The Docker failure was isolated to the missing runtime helper module, not to the PostgreSQL schema trigger or Next.js compilation.
+- Fresh CI and Docker checks on the resulting head are required to verify all fixes; no merge has been performed.
