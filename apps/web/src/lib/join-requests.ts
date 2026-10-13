@@ -807,6 +807,16 @@ export async function actOnJoinRequest(
       { snapshot: snapshotJson(snapshot) },
       now,
     );
+    // The owner hears the outcome either way (S-2): the request can be decided again.
+    await notify(
+      client,
+      ride.owner_id,
+      'join_request',
+      'A rider confirmed the new terms',
+      'A rider accepted the changed ride terms. Their request is waiting for your decision again.',
+      rideId,
+      now,
+    );
     return { kind: 'reconfirmed', requestId };
   }
 

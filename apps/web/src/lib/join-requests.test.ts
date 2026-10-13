@@ -466,6 +466,16 @@ describe('actOnJoinRequest', () => {
           values?.includes('rider_reconfirmed'),
       ),
     ).toBe(true);
+    // S-2: the owner is told the request is waiting for them again.
+    expect(
+      query.mock.calls.some(
+        ([sql, values]) =>
+          sql.includes('INSERT INTO notifications') &&
+          values?.[0] === OWNER_ID &&
+          values?.[1] === 'join_request' &&
+          values?.[2] === 'A rider confirmed the new terms',
+      ),
+    ).toBe(true);
   });
 
   it('allows a rider to decline changed terms and withdraw an ordinary pending request', async () => {
