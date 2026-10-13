@@ -80,7 +80,9 @@ describe('ComplaintForm (FR-RD-13.1 to 13.6, CS455-53)', () => {
     await userEvent.click(screen.getByRole('radio', { name: /^Safety/ }));
     const contacts = screen.getByRole('region', { name: 'Emergency contacts' });
     expect(within(contacts).getByRole('link', { name: '112' })).toHaveAttribute('href', 'tel:112');
-    expect(contacts).toHaveTextContent('IIT Kanpur security: number to be confirmed');
+    expect(
+      within(contacts).getByRole('link', { name: '0512-259-7999' }),
+    ).toHaveAttribute('href', 'tel:05122597999');
     expect(contacts).toHaveTextContent('does not contact emergency services for you');
   });
 

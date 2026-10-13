@@ -165,13 +165,13 @@ export function activeShares(
 export function itineraryFor(
   direction: Direction,
   departureStart: Date,
-  seats: ReadonlyArray<Pick<SeatRow, 'id' | 'place' | 'is_owner' | 'left_at'>>,
+  seats: ReadonlyArray<Pick<SeatRow, 'id' | 'place' | 'is_owner' | 'left_at' | 'no_show_at'>>,
 ): Itinerary {
   return tripItinerary(
     direction,
     departureStart,
     seats
-      .filter((seat) => !seat.left_at)
+      .filter((seat) => isActiveSeat({ leftAt: seat.left_at, noShowAt: seat.no_show_at }))
       .map((seat) => ({ seatId: seat.id, place: seat.place, isOwner: seat.is_owner })),
   );
 }

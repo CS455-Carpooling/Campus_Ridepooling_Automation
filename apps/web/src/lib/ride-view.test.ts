@@ -551,6 +551,7 @@ describe('getRideView: the trip under way (CS455-62, CS455-63)', () => {
       ['no_show', null],
     ]);
     expect(view).toMatchObject({ occupantCount: 2, viewerShare: 150 });
+    expect(view?.trip?.stops.flatMap((stop) => stop.people)).not.toContain('Meera Iyer');
   });
 
   it('tells the owner when each rider may be marked a no-show, 5 minutes after their pickup time', async () => {
@@ -737,5 +738,19 @@ describe('getRideView: SOS (CS455-64)', () => {
     const view = await getRideView(RIDE_ID, VIEWER_ID, locked);
     expect(view?.trip).toMatchObject({ canRaiseSos: false, viewerSos: null });
     expect(query.mock.calls[0][0]).toContain('s.raised_by = $2');
+  });
+
+  it('does not offer SOS to a rider already removed from the pool as a no-show', async () => {
+    respond(
+      rideRow({
+        state: 'in_transit',
+        pickup_started_at: locked,
+        trip_started_at: locked,
+        viewer_is_rider: true,
+      }),
+      [ownerSeat, { ...me, no_show_at: locked }],
+    );
+    const view = await getRideView(RIDE_ID, VIEWER_ID, locked);
+    expect(view?.trip).toMatchObject({ canRaiseSos: false, viewerNoShow: true });
   });
 });

@@ -4,10 +4,10 @@ import type { Direction } from './ride-rules';
 import { rideTitle, type RideState } from './ride-status';
 import { canRaiseSos, type IncidentStatus, type SosUpdate } from './sos-rules';
 import type { TripResult } from './trip';
-import { seatStatus, type SeatStatus } from './trip-rules';
+import { isActiveSeat, seatStatus, type SeatStatus } from './trip-rules';
 
 /**
- * SOS alerts (CS455-64: FR-RD-15, FR-RO-13.2). Anyone with a seat raises one while the trip is
+ * SOS alerts (CS455-64: FR-RD-15, FR-RO-13.2). An active occupant raises one while the trip is
  * under way, suspended or not (FR-RD-01.5). It is stored with a snapshot of the trip for the
  * operations admins and is never shown or sent to the rest of the pool (FR-RD-15.4): no
  * notification, nothing in the ride view but the raiser's own alert. Pressing SOS again returns
@@ -108,6 +108,9 @@ const SEATS_SQL = `
   WHERE m.ride_id = $1
   ORDER BY (m.user_id = r.owner_id) DESC, m.joined_at, m.id`;
 
+const isActiveOccupant = (seat: Pick<SeatRow, 'left_at' | 'no_show_at'>) =>
+  isActiveSeat({ leftAt: seat.left_at, noShowAt: seat.no_show_at });
+
 // One active alert per person per ride (sos_incidents_one_active): pressing SOS again adds nothing.
 const INSERT_SQL = `
   INSERT INTO sos_incidents
@@ -134,7 +137,7 @@ export async function raiseSos(
   const ride = (await client.query<RideRow>(RIDE_SQL, [rideId])).rows[0];
   if (!ride) return { kind: 'not_found' };
   const seats = (await client.query<SeatRow>(SEATS_SQL, [rideId])).rows;
-  const mine = seats.find((seat) => seat.user_id === userId && !seat.left_at);
+  const mine = seats.find((seat) => seat.user_id === userId && isActiveOccupant(seat));
   if (!mine) return { kind: 'not_found' };
   if (!canRaiseSos(ride.state, true)) return { kind: 'refused', code: 'not_active' };
 
@@ -149,7 +152,7 @@ export async function raiseSos(
       state: ride.state,
     },
     occupants: seats
-      .filter((seat) => !seat.left_at)
+      .filter(isActiveOccupant)
       .map((seat) => ({
         userId: seat.user_id,
         name: seat.name,

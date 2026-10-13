@@ -25,16 +25,12 @@ export function EmergencyContacts() {
         </li>
         <li>
           {campusSecurity.label}:{' '}
-          {campusSecurity.number ? (
-            <a
-              href={`tel:${campusSecurity.number.replace(/\s+/g, '')}`}
-              className="font-mono text-lg font-semibold text-on-brand"
-            >
-              {campusSecurity.number}
-            </a>
-          ) : (
-            <span className="text-on-brand-muted">number to be confirmed</span>
-          )}
+          <a
+            href={`tel:${campusSecurity.number.replace(/\D/g, '')}`}
+            className="font-mono text-lg font-semibold text-on-brand"
+          >
+            {campusSecurity.number}
+          </a>
         </li>
       </ul>
       <p className="mt-3 text-sm text-on-brand-muted">{NO_DISPATCH_NOTE}</p>

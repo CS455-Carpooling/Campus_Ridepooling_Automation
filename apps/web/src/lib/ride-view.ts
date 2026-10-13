@@ -21,6 +21,7 @@ import { AGREED_PICKUP_SQL, activeShares } from './trip';
 import { pickupTimeFor, tripItinerary } from './trip-itinerary';
 import {
   checkInRefusal,
+  isActiveSeat,
   noShowAvailableAt,
   seatStatus,
   tripTransitionRefusal,
@@ -85,7 +86,7 @@ export type TripView = {
   canCheckIn: boolean;
   /** The viewer was marked a no-show on this ride (FR-RD-10.3). */
   viewerNoShow: boolean;
-  /** The viewer may raise an SOS now: they have a seat and the trip is under way (FR-RD-15.1). */
+  /** The viewer may raise an SOS now: they are active in the pool and the trip is under way. */
   canRaiseSos: boolean;
   /** The viewer's own alert on this ride, while it is not closed; never anyone else's (FR-RD-15.4). */
   viewerSos: SosIncident | null;
@@ -286,11 +287,13 @@ export async function getRideView(
   const itinerary = tripItinerary(
     ride.direction,
     ride.departure_start,
-    people.map((person) => ({
-      seatId: person.occupant_id,
-      place: person.campus_place,
-      isOwner: person.is_owner,
-    })),
+    people
+      .filter((person) => isActiveSeat({ leftAt: null, noShowAt: person.no_show_at }))
+      .map((person) => ({
+        seatId: person.occupant_id,
+        place: person.campus_place,
+        isOwner: person.is_owner,
+      })),
   );
   // For the owner during pickup, each rider still to be decided gets the time a no-show becomes
   // possible: 5 minutes after their estimated pickup time (P-19).
@@ -374,7 +377,12 @@ export async function getRideView(
               ride.locked_at,
             ) === null,
           viewerNoShow,
-          canRaiseSos: canRaiseSos(ride.state, viewerRow !== undefined),
+          canRaiseSos:
+            canRaiseSos(
+              ride.state,
+              viewerRow !== undefined &&
+                isActiveSeat({ leftAt: null, noShowAt: viewerRow.no_show_at }),
+            ),
           viewerSos: ride.viewer_sos
             ? {
                 id: ride.viewer_sos.id,

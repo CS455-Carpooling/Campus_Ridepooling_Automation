@@ -153,11 +153,12 @@ describe('activeShares (FR-RO-10.2, Table T-2)', () => {
 });
 
 describe('itineraryFor', () => {
-  it('leaves out seats that left', () => {
+  it('leaves out seats that left or were marked as a no-show', () => {
     const stops = itineraryFor('to_hub', departure, [
       ownerSeat,
       riderSeat,
       seat('s-gone', STRANGER, { place: 'Hall 9', left_at: at(-120) }),
+      seat('s-no-show', STRANGER, { place: 'Hall 10', no_show_at: at(10) }),
     ]).stops;
     expect(stops.map((stop) => stop.place)).toEqual(['Hall 1', 'Hall 2']);
   });

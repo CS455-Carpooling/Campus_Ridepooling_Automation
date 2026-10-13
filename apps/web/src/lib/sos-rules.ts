@@ -7,11 +7,11 @@ import type { RideState } from './ride-status';
 import { isTripActive } from './trip-rules';
 
 /**
- * Anyone with a seat on the ride, rider or owner, may raise an SOS while the trip is under way
- * (FR-RD-15.1, FR-RO-13.2), suspended or not (FR-RD-01.5).
+ * An active occupant, rider or owner, may raise an SOS while the trip is under way (FR-RD-15.1,
+ * FR-RO-13.2), suspended or not (FR-RD-01.5).
  */
-export function canRaiseSos(state: RideState, hasSeat: boolean): boolean {
-  return hasSeat && isTripActive(state);
+export function canRaiseSos(state: RideState, hasActiveSeat: boolean): boolean {
+  return hasActiveSeat && isTripActive(state);
 }
 
 export const INCIDENT_STATUSES = ['open', 'acknowledged', 'closed'] as const;
