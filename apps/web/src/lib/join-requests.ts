@@ -108,7 +108,7 @@ async function recordEvent(
 async function notify(
   client: PoolClient,
   userId: string,
-  type: 'join_request' | 'join_request_update' | 'ride_share_update',
+  type: 'join_request' | 'join_request_update' | 'ride_share_update' | 'ride_update',
   title: string,
   body: string,
   rideId: string,
@@ -297,7 +297,8 @@ async function refreshPendingSnapshots(
   ride: RideRow,
   now: Date,
   seats: SeatRow[],
-) {
+): Promise<Set<string>> {
+  const notifiedRiderIds = new Set<string>();
   const { rows } = await client.query<RequestRow>(
     `${ACTIVE_REQUEST_SQL}
      WHERE ride_id = $1 AND status IN ('pending', 'needs_reconfirmation')
@@ -357,9 +358,11 @@ async function refreshPendingSnapshots(
           ride.id,
           now,
         );
+        notifiedRiderIds.add(request.rider_id);
       }
     }
   }
+  return notifiedRiderIds;
 }
 
 async function refreshAcceptedItinerary(
@@ -1255,7 +1258,31 @@ export async function editRideForOwner(
     ride.expected_total_fare,
   );
   await refreshAcceptedItinerary(client, updatedRide, now, beforeSeats);
-  await refreshPendingSnapshots(client, updatedRide, now, beforeSeats);
+  const notifiedWaitingRiders = await refreshPendingSnapshots(
+    client,
+    updatedRide,
+    now,
+    beforeSeats,
+  );
+  const { rows: waitingRiders } = await client.query<{ rider_id: string }>(
+    `SELECT DISTINCT rider_id FROM ride_join_requests
+     WHERE ride_id = $1 AND status IN ('pending', 'needs_reconfirmation')`,
+    [rideId],
+  );
+  for (const waitingRider of waitingRiders) {
+    // The state-transition notice already explains a material change. Otherwise, every waiting
+    // requester still needs to know that the terms they are reviewing have changed.
+    if (notifiedWaitingRiders.has(waitingRider.rider_id)) continue;
+    await notify(
+      client,
+      waitingRider.rider_id,
+      'ride_update',
+      'Ride details changed',
+      'The owner changed the ride details. Review the updated departure, pickup, destination, and fare on the ride page.',
+      rideId,
+      now,
+    );
+  }
   return { kind: 'edited', rideId };
 }
 

@@ -1080,3 +1080,57 @@ Refer to the comment on PR #61, make the suggested fix if viable, do not reply t
 
 ### Verification
 - Added the regression test to `NotificationsCentre.test.tsx`. CI and Docker checks for the resulting commit must complete before considering the PR ready.
+
+## 2026-10-13 — Notification event integration, end-to-end verification, and final hardening (CS455-70)
+
+### User prompt
+“Continue my CS455 Notification Centre work in https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation.
+
+Implement PR 4: notification event integration, end-to-end verification, and final hardening. PRs 1–3 should already be merged into `master`.
+
+Mandatory Git workflow: inspect repository state, working tree, recent history, current notification implementation and merged PRs; fetch latest; create and work only on `CS455-59-notification-integration-tests`; preserve unrelated changes; commit only to this branch.
+
+Audit `docs/BUILD_CHECKLIST.md`, relevant requirements and acceptance criteria, notification schema and event-producing code. Verify types against actual schema and code; do not invent event types or assume every schema type has a producer. Scope: integrate supported missing events, use durable/idempotent notification creation compatible with realtime delivery, coordinate with feature owners and do not take over their workflows, add/strengthen ownership/read/unread/order/realtime/offline tests, verify links, document unsupported integrations, run supported checks without claiming unavailable end-to-end verification, and update the AI log. Jira: CS455-70.”
+
+### Repository state and history
+- Confirmed PR #53 (notification API), PR #54 (Notification Centre UI), and PR #61 (realtime notification delivery/offline sync) are merged into `master`.
+- Created `CS455-59-notification-integration-tests` from the then-current `master` commit `c9268106ea19497382d1422da2c26a5691577faa`. All changes described here were committed only to that branch. The branch was initially new.
+- This execution environment cannot inspect a developer's local worktree. A full local clone/dependency environment is not available; previous attempts to clone failed at GitHub DNS resolution.
+
+### Requirements and notification type audit
+- Read `docs/BUILD_CHECKLIST.md` and `Deliverables/D1/Requirements Engineering/users/rider/02_functional_requirements.md`, especially FR-RD-14.1 to FR-RD-14.4.
+- Confirmed the current schema and `apps/web/src/lib/notification-types.ts` allow 12 types: `pool_chat_opened`, `pool_chat_message`, `ride_update`, `account_warning`, `account_suspended`, `account_reactivated`, `complaint_update`, `join_request`, `join_request_update`, `ride_share_update`, `trip_update`, and `no_show_recorded`.
+- Added `apps/web/src/lib/notification-types.test.ts` so the shared TypeScript allow-list must stay equal to the SQL constraint. A remote/static evaluation of the checked-in schema and type list finds 12 entries on both sides, with matching sets.
+
+### Current producer inventory and ownership boundaries
+- `pool_chat_opened`: already inserted from the existing chat-creation CTE only when a chat is newly created; repeated opens do not generate another chat-creation notification.
+- `pool_chat_message`: already inserted in the chat-message transaction for other pool members. PR 3's PostgreSQL `AFTER INSERT` trigger emits only after commit.
+- `join_request`: already created for the ride owner when a new request is submitted. Existing idempotency keys return the saved request before another notification can be inserted.
+- `join_request_update`: already created for state transitions such as accepted, rejected, expired, withdrawn, cancelled, reconfirmation/lock outcomes and other request lifecycle changes. Existing state guards/no-op handling prevent a repeated accepted transition from issuing the same state-change notice again.
+- `ride_share_update`: already produced when accepted riders' calculated share changes.
+- `ride_update`: previously had no producer in the inspected code. Added a narrow integration in the existing `editRideForOwner()` transaction: waiting requesters now receive a ride-details update when the ride is materially edited and no status-transition notice already covers the edit. If a pending request moves to `needs_reconfirmation`, its more specific existing `join_request_update` is retained instead of sending a duplicate second notice. Repeating the same saved edit is a no-op and does not add another notification. The ride update and notification insert occur in the caller's same transaction, using the existing notify helper and the PR 3 database trigger.
+- `trip_update` and `no_show_recorded`: already produced from the trip state/no-show service in its transaction (PR #57 / CS455-62).
+- `account_warning`, `account_suspended`, `account_reactivated`: already produced inside the existing operations-admin enforcement transaction. The notification body intentionally does not disclose admin free-form notes that could identify a complainant.
+- `complaint_update`: already produced when an authorized, version-checked complaint status transition is saved. The resolution notice says only whether action was taken, not the sanction.
+- SOS remains intentionally private; the SOS feature's current requirements prohibit notifying the rest of the pool about an SOS. No SOS notification was added.
+- No central insert service was introduced because these producers already use their owning PostgreSQL transaction clients; moving them to an independent service would risk breaking commit/rollback atomicity. Existing local notification helpers use the shared type contract where useful.
+
+### Other changes
+- `apps/web/src/app/api/notifications/route.ts`: bounded GET results to `created_at >= now() - interval '30 days'` as required by FR-RD-14.2, retaining authenticated-user scope, descending `created_at, id` ordering and bounded pagination. The existing `notifications_user_created_idx` supports the query.
+- `apps/web/src/app/api/notifications/route.test.ts`: asserted both the 30-day condition and deterministic ordering alongside existing authentication, ownership, pagination and serialization coverage.
+- `apps/web/src/lib/join-requests.test.ts`: added a regression test that a changed ride with a waiting requester produces the missing `ride_update`, and that retrying the same already-saved edit does not create a second notification. Strengthened the existing idempotent request submission test to assert a replay inserts no notification.
+- `apps/web/src/lib/enforcement.ts`: typed its notification helper against shared `NotificationType` instead of an unconstrained string.
+- The existing PATCH notification API test still verifies current-user scoping, 404 equivalence for missing/non-owned rows, and `COALESCE(read_at, now())` so marking read is persisted and idempotent. The realtime helper/UI tests already cover user-room isolation, committed-row delivery, duplicate event IDs, reconnect/refetch, tab resume and stale-read-state protection.
+- Notification links remain constrained to valid related ride IDs and the existing ride page. No complaint ID exists in the notification schema, and there is no dedicated complaint detail destination in the current Notification Centre contract; related chat/message IDs are not linked to unsupported routes.
+
+### Unimplemented integrations and cross-team dependencies
+- Settlement/payment status changes and reminders are required by the wording of FR-RD-14.1, but the inspected schema has no settlement/payment notification type and the current tree does not expose a completed payment/settlement event producer. This is a payments/settlement feature-owner dependency; no invented notification type, payment state, reminder job or business workflow was added.
+- FR-RD-14.3 offline email notifications are not implemented by this PR. They need the accepted email-provider/consent and delivery/retry boundary from the owning notification/email work.
+- FR-RD-14.4 browser push is a Could requirement and remains unsupported; there is no push-subscription/permission delivery integration in the current branch.
+- The Notification Centre still displays at most the latest 100 notifications. The new API enforces the 30-day window, but the unread count remains based on the loaded page rather than an aggregate over every notification in that window; separate unread-count/pagination API work is still needed if the acceptance criterion requires an all-30-day unread total.
+
+### Verification and limitations
+- Remote/static checks confirmed: all notification type names in the SQL check constraint match the shared TypeScript list (12/12); the notification GET SQL is user-scoped, ordered by `created_at DESC, id DESC`, and restricted to the most recent 30 days; and the ride-edit hook emits `ride_update` only to waiting requesters not covered by a transition notification.
+- Unit tests, integration tests, formatter, lint, typecheck, build, Docker Compose, and live PostgreSQL verification **were not run in this environment** because it has no working local checkout/dependency environment. No full end-to-end verification is claimed.
+- CI in `.github/workflows/ci.yml` triggers on pull requests and `master`, not arbitrary feature-branch pushes; no PR was opened as part of this task, so no new CI run is available to report. The tests described above are added/updated but need execution in a checkout/CI before merge.
+
