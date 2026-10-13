@@ -168,6 +168,40 @@ describe('POST /api/rides', () => {
     expect(h.clientQuery).toHaveBeenCalledWith('ROLLBACK');
   });
 
+  it('refuses a ride departing within two hours of a seat held on another ride (P-08)', async () => {
+    h.clientQuery.mockImplementation((sql: string) => {
+      if (sql.includes('FROM locations')) return Promise.resolve({ rows: locations });
+      if (sql.includes('FROM vehicle_types')) return Promise.resolve({ rows: vehicles });
+      if (sql === 'SELECT id FROM users WHERE id=$1 FOR NO KEY UPDATE') {
+        return Promise.resolve({ rows: [{ id: 'user-1' }] });
+      }
+      if (sql.includes('SELECT 1 FROM riders seat')) {
+        return Promise.resolve({ rows: [{ '?column?': 1 }] });
+      }
+      return Promise.resolve({ rows: [] });
+    });
+    const response = await POST(new Request('http://localhost/api/rides', { method: 'POST' }));
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({
+      error: 'You have a seat on another ride departing within two hours of this one.',
+      code: 'departure_conflict',
+    });
+    const seatCheck = h.clientQuery.mock.calls.find(([sql]) =>
+      String(sql).includes('SELECT 1 FROM riders seat'),
+    );
+    expect(seatCheck?.[0]).toContain('seat.left_at IS NULL');
+    expect(seatCheck?.[0]).toContain('joined.owner_id<>$1');
+    expect(seatCheck?.[1]).toEqual([
+      'user-1',
+      validBody.departureStart,
+      ['scheduled', 'pickup_in_progress', 'in_transit'],
+    ]);
+    expect(h.clientQuery).toHaveBeenCalledWith('ROLLBACK');
+    expect(
+      h.clientQuery.mock.calls.some(([sql]) => String(sql).includes('INSERT INTO rides')),
+    ).toBe(false);
+  });
+
   it('rolls back and returns 500 when persistence fails', async () => {
     h.clientQuery.mockImplementation((sql: string) => {
       if (sql.includes('FROM locations')) return Promise.resolve({ rows: locations });

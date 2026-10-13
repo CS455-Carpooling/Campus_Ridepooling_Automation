@@ -106,6 +106,20 @@ async function createRide(
 
   if (conflict.rows.length > 0) return { kind: 'conflict' as const };
 
+  // Nor can they offer a ride departing within two hours of a seat they hold on someone else's
+  // ride: one person travels in one pool at a time (FR-RO-03.2, P-08).
+  const seatConflict = await client.query(
+    `SELECT 1 FROM riders seat
+     JOIN rides joined ON joined.id = seat.ride_id
+     WHERE seat.user_id=$1 AND seat.left_at IS NULL AND joined.owner_id<>$1
+       AND joined.state=ANY($3::text[])
+       AND abs(extract(epoch FROM (joined.departure_start - $2::timestamptz))) < 7200
+     LIMIT 1`,
+    [userId, request.departureStart, [...ACTIVE_RIDE_STATES]],
+  );
+
+  if (seatConflict.rows.length > 0) return { kind: 'seat_conflict' as const };
+
   const ride = await client.query<RideRow>(
     `INSERT INTO rides
       (owner_id,direction,hub_id,vehicle_type_id,capacity_snapshot,departure_start,departure_end,expected_total_fare,state)
@@ -191,6 +205,16 @@ export async function POST(req: Request) {
       return json(
         {
           error: 'You already have a scheduled or active ride that overlaps this departure window.',
+        },
+        409,
+      );
+    }
+    if (result.kind === 'seat_conflict') {
+      await client.query('ROLLBACK');
+      return json(
+        {
+          error: 'You have a seat on another ride departing within two hours of this one.',
+          code: 'departure_conflict',
         },
         409,
       );
