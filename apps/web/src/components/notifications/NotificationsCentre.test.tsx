@@ -2,8 +2,11 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NotificationsCentre } from './NotificationsCentre';
 
+type SocketEventHandler = (payload?: unknown) => void;
+type SocketHandlers = Record<string, SocketEventHandler[]>;
+
 const socketState = vi.hoisted(() => ({
-  handlers: {} as Record<string, Array<(payload?: unknown) => void>>,
+  handlers: {} as SocketHandlers,
   disconnect: vi.fn(),
 }));
 
@@ -56,7 +59,7 @@ function emitSocketEvent(event: string, payload?: unknown) {
 
 beforeEach(() => {
   vi.restoreAllMocks();
-  socketState.handlers = Object.create(null) as Record<string, Array<(payload?: unknown) => void>>;
+  socketState.handlers = Object.create(null) as SocketHandlers;
   socketState.disconnect.mockClear();
 });
 
