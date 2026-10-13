@@ -157,7 +157,7 @@ const RIDER_REQUEST_HISTORY_SQL = `
   FROM ride_join_request_events h
   JOIN ride_join_requests jr ON jr.id = h.request_id
   WHERE jr.rider_id = $1
-  ORDER BY h.changed_at ASC, h.id ASC
+  ORDER BY h.created_at ASC, h.id ASC
 `;
 
 function toIsoString(value: Date | string): string {

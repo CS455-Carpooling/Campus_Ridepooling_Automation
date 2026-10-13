@@ -33,7 +33,7 @@ export function RequestToJoinButton({ rideId, pickupPointId, disabled = false }:
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          pickupPointId,
+          pickupLocationId: pickupPointId,
           idempotencyKey: crypto.randomUUID(),
         }),
       });

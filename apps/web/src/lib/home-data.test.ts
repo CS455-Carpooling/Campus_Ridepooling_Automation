@@ -55,6 +55,8 @@ describe('home data', () => {
       }
 
       if (sql.includes('ride_join_request_events')) {
+        expect(sql).toContain('ORDER BY h.created_at ASC, h.id ASC');
+        expect(sql).not.toContain('h.changed_at');
         return {
           rows: [
             {

@@ -45,7 +45,8 @@ describe('RequestToJoinButton', () => {
     const options = fetchMock.mock.calls[0][1] as RequestInit;
     const body = JSON.parse(String(options.body));
 
-    expect(body.pickupPointId).toBe('hall-6');
+    expect(body.pickupLocationId).toBe('hall-6');
+    expect(body).not.toHaveProperty('pickupPointId');
     expect(body.idempotencyKey).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
     );
