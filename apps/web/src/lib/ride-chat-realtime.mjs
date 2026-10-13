@@ -1,3 +1,10 @@
+export function rideChatAvailable(ride, now) {
+  if (ride.state !== 'scheduled') return true;
+  if (ride.locked_at != null) return true;
+  const lockAt = new Date(ride.departure_start.getTime() - 60 * 60 * 1000);
+  return now.getTime() >= lockAt.getTime();
+}
+
 export function registerRideChatMessageHandler(io, socket, dependencies) {
   const { authenticate, isMember, createMessage } = dependencies;
 
