@@ -642,19 +642,54 @@ describe('owner ride lifecycle integration', () => {
     expect(query.mock.calls.some(([sql]) => sql.includes('UPDATE rides'))).toBe(false);
   });
 
-  it('does not allow cancellation once pickup time has started', async () => {
+  it.each(['pickup_in_progress', 'in_transit'] as const)(
+    'does not allow cancellation once the trip has started (%s)',
+    async (state) => {
+      const { client, query } = makeClient((sql) => {
+        if (sql.includes('SELECT id FROM users')) return [{ id: OWNER_ID }];
+        if (sql.includes('FROM rides WHERE id = $1 FOR NO KEY UPDATE')) {
+          return [{ ...ride, state, departure_start: new Date(NOW.getTime() - 1) }];
+        }
+        return [];
+      });
+
+      await expect(cancelRideForOwner(client, RIDE_ID, OWNER_ID, NOW)).resolves.toMatchObject({
+        kind: 'trip_started',
+      });
+      expect(query.mock.calls.some(([sql]) => sql.includes("SET state = 'cancelled'"))).toBe(false);
+    },
+  );
+
+  it('still cancels a scheduled ride after its departure time, as the trip has not started', async () => {
     const { client, query } = makeClient((sql) => {
       if (sql.includes('SELECT id FROM users')) return [{ id: OWNER_ID }];
       if (sql.includes('FROM rides WHERE id = $1 FOR NO KEY UPDATE')) {
-        return [{ ...ride, departure_start: new Date(NOW.getTime() - 1) }];
+        return [{ ...ride, departure_start: new Date(NOW.getTime() - 10 * 60_000) }];
       }
       return [];
     });
 
-    await expect(cancelRideForOwner(client, RIDE_ID, OWNER_ID, NOW)).resolves.toMatchObject({
-      kind: 'trip_started',
+    await expect(cancelRideForOwner(client, RIDE_ID, OWNER_ID, NOW)).resolves.toEqual({
+      kind: 'cancelled',
+      rideId: RIDE_ID,
     });
-    expect(query.mock.calls.some(([sql]) => sql.includes("SET state = 'cancelled'"))).toBe(false);
+    expect(query.mock.calls.some(([sql]) => sql.includes("SET state = 'cancelled'"))).toBe(true);
+    expect(
+      query.mock.calls.some(([sql]) => sql.includes('UPDATE riders SET locked_share = NULL')),
+    ).toBe(true);
+  });
+
+  it('refuses to cancel a ride that is already completed or cancelled', async () => {
+    const { client } = makeClient((sql) => {
+      if (sql.includes('SELECT id FROM users')) return [{ id: OWNER_ID }];
+      if (sql.includes('FROM rides WHERE id = $1 FOR NO KEY UPDATE')) {
+        return [{ ...ride, state: 'completed' }];
+      }
+      return [];
+    });
+    await expect(cancelRideForOwner(client, RIDE_ID, OWNER_ID, NOW)).resolves.toMatchObject({
+      kind: 'ride_closed',
+    });
   });
 });
 

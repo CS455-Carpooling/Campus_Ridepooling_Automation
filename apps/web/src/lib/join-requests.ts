@@ -1096,8 +1096,13 @@ export async function cancelRideForOwner(
   const ride = await lockRide(client, rideId);
   if (!ride) return requestFailure('not_found');
   if (ride.owner_id !== ownerId) return requestFailure('not_owner');
+  // A ride can be cancelled until its trip starts, before or after lock (FR-RO-04.4,
+  // FR-RD-06.11): the trip starts with Pickup in Progress, not at the departure time, so an
+  // owner whose ride cannot run can still release its riders after the window opens.
+  if (ride.state === 'pickup_in_progress' || ride.state === 'in_transit') {
+    return requestFailure('trip_started');
+  }
   if (ride.state !== 'scheduled') return requestFailure('ride_closed');
-  if (now.getTime() >= ride.departure_start.getTime()) return requestFailure('trip_started');
 
   await client.query(`UPDATE rides SET state = 'cancelled', cancelled_at = $2 WHERE id = $1`, [
     rideId,
