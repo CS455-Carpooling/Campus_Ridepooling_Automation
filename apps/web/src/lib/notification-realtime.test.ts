@@ -109,7 +109,7 @@ describe('notification realtime delivery', () => {
   });
 
   it('contains database errors rather than crashing the listener callback', async () => {
-    const logger = { error: vi.fn() };
+    const logger = { error: vi.fn() } as unknown as Pick<Console, 'error'>;
     const deliver = registerNotificationInsertHandler(
       { to: vi.fn() },
       {
@@ -130,7 +130,7 @@ describe('notification realtime delivery', () => {
       const schema = await readFile(new URL('../../db/schema.sql', import.meta.url), 'utf8');
       expect(schema).toContain(`PERFORM pg_notify('${NOTIFICATION_CHANNEL}', NEW.id::text);`);
       expect(schema).toMatch(
-        /CREATE TRIGGER notifications_realtime_insert\s+AFTER INSERT ON notifications/s,
+        /CREATE TRIGGER notifications_realtime_insert\s+AFTER INSERT ON notifications/,
       );
       expect(schema).toContain('EXECUTE FUNCTION notify_notification_inserted()');
     },
