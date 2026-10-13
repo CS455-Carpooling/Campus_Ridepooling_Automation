@@ -91,27 +91,24 @@ describe('NotificationsCentre', () => {
     expect(screen.getByText(/12 Oct, 15:30/)).toBeInTheDocument();
   });
 
-  it(
-    'marks a notification read only after the API confirms and reflects persisted state',
-    async () => {
-      const fetch = vi
-        .spyOn(globalThis, 'fetch')
-        .mockResolvedValueOnce(listResponse([notification]))
-        .mockResolvedValueOnce(
-          Response.json({ notification: { id: 'n1', readAt: '2026-10-12T10:05:00.000Z' } }),
-        );
-      render(<NotificationsCentre />);
-      fireEvent.click(await screen.findByRole('button', { name: 'Mark as read: Ride updated' }));
-      expect(await screen.findByText('Read')).toBeInTheDocument();
-      expect(
-        screen.queryByRole('button', { name: 'Mark as read: Ride updated' }),
-      ).not.toBeInTheDocument();
-      expect(fetch).toHaveBeenLastCalledWith(
-        '/api/notifications/n1',
-        expect.objectContaining({ method: 'PATCH' }),
+  it('marks a notification read only after the API confirms and reflects persisted state', async () => {
+    const fetch = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(listResponse([notification]))
+      .mockResolvedValueOnce(
+        Response.json({ notification: { id: 'n1', readAt: '2026-10-12T10:05:00.000Z' } }),
       );
-    },
-  );
+    render(<NotificationsCentre />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Mark as read: Ride updated' }));
+    expect(await screen.findByText('Read')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Mark as read: Ride updated' }),
+    ).not.toBeInTheDocument();
+    expect(fetch).toHaveBeenLastCalledWith(
+      '/api/notifications/n1',
+      expect.objectContaining({ method: 'PATCH' }),
+    );
+  });
 
   it('shows an error and retry when listing fails', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response(null, { status: 500 }));
@@ -184,36 +181,31 @@ describe('NotificationsCentre', () => {
 
   it('does not link malformed related ride identifiers', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      listResponse([
-        { ...notification, relatedRideId: 'not-a-uuid', relatedChatId: 'stale-chat' },
-      ]),
+      listResponse([{ ...notification, relatedRideId: 'not-a-uuid', relatedChatId: 'stale-chat' }]),
     );
     render(<NotificationsCentre />);
     await screen.findByRole('heading', { name: 'Ride updated' });
     expect(screen.queryByRole('link', { name: 'View related ride' })).not.toBeInTheDocument();
   });
 
-  it(
-    'inserts incoming socket notifications immediately and deduplicates by notification ID',
-    async () => {
-      vi.spyOn(globalThis, 'fetch').mockResolvedValue(listResponse([notification]));
-      render(<NotificationsCentre />);
-      await screen.findByRole('heading', { name: 'Ride updated' });
-      const liveNotification = {
-        ...notification,
-        id: 'n2',
-        title: 'New ride message',
-        body: 'A new message has arrived.',
-        createdAt: '2026-10-12T10:05:00.000Z',
-      };
+  it('inserts incoming socket notifications immediately and deduplicates by notification ID', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(listResponse([notification]));
+    render(<NotificationsCentre />);
+    await screen.findByRole('heading', { name: 'Ride updated' });
+    const liveNotification = {
+      ...notification,
+      id: 'n2',
+      title: 'New ride message',
+      body: 'A new message has arrived.',
+      createdAt: '2026-10-12T10:05:00.000Z',
+    };
 
-      act(() => emitSocketEvent('notification:new', liveNotification));
-      expect(await screen.findByRole('heading', { name: 'New ride message' })).toBeInTheDocument();
-      act(() => emitSocketEvent('notification:new', liveNotification));
-      expect(screen.getAllByRole('heading', { name: 'New ride message' })).toHaveLength(1);
-      expect(screen.getByText('2 unread notifications')).toBeInTheDocument();
-    },
-  );
+    act(() => emitSocketEvent('notification:new', liveNotification));
+    expect(await screen.findByRole('heading', { name: 'New ride message' })).toBeInTheDocument();
+    act(() => emitSocketEvent('notification:new', liveNotification));
+    expect(screen.getAllByRole('heading', { name: 'New ride message' })).toHaveLength(1);
+    expect(screen.getByText('2 unread notifications')).toBeInTheDocument();
+  });
 
   it('preserves read state for delayed insert events', async () => {
     const readNotification = {
