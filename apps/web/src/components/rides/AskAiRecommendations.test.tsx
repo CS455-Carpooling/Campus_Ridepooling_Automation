@@ -35,6 +35,7 @@ const ride: SearchRideResult = {
   seatsLeft: 2,
   totalFare: 300,
   estimatedShare: 150,
+  requestState: null,
 };
 
 const response: RideRecommendationResponse = {

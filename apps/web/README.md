@@ -54,16 +54,16 @@ exist yet shows the 404 page until the page is built.
 | `/terms` | Terms of service (community guidelines) | Built |
 | `/privacy` | Privacy policy | Built |
 | `/rides/new` | Offer a ride: route, vehicle, departure window, fare | Built (CS455-22 to 25) |
-| `/rides/[id]` | Ride details: route, departure window, state and lock time, seats, fare split, people | Built (CS455-28, 29) |
+| `/rides/[id]` | Ride details, join requests and history, owner decisions, fare shares, ride edit/cancel/lock; from the lock, the trip: pickup order, arrivals, no-shows, SOS, live updates | Built (CS455-28, 29, 63) |
 | `/rides/[id]/review` | Rate the people on a completed ride, for 72 hours after it is completed | Built (CS455-40 to 43) |
-| `/rides` | Find a ride | Not started |
+| `/rides`, `/rides/results` | Find a ride: search and results, with AI recommendations | Built |
 | `/notifications` | Notifications | Not started |
 | `/admin` | Sends an admin to their home; tells a student the admin pages are not for them | Built (CS455-49) |
 | `/admin/complaints` | One complaint queue, from the form and from chat reports, Safety first | Built (CS455-45, 53) |
 | `/admin/complaints/[id]`, `/admin/riders`, `/admin/riders/[id]`, `/admin/rides/[id]` | Complaint detail, rider search and record, a read-only ride | Built (CS455-53) |
 | `/rides/[id]/complaint`, `/complaints` | File a complaint about someone on a ride; your complaints | Built (CS455-53) |
 | `/admin/configuration/...` | Vehicle types, hubs and pickup points, fares | Built (CS455-51) |
-| `/admin/incidents` | SOS incidents | Not started (needs in-trip ride states) |
+| `/admin/incidents`, `/admin/incidents/[id]` | SOS alerts, open first; one alert with the trip as it was, the mobile number and location, Acknowledge and Close | Built (CS455-65) |
 
 ## Signed-in pages and roles
 
@@ -90,19 +90,32 @@ exist yet shows the 404 page until the page is built.
   an hour before departure. `getRideView()` in `src/lib/ride-view.ts` applies it on the server and
   answers "Ride not found" for every other case, so a link never reveals whether a ride exists.
 - **Completing and rating a ride** (`src/lib/rating-rules.ts`, CS455-39): only the owner marks a
-  ride completed, from the start of its departure window, never a cancelled ride and never twice.
+  ride completed, once its trip has started (Pickup in Progress or In Transit, CS455-62), never a
+  cancelled ride; asking twice changes nothing.
   Everyone with a seat on a completed ride may then rate each other person on it from 1 to 5, once,
   with an optional comment of up to 500 characters, for 72 hours (P-16). The `ride_ratings` table
   enforces in PostgreSQL that both people had a seat on that ride, that nobody rates themselves and
   that each person rates each other person once. A rating counts only after its ride's 72 hours are
   over; others see an average only from 3 ratings up, comments go only to the person rated, and
   nobody is ever shown who gave a rating (P-24).
-  `POST /api/rides/[id]/complete` marks a ride completed, and the owner's ride page offers it as
-  "Mark ride completed", with a confirmation.
+  `POST /api/rides/[id]/complete` marks a ride completed and stores the final shares; it is the
+  same step as `POST /api/rides/[id]/trip` with `to: 'completed'`.
+- **Join requests** (`src/lib/join-requests.ts`, FR-RD-06/07 and FR-RO-05/06) are a separate,
+  durable state machine from confirmed `riders` seats. A rider can submit an idempotent request,
+  withdraw it, review its history, and reconfirm materially changed terms. Owners can accept or
+  reject waiting requests; acceptance is serialized with seat-capacity and rider-conflict checks.
+  Requests expire when the ride locks, and accepted riders can leave with locked-share liability
+  retained for an ordinary post-lock departure. Owner edits require confirmation when confirmed
+  riders are affected; cancellations release fare liability and notify riders. The ride page shows
+  rider and owner controls, and `/home` lists sent and received waiting requests.
+- **In-trip outcomes** (arrivals, no-shows, completion) are the trip APIs below (CS455-60). They
+  build on the join requests: starting pickup applies the lock if it has not been applied yet, a
+  no-show moves the rider's request to No-show, and completing moves accepted requests to
+  Completed.
 - **Page data** comes from server-only modules in `src/lib`. `ride-view.ts` reads rides from
   PostgreSQL for the ride page and for the Upcoming list on `/home` (rides you offered or joined,
-  through `home-data.ts`). Join requests do not exist yet, so nothing is listed as waiting, and the
-  admin counts are null, which the page shows as "Not available yet".
+  through `home-data.ts`). The request transition history is stored in
+  `ride_join_request_events`; request and share updates are stored in `notifications`.
 - **Ratings API** (`src/lib/ride-ratings.ts`, CS455-42): `POST /api/rides/[id]/ratings` takes
   `{ ratings: [{ occupantId, score, comment? }] }`, where `occupantId` is a seat on the ride
   (`riders.id`), so no user ID reaches the browser. It stores all of the ratings or none of them
@@ -138,8 +151,8 @@ exist yet shows the 404 page until the page is built.
   commit. A refused or failed attempt keeps nothing and is audited as `refused` or `failed`;
   errors are logged, never shown. Each action uses a code from `src/lib/admin-activity.ts`, which
   also holds how the pages name it.
-- **Admin pages** sit in `AdminPageShell` (CS455-49): the admin navigation (Home, Complaints,
-  Riders, Configuration, Profile) with the current page marked and a way to log out, then the
+- **Admin pages** sit in `AdminPageShell` (CS455-49): the admin navigation (Home, SOS incidents,
+  Complaints, AI decisions, Riders, Configuration, Profile) with the current page marked and a way to log out, then the
   page's title with an optional back link, eyebrow, description and actions. The admin home
   (`/dashboard` for an admin) counts open complaints (chat reports included, safety ones called
   out), AI recommendations awaiting a decision and riders suspended now, and lists the last 10
@@ -175,6 +188,84 @@ exist yet shows the 404 page until the page is built.
   `src/index.css` styles it as a large landing-page quote.
 - **Suspended riders** cannot offer a ride or rate others: those APIs answer 403 `suspended` with
   the end time and reason category. They can still file complaints (FR-RD-01.5).
+- **Trips under way and SOS** (CS455-60). The data is in `db/schema.sql`:
+  - each step of the trip keeps its time on `rides`;
+  - each seat on `riders` records checked in, arrived and no-show;
+  - `ride_final_shares` stores what each person owed when the ride was completed, and never
+    changes;
+  - `sos_incidents` holds the SOS alerts, which only admins see.
+
+  The database refuses:
+  - a trip state without its time;
+  - a seat both arrived and a no-show;
+  - a change to final shares;
+  - a change to what an SOS recorded;
+  - a second active SOS by the same person on the same ride;
+  - deleting an incident.
+
+  The shared rules are:
+  - `src/lib/trip-rules.ts`: the steps, which go Scheduled, then Pickup in Progress once locked,
+    then optionally In Transit, then Completed, by the owner only. It also holds what the owner
+    may mark about each seat, the 5-minute no-show grace period (P-19), checking in, and
+    `canLeave()`, which is false once pickup starts;
+  - `src/lib/sos-rules.ts`: who may raise an SOS, and how an incident moves for admins;
+  - `src/lib/trip-itinerary.ts`: the stop order and estimated times, from the campus travel
+    estimates in `src/lib/ai/campus-travel-times.ts`.
+
+  A no-show leaves the pool: the fare is split between the seats that neither left nor were
+  no-shows (FR-RO-10.2).
+- **Trip APIs** (`src/lib/trip.ts`, CS455-62): each change runs in one transaction with the ride
+  locked, through `runTripChange()` in `src/lib/trip-api.ts`, and refusals come as
+  `{ error, code }`. The APIs are:
+  - `POST /api/rides/[id]/trip` with `{ to }`: the owner starts pickup (once locked), starts the
+    trip or completes the ride. Leaving pickup marks riders not yet marked as on board, and
+    completing writes `ride_final_shares`. Riders are notified (`trip_update`).
+  - `POST /api/rides/[id]/arrivals` with `{ occupantId, status }`: during pickup the owner marks a
+    seat `arrived`, `not_arrived` or `no_show`. A no-show is allowed from 5 minutes after the
+    rider's estimated pickup time; before then the answer is 409 `grace_period` with
+    `availableAt`. The rider is notified (`no_show_recorded`), may report it for 7 days, and is
+    left out of the fare split and ratings.
+  - `POST /api/rides/[id]/check-in`: a rider says they are at their pickup point, from the lock
+    until the trip starts.
+  - `GET /api/rides/[id]/trip`: `{ state, stamp }` for people on the ride, so the page can refresh
+    when anything on the trip changes.
+- **The trip on the ride page** (CS455-63) appears from the lock.
+  - **The owner** gets `TripPanel`: Start pickup, the pickup order with Arrived, Undo and No-show
+    for each rider (No-show shows when it becomes possible), then Start the trip and Complete the
+    ride. Each step asks first, in place (`TripActionButton`), and shows its result only after the
+    server confirms.
+  - **Riders** get `TripStatus`: where the trip is, their own stop and estimated time, "I am at
+    the pickup point", and a notice with a link to report it if they were marked a no-show.
+  - **Live updates:** `useTripRefresh` (`components/rides/trip-hooks.ts`) asks for the trip's
+    stamp every 2 seconds while the tab is visible, and reads the page again only when it changes
+    (P-13).
+  - **Admin ride view:** `/admin/rides/[id]` adds the trip's times, each person's pickup status
+    and the final shares.
+- **SOS** (`src/lib/sos.ts`, CS455-64).
+  - **Who:** anyone with a seat, rider or owner, while the trip is under way, suspended or not.
+  - **On the ride page,** `SosPanel` asks once, then sends the alert straight away
+    (`POST /api/rides/[id]/sos`). Only after that does it ask for the location and add it
+    (`PATCH /api/sos/[id]`), so a slow or refused location never delays the alert.
+  - **The SOS screen** shows the emergency numbers and the no-dispatch note from the question on,
+    and the reference once sent. The person who raised it can mark it a false alarm.
+  - **What is stored:** a snapshot of the trip and the raiser's mobile number. One active alert
+    per person per ride, so pressing SOS again returns it.
+  - **Privacy:** nothing about it reaches the rest of the pool: no notification, and the ride
+    view reads only the viewer's own alert.
+  - **Location:** `next.config.ts` allows it for our own pages only (`geolocation=(self)`).
+  - **Complaint form:** a Safety complaint during a trip points to SOS on the ride page.
+- **SOS for admins** (CS455-65).
+  - **Pages:** `/admin/incidents` lists every alert, open first
+    (`admin-incident-queries.ts`). `/admin/incidents/[id]` shows the trip as it was, who was on
+    it, the mobile number and the location (with a map link), and Acknowledge, then Close with a
+    note.
+  - **API:** `PATCH /api/admin/incidents/[id]` goes through `withAdminAction()` and is audited as
+    `incident.acknowledge` or `incident.close`.
+  - **Alert bar:** every admin page shows it (`IncidentAlert` in `AdminPageShell`). It asks
+    `GET /api/admin/incidents/open` every 3 seconds, so a new alert shows within 5 (P-22), and
+    stays until someone acknowledges it.
+  - **Elsewhere:** the admin home counts alerts not closed, and the admin ride view lists a
+    ride's alerts.
 
 ## Conventions
 

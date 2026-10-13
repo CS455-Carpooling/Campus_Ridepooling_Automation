@@ -277,11 +277,26 @@ Docker Compose stack from the root README, after registering the accounts and of
 # put another account on the ride, with a pickup point
 docker compose exec db psql -U crp -d crp -c "INSERT INTO riders (ride_id, user_id, campus_location_id) SELECT '<ride id>', id, 'hall-5' FROM users WHERE email = '<name>@iitk.ac.in';"
 
-# move the ride into the past, so its owner can mark it completed on the ride page
-docker compose exec db psql -U crp -d crp -c "UPDATE rides SET departure_start = now() - interval '2 hours', departure_end = now() - interval '1 hour' WHERE id = '<ride id>';"
+# move the ride into its lock window, so its owner can start pickup and then complete it on the
+# ride page (a ride is completed only once its trip has started)
+docker compose exec db psql -U crp -d crp -c "UPDATE rides SET departure_start = now() + interval '30 minutes', departure_end = now() + interval '90 minutes' WHERE id = '<ride id>';"
 
 # after rating: end the 72 hours early, so averages and comments appear (from 3 ratings)
 docker compose exec db psql -U crp -d crp -c "UPDATE rides SET completed_at = now() - interval '73 hours' WHERE id = '<ride id>';"
+```
+
+### Trying a trip locally
+
+A trip can start only once its ride is locked, an hour before departure. To try pickup, arrivals,
+no-shows and SOS without waiting, move a ride you offered into its lock window, after putting
+people on it as above:
+
+```bash
+# departure in 30 minutes: locked, so its owner can start pickup on the ride page
+docker compose exec db psql -U crp -d crp -c "UPDATE rides SET departure_start = now() + interval '30 minutes', departure_end = now() + interval '90 minutes' WHERE id = '<ride id>';"
+
+# departure 20 minutes ago: the 5-minute no-show grace period is already over
+docker compose exec db psql -U crp -d crp -c "UPDATE rides SET departure_start = now() - interval '20 minutes', departure_end = now() + interval '40 minutes' WHERE id = '<ride id>';"
 ```
 
 ### Making an operations admin

@@ -120,10 +120,42 @@ describe('getComplaintFormPage (FR-RD-13.1, 09.6)', () => {
   it('ignores a message ID that is not a UUID, and has no closing time before completion', async () => {
     answer([{ ...rideRow, state: 'scheduled', completed_at: null }], []);
     const page = await getComplaintFormPage(RIDE, VIEWER, 'not-an-id', now);
-    expect(page).toMatchObject({ window: 'not_completed', closesAt: null, message: null });
+    expect(page).toMatchObject({
+      window: 'not_completed',
+      closesAt: null,
+      message: null,
+      sosAvailable: false,
+    });
     expect(query.mock.calls.some(([sql]) => String(sql).includes('ride_chat_messages'))).toBe(
       false,
     );
+  });
+});
+
+describe('getComplaintFormPage during a trip (CS455-64)', () => {
+  it('offers SOS while the trip is under way, to someone still on it (FR-RD-13.6)', async () => {
+    answer([{ ...rideRow, state: 'in_transit', completed_at: null, viewer_left_at: null }], []);
+    await expect(getComplaintFormPage(RIDE, VIEWER, null, now)).resolves.toMatchObject({
+      sosAvailable: true,
+    });
+    answer([{ ...rideRow, state: 'in_transit', completed_at: null, viewer_left_at: now }], []);
+    await expect(getComplaintFormPage(RIDE, VIEWER, null, now)).resolves.toMatchObject({
+      sosAvailable: false,
+    });
+  });
+
+  it('opens the form for a no-show from the no-show, and says until when', async () => {
+    const noShowAt = new Date(now.getTime() - 60 * 60 * 1000);
+    answer(
+      [{ ...rideRow, state: 'in_transit', completed_at: null, viewer_no_show_at: noShowAt }],
+      [],
+    );
+    const page = await getComplaintFormPage(RIDE, VIEWER, null, now);
+    expect(page).toMatchObject({
+      window: 'open',
+      closesAt: new Date(noShowAt.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      sosAvailable: false,
+    });
   });
 });
 

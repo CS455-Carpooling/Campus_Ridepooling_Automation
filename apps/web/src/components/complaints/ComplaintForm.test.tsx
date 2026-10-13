@@ -38,6 +38,7 @@ const page = (change: Partial<ComplaintFormPage> = {}): ComplaintFormPage => ({
     },
   ],
   message: null,
+  sosAvailable: false,
   ...change,
 });
 
@@ -79,8 +80,21 @@ describe('ComplaintForm (FR-RD-13.1 to 13.6, CS455-53)', () => {
     await userEvent.click(screen.getByRole('radio', { name: /^Safety/ }));
     const contacts = screen.getByRole('region', { name: 'Emergency contacts' });
     expect(within(contacts).getByRole('link', { name: '112' })).toHaveAttribute('href', 'tel:112');
-    expect(contacts).toHaveTextContent('IIT Kanpur security: number to be confirmed');
+    expect(within(contacts).getByRole('link', { name: '0512-259-7999' })).toHaveAttribute(
+      'href',
+      'tel:05122597999',
+    );
     expect(contacts).toHaveTextContent('does not contact emergency services for you');
+  });
+
+  it('points to SOS on the ride page for Safety while the trip is under way (CS455-64)', async () => {
+    render(<ComplaintForm page={page({ sosAvailable: true })} />);
+    expect(screen.queryByRole('link', { name: 'SOS on the ride page' })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('radio', { name: /^Safety/ }));
+    expect(screen.getByRole('link', { name: 'SOS on the ride page' })).toHaveAttribute(
+      'href',
+      `/rides/${RIDE}`,
+    );
   });
 
   it('checks the form before sending', async () => {

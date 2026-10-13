@@ -4,6 +4,7 @@ import {
   formatDepartureWindow,
   formatRating,
   formatRupees,
+  formatClockTime,
   formatTimeOfDay,
 } from './format';
 
@@ -53,6 +54,13 @@ describe('formatTimeOfDay', () => {
   it('shows the time in IST with seconds, on a 24-hour clock', () => {
     expect(formatTimeOfDay('2026-10-05T15:42:05Z')).toBe('21:12:05');
     expect(formatTimeOfDay('2026-10-05T18:30:00Z')).toBe('00:00:00');
+  });
+});
+
+describe('formatClockTime (CS455-63)', () => {
+  it('shows hours and minutes in IST, on a 24-hour clock', () => {
+    expect(formatClockTime('2026-10-05T15:42:05Z')).toBe('21:12');
+    expect(formatClockTime('2026-10-05T18:30:00Z')).toBe('00:00');
   });
 });
 

@@ -58,7 +58,7 @@ export function RideChat({
       };
       setThread(data.thread ?? null);
       setEmptyMessage(data.message ?? '');
-      if (data.error) setError(data.error);
+      setError(data.error ?? '');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Unable to load chat.');
     }

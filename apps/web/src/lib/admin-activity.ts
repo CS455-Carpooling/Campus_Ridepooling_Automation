@@ -17,6 +17,8 @@ export const adminActionLabels = {
   'rider.suspend': 'Suspended a rider',
   'rider.reactivate': 'Lifted a suspension',
   'ai.decide': 'Decided on an AI recommendation',
+  'incident.acknowledge': 'Acknowledged an SOS incident',
+  'incident.close': 'Closed an SOS incident',
 } as const;
 
 export type AdminAction = keyof typeof adminActionLabels;

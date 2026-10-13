@@ -37,6 +37,7 @@ type RideRow = {
   owner_id: string;
   state: RideState;
   departure_start: Date;
+  locked_at: Date | null;
   completed_at: Date | null;
   cancelled_at: Date | null;
 };
@@ -59,10 +60,11 @@ type MessageRow = {
 };
 
 export function rideChatAvailable(
-  ride: Pick<RideRow, 'state' | 'departure_start'>,
+  ride: Pick<RideRow, 'state' | 'departure_start' | 'locked_at'>,
   now: Date,
 ): boolean {
   if (ride.state !== 'scheduled') return true;
+  if (ride.locked_at != null) return true;
   return now.getTime() >= lockTime(ride.departure_start).getTime();
 }
 
@@ -169,7 +171,7 @@ export async function getRideChatThread(
   if (!isUuid(rideId) || !isUuid(viewerId)) return null;
 
   const rideQuery = await pool.query<RideRow>(
-    `SELECT id, owner_id, state, departure_start, completed_at, cancelled_at
+    `SELECT id, owner_id, state, departure_start, locked_at, completed_at, cancelled_at
      FROM rides WHERE id = $1`,
     [rideId],
   );
@@ -270,7 +272,7 @@ export async function createChatMessage(
   }
 
   const rideQuery = await pool.query<RideRow>(
-    `SELECT id, owner_id, state, departure_start, completed_at, cancelled_at
+    `SELECT id, owner_id, state, departure_start, locked_at, completed_at, cancelled_at
      FROM rides WHERE id = $1`,
     [rideId],
   );
@@ -363,7 +365,7 @@ export async function reportChatMessage(
   }
 
   const rideQuery = await pool.query<RideRow>(
-    `SELECT id, owner_id, state, departure_start, completed_at, cancelled_at
+    `SELECT id, owner_id, state, departure_start, locked_at, completed_at, cancelled_at
      FROM rides WHERE id = $1`,
     [rideId],
   );

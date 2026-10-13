@@ -662,3 +662,20 @@ Continue the Notification Centre work and implement real-time delivery and offli
 
 ### Verification
 - After committing these changes, inspect the replacement CI and Docker runs for PR #61. Do not mark either check as passing until GitHub reports success.
+
+
+## 2026-10-13 — Resolve PR #61 conflicts with current master
+
+### User prompt
+“why aren't any checks running? also, there are merge conflicts with this PR, resolve those cleanly”
+
+### Merge resolution
+- Merged the realtime notification implementation onto the current `master` tree at `ffb60b8b554389b162db0ba375a4a4f5d3bacf5b`, rather than replacing newer source files with the older branch versions.
+- Reconciled `apps/web/server.mjs` by preserving current RideState/SOS-era changes (including `rideChatAvailable`, `locked_at`, and the newer chat maintenance behavior) and layering in authenticated notification-room membership and the PostgreSQL LISTEN/NOTIFY listener.
+- Reconciled `apps/web/db/schema.sql` by retaining current join-request, in-trip, SOS, and full notification-type constraints, then appending the commit-aware notification trigger.
+- Kept the realtime UI/tests and realtime helper/test, including the fixes for the reported TypeScript build errors.
+- Checks had not rerun because there were no workflow runs for the previous updated head; the prior failed runs referenced the older head. A fresh PR event will be requested after the clean merge commit is pushed.
+
+### Verification
+- The merged tree retains current master files and layers the realtime changes into the conflicting server, schema, and AI log files.
+- The new CI/Docker runs must complete before the PR can be considered ready to merge.

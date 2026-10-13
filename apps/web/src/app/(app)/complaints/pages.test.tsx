@@ -50,6 +50,7 @@ const formPage = (change: Partial<ComplaintFormPage> = {}): ComplaintFormPage =>
     },
   ],
   message: null,
+  sosAvailable: false,
   ...change,
 });
 

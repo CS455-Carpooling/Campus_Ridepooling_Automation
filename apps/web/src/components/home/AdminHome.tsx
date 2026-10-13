@@ -13,6 +13,15 @@ export function AdminHome({ data }: { data: AdminHomeData }) {
   const safety = data.safetyComplaintsToReview;
   const queues: Queue[] = [
     {
+      label: 'SOS incidents not closed',
+      count: data.openIncidents,
+      href: routes.adminIncidents,
+      note:
+        data.unacknowledgedIncidents > 0
+          ? `${data.unacknowledgedIncidents} not acknowledged`
+          : undefined,
+    },
+    {
       label: 'Complaints awaiting review',
       count: data.complaintsToReview,
       href: routes.adminComplaints,
@@ -24,7 +33,6 @@ export function AdminHome({ data }: { data: AdminHomeData }) {
       href: routes.adminComplaints,
     },
     { label: 'Riders suspended now', count: data.ridersSuspended, href: routes.adminRiders },
-    { label: 'SOS incidents', count: data.openIncidents, href: null },
   ];
 
   return (
