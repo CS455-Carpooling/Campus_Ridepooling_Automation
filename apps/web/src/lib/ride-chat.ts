@@ -3,11 +3,7 @@ import type { Pool, PoolClient } from 'pg';
 import { pool } from './db';
 import { isUuid } from './ids';
 import { lockTime, type RideState } from './ride-status';
-import {
-  CHAT_KEPT_FOR_COMPLAINT_SQL,
-  SUSPENDED_CHAT_ERROR,
-  senderSuspended,
-} from './ride-chat-realtime.mjs';
+import { CHAT_KEPT_FOR_COMPLAINT_SQL, chatSendRefusal } from './ride-chat-realtime.mjs';
 
 export type RideChatMessage = {
   id: string;
@@ -290,9 +286,8 @@ export async function createChatMessage(
     return { ok: false, code: 'FORBIDDEN', error: 'Only current pool members may post here.' };
   }
 
-  if (await senderSuspended(pool, senderId, now)) {
-    return { ok: false, code: 'SUSPENDED', error: SUSPENDED_CHAT_ERROR };
-  }
+  const refusal = await chatSendRefusal(pool, ride, senderId, now);
+  if (refusal) return refusal;
 
   if (!rideChatAvailable(ride, now)) {
     return { ok: false, code: 'CHAT_UNAVAILABLE', error: 'Pool chat opens once the ride locks.' };

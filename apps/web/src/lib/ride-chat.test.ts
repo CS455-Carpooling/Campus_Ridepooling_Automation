@@ -12,7 +12,6 @@ import {
   rideChatDeletionDue,
   rideChatReadOnly,
 } from './ride-chat';
-import { SUSPENDED_CHAT_ERROR } from './ride-chat-realtime.mjs';
 
 beforeEach(() => {
   query.mockReset();
@@ -326,15 +325,17 @@ describe('ride-chat domain helpers', () => {
         });
       }
       if (statement.includes('from rider_suspensions')) {
-        return Promise.resolve({ rows: [{ '?column?': 1 }] });
+        return Promise.resolve({
+          rows: [{ reason_category: 'harassment', ends_at: new Date('2026-10-12T12:00:00Z') }],
+        });
       }
       return Promise.resolve({ rows: [] });
     });
 
-    await expect(createChatMessage(rideId, senderId, 'Hello', now)).resolves.toEqual({
+    await expect(createChatMessage(rideId, senderId, 'Hello', now)).resolves.toMatchObject({
       ok: false,
       code: 'SUSPENDED',
-      error: SUSPENDED_CHAT_ERROR,
+      error: expect.stringContaining('so you cannot post in pool chats'),
     });
     const suspensionCheck = query.mock.calls.find(([sql]) =>
       String(sql).includes('FROM rider_suspensions'),

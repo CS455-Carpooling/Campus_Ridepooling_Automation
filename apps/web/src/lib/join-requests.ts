@@ -14,6 +14,7 @@ import {
 } from './join-request-rules';
 import { isUuid } from './ids';
 import { RIDE_RULES } from './ride-rules';
+import { ACTIVE_SUSPENSION_SQL } from './suspension-rule.mjs';
 import { lockTime, type RideState } from './ride-status';
 
 type RideRow = {
@@ -131,14 +132,9 @@ async function lockUser(client: PoolClient, userId: string): Promise<boolean> {
   return rows.length > 0;
 }
 
+// The one suspension rule (suspension-rule.mjs), read inside this transaction.
 async function hasSuspension(client: PoolClient, userId: string, now: Date): Promise<boolean> {
-  const { rows } = await client.query(
-    `SELECT 1 FROM rider_suspensions
-     WHERE user_id = $1 AND lifted_at IS NULL AND starts_at <= $2
-       AND (ends_at IS NULL OR ends_at > $2)
-     LIMIT 1`,
-    [userId, now],
-  );
+  const { rows } = await client.query(ACTIVE_SUSPENSION_SQL, [userId, now]);
   return rows.length > 0;
 }
 

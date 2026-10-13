@@ -3,12 +3,8 @@
  * CS455-52), shared by the admin pages and APIs. The database enforces the absolute ones again
  * (schema.sql). Pure functions only.
  */
-import {
-  COMPLAINT_CATEGORIES,
-  complaintCategoryLabels,
-  type ComplaintCategory,
-} from './complaint-rules';
-import { formatDeparture } from './format';
+import { COMPLAINT_CATEGORIES, type ComplaintCategory } from './complaint-rules';
+import { suspensionRefusal } from './suspension-rule.mjs';
 import { isUuid } from './ids';
 import type { ActiveSuspension } from './suspensions';
 
@@ -131,9 +127,6 @@ export function suspensionEndsAt(start: Date, days: number): Date {
  * "offer a ride".
  */
 export function suspendedMessage(suspension: ActiveSuspension, refused: string): string {
-  const until = suspension.endsAt
-    ? `until ${formatDeparture(suspension.endsAt)} (IST)`
-    : 'until an operations admin lifts it';
-  const category = complaintCategoryLabels[suspension.reasonCategory];
-  return `Your account is suspended ${until} (reason: ${category}), so you cannot ${refused}. You can still file a complaint.`;
+  // One wording everywhere, the pool chat's socket server included (suspension-rule.mjs).
+  return suspensionRefusal(suspension, refused);
 }

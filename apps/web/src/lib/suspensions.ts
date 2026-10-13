@@ -3,6 +3,7 @@ import type { Pool, PoolClient } from 'pg';
 import type { ComplaintCategory } from './complaint-rules';
 import { pool } from './db';
 import { isUuid } from './ids';
+import { ACTIVE_SUSPENSION_SQL } from './suspension-rule.mjs';
 
 /**
  * A suspension in force, as the suspended rider may see it: the reason category and when it
@@ -26,14 +27,9 @@ type SuspensionRow = {
 };
 
 // The same rule as the active_rider_suspensions view, at the time given: a temporary
-// suspension stops at its end time with no job running (SYS-FR-25).
-const ACTIVE_SQL = `
-  SELECT id, reason_category, starts_at, ends_at, is_indefinite
-  FROM rider_suspensions
-  WHERE user_id = $1 AND lifted_at IS NULL AND starts_at <= $2
-    AND (ends_at IS NULL OR ends_at > $2)
-  ORDER BY is_indefinite DESC, ends_at DESC NULLS FIRST
-  LIMIT 1`;
+// suspension stops at its end time with no job running (SYS-FR-25). One copy, shared with the
+// socket server (suspension-rule.mjs).
+const ACTIVE_SQL = ACTIVE_SUSPENSION_SQL;
 
 /**
  * The suspension in force for `userId` at `now`, or null. When several overlap, the one that

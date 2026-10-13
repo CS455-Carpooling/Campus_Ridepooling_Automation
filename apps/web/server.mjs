@@ -6,10 +6,9 @@ import next from 'next';
 import { Server } from 'socket.io';
 import {
   CHAT_KEPT_FOR_COMPLAINT_SQL,
-  SUSPENDED_CHAT_ERROR,
+  chatSendRefusal,
   registerRideChatMessageHandler,
   rideChatAvailable,
-  senderSuspended,
 } from './src/lib/ride-chat-realtime.mjs';
 import {
   NOTIFICATION_CHANNEL,
@@ -161,9 +160,8 @@ async function createChatMessageForSocket(rideId, senderId, rawMessage, now = ne
     return { ok: false, code: 'FORBIDDEN', error: 'Only current pool members may post here.' };
   }
 
-  if (await senderSuspended(pool, senderId, now)) {
-    return { ok: false, code: 'SUSPENDED', error: SUSPENDED_CHAT_ERROR };
-  }
+  const refusal = await chatSendRefusal(pool, ride, senderId, now);
+  if (refusal) return refusal;
 
   if (!rideChatAvailable(ride, now)) {
     return { ok: false, code: 'CHAT_UNAVAILABLE', error: 'Pool chat opens once the ride locks.' };
