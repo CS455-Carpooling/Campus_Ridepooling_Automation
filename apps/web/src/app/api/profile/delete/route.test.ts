@@ -71,6 +71,17 @@ describe('POST /api/profile/delete', () => {
     expect(m.release).toHaveBeenCalledOnce();
   });
 
+  it('does not treat an elapsed scheduled window as an active ride', async () => {
+    m.clientQuery.mockImplementation(async (sql: string) =>
+      sql.includes('AS busy') ? { rows: [{ busy: false }] } : { rows: [] },
+    );
+
+    const response = await post('DELETE');
+    expect(response.status).toBe(200);
+    const check = m.clientQuery.mock.calls.find(([sql]) => String(sql).includes('AS busy'));
+    expect(check?.[0]).toContain("r.state = 'scheduled' AND r.departure_end > now()");
+  });
+
   it('keeps an account that has an upcoming ride or a waiting request (FR-RD-16.3)', async () => {
     m.clientQuery.mockImplementation(async (sql: string) =>
       sql.includes('AS busy') ? { rows: [{ busy: true }] } : { rows: [] },
