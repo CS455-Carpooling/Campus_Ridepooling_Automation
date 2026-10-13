@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { ComplaintForm } from '@/components/complaints/ComplaintForm';
+import { EmergencyContacts } from '@/components/complaints/EmergencyContacts';
 import { DesignSystem } from '@/components/ui/DesignSystem';
 import { getCurrentUser } from '@/lib/auth';
 import { getComplaintFormPage, type ComplaintFormPage } from '@/lib/complaint-queries';
@@ -58,6 +59,15 @@ export default async function RideComplaintPage({
           {formatDepartureWindow(page.departureStart, page.departureEnd)}
         </p>
       </header>
+      {page.sosAvailable && (
+        <section aria-label="Safety now" className="mt-8 flex flex-col gap-4">
+          <p className="font-semibold">
+            Your trip is under way: if you are in danger now, use{' '}
+            <Link href={routes.ride(page.rideId)}>SOS on the ride page</Link>.
+          </p>
+          <EmergencyContacts />
+        </section>
+      )}
       {canFile ? (
         <ComplaintForm page={page} />
       ) : (

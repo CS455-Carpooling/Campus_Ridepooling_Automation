@@ -4,9 +4,9 @@ import { cx } from '@/lib/cx';
 /**
  * primary: the main action on a page. secondary: a second, less important
  * action. accent: the main action on a brand (forest) panel. quiet: an
- * underlined text action.
+ * underlined text action. danger: an emergency action only, such as SOS.
  */
-export type ButtonVariant = 'primary' | 'secondary' | 'accent' | 'quiet';
+export type ButtonVariant = 'primary' | 'secondary' | 'accent' | 'quiet' | 'danger';
 
 // Hover changes colour instantly; no transitions or hover movement (see the design rules).
 const variantClasses: Record<ButtonVariant, string> = {
@@ -17,6 +17,7 @@ const variantClasses: Record<ButtonVariant, string> = {
     'border-accent bg-accent text-on-accent hover:border-accent-strong hover:bg-accent-strong',
   quiet:
     'border-transparent bg-transparent text-ink underline underline-offset-4 hover:text-accent-text',
+  danger: 'border-danger bg-danger text-on-primary underline-offset-4 hover:underline',
 };
 
 export type ButtonProps = ComponentProps<'button'> & {

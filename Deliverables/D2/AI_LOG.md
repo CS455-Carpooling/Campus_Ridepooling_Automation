@@ -511,3 +511,93 @@ Implement the first small, reviewable pull request for the Notification Centre b
 - Remote branch files were created through GitHub API operations, which each create a commit; these changes are committed on `CS455-59-notification-api`, not `master`.
 - Earlier local patch validation reported `git apply --check` and `git diff --check` passed in a synthetic checkout, but project Vitest, ESLint, and TypeScript checks were not run against a real checkout because GitHub could not be resolved from the local runtime.
 - A PR must explicitly reference CS455-67. No UI, ride lifecycle, schema, notification creation, or realtime architecture changes were intended.
+
+
+## 2026-10-12 — Notification Centre UI (PR 2, CS455-59-notification-ui)
+
+### User prompt
+Implement PR 2, the Notification Centre UI, assuming PR 1 is merged into master. Inspect current repository/branch/worktree/history and PR 1 status, fetch latest changes, create and work only on `CS455-59-notification-ui`, preserve unrelated work, and inspect the existing page, navigation, design system, API client patterns, authentication, and merged API. Build the existing `/notifications` route to fetch signed-in-user notifications, display title/body/timestamp/read state, support loading/empty/error states, persist mark-as-read, navigate only to existing valid destinations using related IDs, gracefully handle malformed resources, and follow responsive/accessibility conventions. Do not implement real-time delivery or ride/chat/complaint/SOS workflows. Add UI tests, run available checks, report results and integration needs, do not open a PR without authorization, and update this AI log with the prompt and commit on this branch.
+
+### Audit
+- Confirmed PR #53 (Notification API) is merged into `master`; current master head is merge commit `6fd4632e17e5d892087c3511c2f19b64a3cfb893`.
+- Created branch `CS455-59-notification-ui` from the latest master. The remote GitHub API does not expose a local working tree, so local uncommitted status cannot be independently verified.
+- Confirmed `routes.notifications` and the student navigation entry already exist, but `apps/web/src/app/notifications/page.tsx` did not exist before this change.
+- Reused Next.js server page authentication via `verifySession()`, the existing `DesignSystem`, shared `Button`/`ButtonLink`, `Skeleton`/`LoadingRegion`, route constants, and existing Vitest/React Testing Library setup.
+- Confirmed the merged API contract: `GET /api/notifications?limit=100&offset=0` returns `notifications` and pagination metadata; `PATCH /api/notifications/{id}` returns `notification.id` and persisted `readAt`.
+- Existing ride detail route is `routes.ride(id)`. Related chat/message IDs alone do not establish a distinct supported navigation route, so this UI only links to a syntactically valid related ride UUID; otherwise it displays the notification without a link.
+
+### Changes
+- Added `apps/web/src/app/notifications/page.tsx`, protected by `verifySession()`.
+- Added `apps/web/src/components/notifications/NotificationsCentre.tsx` with persisted fetch, input shape validation, loading skeletons, empty/error states and retry, read/unread display, timestamp formatting in IST, API-confirmed mark-as-read, and valid related ride links.
+- Added `apps/web/src/components/notifications/NotificationsCentre.test.tsx` covering loading, empty, populated content/timestamp/read state/link, successful mark-read, list failure/retry, failed mark-read, and malformed related IDs.
+
+### Verification status
+- Remote source changes were prepared as Git objects for a single commit on `CS455-59-notification-ui`; no PR is opened as requested.
+- UI tests, ESLint, typecheck, and build have not been run in a real local checkout in this environment. They remain required before review.
+- No Socket.IO work, database/schema changes, ride lifecycle changes, or ride/chat/complaint/SOS workflows were added.
+
+
+## 2026-10-12 — Accept all supported notification types in the UI
+
+### User prompt
+“The UI currently rejects four valid notification types supported by the database and API. The component recognizes only `'pool_chat_opened' | 'pool_chat_message' | 'ride_update'`. But the database schema also allows `account_warning`, `account_suspended`, `account_reactivated`, and `complaint_update`. The validation function `isNotification()` rejects any item with one of those types. Because the page validates the entire response with `data.notifications.every(isNotification)`, one such notification causes the entire list to be treated as an invalid response, hiding otherwise valid notifications too. Fix this. Update the AI log with this prompt.”
+
+### Changes
+- Expanded the UI notification type union and runtime allow-list to include `account_warning`, `account_suspended`, `account_reactivated`, and `complaint_update` alongside the existing three types.
+- Added a UI test that returns all four additional types together with an existing ride notification and asserts every item renders without an invalid-response error. This specifically guards against one unsupported type hiding the whole list.
+
+### Repository consistency note
+During verification, the checked-in `apps/web/db/schema.sql` constraint and API `NotificationRow.type` annotation on both this branch and `master` still list only the original three types. The UI now accepts all seven as requested, but the repository's SQL constraint/API compile-time annotation should be reconciled separately before claiming the database/API already persist and emit the four additional types. No database migration or API behavior was changed in this UI-focused fix.
+
+### Verification status
+- Added regression coverage; automated tests, lint, typecheck, and build have not been run in a local checkout in this environment.
+
+
+## 2026-10-12 — Align notification API type with supported types
+
+### User prompt
+“I have run all checks and fixed formatting, lint and type check errors locally and opened a PR https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/54. The UI accepts seven types: `pool_chat_opened`, `pool_chat_message`, `ride_update`, `account_warning`, `account_suspended`, `account_reactivated`, and `complaint_update`. However, the API’s `NotificationRow` TypeScript declaration still lists only the first three. The database schema contains a later constraint extension allowing all seven, so the API declaration is inconsistent with the schema. Fix this, make sure to stay consistent with formatting, commit this and update the AI log with this prompt.”
+
+### Change made
+- Updated `NotificationRow.type` in `apps/web/src/app/api/notifications/route.ts` to match the seven types accepted by the UI and specified by the user.
+- No API runtime logic or database schema changes were made.
+
+### Verification
+- Inspected open PR #54 and its source branch `CS455-59-notification-ui` before editing.
+- Confirmed the current source declaration was limited to the original three types.
+- Formatting, lint, typecheck, and tests were not run in this environment; the user reports having run checks locally for PR #54.
+
+
+## 2026-10-12 — Fix notification API type formatting after PR lint check
+
+### User prompt
+“ I made the correction to the PR but the lint check is now failing; fix that, commit directly to the PR, and make it so the check passes.”
+
+### Changes
+- Reformatted the seven-value `NotificationRow.type` union in `apps/web/src/app/api/notifications/route.ts` into the repository's Prettier-compatible multiline layout.
+- No API behavior or database schema was changed.
+
+### Verification
+- Inspected PR #54 CI run and found the failing step was **Check formatting**; lint and type-check had not failed in that run.
+- A new CI run is required to confirm the formatting fix passes.
+
+
+## 2026-10-12 — Address PR #54 Notification Centre review
+
+### User prompt
+“make these edits to PR 54 and also ensure lint checks are all correct”
+
+### Changes
+- Changed notification response validation to accept any string notification type, so a newly introduced type such as `trip_update` no longer invalidates and hides the entire list.
+- Added `apps/web/src/lib/notification-types.ts` as the shared notification type definition and reused it in the notifications GET API route; the UI intentionally tolerates unknown string values.
+- Removed the conflicting `block` class from notification timestamps by wrapping `time` in a paragraph.
+- Hid the unread count when the initial list cannot be loaded, reused `isUuid()` and `formatDeparture()`, improved the empty-state copy, and gave each mark-as-read button a notification-specific accessible name.
+- Added regression coverage for unknown notification types, the error-state unread count, timestamp formatting, accessible button names, and the notifications page session guard.
+
+### Scope decisions
+- “Mark all as read” is a separate feature and was not added because the current API only supports marking one notification at a time.
+- Header live updates and the 30-day retention limit remain follow-up work, as the review permits.
+
+### Verification
+- Changes were committed to `CS455-59-notification-ui`, the head branch of PR #54.
+- The repository's CI workflow is the authoritative place to verify lint, formatting, type-check, tests, and build. These checks have not yet been confirmed for the updated head; check the latest workflow run before merging.

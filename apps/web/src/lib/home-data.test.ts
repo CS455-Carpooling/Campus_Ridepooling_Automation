@@ -23,6 +23,7 @@ beforeEach(() => {
 
 describe('home data', () => {
   it('loads rides and join-request history for the student dashboard', async () => {
+    const userId = '12345678-1234-4123-8123-123456789abc';
     const ride = {
       rideId: 'r1',
       title: 'To Kanpur Central',
@@ -36,9 +37,24 @@ describe('home data', () => {
 
     getUpcomingRides.mockResolvedValue([ride]);
     getHistoricalRides.mockResolvedValue([pastRide]);
-
     query.mockImplementation(async (sql: string) => {
-      if (sql.includes('ride_join_request_history')) {
+      if (sql.includes('UNION ALL')) {
+        return {
+          rows: [
+            {
+              kind: 'sent',
+              request_id: 'q1',
+              ride_id: 'r3',
+              destination: 'Kanpur Central',
+              departure: new Date('2026-10-10T01:00:00Z'),
+              rider_name: null,
+              status: 'pending',
+            },
+          ],
+        };
+      }
+
+      if (sql.includes('ride_join_request_events')) {
         return {
           rows: [
             {
@@ -74,10 +90,9 @@ describe('home data', () => {
 
       return { rows: [] };
     });
-
     const now = new Date('2026-10-05T12:00:00Z');
 
-    await expect(getStudentHome('u1', now)).resolves.toEqual({
+    await expect(getStudentHome(userId, now)).resolves.toEqual({
       upcoming: [ride],
       history: [pastRide],
       waiting: [
@@ -85,8 +100,9 @@ describe('home data', () => {
           kind: 'sent',
           requestId: 'q1',
           rideId: 'r3',
-          destination: 'Hall 5 → Kanpur Central',
+          destination: 'Kanpur Central',
           departure: '2026-10-10T01:00:00.000Z',
+          state: 'pending',
         },
       ],
       joinRequests: [
@@ -114,9 +130,9 @@ describe('home data', () => {
       ],
     });
 
-    expect(getUpcomingRides).toHaveBeenCalledWith('u1', now);
-    expect(getHistoricalRides).toHaveBeenCalledWith('u1', now);
-    expect(query).toHaveBeenCalledTimes(2);
+    expect(getUpcomingRides).toHaveBeenCalledWith(userId, now);
+    expect(getHistoricalRides).toHaveBeenCalledWith(userId, now);
+    expect(query).toHaveBeenCalledTimes(3);
   });
 
   it('counts open complaints, AI items, suspensions, and lists the last admin actions', async () => {
@@ -142,13 +158,16 @@ describe('home data', () => {
                 safety: 1,
                 recommendations: 2,
                 suspended: 3,
+                incidents: 2,
+                unacknowledged: 1,
               },
             ],
           },
     );
 
     await expect(getAdminHome()).resolves.toEqual({
-      openIncidents: null,
+      openIncidents: 2,
+      unacknowledgedIncidents: 1,
       complaintsToReview: 4,
       safetyComplaintsToReview: 1,
       recommendationsToDecide: 2,

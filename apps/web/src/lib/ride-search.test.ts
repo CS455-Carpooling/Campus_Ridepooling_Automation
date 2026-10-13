@@ -33,6 +33,7 @@ const mockRideRow = {
   occupant_count: 1,
   seats_left: 3,
   owner_name: 'Rahul Sharma',
+  request_state: null,
 };
 
 const mockOccupantRow = {
@@ -75,6 +76,7 @@ describe('searchRides', () => {
       seatsLeft: 3,
       totalFare: 400,
       estimatedShare: 200, // ceil(400 / 2)
+      requestState: null,
     });
   });
 
@@ -103,9 +105,11 @@ describe('searchRides', () => {
   });
 
   it('estimates the share with the viewer as one more person (FR-RD-08.1)', async () => {
-    h.query.mockResolvedValueOnce({ rows: [] });
-    await searchRides('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', validRequest);
-    expect(String(h.query.mock.calls[0][0])).toMatch(/WHERE o\.ride_id = r\.id\) \+ 1\s/);
+    h.query
+      .mockResolvedValueOnce({ rows: [mockRideRow] })
+      .mockResolvedValueOnce({ rows: [mockOccupantRow] });
+    const results = await searchRides('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', validRequest);
+    expect(results[0].estimatedShare).toBe(200);
   });
 });
 

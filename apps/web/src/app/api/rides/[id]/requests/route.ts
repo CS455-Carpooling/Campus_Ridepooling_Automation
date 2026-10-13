@@ -1,379 +1,224 @@
-import { pool } from '@/lib/db';
-import { getCurrentUser, guard, json, readJson } from '@/lib/auth';
-import { estimateShare } from '@/lib/fare';
-import { getActiveSuspension } from '@/lib/suspensions';
-import { suspendedMessage } from '@/lib/enforcement-rules';
-import { RIDE_REQUEST_RULES, validateJoinRequest } from '@/lib/ride-request-rules';
 import type { PoolClient } from 'pg';
+import { getCurrentUser, guard, json, readJson } from '@/lib/auth';
+import { pool } from '@/lib/db';
+import { isUuid } from '@/lib/ids';
+import { parseJoinRequestInput } from '@/lib/join-request-rules';
+import { submitJoinRequest } from '@/lib/join-requests';
 
-type RideRow = {
-  id: string;
-  owner_id: string;
-  departure_start: Date;
-  expected_total_fare: number;
-  capacity_snapshot: number;
-  state: string;
-};
+type RequestRouteContext = RouteContext<'/api/rides/[id]/requests'>;
 
-type RequestRow = {
-  id: string;
-  ride_id: string;
-  rider_id: string;
-  pickup_point_id: string;
-  status: string;
-  departure_snapshot: Date;
-  pickup_time_snapshot: Date;
-  estimated_share_snapshot: number;
-  submitted_at: Date;
-};
+export async function GET(_req: Request, ctx: RequestRouteContext) {
+  const user = await getCurrentUser();
+  if (!user) return json({ error: 'Authentication required.', code: 'unauthenticated' }, 401);
 
-const MINUTE_MS = 60_000;
+  const { id } = await ctx.params;
+  if (!isUuid(id)) return json({ error: 'Ride not found.', code: 'not_found' }, 404);
 
-function errorResponse(message: string, status: number, code: string) {
-  return json({ error: message, code }, status);
+  const ride = await pool.query<{ owner_id: string }>('SELECT owner_id FROM rides WHERE id = $1', [
+    id,
+  ]);
+  if (!ride.rows[0]) return json({ error: 'Ride not found.', code: 'not_found' }, 404);
+
+  if (ride.rows[0].owner_id === user.id) {
+    const { rows } = await pool.query<{
+      id: string;
+      status: string;
+      reason_code: string | null;
+      submitted_at: Date;
+      snapshot_departure_start: Date;
+      snapshot_pickup_at: Date;
+      snapshot_estimated_share: number;
+      current_departure_start: Date | null;
+      current_pickup_at: Date | null;
+      current_estimated_share: number | null;
+      rider_name: string;
+      pickup_name: string;
+      visible_tags: string[] | null;
+    }>(
+      `SELECT request.id, request.status, request.reason_code, request.submitted_at,
+              request.snapshot_departure_start, request.snapshot_pickup_at,
+              request.snapshot_estimated_share, request.current_departure_start,
+              request.current_pickup_at, request.current_estimated_share,
+              COALESCE(profile.display_name, rider.full_name) AS rider_name,
+              pickup.name AS pickup_name,
+              COALESCE(tags.visible_tags, ARRAY[]::text[]) AS visible_tags
+       FROM ride_join_requests request
+       JOIN users rider ON rider.id = request.rider_id
+       LEFT JOIN user_profiles profile ON profile.user_id = rider.id
+       JOIN locations pickup ON pickup.id = request.pickup_location_id
+       LEFT JOIN LATERAL (
+         SELECT array_agg(tag.name ORDER BY tag.name) AS visible_tags
+         FROM user_profile_tags selected
+         JOIN interest_tags tag ON tag.id = selected.tag_id AND tag.is_active = true
+         WHERE selected.user_id = rider.id AND selected.is_visible = true
+       ) tags ON true
+       WHERE request.ride_id = $1 AND request.status IN ('pending', 'needs_reconfirmation')
+       ORDER BY request.submitted_at, request.id`,
+      [id],
+    );
+    return json({
+      role: 'owner',
+      requests: rows.map((row) => ({
+        id: row.id,
+        status: row.status,
+        reasonCode: row.reason_code,
+        submittedAt: row.submitted_at.toISOString(),
+        riderName: row.rider_name,
+        pickupName: row.pickup_name,
+        visibleTags: row.visible_tags ?? [],
+        agreed: {
+          departureStart: row.snapshot_departure_start.toISOString(),
+          pickupAt: row.snapshot_pickup_at.toISOString(),
+          estimatedShare: row.snapshot_estimated_share,
+        },
+        current: {
+          departureStart:
+            row.current_departure_start?.toISOString() ??
+            row.snapshot_departure_start.toISOString(),
+          pickupAt: row.current_pickup_at?.toISOString() ?? row.snapshot_pickup_at.toISOString(),
+          estimatedShare: row.current_estimated_share ?? row.snapshot_estimated_share,
+        },
+      })),
+    });
+  }
+
+  const { rows } = await pool.query<{
+    id: string;
+    status: string;
+    reason_code: string | null;
+    submitted_at: Date;
+    accepted_at: Date | null;
+    snapshot_departure_start: Date;
+    snapshot_pickup_at: Date;
+    snapshot_estimated_share: number;
+    current_departure_start: Date | null;
+    current_pickup_at: Date | null;
+    current_estimated_share: number | null;
+    late_cancellation: boolean;
+    locked_share: number | null;
+  }>(
+    `SELECT id, status, reason_code, submitted_at, accepted_at,
+            snapshot_departure_start, snapshot_pickup_at, snapshot_estimated_share,
+            current_departure_start, current_pickup_at, current_estimated_share,
+            late_cancellation, locked_share
+     FROM ride_join_requests
+     WHERE ride_id = $1 AND rider_id = $2
+     ORDER BY submitted_at DESC, id DESC`,
+    [id, user.id],
+  );
+  const events = await pool.query<{
+    request_id: string;
+    from_status: string | null;
+    to_status: string;
+    reason_code: string | null;
+    details: Record<string, unknown>;
+    created_at: Date;
+  }>(
+    `SELECT event.request_id, event.from_status, event.to_status, event.reason_code,
+            event.details, event.created_at
+     FROM ride_join_request_events event
+     JOIN ride_join_requests request ON request.id = event.request_id
+     WHERE request.ride_id = $1 AND request.rider_id = $2
+     ORDER BY event.created_at, event.id`,
+    [id, user.id],
+  );
+  return json({
+    role: 'rider',
+    requests: rows.map((row) => ({
+      id: row.id,
+      status: row.status,
+      reasonCode: row.reason_code,
+      submittedAt: row.submitted_at.toISOString(),
+      acceptedAt: row.accepted_at?.toISOString() ?? null,
+      agreed: {
+        departureStart: row.snapshot_departure_start.toISOString(),
+        pickupAt: row.snapshot_pickup_at.toISOString(),
+        estimatedShare: row.snapshot_estimated_share,
+      },
+      current: {
+        departureStart:
+          row.current_departure_start?.toISOString() ?? row.snapshot_departure_start.toISOString(),
+        pickupAt: row.current_pickup_at?.toISOString() ?? row.snapshot_pickup_at.toISOString(),
+        estimatedShare: row.current_estimated_share ?? row.snapshot_estimated_share,
+      },
+      lateCancellation: row.late_cancellation,
+      lockedShare: row.locked_share,
+      history: events.rows
+        .filter((event) => event.request_id === row.id)
+        .map((event) => ({
+          from: event.from_status,
+          to: event.to_status,
+          reasonCode: event.reason_code,
+          details: event.details,
+          at: event.created_at.toISOString(),
+        })),
+    })),
+  });
 }
 
-export async function POST(req: Request, context: { params: Promise<{ id: string }> }) {
-  const blocked = await guard('submit-join-request', 20, 900);
+const errorByKind: Record<string, { status: number; error: string }> = {
+  not_found: { status: 404, error: 'Ride not found.' },
+  not_owner: { status: 403, error: 'Only the ride owner can do that.' },
+  not_rider: { status: 403, error: 'This action is not available to this account.' },
+  suspended: { status: 403, error: 'Your account is suspended and cannot request a seat.' },
+  ride_closed: { status: 409, error: 'This ride is no longer open for requests.' },
+  ride_locked: { status: 409, error: 'This ride has reached its lock time.' },
+  ride_full: { status: 409, error: 'This ride has no available seats.' },
+  invalid_pickup: { status: 400, error: 'Choose an active campus pickup point.' },
+  pickup_estimate_unavailable: {
+    status: 409,
+    error: 'A pickup-time estimate is unavailable for this route.',
+  },
+  already_requested: { status: 409, error: 'You already have a request or seat on this ride.' },
+  active_request_limit: {
+    status: 409,
+    error: 'You can have at most three requests waiting for an owner decision.',
+  },
+  departure_conflict: {
+    status: 409,
+    error: 'This ride departs within two hours of another ride you have joined.',
+  },
+};
+
+export async function POST(req: Request, ctx: RequestRouteContext) {
+  const blocked = await guard('request-ride-seat', 20, 900);
   if (blocked) return blocked;
-
   const user = await getCurrentUser();
+  if (!user) return json({ error: 'Authentication required.', code: 'unauthenticated' }, 401);
 
-  if (!user) {
-    return errorResponse('Authentication required.', 401, 'unauthenticated');
-  }
-
-  const { id: rideId } = await context.params;
-
-  // Validate the route ID before using it in a database query.
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(rideId)) {
-    return errorResponse('Invalid ride ID.', 400, 'invalid_ride_id');
-  }
-
-  const body = await readJson(req);
-  const validation = validateJoinRequest(body);
-
-  if (!validation.ok) {
-    return errorResponse(validation.message, 400, 'invalid_request');
-  }
-
-  const { pickupPointId, idempotencyKey } = validation.value;
+  const { id } = await ctx.params;
+  if (!isUuid(id)) return json({ error: 'Ride not found.', code: 'not_found' }, 404);
+  const parsed = parseJoinRequestInput(await readJson(req));
+  if (!parsed.ok) return json({ error: parsed.error, code: 'invalid_request' }, 400);
 
   let client: PoolClient | null = null;
-
   try {
     client = await pool.connect();
     await client.query('BEGIN');
-
-    /*
-     * Lock this user's row first.
-     * This serializes concurrent submissions by the same rider and
-     * protects the request limit and idempotency check.
-     */
-    const account = await client.query<{
-      id: string;
-      email_verified_at: Date | null;
-    }>(
-      `SELECT id, email_verified_at
-       FROM users
-       WHERE id = $1
-       FOR UPDATE`,
-      [user.id],
+    const result = await submitJoinRequest(
+      client,
+      id,
+      user.id,
+      parsed.value.pickupLocationId,
+      parsed.value.idempotencyKey,
+      new Date(),
     );
-
-    const accountRow = account.rows[0];
-
-    if (!accountRow) {
-      await client.query('ROLLBACK');
-      return errorResponse('Authentication required.', 401, 'unauthenticated');
+    if (result.kind !== 'created' && result.kind !== 'existing') {
+      if (result.kind === 'ride_locked') await client.query('COMMIT');
+      else await client.query('ROLLBACK');
+      const detail = 'detail' in result ? result.detail : undefined;
+      const failure = errorByKind[result.kind] ?? {
+        status: 409,
+        error: detail ?? 'The request could not be completed.',
+      };
+      return json({ error: failure.error, code: result.kind }, failure.status);
     }
-
-    if (!accountRow.email_verified_at) {
-      await client.query('ROLLBACK');
-      return errorResponse(
-        'Verify your IITK email before requesting a ride.',
-        403,
-        'email_not_verified',
-      );
-    }
-
-    const suspension = await getActiveSuspension(user.id, new Date(), client);
-
-    if (suspension) {
-      await client.query('ROLLBACK');
-      return json(
-        {
-          error: suspendedMessage(suspension, 'request to join a ride'),
-          code: 'suspended',
-        },
-        403,
-      );
-    }
-
-    /*
-     * Repeated submissions with the same key within 24 hours return
-     * the original request instead of creating another one.
-     */
-    const previousRequest = await client.query<RequestRow>(
-      `SELECT id, ride_id, rider_id, pickup_point_id, status,
-              departure_snapshot, pickup_time_snapshot,
-              estimated_share_snapshot, submitted_at
-       FROM ride_join_requests
-       WHERE rider_id = $1
-         AND idempotency_key = $2
-         AND submitted_at >= now() - make_interval(hours => $3)
-       LIMIT 1`,
-      [user.id, idempotencyKey, RIDE_REQUEST_RULES.idempotencyWindowHours],
-    );
-
-    if (previousRequest.rows[0]) {
-      const previous = previousRequest.rows[0];
-
-      await client.query('COMMIT');
-
-      return json(
-        {
-          request: {
-            id: previous.id,
-            rideId: previous.ride_id,
-            status: previous.status,
-            pickupPointId: previous.pickup_point_id,
-            departureSnapshot: previous.departure_snapshot,
-            pickupTimeSnapshot: previous.pickup_time_snapshot,
-            estimatedShare: previous.estimated_share_snapshot,
-            submittedAt: previous.submitted_at,
-          },
-          reused: true,
-        },
-        200,
-      );
-    }
-
-    // Lock the ride so two riders cannot take its last seat simultaneously.
-    const rideResult = await client.query<RideRow>(
-      `SELECT id, owner_id, departure_start, expected_total_fare,
-              capacity_snapshot, state
-       FROM rides
-       WHERE id = $1
-       FOR UPDATE`,
-      [rideId],
-    );
-
-    const ride = rideResult.rows[0];
-
-    if (!ride) {
-      await client.query('ROLLBACK');
-      return errorResponse('Ride not found.', 404, 'ride_not_found');
-    }
-
-    if (ride.owner_id === user.id) {
-      await client.query('ROLLBACK');
-      return errorResponse(
-        'You cannot request to join your own ride.',
-        409,
-        'ride_owner_cannot_join',
-      );
-    }
-
-    if (ride.state !== 'scheduled') {
-      await client.query('ROLLBACK');
-      return errorResponse('This ride is no longer open for requests.', 409, 'ride_not_open');
-    }
-
-    const now = new Date();
-    const lockTime =
-      ride.departure_start.getTime() - RIDE_REQUEST_RULES.minimumDepartureLeadMinutes * MINUTE_MS;
-
-    if (now.getTime() >= lockTime) {
-      await client.query('ROLLBACK');
-      return errorResponse(
-        'The request deadline for this ride has passed.',
-        409,
-        'request_deadline_passed',
-      );
-    }
-
-    // Pickup IDs are text values, for example "hall-9".
-    const pickupResult = await client.query<{
-      id: string;
-      type: string;
-    }>(
-      `SELECT id, type
-       FROM locations
-       WHERE id = $1 AND is_active = true
-       FOR SHARE`,
-      [pickupPointId],
-    );
-
-    if (pickupResult.rows.length === 0 || pickupResult.rows[0].type !== 'campus') {
-      await client.query('ROLLBACK');
-      return errorResponse('Choose an active campus pickup point.', 400, 'invalid_pickup_point');
-    }
-
-    // A confirmed rider already occupies a seat.
-    const occupancyResult = await client.query<{ count: string }>(
-      `SELECT COUNT(*)::text AS count
-       FROM riders
-       WHERE ride_id = $1 AND left_at IS NULL`,
-      [ride.id],
-    );
-
-    const occupants = Number(occupancyResult.rows[0]?.count ?? 0);
-
-    if (occupants >= ride.capacity_snapshot) {
-      await client.query('ROLLBACK');
-      return errorResponse('This ride has no seats available.', 409, 'ride_full');
-    }
-
-    // Reject a second active or accepted request for this same ride.
-    const duplicateResult = await client.query<{ id: string }>(
-      `SELECT id
-       FROM ride_join_requests
-       WHERE ride_id = $1
-         AND rider_id = $2
-         AND status IN ('pending', 'needs_reconfirmation', 'accepted')
-       LIMIT 1`,
-      [ride.id, user.id],
-    );
-
-    if (duplicateResult.rows.length > 0) {
-      await client.query('ROLLBACK');
-      return errorResponse(
-        'You already have an active request for this ride.',
-        409,
-        'duplicate_active_request',
-      );
-    }
-
-    // Count pending requests across all rides.
-    const activeCountResult = await client.query<{ count: string }>(
-      `SELECT COUNT(*)::text AS count
-       FROM ride_join_requests
-       WHERE rider_id = $1
-         AND status IN ('pending', 'needs_reconfirmation')`,
-      [user.id],
-    );
-
-    const activeRequestCount = Number(activeCountResult.rows[0]?.count ?? 0);
-
-    if (activeRequestCount >= RIDE_REQUEST_RULES.maxActiveRequests) {
-      await client.query('ROLLBACK');
-      return errorResponse(
-        'You can have at most three active join requests.',
-        409,
-        'active_request_limit_reached',
-      );
-    }
-
-    /*
-     * A rider must have at least two hours between accepted rides.
-     * The riders table contains the owner as well as accepted riders.
-     */
-    const acceptedRideConflict = await client.query<{ id: string }>(
-      `SELECT other_ride.id
-       FROM riders AS confirmed
-       JOIN rides AS other_ride ON other_ride.id = confirmed.ride_id
-       WHERE confirmed.user_id = $1
-         AND confirmed.left_at IS NULL
-         AND other_ride.id <> $2
-         AND other_ride.state IN ('scheduled', 'pickup_in_progress', 'in_transit')
-         AND ABS(
-           EXTRACT(
-             EPOCH FROM (other_ride.departure_start - $3::timestamptz)
-           )
-         ) < $4
-       LIMIT 1`,
-      [
-        user.id,
-        ride.id,
-        ride.departure_start,
-        RIDE_REQUEST_RULES.minimumAcceptedRideGapMinutes * 60,
-      ],
-    );
-
-    if (acceptedRideConflict.rows.length > 0) {
-      await client.query('ROLLBACK');
-      return errorResponse(
-        'This ride departs too close to another ride you have joined.',
-        409,
-        'accepted_ride_time_conflict',
-      );
-    }
-
-    /*
-     * Current data has no route itinerary or pickup-time estimator.
-     * This is a temporary proxy, not a real pickup-time prediction.
-     */
-    const pickupTimeSnapshot = ride.departure_start;
-
-    const estimatedShare = estimateShare(ride.expected_total_fare, occupants);
-
-    const inserted = await client.query<RequestRow>(
-      `INSERT INTO ride_join_requests (
-         ride_id,
-         rider_id,
-         pickup_point_id,
-         status,
-         idempotency_key,
-         departure_snapshot,
-         pickup_time_snapshot,
-         estimated_share_snapshot
-       )
-       VALUES ($1, $2, $3, 'pending', $4, $5, $6, $7)
-       RETURNING id, ride_id, rider_id, pickup_point_id, status,
-                 departure_snapshot, pickup_time_snapshot,
-                 estimated_share_snapshot, submitted_at`,
-      [
-        ride.id,
-        user.id,
-        pickupPointId,
-        idempotencyKey,
-        ride.departure_start,
-        pickupTimeSnapshot,
-        estimatedShare,
-      ],
-    );
-
-    const request = inserted.rows[0];
-
-    await client.query(
-      `INSERT INTO ride_join_request_history (
-         request_id, previous_status, new_status, reason_code, changed_by
-       )
-       VALUES ($1, NULL, 'pending', 'request_submitted', $2)`,
-      [request.id, user.id],
-    );
-
     await client.query('COMMIT');
-
-    return json(
-      {
-        request: {
-          id: request.id,
-          rideId: request.ride_id,
-          status: request.status,
-          pickupPointId: request.pickup_point_id,
-          departureSnapshot: request.departure_snapshot,
-          pickupTimeSnapshot: request.pickup_time_snapshot,
-          estimatedShare: request.estimated_share_snapshot,
-          submittedAt: request.submitted_at,
-        },
-        reused: false,
-      },
-      201,
-    );
+    return json({ request: result }, result.kind === 'created' ? 201 : 200);
   } catch (error) {
-    if (client) {
-      await client.query('ROLLBACK').catch(() => undefined);
-    }
-
-    console.error('Submit join request failed:', error);
-
-    return errorResponse(
-      'Unable to submit your join request right now.',
-      500,
-      'join_request_failed',
-    );
+    if (client) await client.query('ROLLBACK').catch(() => undefined);
+    console.error('Submit ride request failed:', error);
+    return json({ error: 'Unable to submit the request right now.', code: 'server_error' }, 500);
   } finally {
     client?.release();
   }

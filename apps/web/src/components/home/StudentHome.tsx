@@ -157,8 +157,20 @@ function WaitingRequests({
             return (
               <li key={request.requestId} className="py-3">
                 {request.kind === 'sent' ? (
+                  request.state === 'needs_reconfirmation' ? (
+                    <>
+                      Your request for the ride to {ride} on {when} needs your confirmation before
+                      the owner can decide.
+                    </>
+                  ) : (
+                    <>
+                      Your request for the ride to {ride} on {when} is waiting for the ride owner.
+                    </>
+                  )
+                ) : request.state === 'needs_reconfirmation' ? (
                   <>
-                    Your request for the ride to {ride} on {when} is waiting for the ride owner.
+                    {request.riderName}&apos;s request for your ride to {ride} on {when} needs their
+                    confirmation before you can decide.
                   </>
                 ) : (
                   <>
@@ -289,6 +301,12 @@ function statusLabel(status: RequestStatus): string {
       return 'Expired';
     case 'ride_cancelled':
       return 'Ride cancelled';
+    case 'left':
+      return 'Left ride';
+    case 'no_show':
+      return 'No-show';
+    case 'completed':
+      return 'Completed';
   }
 }
 

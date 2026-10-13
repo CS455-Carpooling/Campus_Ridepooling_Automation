@@ -6,6 +6,7 @@ import { isUuid } from './ids';
 import type { Direction } from './ride-rules';
 import { rideTitle, type RideState } from './ride-status';
 import { getActiveSuspension, type ActiveSuspension } from './suspensions';
+import { seatStatus, type SeatStatus } from './trip-rules';
 
 /**
  * The admin's view of riders (OA-FR-42, SYS-NFR-07, CS455-53): finding one, their record, and
@@ -63,6 +64,8 @@ export type RiderRide = {
   departureStart: string;
   state: RideState;
   asOwner: boolean;
+  /** The owner marked them a no-show on this ride (FR-RO-10.3), for review. */
+  noShow: boolean;
 };
 
 export type RiderWarning = {
@@ -163,9 +166,10 @@ export async function getRiderRecord(
       departure_start: Date;
       state: RideState;
       as_owner: boolean;
+      no_show: boolean;
     }>(
       `SELECT r.id, r.direction, hub.name AS hub_name, r.departure_start, r.state,
-              (r.owner_id = $1) AS as_owner
+              (r.owner_id = $1) AS as_owner, (m.no_show_at IS NOT NULL) AS no_show
        FROM riders m
        JOIN rides r ON r.id = m.ride_id
        JOIN locations hub ON hub.id = r.hub_id
@@ -233,6 +237,7 @@ export async function getRiderRecord(
       departureStart: ride.departure_start.toISOString(),
       state: ride.state,
       asOwner: ride.as_owner,
+      noShow: ride.no_show,
     })),
     complaintsFiled: filed.rows.map(toComplaint),
     complaintsReceived: received.rows.map(toComplaint),
@@ -270,12 +275,19 @@ export type AdminRideView = {
   totalFare: number;
   createdAt: string;
   completedAt: string | null;
+  /** When the owner started pickup and the trip (CS455-63), or null. */
+  pickupStartedAt: string | null;
+  tripStartedAt: string | null;
   occupants: Array<{
     userId: string;
     name: string;
     isOwner: boolean;
     campusPlace: string;
     joinedAt: string;
+    /** Where they stood at pickup (FR-RO-09.3, FR-RO-10.3). */
+    status: SeatStatus;
+    /** What they owed when the ride was completed (FR-RO-09.4), or null before then. */
+    finalShare: number | null;
   }>;
   complaints: Array<{
     id: string;
@@ -301,10 +313,12 @@ export async function getAdminRide(rideId: string): Promise<AdminRideView | null
       expected_total_fare: number;
       created_at: Date;
       completed_at: Date | null;
+      pickup_started_at: Date | null;
+      trip_started_at: Date | null;
     }>(
       `SELECT r.id, r.direction, hub.name AS hub_name, r.state, r.departure_start, r.departure_end,
               vt.name AS vehicle_name, r.capacity_snapshot, r.expected_total_fare, r.created_at,
-              r.completed_at
+              r.completed_at, r.pickup_started_at, r.trip_started_at
        FROM rides r
        JOIN locations hub ON hub.id = r.hub_id
        JOIN vehicle_types vt ON vt.id = r.vehicle_type_id
@@ -321,13 +335,20 @@ export async function getAdminRide(rideId: string): Promise<AdminRideView | null
       is_owner: boolean;
       campus_place: string;
       joined_at: Date;
+      left_at: Date | null;
+      checked_in_at: Date | null;
+      arrived_at: Date | null;
+      no_show_at: Date | null;
+      final_share: number | null;
     }>(
       `SELECT m.user_id, COALESCE(p.display_name, u.full_name) AS name,
-              (m.user_id = r.owner_id) AS is_owner, place.name AS campus_place, m.joined_at
+              (m.user_id = r.owner_id) AS is_owner, place.name AS campus_place, m.joined_at,
+              m.left_at, m.checked_in_at, m.arrived_at, m.no_show_at, final.share AS final_share
        FROM riders m
        JOIN rides r ON r.id = m.ride_id
        JOIN users u ON u.id = m.user_id
        LEFT JOIN user_profiles p ON p.user_id = u.id
+       LEFT JOIN ride_final_shares final ON final.ride_id = m.ride_id AND final.user_id = m.user_id
        JOIN locations place ON place.id = m.campus_location_id
        WHERE m.ride_id = $1
        ORDER BY (m.user_id = r.owner_id) DESC, m.joined_at, m.id`,
@@ -356,12 +377,21 @@ export async function getAdminRide(rideId: string): Promise<AdminRideView | null
     totalFare: ride.expected_total_fare,
     createdAt: ride.created_at.toISOString(),
     completedAt: ride.completed_at ? ride.completed_at.toISOString() : null,
+    pickupStartedAt: ride.pickup_started_at ? ride.pickup_started_at.toISOString() : null,
+    tripStartedAt: ride.trip_started_at ? ride.trip_started_at.toISOString() : null,
     occupants: occupants.rows.map((row) => ({
       userId: row.user_id,
       name: row.name,
       isOwner: row.is_owner,
       campusPlace: row.campus_place,
       joinedAt: row.joined_at.toISOString(),
+      status: seatStatus({
+        leftAt: row.left_at,
+        checkedInAt: row.checked_in_at,
+        arrivedAt: row.arrived_at,
+        noShowAt: row.no_show_at,
+      }),
+      finalShare: row.final_share,
     })),
     complaints: complaints.rows,
   };

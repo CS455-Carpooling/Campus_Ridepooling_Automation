@@ -2,6 +2,7 @@ import 'server-only';
 import {
   complaintFormClosesAt,
   complaintWindow,
+  complaintWindowStart,
   type ComplaintCategory,
   type ComplaintStatus,
   type ComplaintWindow,
@@ -10,6 +11,7 @@ import { pool } from './db';
 import { isUuid } from './ids';
 import type { Direction } from './ride-rules';
 import { rideTitle, type RideState } from './ride-status';
+import { canRaiseSos } from './sos-rules';
 
 /** Someone the viewer may complain about, named by their seat, never by account (CS455-53). */
 export type ComplaintPerson = {
@@ -37,11 +39,13 @@ export type ComplaintFormPage = {
   departureEnd: string;
   state: RideState;
   window: ComplaintWindow;
-  /** 7 days after completion; null while the ride is not completed. */
+  /** 7 days after completion, or after the viewer's own no-show; null before either. */
   closesAt: string | null;
   /** Everyone else on the ride, owner first. */
   people: ComplaintPerson[];
   message: ReportedMessage | null;
+  /** The trip is under way and the viewer is on it, so SOS is on the ride page (FR-RD-13.6). */
+  sosAvailable: boolean;
 };
 
 type RideRow = {
@@ -52,6 +56,8 @@ type RideRow = {
   departure_end: Date;
   completed_at: Date | null;
   hub_name: string;
+  viewer_no_show_at: Date | null;
+  viewer_left_at: Date | null;
 };
 
 type PersonRow = {
@@ -67,7 +73,7 @@ type MessageRow = { id: string; body: string; created_at: Date; sender_occupant_
 // The join on the viewer's seat is the access check: only the people on a ride see this page.
 const RIDE_SQL = `
   SELECT r.id, r.direction, r.state, r.departure_start, r.departure_end, r.completed_at,
-         hub.name AS hub_name
+         hub.name AS hub_name, me.no_show_at AS viewer_no_show_at, me.left_at AS viewer_left_at
   FROM rides r
   JOIN riders me ON me.ride_id = r.id AND me.user_id = $2
   JOIN locations hub ON hub.id = r.hub_id
@@ -117,6 +123,10 @@ export async function getComplaintFormPage(
       : Promise.resolve({ rows: [] as MessageRow[] }),
   ]);
   const reported = message.rows[0];
+  const windowStart = complaintWindowStart(
+    ride.state === 'completed' ? ride.completed_at : null,
+    ride.viewer_no_show_at,
+  );
 
   return {
     rideId: ride.id,
@@ -125,8 +135,9 @@ export async function getComplaintFormPage(
     departureStart: ride.departure_start.toISOString(),
     departureEnd: ride.departure_end.toISOString(),
     state: ride.state,
-    window: complaintWindow(ride.state, ride.completed_at, now),
-    closesAt: ride.completed_at ? complaintFormClosesAt(ride.completed_at).toISOString() : null,
+    window: complaintWindow(ride.state, ride.completed_at, now, ride.viewer_no_show_at),
+    sosAvailable: canRaiseSos(ride.state, !ride.viewer_left_at),
+    closesAt: windowStart ? complaintFormClosesAt(windowStart).toISOString() : null,
     people: people.rows.map((person) => ({
       occupantId: person.occupant_id,
       name: person.name,

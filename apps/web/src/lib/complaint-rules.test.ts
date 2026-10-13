@@ -11,6 +11,7 @@ import {
   complaintStatusLabels,
   complaintStatusMessages,
   complaintWindow,
+  complaintWindowStart,
   parseComplaintRequest,
   parseComplaintStatusChange,
 } from './complaint-rules';
@@ -72,6 +73,26 @@ describe('complaintWindow (FR-RD-13.1)', () => {
   it('is never open on a cancelled ride, nor on a completed one without a completion time', () => {
     expect(complaintWindow('cancelled', null, completedAt)).toBe('cancelled');
     expect(complaintWindow('completed', null, completedAt)).toBe('not_completed');
+  });
+
+  it('opens for a no-show from the no-show, during the trip, so they can dispute it (CS455-62)', () => {
+    const noShowAt = new Date(completedAt.getTime() - 2 * 60 * 60 * 1000);
+    expect(complaintWindow('pickup_in_progress', null, noShowAt, noShowAt)).toBe('open');
+    expect(
+      complaintWindow('in_transit', null, new Date(noShowAt.getTime() + 7 * DAY), noShowAt),
+    ).toBe('closed');
+    expect(complaintWindow('cancelled', null, noShowAt, noShowAt)).toBe('cancelled');
+  });
+
+  it('counts 7 days from the later of completion and the no-show', () => {
+    const noShowAt = new Date(completedAt.getTime() - 60 * 60 * 1000);
+    expect(complaintWindowStart(completedAt, noShowAt)).toEqual(completedAt);
+    expect(complaintWindowStart(noShowAt, completedAt)).toEqual(completedAt);
+    expect(complaintWindowStart(null, noShowAt)).toEqual(noShowAt);
+    expect(complaintWindowStart(completedAt)).toEqual(completedAt);
+    expect(complaintWindowStart(null, null)).toBeNull();
+    // A completion time on a ride not completed does not count.
+    expect(complaintWindow('in_transit', completedAt, completedAt, null)).toBe('not_completed');
   });
 });
 

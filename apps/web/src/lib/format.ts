@@ -48,6 +48,12 @@ export function formatTimeOfDay(iso: string): string {
   return timeOfDayFormat.format(new Date(iso));
 }
 
+/** Formats the time of an ISO date-time as, for example, "18:05" (IST), for times on a trip. */
+export function formatClockTime(iso: string): string {
+  const parts = departureParts(iso);
+  return `${parts.hour}:${parts.minute}`;
+}
+
 const rupeeFormat = new Intl.NumberFormat('en-IN', {
   style: 'currency',
   currency: 'INR',

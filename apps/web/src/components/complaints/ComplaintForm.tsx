@@ -196,6 +196,12 @@ export function ComplaintForm({ page }: { page: ComplaintFormPage }) {
             error={errors.category}
           />
           {category === 'safety' && <EmergencyContacts />}
+          {category === 'safety' && page.sosAvailable && (
+            <p className="font-semibold">
+              Your trip is under way: if you are in danger now, use{' '}
+              <Link href={routes.ride(page.rideId)}>SOS on the ride page</Link>.
+            </p>
+          )}
           <div className="flex flex-col gap-1">
             <TextAreaField
               label="Describe what happened"

@@ -45,6 +45,17 @@ export function RideCard({ ride, pickupPointId }: RideCardProps) {
         </span>
       </header>
 
+      {ride.requestState && (
+        <p
+          className="rounded-control border border-line px-3 py-2 text-sm font-semibold"
+          role="status"
+        >
+          {ride.requestState === 'needs_reconfirmation'
+            ? 'Your request needs confirmation'
+            : 'Request sent: waiting for the owner'}
+        </p>
+      )}
+
       {/* Details grid */}
       <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
         <Fact term="Departure">

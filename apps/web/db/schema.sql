@@ -153,107 +153,79 @@ CREATE TABLE IF NOT EXISTS riders (
 -- Added after the table, so existing databases get it too.
 ALTER TABLE riders ADD COLUMN IF NOT EXISTS joined_at TIMESTAMPTZ NOT NULL DEFAULT now();
 ALTER TABLE riders ADD COLUMN IF NOT EXISTS left_at TIMESTAMPTZ;
+ALTER TABLE riders ADD COLUMN IF NOT EXISTS locked_share INTEGER;
 
 -- "My rides" looks rides up by person; the unique (ride_id, user_id) index cannot serve that.
 CREATE INDEX IF NOT EXISTS riders_user_idx ON riders(user_id);
 
-
--- Rider requests to join an existing ride.
+-- A rider's seat request is separate from their confirmed seat. Request history is retained
+-- after withdrawal, rejection, expiry, cancellation, or leaving (FR-RD-06.10).
 CREATE TABLE IF NOT EXISTS ride_join_requests (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-
-  ride_id UUID NOT NULL
-    REFERENCES rides(id) ON DELETE CASCADE,
-
-  rider_id UUID NOT NULL
-    REFERENCES users(id) ON DELETE CASCADE,
-
-  pickup_point_id TEXT NOT NULL
-    REFERENCES locations(id),
-
+  ride_id UUID NOT NULL REFERENCES rides(id) ON DELETE CASCADE,
+  rider_id UUID NOT NULL REFERENCES users(id),
+  pickup_location_id TEXT NOT NULL REFERENCES locations(id),
   status TEXT NOT NULL DEFAULT 'pending'
-    CHECK (
-      status IN (
-        'pending',
-        'needs_reconfirmation',
-        'accepted',
-        'rejected',
-        'withdrawn',
-        'expired',
-        'ride_cancelled'
-      )
-    ),
-
-  idempotency_key UUID NOT NULL,
-
-  departure_snapshot TIMESTAMPTZ NOT NULL,
-  pickup_time_snapshot TIMESTAMPTZ NOT NULL,
-
-  estimated_share_snapshot INTEGER NOT NULL
-    CHECK (estimated_share_snapshot > 0),
-
-  reason_code TEXT,
-
+    CHECK (status IN (
+      'pending', 'needs_reconfirmation', 'accepted', 'rejected', 'withdrawn',
+      'expired', 'ride_cancelled', 'left', 'no_show', 'completed'
+    )),
+  reason_code TEXT CHECK (reason_code IS NULL OR char_length(reason_code) BETWEEN 1 AND 100),
   submitted_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  decided_at TIMESTAMPTZ,
+  accepted_at TIMESTAMPTZ,
+  snapshot_departure_start TIMESTAMPTZ NOT NULL,
+  snapshot_pickup_at TIMESTAMPTZ NOT NULL,
+  snapshot_estimated_share INTEGER NOT NULL CHECK (snapshot_estimated_share >= 0),
+  accepted_departure_start TIMESTAMPTZ,
+  accepted_pickup_at TIMESTAMPTZ,
+  current_departure_start TIMESTAMPTZ,
+  current_pickup_at TIMESTAMPTZ,
+  current_estimated_share INTEGER CHECK (current_estimated_share IS NULL OR current_estimated_share >= 0),
+  no_liability_until_trip BOOLEAN NOT NULL DEFAULT FALSE,
+  late_cancellation BOOLEAN NOT NULL DEFAULT FALSE,
+  locked_share INTEGER CHECK (locked_share IS NULL OR locked_share >= 0),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Find requests belonging to a ride.
-CREATE INDEX IF NOT EXISTS ride_join_requests_ride_status_idx
-  ON ride_join_requests (ride_id, status, submitted_at);
-
--- Count a rider's active requests efficiently.
-CREATE INDEX IF NOT EXISTS ride_join_requests_rider_status_idx
-  ON ride_join_requests (rider_id, status, submitted_at);
-
--- A rider can have only one pending, reconfirmation, or accepted
--- request for the same ride.
-CREATE UNIQUE INDEX IF NOT EXISTS ride_join_requests_one_active_per_ride
-  ON ride_join_requests (ride_id, rider_id)
+CREATE INDEX IF NOT EXISTS ride_join_requests_rider_created_idx
+  ON ride_join_requests(rider_id, submitted_at DESC, id DESC);
+CREATE INDEX IF NOT EXISTS ride_join_requests_ride_status_created_idx
+  ON ride_join_requests(ride_id, status, submitted_at, id);
+CREATE UNIQUE INDEX IF NOT EXISTS ride_join_requests_one_active_per_ride_idx
+  ON ride_join_requests(ride_id, rider_id)
   WHERE status IN ('pending', 'needs_reconfirmation', 'accepted');
 
--- Record every request-state transition for the audit/history view.
-CREATE TABLE IF NOT EXISTS ride_join_request_history (
+CREATE TABLE IF NOT EXISTS ride_join_request_events (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-
-  request_id UUID NOT NULL
-    REFERENCES ride_join_requests(id) ON DELETE CASCADE,
-
-  previous_status TEXT
-    CHECK (
-      previous_status IS NULL OR previous_status IN (
-        'pending',
-        'needs_reconfirmation',
-        'accepted',
-        'rejected',
-        'withdrawn',
-        'expired',
-        'ride_cancelled'
-      )
-    ),
-
-  new_status TEXT NOT NULL
-    CHECK (
-      new_status IN (
-        'pending',
-        'needs_reconfirmation',
-        'accepted',
-        'rejected',
-        'withdrawn',
-        'expired',
-        'ride_cancelled'
-      )
-    ),
-
+  request_id UUID NOT NULL REFERENCES ride_join_requests(id) ON DELETE CASCADE,
+  from_status TEXT,
+  to_status TEXT NOT NULL
+    CHECK (to_status IN (
+      'pending', 'needs_reconfirmation', 'accepted', 'rejected', 'withdrawn',
+      'expired', 'ride_cancelled', 'left', 'no_show', 'completed'
+    )),
   reason_code TEXT,
-
-  changed_by UUID REFERENCES users(id) ON DELETE SET NULL,
-  changed_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  details JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS ride_join_request_history_request_idx
-  ON ride_join_request_history (request_id, changed_at);
+CREATE INDEX IF NOT EXISTS ride_join_request_events_request_created_idx
+  ON ride_join_request_events(request_id, created_at, id);
 
+-- An idempotency key is reusable after P-20; keeping its expiry separately lets request history
+-- remain intact while a retried submission within 24 hours returns the original request.
+CREATE TABLE IF NOT EXISTS ride_join_request_keys (
+  rider_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  idempotency_key TEXT NOT NULL CHECK (char_length(idempotency_key) BETWEEN 1 AND 200),
+  request_id UUID NOT NULL REFERENCES ride_join_requests(id) ON DELETE CASCADE,
+  expires_at TIMESTAMPTZ NOT NULL,
+  PRIMARY KEY (rider_id, idempotency_key)
+);
+
+CREATE INDEX IF NOT EXISTS ride_join_request_keys_expiry_idx
+  ON ride_join_request_keys(expires_at);
 
 -- Initial configurable locations. Stable IDs match the current Create Ride form
 -- values so the UI can later read these records directly from the database.
@@ -308,6 +280,7 @@ UPDATE vehicle_types SET sort_order = CASE id
 -- column existed take the end of their departure window.
 ALTER TABLE rides ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ;
 ALTER TABLE rides ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMPTZ;
+ALTER TABLE rides ADD COLUMN IF NOT EXISTS locked_at TIMESTAMPTZ;
 
 UPDATE rides SET completed_at = departure_end
 WHERE state = 'completed' AND completed_at IS NULL;
@@ -396,6 +369,27 @@ CREATE TABLE IF NOT EXISTS notifications (
   read_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- The full list of notification types, in one place: account and complaint updates (CS455-46),
+-- join requests (CS455-75) and trips under way (CS455-60). Add new types here, and add the newest
+-- of each group to the LIKE tests, so the check is replaced whenever any group is missing.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'notifications_type_check'
+      AND pg_get_constraintdef(oid) LIKE '%ride_share_update%'
+      AND pg_get_constraintdef(oid) LIKE '%no_show_recorded%'
+  ) THEN
+    ALTER TABLE notifications DROP CONSTRAINT IF EXISTS notifications_type_check;
+    ALTER TABLE notifications ADD CONSTRAINT notifications_type_check CHECK (type IN (
+      'pool_chat_opened', 'pool_chat_message', 'ride_update',
+      'account_warning', 'account_suspended', 'account_reactivated', 'complaint_update',
+      'join_request', 'join_request_update', 'ride_share_update',
+      'trip_update', 'no_show_recorded'
+    ));
+  END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS notifications_user_created_idx
   ON notifications(user_id, created_at DESC);
@@ -775,23 +769,6 @@ BEGIN
   END IF;
 END $$;
 
--- Notifications about a rider's own account and complaints. This block holds the full list of
--- notification types: add new types here, since it replaces the check whenever one is missing.
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint
-    WHERE conname = 'notifications_type_check'
-      AND pg_get_constraintdef(oid) LIKE '%complaint_update%'
-  ) THEN
-    ALTER TABLE notifications DROP CONSTRAINT IF EXISTS notifications_type_check;
-    ALTER TABLE notifications ADD CONSTRAINT notifications_type_check CHECK (type IN (
-      'pool_chat_opened', 'pool_chat_message', 'ride_update',
-      'account_warning', 'account_suspended', 'account_reactivated', 'complaint_update'
-    ));
-  END IF;
-END $$;
-
 -- Chat reports become complaints (FR-RD-09.6). Reports already in ride_chat_complaints are
 -- copied once (accused: the message's sender; category Other; the report reason as the
 -- description), and every reported message is linked to the complaint for its reporter, trip
@@ -918,3 +895,173 @@ CREATE INDEX IF NOT EXISTS ride_recommendation_rate_events_user_created_idx
   ON ride_recommendation_rate_events(user_id, created_at DESC);
 
 ALTER TABLE ride_recommendation_audits ADD COLUMN IF NOT EXISTS suggested_ride_ids UUID[] NOT NULL DEFAULT '{}';
+
+-- In-trip states, pickup progress and SOS incidents (CS455-60: FR-RO-09, FR-RO-10, FR-RD-10,
+-- FR-RD-15). The owner moves a ride Scheduled, then Pickup in Progress (once it is locked), then
+-- optionally In Transit, then Completed, and each step keeps its time. Rides completed before
+-- these columns existed have no pickup or trip time, which the check allows.
+ALTER TABLE rides ADD COLUMN IF NOT EXISTS pickup_started_at TIMESTAMPTZ;
+ALTER TABLE rides ADD COLUMN IF NOT EXISTS trip_started_at TIMESTAMPTZ;
+
+UPDATE rides SET pickup_started_at = departure_start
+WHERE state IN ('pickup_in_progress', 'in_transit') AND pickup_started_at IS NULL;
+
+UPDATE rides SET trip_started_at = pickup_started_at
+WHERE state = 'in_transit' AND trip_started_at IS NULL;
+
+-- Each seat at pickup: the rider says they are at their pickup point (FR-RD-10.4), and the owner
+-- marks them arrived (FR-RO-09.3) or, after the grace period, a no-show (FR-RO-10.1). A no-show
+-- leaves the active pool, so the others' shares are worked out without them (FR-RO-10.2), and
+-- the record stays for review (FR-RO-10.3).
+ALTER TABLE riders ADD COLUMN IF NOT EXISTS checked_in_at TIMESTAMPTZ;
+ALTER TABLE riders ADD COLUMN IF NOT EXISTS arrived_at TIMESTAMPTZ;
+ALTER TABLE riders ADD COLUMN IF NOT EXISTS no_show_at TIMESTAMPTZ;
+ALTER TABLE riders ADD COLUMN IF NOT EXISTS no_show_by UUID REFERENCES users(id);
+
+-- The final pool and shares, written once when the owner completes the ride (FR-RO-09.4), in the
+-- order the fare split counts them. They never change afterwards; they go only with the ride.
+CREATE TABLE IF NOT EXISTS ride_final_shares (
+  ride_id UUID NOT NULL REFERENCES rides(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id),
+  role TEXT NOT NULL CHECK (role IN ('owner', 'rider')),
+  position INTEGER NOT NULL CHECK (position >= 1),
+  share INTEGER NOT NULL CHECK (share >= 0),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (ride_id, user_id),
+  CONSTRAINT ride_final_shares_position_unique UNIQUE (ride_id, position)
+);
+
+-- SOS alerts raised during a trip (FR-RD-15, FR-RO-13.2). Only operations admins see them; the
+-- rest of the pool is never told (FR-RD-15.4). The context is a snapshot of the ride when the
+-- alert was raised, so later changes cannot alter what the admin reads. Location may be added
+-- once, after the alert, so asking for it never delays the alert. One active alert per person
+-- per ride: pressing SOS again returns it. Incidents are never deleted.
+CREATE TABLE IF NOT EXISTS sos_incidents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  reference TEXT NOT NULL UNIQUE
+    DEFAULT ('SOS-' || upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 8))),
+  ride_id UUID NOT NULL REFERENCES rides(id) ON DELETE RESTRICT,
+  raised_by UUID NOT NULL REFERENCES users(id),
+  raised_role TEXT NOT NULL CHECK (raised_role IN ('owner', 'rider')),
+  trip_state TEXT NOT NULL CHECK (trip_state IN ('pickup_in_progress', 'in_transit')),
+  raised_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  -- Copied from the raiser's profile (FR-RD-02.7); shown to admins only.
+  mobile_number TEXT CHECK (mobile_number IS NULL OR mobile_number ~ '^[0-9]{10}$'),
+  context JSONB NOT NULL,
+  latitude DOUBLE PRECISION CHECK (latitude IS NULL OR latitude BETWEEN -90 AND 90),
+  longitude DOUBLE PRECISION CHECK (longitude IS NULL OR longitude BETWEEN -180 AND 180),
+  accuracy_m DOUBLE PRECISION CHECK (accuracy_m IS NULL OR accuracy_m >= 0),
+  located_at TIMESTAMPTZ,
+  -- The raiser said it was a false alarm (FR-RD-15.5); the incident stays for review.
+  false_alarm_at TIMESTAMPTZ,
+  status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'acknowledged', 'closed')),
+  acknowledged_at TIMESTAMPTZ,
+  acknowledged_by UUID REFERENCES users(id),
+  closed_at TIMESTAMPTZ,
+  closed_by UUID REFERENCES users(id),
+  close_note TEXT CHECK (close_note IS NULL OR char_length(close_note) BETWEEN 1 AND 1000),
+  -- The owner has a seat too, so whoever raises it must hold a seat on the ride.
+  CONSTRAINT sos_incidents_raiser_on_ride FOREIGN KEY (ride_id, raised_by)
+    REFERENCES riders (ride_id, user_id),
+  CONSTRAINT sos_incidents_location_complete CHECK (
+    (latitude IS NULL) = (longitude IS NULL)
+    AND (latitude IS NULL) = (located_at IS NULL)
+    AND (accuracy_m IS NULL OR latitude IS NOT NULL)
+  ),
+  CONSTRAINT sos_incidents_admin_matches_time CHECK (
+    (acknowledged_at IS NULL) = (acknowledged_by IS NULL)
+    AND (closed_at IS NULL) = (closed_by IS NULL)
+  ),
+  CONSTRAINT sos_incidents_status_matches_times CHECK (
+    CASE status
+      WHEN 'open' THEN acknowledged_at IS NULL AND closed_at IS NULL
+      WHEN 'acknowledged' THEN acknowledged_at IS NOT NULL AND closed_at IS NULL
+      ELSE closed_at IS NOT NULL AND close_note IS NOT NULL
+    END
+  )
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS sos_incidents_one_active
+  ON sos_incidents (ride_id, raised_by) WHERE status <> 'closed' AND false_alarm_at IS NULL;
+CREATE INDEX IF NOT EXISTS sos_incidents_status_raised_idx
+  ON sos_incidents (status, raised_at DESC);
+CREATE INDEX IF NOT EXISTS sos_incidents_ride_idx ON sos_incidents (ride_id);
+
+-- Rows that must never change once written.
+CREATE OR REPLACE FUNCTION refuse_row_change() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+  RAISE EXCEPTION '% rows cannot be changed: % is not allowed', TG_TABLE_NAME, TG_OP
+    USING ERRCODE = 'insufficient_privilege';
+END;
+$$;
+
+-- What was raised, by whom and when stays as it was. Location and a false alarm may each be added
+-- once; an acknowledgement is never undone; a closed incident is final.
+CREATE OR REPLACE FUNCTION sos_incidents_keep_original() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+  IF NEW.id IS DISTINCT FROM OLD.id
+     OR NEW.reference IS DISTINCT FROM OLD.reference
+     OR NEW.ride_id IS DISTINCT FROM OLD.ride_id
+     OR NEW.raised_by IS DISTINCT FROM OLD.raised_by
+     OR NEW.raised_role IS DISTINCT FROM OLD.raised_role
+     OR NEW.trip_state IS DISTINCT FROM OLD.trip_state
+     OR NEW.raised_at IS DISTINCT FROM OLD.raised_at
+     OR NEW.mobile_number IS DISTINCT FROM OLD.mobile_number
+     OR NEW.context IS DISTINCT FROM OLD.context
+     OR (OLD.located_at IS NOT NULL
+         AND (NEW.latitude, NEW.longitude, NEW.accuracy_m, NEW.located_at)
+           IS DISTINCT FROM (OLD.latitude, OLD.longitude, OLD.accuracy_m, OLD.located_at))
+     OR (OLD.false_alarm_at IS NOT NULL AND NEW.false_alarm_at IS DISTINCT FROM OLD.false_alarm_at)
+     OR (OLD.acknowledged_at IS NOT NULL
+         AND (NEW.acknowledged_at, NEW.acknowledged_by)
+           IS DISTINCT FROM (OLD.acknowledged_at, OLD.acknowledged_by))
+     OR OLD.status = 'closed' THEN
+    RAISE EXCEPTION 'The original SOS incident cannot be changed'
+      USING ERRCODE = 'check_violation';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'rides_trip_times_match_state') THEN
+    ALTER TABLE rides ADD CONSTRAINT rides_trip_times_match_state CHECK (
+      (state NOT IN ('pickup_in_progress', 'in_transit') OR pickup_started_at IS NOT NULL)
+      AND (state <> 'in_transit' OR trip_started_at IS NOT NULL)
+      AND (state <> 'scheduled' OR (pickup_started_at IS NULL AND trip_started_at IS NULL))
+      AND (trip_started_at IS NULL
+           OR (pickup_started_at IS NOT NULL AND trip_started_at >= pickup_started_at))
+    );
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'riders_arrived_or_no_show') THEN
+    ALTER TABLE riders ADD CONSTRAINT riders_arrived_or_no_show
+      CHECK (arrived_at IS NULL OR no_show_at IS NULL);
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'riders_no_show_by_matches') THEN
+    ALTER TABLE riders ADD CONSTRAINT riders_no_show_by_matches
+      CHECK ((no_show_at IS NULL) = (no_show_by IS NULL));
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'ride_final_shares_no_change') THEN
+    CREATE TRIGGER ride_final_shares_no_change
+      BEFORE UPDATE ON ride_final_shares
+      FOR EACH ROW EXECUTE FUNCTION refuse_row_change();
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'sos_incidents_original_unchanged') THEN
+    CREATE TRIGGER sos_incidents_original_unchanged
+      BEFORE UPDATE ON sos_incidents
+      FOR EACH ROW EXECUTE FUNCTION sos_incidents_keep_original();
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'sos_incidents_no_delete') THEN
+    CREATE TRIGGER sos_incidents_no_delete
+      BEFORE DELETE ON sos_incidents
+      FOR EACH ROW EXECUTE FUNCTION refuse_row_change();
+  END IF;
+END $$;

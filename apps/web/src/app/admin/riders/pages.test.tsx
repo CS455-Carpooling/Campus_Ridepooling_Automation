@@ -54,6 +54,7 @@ const rider: RiderRecord = {
       departureStart: '2026-10-10T06:30:00.000Z',
       state: 'completed',
       asOwner: true,
+      noShow: false,
     },
   ],
   complaintsFiled: [],

@@ -66,6 +66,7 @@ describe('getRatingPage', () => {
     expect(query.mock.calls[0][0]).toContain(
       'JOIN riders me ON me.ride_id = r.id AND me.user_id = $2',
     );
+    expect(query.mock.calls[0][0]).toContain('me.left_at IS NULL');
     expect(query.mock.calls[0][1]).toEqual([RIDE_ID, VIEWER_ID]);
   });
 
@@ -103,7 +104,11 @@ describe('getRatingPage', () => {
     });
     const peopleSql = query.mock.calls[1][0] as string;
     expect(peopleSql).toContain('m.user_id <> $2');
+    expect(peopleSql).toContain('m.left_at IS NULL');
     expect(peopleSql).toContain('given.rater_id = $2');
+    // FR-RO-12.2: someone who left or was a no-show neither rates nor is rated (CS455-62).
+    expect(query.mock.calls[0][0]).toContain('me.left_at IS NULL AND me.no_show_at IS NULL');
+    expect(peopleSql).toContain('m.left_at IS NULL AND m.no_show_at IS NULL');
   });
 
   it('US-RD-28 AC1: says when rating has closed, and when the ride is not completed', async () => {
@@ -174,6 +179,8 @@ describe('submitRatings (FR-RD-12.1 to 12.3)', () => {
   it('stores every rating in one statement, by account behind each seat', async () => {
     await expect(run()).resolves.toEqual({ kind: 'rated', count: 2 });
     expect(clientQuery.mock.calls[0][1]).toEqual([RIDE_ID, VIEWER_ID]);
+    expect(clientQuery.mock.calls[0][0]).toContain('me.no_show_at IS NULL');
+    expect(clientQuery.mock.calls[1][0]).toContain('no_show_at IS NULL');
     expect(insertCall()?.[1]).toEqual([
       RIDE_ID,
       VIEWER_ID,

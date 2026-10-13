@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   requireAdminPage: vi.fn(),
   getAdminRide: vi.fn(),
+  listRideIncidents: vi.fn(),
   notFound: vi.fn(() => {
     throw new Error('NEXT_NOT_FOUND');
   }),
@@ -15,6 +16,7 @@ vi.mock('next/navigation', () => ({
 }));
 vi.mock('@/lib/admin-auth', () => ({ requireAdminPage: mocks.requireAdminPage }));
 vi.mock('@/lib/admin-rider-queries', () => ({ getAdminRide: mocks.getAdminRide }));
+vi.mock('@/lib/admin-incident-queries', () => ({ listRideIncidents: mocks.listRideIncidents }));
 
 import AdminRidePage from './page';
 
@@ -32,6 +34,8 @@ const ride = {
   totalFare: 400,
   createdAt: '2026-10-09T10:00:00.000Z',
   completedAt: '2026-10-10T03:00:00.000Z',
+  pickupStartedAt: '2026-10-10T00:55:00.000Z',
+  tripStartedAt: '2026-10-10T01:10:00.000Z',
   occupants: [
     {
       userId: 'u1',
@@ -39,6 +43,8 @@ const ride = {
       isOwner: true,
       campusPlace: 'Hall 6',
       joinedAt: '2026-10-09T10:00:00.000Z',
+      status: 'waiting',
+      finalShare: 250,
     },
     {
       userId: 'u2',
@@ -46,6 +52,8 @@ const ride = {
       isOwner: false,
       campusPlace: 'Hall 1',
       joinedAt: '2026-10-09T11:00:00.000Z',
+      status: 'no_show',
+      finalShare: null,
     },
   ],
   complaints: [{ id: 'c1', reference: 'CMP-1A2B3C4D', category: 'tardiness', status: 'resolved' }],
@@ -55,6 +63,11 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.requireAdminPage.mockResolvedValue({ userId: 'a1', role: 'admin' });
   mocks.getAdminRide.mockResolvedValue(ride);
+  mocks.listRideIncidents.mockResolvedValue([]);
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async () => Response.json({ unacknowledged: 0, newest: null })),
+  );
 });
 
 describe('/admin/rides/[id] (CS455-53, SYS-FR-17)', () => {
@@ -75,6 +88,10 @@ describe('/admin/rides/[id] (CS455-53, SYS-FR-17)', () => {
       '/admin/riders/u1',
     );
     expect(people[0]).toHaveTextContent('Owner, Hall 6');
+    // CS455-63: the trip's times, who was a no-show, and the final shares.
+    expect(people[0]).toHaveTextContent('Final share ₹250');
+    expect(people[1]).toHaveTextContent('No-show');
+    expect(screen.getByText('Sat 10 Oct, 06:25')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'CMP-1A2B3C4D' })).toHaveAttribute(
       'href',
       '/admin/complaints/c1',
@@ -82,11 +99,45 @@ describe('/admin/rides/[id] (CS455-53, SYS-FR-17)', () => {
     expect(screen.queryByRole('button', { name: /edit|cancel|complete/i })).not.toBeInTheDocument();
   });
 
+  it('lists the SOS alerts raised on the ride (CS455-65)', async () => {
+    expect(screen.queryByRole('list', { name: 'SOS alerts on this ride' })).not.toBeInTheDocument();
+    mocks.listRideIncidents.mockResolvedValue([
+      {
+        id: 'i1',
+        reference: 'SOS-1A2B3C4D',
+        status: 'acknowledged',
+        raisedAt: '2026-10-10T01:20:00.000Z',
+        raiserName: 'Aditi',
+        raisedRole: 'rider',
+        rideTitle: 'Hall 6 to Kanpur Central',
+        falseAlarm: true,
+        locationShared: false,
+      },
+    ]);
+    render(await open());
+    const alerts = within(
+      screen.getByRole('list', { name: 'SOS alerts on this ride' }),
+    ).getAllByRole('listitem');
+    expect(within(alerts[0]).getByRole('link', { name: 'SOS-1A2B3C4D' })).toHaveAttribute(
+      'href',
+      '/admin/incidents/i1',
+    );
+    expect(alerts[0]).toHaveTextContent('by Aditi');
+    expect(alerts[0]).toHaveTextContent('marked a false alarm');
+    expect(within(alerts[0]).getByText('Acknowledged')).toBeInTheDocument();
+  });
+
   it('says when there are no complaints, and is not found for an unknown ride', async () => {
-    mocks.getAdminRide.mockResolvedValue({ ...ride, complaints: [], completedAt: null });
+    mocks.getAdminRide.mockResolvedValue({
+      ...ride,
+      complaints: [],
+      completedAt: null,
+      pickupStartedAt: null,
+      tripStartedAt: null,
+    });
     render(await open());
     expect(screen.getByText('None.')).toBeInTheDocument();
-    expect(screen.getByText('Not yet')).toBeInTheDocument();
+    expect(screen.getAllByText('Not yet')).toHaveLength(3);
     mocks.getAdminRide.mockResolvedValue(null);
     await expect(open('x')).rejects.toThrow('NEXT_NOT_FOUND');
   });
