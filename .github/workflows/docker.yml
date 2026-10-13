@@ -11,10 +11,10 @@ on:
       - apps/web/package.json
       - apps/web/db/**
       - apps/web/server.mjs
+      - apps/web/src/lib/suspension-rule.mjs
       - apps/web/scripts/**
       - apps/web/src/lib/ride-chat-realtime.mjs
       - apps/web/src/lib/notification-realtime.mjs
-      - apps/web/src/lib/suspension-rule.mjs
       - package-lock.json
       - .github/workflows/docker.yml
   push:
@@ -26,10 +26,10 @@ on:
       - apps/web/package.json
       - apps/web/db/**
       - apps/web/server.mjs
+      - apps/web/src/lib/suspension-rule.mjs
       - apps/web/scripts/**
       - apps/web/src/lib/ride-chat-realtime.mjs
       - apps/web/src/lib/notification-realtime.mjs
-      - apps/web/src/lib/suspension-rule.mjs
       - package-lock.json
       - .github/workflows/docker.yml
   workflow_dispatch:
