@@ -4,12 +4,18 @@ import { formatDepartureWindow, formatRupees } from '@/lib/format';
 import { campusPlaceLabel, directionLabels } from '@/lib/ride-status';
 import type { SearchRideResult } from '@/lib/ride-search';
 import { routes } from '@/lib/routes';
+import { RequestToJoinButton } from './RequestToJoinButton';
+
+type RideCardProps = {
+  ride: SearchRideResult;
+  pickupPointId: string;
+};
 
 /**
  * One search result card. Purely presentational: all numbers are worked out
  * by the server in ride-search.ts. Links to the full ride detail page.
  */
-export function RideCard({ ride }: { ride: SearchRideResult }) {
+export function RideCard({ ride, pickupPointId }: RideCardProps) {
   const placeLabel = campusPlaceLabel(ride.direction);
   const full = ride.seatsLeft === 0;
 
@@ -99,6 +105,9 @@ export function RideCard({ ride }: { ride: SearchRideResult }) {
       >
         View ride
       </Link>
+
+      {/* Request to join */}
+      <RequestToJoinButton rideId={ride.id} pickupPointId={pickupPointId} disabled={full} />
     </article>
   );
 }

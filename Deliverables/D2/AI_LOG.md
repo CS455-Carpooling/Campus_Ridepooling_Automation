@@ -603,6 +603,45 @@ During verification, the checked-in `apps/web/db/schema.sql` constraint and API 
 - The repository's CI workflow is the authoritative place to verify lint, formatting, type-check, tests, and build. These checks have not yet been confirmed for the updated head; check the latest workflow run before merging.
 
 
+## 2026-10-13 — Ride join-request PR follow-up (PR #62; lifecycle context from PR #55)
+
+### User prompts
+
+- “I am getting this error while doing npm run dev for my project, wanted to resolve this for the project to run in local server” — followed by PostgreSQL reporting that `ride_join_requests.locked_share` did not exist.
+- “got this error this time” — followed by PostgreSQL reporting that `ride_join_requests.pickup_location_id` did not exist and the user's Docker/database migration steps.
+- Reported the dashboard runtime error `column h.changed_at does not exist`.
+- Reported that both the search-card Join action and the ride-detail request form failed, with the search-card action saying to choose a valid pickup point even though a valid campus pickup point had been selected.
+- “create a ai engineering log for this PR”
+
+### Context reviewed
+
+- Reviewed the PR #62 description and PR #55 description to understand the initial submission work and the broader join-request lifecycle.
+- Inspected the current join-request UI, request API validation and persistence code, dashboard history query, schema migration, tests, and the configured local database's request/location columns.
+- PR #62 and PR #55 are treated as feature context; this entry records the AI-assisted follow-up work performed in this workspace, not a claim that the earlier PR implementation was generated in this interaction.
+
+### AI output and evaluation
+
+- The first database error indicated that `CREATE TABLE IF NOT EXISTS` had not upgraded an existing request table. Inspection confirmed the local table had an older schema, including legacy pickup/snapshot column names. A one-column-only repair would have left later request queries and inserts incompatible.
+- The pickup validation message initially appeared to indicate a bad database location. Inspection instead found a request-contract mismatch: the search card sent `pickupPointId`, while the API parser reads `pickupLocationId`. The selected campus location itself was valid.
+- The dashboard query selected `h.created_at AS changed_at` but ordered by `h.changed_at`, which PostgreSQL cannot resolve as a table column. The correct ordering column is `h.created_at`.
+- No model-generated business rules or user-facing claims were accepted without checking the repository code or database schema. No unresolved AI-generated factual claim was intentionally included in the final changes.
+
+### Changes made and accepted
+
+- Updated `apps/web/db/schema.sql` with idempotent compatibility changes that add the request columns expected by the current implementation, copy legacy pickup/snapshot data where available, retain the old columns and their data, and make obsolete legacy insert columns nullable. This allows the current request insert to coexist with older databases without dropping request data.
+- Updated `apps/web/src/components/rides/RequestToJoinButton.tsx` to send `pickupLocationId` and updated its test to assert the API's expected request body.
+- Updated `apps/web/src/lib/home-data.ts` to order history by `h.created_at`; added a regression assertion in `apps/web/src/lib/home-data.test.ts`.
+- Updated the root `README.md` to include the database migration in local setup.
+- These changes were accepted because they address the inspected schema/API mismatches directly and preserve existing request records.
+
+### Verification and remaining limits
+
+- Applied the schema migration successfully to the database configured in `apps/web/.env.local`; repeated it to check idempotency.
+- Verified the migrated request table contains the expected columns and its existing requests have non-null required snapshot/pickup values.
+- Ran focused tests for the join-request rules and lifecycle, dashboard data, request button, and both request APIs: **6 test files and 48 tests passed**.
+- Ran `git diff --check`; no whitespace errors were reported. Editor diagnostics reported no errors in the edited TypeScript files.
+- A live browser/manual submission was not verified in this interaction. The development-server launch request had been denied earlier, so do not treat this log entry as evidence of an end-to-end browser check or full CI pass.
+
 ## 2026-10-13 — Condensed session history and trip-safety audit
 
 ### User request
@@ -1135,4 +1174,3 @@ Audit `docs/BUILD_CHECKLIST.md`, relevant requirements and acceptance criteria, 
 - The committed regression test checks that a requester receiving a material-drift `join_request_update` does not also receive the generic `ride_update`, while another waiting requester still receives the generic update. Retrying the same saved edit does not insert a second notice.
 - The Docker workflow path filters include the TypeScript notification and ride-request producer files so those runtime changes trigger the stack smoke check.
 - No separate manual end-to-end rider/admin scenario or live PostgreSQL session was run beyond the automated Docker Compose smoke checks. Payment/settlement notifications, offline email, and browser push remain documented dependencies rather than implemented integrations.
-

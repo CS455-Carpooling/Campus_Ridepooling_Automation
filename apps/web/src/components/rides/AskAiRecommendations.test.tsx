@@ -5,8 +5,8 @@ import type { SearchRideRequest, SearchRideResult } from '@/lib/ride-search';
 import type { RideRecommendationResponse } from '@/lib/ai/types';
 
 vi.mock('./RideCard', () => ({
-  RideCard: ({ ride }: { ride: SearchRideResult }) => (
-    <div data-testid="trusted-ride">
+  RideCard: ({ ride, pickupPointId }: { ride: SearchRideResult; pickupPointId: string }) => (
+    <div data-testid="trusted-ride" data-pickup-point-id={pickupPointId}>
       {ride.id}|{ride.estimatedShare}|{ride.seatsLeft}|{ride.vehicleName}
     </div>
   ),
@@ -58,6 +58,7 @@ describe('AskAiRecommendations', () => {
 
   it('shows loading and then trusted ride details with explanations', async () => {
     let resolveFetch!: (value: Response) => void;
+
     vi.stubGlobal(
       'fetch',
       vi.fn(
@@ -67,14 +68,18 @@ describe('AskAiRecommendations', () => {
           }),
       ),
     );
+
     render(<AskAiRecommendations filters={filters} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Ask AI to Suggest' }));
     expect(screen.getByRole('status')).toHaveTextContent('Ranking eligible rides');
 
     resolveFetch(new Response(JSON.stringify(response), { status: 200 }));
+
     await screen.findByText('Estimated share fits the selected budget');
+
     expect(screen.getByTestId('trusted-ride')).toHaveTextContent('ride-1|150|2|Auto');
+    expect(screen.getByTestId('trusted-ride')).toHaveAttribute('data-pickup-point-id', 'hall-3');
     expect(screen.getByText('Departure is near the end of your window')).toBeInTheDocument();
     expect(screen.getByText('Available seats')).toBeInTheDocument();
   });
@@ -93,9 +98,13 @@ describe('AskAiRecommendations', () => {
         ),
       ),
     );
+
     render(<AskAiRecommendations filters={filters} />);
+
     fireEvent.click(screen.getByRole('button', { name: 'Ask AI to Suggest' }));
+
     await screen.findByText('No eligible rides found');
+
     expect(screen.getByText('No eligible rides match these filters.')).toBeInTheDocument();
   });
 
@@ -106,9 +115,13 @@ describe('AskAiRecommendations', () => {
         .fn()
         .mockResolvedValue(new Response(JSON.stringify({ error: 'Unavailable' }), { status: 503 })),
     );
+
     render(<AskAiRecommendations filters={filters} />);
+
     fireEvent.click(screen.getByRole('button', { name: 'Ask AI to Suggest' }));
+
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Unavailable'));
+
     expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
   });
 });

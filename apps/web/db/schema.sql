@@ -189,6 +189,205 @@ CREATE TABLE IF NOT EXISTS ride_join_requests (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Keep databases created by the earlier request schema compatible with the current state
+-- machine. CREATE TABLE IF NOT EXISTS alone does not update an existing table.
+ALTER TABLE ride_join_requests
+  ADD COLUMN IF NOT EXISTS pickup_location_id TEXT,
+  ADD COLUMN IF NOT EXISTS decided_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS accepted_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS snapshot_departure_start TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS snapshot_pickup_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS snapshot_estimated_share INTEGER,
+  ADD COLUMN IF NOT EXISTS accepted_departure_start TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS accepted_pickup_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS current_departure_start TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS current_pickup_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS current_estimated_share INTEGER,
+  ADD COLUMN IF NOT EXISTS no_liability_until_trip BOOLEAN NOT NULL DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS late_cancellation BOOLEAN NOT NULL DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS locked_share INTEGER,
+  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = current_schema()
+      AND table_name = 'ride_join_requests'
+      AND column_name = 'pickup_point_id'
+  ) THEN
+    EXECUTE
+      'UPDATE ride_join_requests SET pickup_location_id = pickup_point_id
+       WHERE pickup_location_id IS NULL';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = current_schema()
+      AND table_name = 'ride_join_requests'
+      AND column_name = 'departure_snapshot'
+  ) THEN
+    EXECUTE
+      'UPDATE ride_join_requests SET snapshot_departure_start = departure_snapshot
+       WHERE snapshot_departure_start IS NULL';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = current_schema()
+      AND table_name = 'ride_join_requests'
+      AND column_name = 'pickup_time_snapshot'
+  ) THEN
+    EXECUTE
+      'UPDATE ride_join_requests SET snapshot_pickup_at = pickup_time_snapshot
+       WHERE snapshot_pickup_at IS NULL';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = current_schema()
+      AND table_name = 'ride_join_requests'
+      AND column_name = 'estimated_share_snapshot'
+  ) THEN
+    EXECUTE
+      'UPDATE ride_join_requests SET snapshot_estimated_share = estimated_share_snapshot
+       WHERE snapshot_estimated_share IS NULL';
+  END IF;
+END
+$$;
+
+DO $$
+DECLARE
+  legacy_column TEXT;
+BEGIN
+  FOREACH legacy_column IN ARRAY ARRAY[
+    'pickup_point_id',
+    'idempotency_key',
+    'departure_snapshot',
+    'pickup_time_snapshot',
+    'estimated_share_snapshot'
+  ]
+  LOOP
+    IF EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = current_schema()
+        AND table_name = 'ride_join_requests'
+        AND column_name = legacy_column
+        AND is_nullable = 'NO'
+    ) THEN
+      EXECUTE format(
+        'ALTER TABLE ride_join_requests ALTER COLUMN %I DROP NOT NULL',
+        legacy_column
+      );
+    END IF;
+  END LOOP;
+END
+$$;
+
+UPDATE ride_join_requests request
+SET snapshot_departure_start = COALESCE(request.snapshot_departure_start, ride.departure_start),
+    snapshot_pickup_at = COALESCE(request.snapshot_pickup_at, ride.departure_start),
+    snapshot_estimated_share = COALESCE(
+      request.snapshot_estimated_share,
+      CEIL(ride.expected_total_fare::numeric / ride.capacity_snapshot)::integer
+    ),
+    created_at = COALESCE(request.created_at, request.submitted_at),
+    decided_at = CASE
+      WHEN request.status IN ('accepted', 'rejected', 'withdrawn', 'expired', 'ride_cancelled',
+                              'left', 'no_show', 'completed')
+        THEN COALESCE(request.decided_at, request.updated_at)
+      ELSE request.decided_at
+    END,
+    accepted_at = CASE
+      WHEN request.status = 'accepted'
+        THEN COALESCE(request.accepted_at, request.updated_at)
+      ELSE request.accepted_at
+    END,
+    accepted_departure_start = CASE
+      WHEN request.status = 'accepted'
+        THEN COALESCE(request.accepted_departure_start, request.snapshot_departure_start,
+                      ride.departure_start)
+      ELSE request.accepted_departure_start
+    END,
+    accepted_pickup_at = CASE
+      WHEN request.status = 'accepted'
+        THEN COALESCE(request.accepted_pickup_at, request.snapshot_pickup_at, ride.departure_start)
+      ELSE request.accepted_pickup_at
+    END,
+    no_liability_until_trip = COALESCE(request.no_liability_until_trip, FALSE),
+    late_cancellation = COALESCE(request.late_cancellation, FALSE)
+FROM rides ride
+WHERE request.ride_id = ride.id;
+
+ALTER TABLE ride_join_requests
+  ALTER COLUMN pickup_location_id SET NOT NULL,
+  ALTER COLUMN snapshot_departure_start SET NOT NULL,
+  ALTER COLUMN snapshot_pickup_at SET NOT NULL,
+  ALTER COLUMN snapshot_estimated_share SET NOT NULL,
+  ALTER COLUMN no_liability_until_trip SET DEFAULT FALSE,
+  ALTER COLUMN no_liability_until_trip SET NOT NULL,
+  ALTER COLUMN late_cancellation SET DEFAULT FALSE,
+  ALTER COLUMN late_cancellation SET NOT NULL,
+  ALTER COLUMN created_at SET DEFAULT now(),
+  ALTER COLUMN created_at SET NOT NULL;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'ride_join_requests'::regclass
+      AND conname = 'ride_join_requests_pickup_location_id_fkey'
+  ) THEN
+    ALTER TABLE ride_join_requests
+      ADD CONSTRAINT ride_join_requests_pickup_location_id_fkey
+      FOREIGN KEY (pickup_location_id) REFERENCES locations(id);
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'ride_join_requests'::regclass
+      AND conname = 'ride_join_requests_snapshot_estimated_share_check'
+  ) THEN
+    ALTER TABLE ride_join_requests
+      ADD CONSTRAINT ride_join_requests_snapshot_estimated_share_check
+      CHECK (snapshot_estimated_share >= 0);
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'ride_join_requests'::regclass
+      AND conname = 'ride_join_requests_current_estimated_share_check'
+  ) THEN
+    ALTER TABLE ride_join_requests
+      ADD CONSTRAINT ride_join_requests_current_estimated_share_check
+      CHECK (current_estimated_share IS NULL OR current_estimated_share >= 0);
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'ride_join_requests'::regclass
+      AND conname = 'ride_join_requests_status_check'
+      AND pg_get_constraintdef(oid) NOT LIKE '%completed%'
+  ) THEN
+    ALTER TABLE ride_join_requests
+      DROP CONSTRAINT ride_join_requests_status_check;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'ride_join_requests'::regclass
+      AND conname = 'ride_join_requests_status_check'
+  ) THEN
+    ALTER TABLE ride_join_requests
+      ADD CONSTRAINT ride_join_requests_status_check
+      CHECK (status IN (
+        'pending', 'needs_reconfirmation', 'accepted', 'rejected', 'withdrawn',
+        'expired', 'ride_cancelled', 'left', 'no_show', 'completed'
+      ));
+  END IF;
+END
+$$;
+
 CREATE INDEX IF NOT EXISTS ride_join_requests_rider_created_idx
   ON ride_join_requests(rider_id, submitted_at DESC, id DESC);
 CREATE INDEX IF NOT EXISTS ride_join_requests_ride_status_created_idx
