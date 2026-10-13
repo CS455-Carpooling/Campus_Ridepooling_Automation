@@ -117,6 +117,7 @@ export function NotificationsCentre() {
       if (!Array.isArray(data.notifications) || !data.notifications.every(isNotification)) {
         throw new Error('The notifications response was invalid.');
       }
+      const notifications = data.notifications;
 
       if (!mounted.current || requestId < latestAppliedRequest.current) return;
       latestAppliedRequest.current = requestId;
@@ -124,7 +125,7 @@ export function NotificationsCentre() {
       setItems(() => {
         // The API response is canonical. Preserve only socket events that arrived while this
         // request was in flight, covering the commit/query/subscribe race without stale rows.
-        const merged = new Map(data.notifications.map((item) => [item.id, item] as const));
+        const merged = new Map(notifications.map((item) => [item.id, item] as const));
         for (const { notification, sequence } of socketEvents.current.values()) {
           if (sequence > sequenceAtStart && !merged.has(notification.id)) {
             merged.set(notification.id, notification);
