@@ -13,6 +13,7 @@ on:
       - apps/web/server.mjs
       - apps/web/scripts/**
       - apps/web/src/lib/ride-chat-realtime.mjs
+      - apps/web/src/lib/notification-realtime.mjs
       - package-lock.json
       - .github/workflows/docker.yml
   push:
@@ -26,6 +27,7 @@ on:
       - apps/web/server.mjs
       - apps/web/scripts/**
       - apps/web/src/lib/ride-chat-realtime.mjs
+      - apps/web/src/lib/notification-realtime.mjs
       - package-lock.json
       - .github/workflows/docker.yml
   workflow_dispatch:
