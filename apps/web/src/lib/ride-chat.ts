@@ -1,4 +1,5 @@
 import 'server-only';
+import type { Pool, PoolClient } from 'pg';
 import { pool } from './db';
 import { isUuid } from './ids';
 import { lockTime, type RideState } from './ride-status';
@@ -440,8 +441,12 @@ export async function listOpenChatComplaints() {
   return rows.map((row) => ({ ...row, created_at: asIsoString(row.created_at) }));
 }
 
-export async function resolveChatComplaint(reference: string) {
-  const result = await pool.query(
+export async function resolveChatComplaint(
+  reference: string,
+  // The admin route passes its transaction, so the change and its audit record commit together.
+  db: Pool | PoolClient = pool,
+) {
+  const result = await db.query(
     `UPDATE ride_chat_complaints
      SET status = 'resolved', resolved_at = now()
      WHERE reference = $1 AND status = 'open'
