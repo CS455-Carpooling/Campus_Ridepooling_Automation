@@ -151,21 +151,19 @@ export async function raiseSos(
       vehicle: ride.vehicle_name,
       state: ride.state,
     },
-    occupants: seats
-      .filter(isActiveOccupant)
-      .map((seat) => ({
-        userId: seat.user_id,
-        name: seat.name,
-        role: seat.is_owner ? 'owner' : 'rider',
-        place: seat.place,
-        status: seatStatus({
-          leftAt: seat.left_at,
-          checkedInAt: seat.checked_in_at,
-          arrivedAt: seat.arrived_at,
-          noShowAt: seat.no_show_at,
-        }),
-        raisedTheAlert: seat.user_id === userId,
-      })),
+    occupants: seats.filter(isActiveOccupant).map((seat) => ({
+      userId: seat.user_id,
+      name: seat.name,
+      role: seat.is_owner ? 'owner' : 'rider',
+      place: seat.place,
+      status: seatStatus({
+        leftAt: seat.left_at,
+        checkedInAt: seat.checked_in_at,
+        arrivedAt: seat.arrived_at,
+        noShowAt: seat.no_show_at,
+      }),
+      raisedTheAlert: seat.user_id === userId,
+    })),
   };
 
   const inserted = (

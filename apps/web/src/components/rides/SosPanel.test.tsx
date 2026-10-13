@@ -67,9 +67,10 @@ describe('SosPanel (FR-RD-15)', () => {
     expect(question).toHaveFocus();
     expect(question).toHaveTextContent('The others on this ride are not told.');
     expect(within(question).getByRole('link', { name: '112' })).toHaveAttribute('href', 'tel:112');
-    expect(
-      within(question).getByRole('link', { name: '0512-259-7999' }),
-    ).toHaveAttribute('href', 'tel:05122597999');
+    expect(within(question).getByRole('link', { name: '0512-259-7999' })).toHaveAttribute(
+      'href',
+      'tel:05122597999',
+    );
     expect(question).toHaveTextContent('does not contact emergency services');
     expect(fetchMock).not.toHaveBeenCalled();
   });

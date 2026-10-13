@@ -377,12 +377,11 @@ export async function getRideView(
               ride.locked_at,
             ) === null,
           viewerNoShow,
-          canRaiseSos:
-            canRaiseSos(
-              ride.state,
-              viewerRow !== undefined &&
-                isActiveSeat({ leftAt: null, noShowAt: viewerRow.no_show_at }),
-            ),
+          canRaiseSos: canRaiseSos(
+            ride.state,
+            viewerRow !== undefined &&
+              isActiveSeat({ leftAt: null, noShowAt: viewerRow.no_show_at }),
+          ),
           viewerSos: ride.viewer_sos
             ? {
                 id: ride.viewer_sos.id,
