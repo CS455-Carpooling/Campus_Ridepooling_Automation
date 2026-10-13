@@ -2,7 +2,11 @@ import 'server-only';
 import { pool } from './db';
 import { isUuid } from './ids';
 import { lockTime, type RideState } from './ride-status';
-import { SUSPENDED_CHAT_ERROR, senderSuspended } from './ride-chat-realtime.mjs';
+import {
+  CHAT_KEPT_FOR_COMPLAINT_SQL,
+  SUSPENDED_CHAT_ERROR,
+  senderSuspended,
+} from './ride-chat-realtime.mjs';
 
 export type RideChatMessage = {
   id: string;
@@ -184,12 +188,9 @@ export async function getRideChatThread(
 
   if (rideChatDeletionDue(ride, now)) {
     const deleted = await pool.query<{ id: string }>(
-      `DELETE FROM ride_chats c
-       WHERE c.ride_id = $1
-         AND NOT EXISTS (
-           SELECT 1 FROM ride_chat_complaints complaint
-           WHERE complaint.chat_id = c.id AND complaint.status = 'open'
-         )`,
+      `DELETE FROM ride_chats chat
+       WHERE chat.ride_id = $1
+         AND NOT ${CHAT_KEPT_FOR_COMPLAINT_SQL}`,
       [ride.id],
     );
     if (deleted.rows[0]) return null;

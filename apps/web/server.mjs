@@ -5,6 +5,7 @@ import { Client, Pool } from 'pg';
 import next from 'next';
 import { Server } from 'socket.io';
 import {
+  CHAT_KEPT_FOR_COMPLAINT_SQL,
   SUSPENDED_CHAT_ERROR,
   registerRideChatMessageHandler,
   rideChatAvailable,
@@ -378,10 +379,7 @@ app.prepare().then(() => {
          WHERE ride.id = chat.ride_id
            AND ((ride.state = 'completed' AND ride.completed_at <= now() - interval '31 days')
              OR (ride.state = 'cancelled' AND ride.cancelled_at <= now() - interval '31 days'))
-           AND NOT EXISTS (
-             SELECT 1 FROM ride_chat_complaints complaint
-             WHERE complaint.chat_id = chat.id AND complaint.status = 'open'
-           )`,
+           AND NOT ${CHAT_KEPT_FOR_COMPLAINT_SQL}`,
       );
     } catch (error) {
       console.error('Ride chat maintenance failed:', error);

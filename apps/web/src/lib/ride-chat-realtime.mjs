@@ -5,6 +5,18 @@ export function rideChatAvailable(ride, now) {
   return now.getTime() >= lockAt.getTime();
 }
 
+/**
+ * A pool chat (aliased `chat`) is kept past its 30 days while an unresolved complaint refers to
+ * it (FR-RD-09.5): an open chat report, or any complaint on the ride that is not resolved yet,
+ * whether filed from a reported message or from the complaint form.
+ */
+export const CHAT_KEPT_FOR_COMPLAINT_SQL = `(
+  EXISTS (SELECT 1 FROM ride_chat_complaints report
+          WHERE report.chat_id = chat.id AND report.status = 'open')
+  OR EXISTS (SELECT 1 FROM complaints complaint
+             WHERE complaint.ride_id = chat.ride_id AND complaint.status <> 'resolved')
+)`;
+
 /** Shown to a suspended member who tries to post; they can still read the chat (FR-RD-01.5). */
 export const SUSPENDED_CHAT_ERROR =
   'Your account is suspended, so you cannot post in pool chats. You can still read this chat, raise an SOS and file a complaint.';
