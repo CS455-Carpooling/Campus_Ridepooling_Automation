@@ -528,7 +528,7 @@ describe('owner ride lifecycle integration', () => {
   });
 
   it(
-    'notifies waiting requesters about changed ride terms once, without duplicating transition notices',
+    'notifies waiting requesters and avoids duplicates for reconfirmation transitions',
     async () => {
       let currentRide = { ...ride, direction: 'from_hub' as 'to_hub' | 'from_hub' };
       const waitingRequest = {
@@ -536,6 +536,14 @@ describe('owner ride lifecycle integration', () => {
         snapshot_departure_start: DEPARTURE,
         snapshot_pickup_at: DEPARTURE,
         snapshot_estimated_share: 200,
+      };
+      const secondRiderId = '9c4d5e6f-5555-4000-8000-000000000005';
+      const driftedRequest = {
+        ...requestRow(),
+        id: secondRiderId,
+        rider_id: secondRiderId,
+        snapshot_departure_start: new Date(DEPARTURE.getTime() - 20 * 60_000),
+        snapshot_pickup_at: new Date(DEPARTURE.getTime() - 15 * 60_000),
       };
       const { client, query } = makeClient((sql, values) => {
         if (sql.includes('SELECT id FROM users')) return [{ id: OWNER_ID }];
@@ -566,12 +574,12 @@ describe('owner ride lifecycle integration', () => {
           return [];
         }
         if (sql.includes('SELECT DISTINCT rider_id FROM ride_join_requests')) {
-          return [{ rider_id: RIDER_ID }];
+          return [{ rider_id: RIDER_ID }, { rider_id: secondRiderId }];
         }
         if (
           sql.includes("WHERE ride_id = $1 AND status IN ('pending', 'needs_reconfirmation')")
         ) {
-          return [waitingRequest];
+          return [waitingRequest, driftedRequest];
         }
         return [];
       });
@@ -590,14 +598,10 @@ describe('owner ride lifecycle integration', () => {
 
       const notificationInserts = () =>
         query.mock.calls.filter(([sql]) => String(sql).includes('INSERT INTO notifications'));
-      expect(notificationInserts()).toHaveLength(1);
-      expect(notificationInserts()[0][1]).toEqual([
-        RIDER_ID,
-        'ride_update',
-        'Ride details changed',
-        expect.any(String),
-        RIDE_ID,
-        NOW,
+      expect(notificationInserts()).toHaveLength(2);
+      expect(notificationInserts().map(([, values]) => values?.slice(0, 2))).toEqual([
+        [secondRiderId, 'join_request_update'],
+        [RIDER_ID, 'ride_update'],
       ]);
 
       // A retry of the same edit is a no-op because the saved values already match.
@@ -611,7 +615,7 @@ describe('owner ride lifecycle integration', () => {
           NOW,
         ),
       ).resolves.toEqual({ kind: 'edited', rideId: RIDE_ID });
-      expect(notificationInserts()).toHaveLength(1);
+      expect(notificationInserts()).toHaveLength(2);
     },
   );
 
