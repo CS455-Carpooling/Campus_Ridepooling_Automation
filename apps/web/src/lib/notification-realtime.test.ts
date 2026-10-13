@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import {
   NOTIFICATION_CHANNEL,
@@ -125,7 +126,7 @@ describe('notification realtime delivery', () => {
   });
 
   it('checks the notification insert trigger is commit-aware', async () => {
-    const schema = await readFile(new URL('../../db/schema.sql', import.meta.url), 'utf8');
+    const schema = await readFile(resolve(process.cwd(), 'db/schema.sql'), 'utf8');
     expect(schema).toContain(`PERFORM pg_notify('${NOTIFICATION_CHANNEL}', NEW.id::text);`);
     expect(schema).toMatch(
       /CREATE TRIGGER notifications_realtime_insert\s+AFTER INSERT ON notifications/,
