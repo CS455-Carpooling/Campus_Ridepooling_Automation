@@ -188,9 +188,9 @@ describe('submitJoinRequest', () => {
       state: 'needs_reconfirmation',
       idempotent: true,
     });
-    expect(query.mock.calls.some(([sql]) => String(sql).includes('INSERT INTO notifications'))).toBe(
-      false,
-    );
+    expect(
+      query.mock.calls.some(([sql]) => String(sql).includes('INSERT INTO notifications')),
+    ).toBe(false);
   });
 
   it('refuses a full ride without creating a request', async () => {
