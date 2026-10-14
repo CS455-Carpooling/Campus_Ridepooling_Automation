@@ -19,6 +19,15 @@ vi.mock('../../../lib/auth', () => ({
   readJson: h.readJson,
 }));
 
+vi.mock('server-only', () => ({}));
+vi.mock('../../../lib/ride-options', () => ({
+  getRideFormOptions: vi.fn().mockResolvedValue({
+    campusPlaces: [],
+    hubs: [],
+    vehicleTypes: [],
+  }),
+}));
+
 vi.mock('../../../lib/ai/chatbot', () => ({
   processChatbotMessage: h.processChatbotMessage,
   MAX_MESSAGE_LENGTH: 500,
@@ -165,6 +174,7 @@ describe('POST /api/chatbot (Backend API Route & Guardrails)', () => {
     expect(h.processChatbotMessage).toHaveBeenCalledWith(
       USER.id,
       'Need a ride to Kanpur Central tomorrow 8am',
+      expect.objectContaining({ rideOptions: expect.anything() }),
     );
     expect(h.logChatbotAudit).toHaveBeenCalledWith(
       expect.objectContaining({

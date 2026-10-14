@@ -12,6 +12,12 @@ import {
 } from './chatbot-tools';
 import type { PreferenceProposal, ProposedPreferenceChanges } from './preference-proposals';
 import type { SearchRideResult } from '../ride-search';
+import {
+  getRideFormOptions,
+  type RideFormOptions,
+  type Place,
+  type VehicleType,
+} from '../ride-options';
 
 export const MAX_MESSAGE_LENGTH = 500; // AI-RD-09, US-RD-12-AC3
 
@@ -75,63 +81,244 @@ export type ChatbotResponse =
 export type ChatbotOptions = {
   now?: Date;
   forceServiceFailure?: boolean;
+  rideOptions?: RideFormOptions;
 };
 
-const HUBS = [
-  {
-    id: 'kanpur-central',
-    name: 'Kanpur Central',
-    keywords: [
-      'kanpur central',
-      'central station',
-      'railway station',
-      'train station',
-      'station',
-      'central',
-    ],
-  },
-  {
-    id: 'lucknow-airport',
-    name: 'Lucknow airport',
-    keywords: ['lucknow airport', 'lucknow', 'ccsi', 'amausi'],
-  },
-  { id: 'kanpur-airport', name: 'Kanpur airport', keywords: ['kanpur airport', 'chakeri'] },
-  {
-    id: 'bus-stand',
-    name: 'Bus stand',
-    keywords: ['bus stand', 'bus station', 'jhakarkati', 'bus'],
-  },
-  {
-    id: 'metro-station',
-    name: 'Metro station',
-    keywords: ['metro station', 'metro', 'iitk metro'],
-  },
-  { id: 'kanpur-anwarganj', name: 'Kanpur Anwarganj', keywords: ['anwarganj'] },
+export const DEFAULT_HUBS: Place[] = [
+  { id: 'kanpur-central', name: 'Kanpur Central', detail: 'Station' },
+  { id: 'lucknow-airport', name: 'Lucknow airport', detail: 'Chaudhary Charan Singh International Airport' },
+  { id: 'kanpur-airport', name: 'Kanpur airport', detail: 'Chakeri' },
+  { id: 'bus-stand', name: 'Bus stand', detail: 'Jhakarkati' },
+  { id: 'metro-station', name: 'Metro station', detail: 'IIT Kanpur Metro Station' },
+  { id: 'kanpur-anwarganj', name: 'Kanpur Anwarganj', detail: 'Station' },
 ];
 
-const CAMPUS_LOCATIONS = [
-  { id: 'hall-1', name: 'Hall 1', keywords: ['hall 1', 'hall1', 'h1'] },
-  { id: 'hall-2', name: 'Hall 2', keywords: ['hall 2', 'hall2', 'h2'] },
-  { id: 'hall-3', name: 'Hall 3', keywords: ['hall 3', 'hall3', 'h3'] },
-  { id: 'hall-4', name: 'Hall 4', keywords: ['hall 4', 'hall4', 'h4'] },
-  { id: 'hall-5', name: 'Hall 5', keywords: ['hall 5', 'hall5', 'h5'] },
-  { id: 'hall-6', name: 'Hall 6', keywords: ['hall 6', 'hall6', 'h6'] },
-  { id: 'hall-7', name: 'Hall 7', keywords: ['hall 7', 'hall7', 'h7'] },
-  { id: 'hall-8', name: 'Hall 8', keywords: ['hall 8', 'hall8', 'h8'] },
-  { id: 'hall-9', name: 'Hall 9', keywords: ['hall 9', 'hall9', 'h9'] },
-  { id: 'hall-10', name: 'Hall 10', keywords: ['hall 10', 'hall10', 'h10'] },
-  { id: 'hall-11', name: 'Hall 11', keywords: ['hall 11', 'hall11', 'h11'] },
-  { id: 'hall-12', name: 'Hall 12', keywords: ['hall 12', 'hall12', 'h12'] },
-  { id: 'hall-13', name: 'Hall 13', keywords: ['hall 13', 'hall13', 'h13'] },
-  { id: 'hall-14', name: 'Hall 14', keywords: ['hall 14', 'hall14', 'h14'] },
-  { id: 'main-gate', name: 'Main Gate', keywords: ['main gate', 'gate'] },
+export const DEFAULT_CAMPUS_LOCATIONS: Place[] = [
+  { id: 'hall-1', name: 'Hall 1' },
+  { id: 'hall-2', name: 'Hall 2' },
+  { id: 'hall-3', name: 'Hall 3' },
+  { id: 'hall-4', name: 'Hall 4' },
+  { id: 'hall-5', name: 'Hall 5' },
+  { id: 'hall-6', name: 'Hall 6' },
+  { id: 'hall-7', name: 'Hall 7' },
+  { id: 'hall-8', name: 'Hall 8' },
+  { id: 'hall-9', name: 'Hall 9' },
+  { id: 'hall-10', name: 'Hall 10' },
+  { id: 'hall-11', name: 'Hall 11' },
+  { id: 'hall-12', name: 'Hall 12' },
+  { id: 'hall-13', name: 'Hall 13' },
+  { id: 'hall-14', name: 'Hall 14' },
+  { id: 'main-gate', name: 'Main Gate' },
 ];
 
-const VEHICLE_TYPES = [
-  { id: 'auto', name: 'Auto', keywords: ['auto', 'autorickshaw', 'rickshaw'] },
-  { id: 'car', name: 'Car', keywords: ['cab', 'car', 'taxi', 'sedan'] },
-  { id: 'vikram', name: 'Vikram', keywords: ['vikram', 'tempo'] },
+export const DEFAULT_VEHICLE_TYPES: VehicleType[] = [
+  { id: 'auto', name: 'Auto', capacity: 3 },
+  { id: 'car', name: 'Car', capacity: 4 },
+  { id: 'vikram', name: 'Vikram', capacity: 6 },
 ];
+
+/** Matches a transport hub against configured hubs in the database. */
+export function matchHub(text: string, hubs: Place[]): Place | null {
+  const lower = text.toLowerCase();
+  if (!Array.isArray(hubs)) return null;
+
+  // 1. Check exact configured hub name, id, or normalized id
+  for (const h of hubs) {
+    if (!h) continue;
+    const hubNameLower = (h.name ?? '').toLowerCase();
+    const hubIdNorm = (h.id ?? '').toLowerCase().replace(/[-_]/g, ' ');
+    if ((hubNameLower && lower.includes(hubNameLower)) || (hubIdNorm && lower.includes(hubIdNorm))) {
+      return h;
+    }
+  }
+
+  // 2. Check well-known transport hub synonyms mapped to configured hubs
+  for (const h of hubs) {
+    if (!h) continue;
+    const id = (h.id ?? '').toLowerCase();
+    const name = (h.name ?? '').toLowerCase();
+
+    // Kanpur Central / Railway Station
+    if (id.includes('central') || name.includes('central') || name.includes('railway')) {
+      if (
+        lower.includes('central station') ||
+        lower.includes('railway station') ||
+        lower.includes('train station') ||
+        lower.includes('kanpur central') ||
+        lower.includes('station') ||
+        lower.includes('central')
+      ) {
+        return h;
+      }
+    }
+
+    // Lucknow Airport
+    if (id.includes('lucknow') && (id.includes('airport') || name.includes('airport'))) {
+      if (
+        lower.includes('lucknow airport') ||
+        lower.includes('lucknow') ||
+        lower.includes('ccsi') ||
+        lower.includes('amausi')
+      ) {
+        return h;
+      }
+    }
+
+    // Kanpur Airport
+    if (id.includes('kanpur') && (id.includes('airport') || name.includes('airport'))) {
+      if (lower.includes('kanpur airport') || lower.includes('chakeri')) {
+        return h;
+      }
+    }
+
+    // Bus Stand
+    if (id.includes('bus') || name.includes('bus')) {
+      if (
+        lower.includes('bus stand') ||
+        lower.includes('bus station') ||
+        lower.includes('jhakarkati') ||
+        lower.includes('bus')
+      ) {
+        return h;
+      }
+    }
+
+    // Metro Station
+    if (id.includes('metro') || name.includes('metro')) {
+      if (
+        lower.includes('metro station') ||
+        lower.includes('metro') ||
+        lower.includes('iitk metro')
+      ) {
+        return h;
+      }
+    }
+
+    // Anwarganj
+    if (id.includes('anwarganj') || name.includes('anwarganj')) {
+      if (lower.includes('anwarganj')) {
+        return h;
+      }
+    }
+  }
+
+  // 3. Generic "airport" defaults to the first airport hub available in configured hubs
+  if (lower.includes('airport')) {
+    const airportHub = hubs.find(
+      (h) => h && ((h.id ?? '').toLowerCase().includes('airport') || (h.name ?? '').toLowerCase().includes('airport')),
+    );
+    if (airportHub) return airportHub;
+  }
+
+  // 4. Generic "station" defaults to the first station hub available
+  if (lower.includes('station')) {
+    const stationHub = hubs.find(
+      (h) =>
+        h &&
+        ((h.id ?? '').toLowerCase().includes('central') ||
+          (h.name ?? '').toLowerCase().includes('central') ||
+          (h.id ?? '').toLowerCase().includes('station')),
+    );
+    if (stationHub) return stationHub;
+  }
+
+  return null;
+}
+
+/** Matches a campus pickup/drop location against configured campus locations. */
+export function matchCampusLocation(text: string, campusPlaces: Place[]): Place | null {
+  const lower = text.toLowerCase();
+  if (!Array.isArray(campusPlaces)) return null;
+
+  // 1. Direct match on name, id, or normalized id
+  for (const loc of campusPlaces) {
+    if (!loc) continue;
+    const nameLower = (loc.name ?? '').toLowerCase();
+    const idNorm = (loc.id ?? '').toLowerCase().replace(/[-_]/g, ' ');
+    if ((nameLower && lower.includes(nameLower)) || (idNorm && lower.includes(idNorm))) {
+      return loc;
+    }
+  }
+
+  // 2. Hall shorthand regex (e.g. "hall 7", "hall7", "h7", "hall-7")
+  const hallMatch = lower.match(/\b(?:hall\s*|h)(\d{1,2})\b/);
+  if (hallMatch && hallMatch[1]) {
+    const hallNum = hallMatch[1];
+    const targetHall = campusPlaces.find(
+      (loc) =>
+        loc &&
+        ((loc.id ?? '').toLowerCase() === `hall-${hallNum}` ||
+          (loc.name ?? '').toLowerCase() === `hall ${hallNum}` ||
+          (loc.id ?? '').toLowerCase() === `hall${hallNum}`),
+    );
+    if (targetHall) return targetHall;
+  }
+
+  // 3. Gate
+  if (lower.includes('main gate') || lower.includes('gate')) {
+    const gateLoc = campusPlaces.find(
+      (loc) => loc && ((loc.id ?? '').toLowerCase().includes('gate') || (loc.name ?? '').toLowerCase().includes('gate')),
+    );
+    if (gateLoc) return gateLoc;
+  }
+
+  return null;
+}
+
+/** Matches a vehicle type against configured vehicle types. */
+export function matchVehicleType(text: string, vehicleTypes: VehicleType[]): VehicleType | null {
+  const lower = text.toLowerCase();
+  if (!Array.isArray(vehicleTypes)) return null;
+
+  // 1. Direct match on name or id
+  for (const v of vehicleTypes) {
+    if (!v) continue;
+    const nameLower = (v.name ?? '').toLowerCase();
+    const idLower = (v.id ?? '').toLowerCase();
+    if ((nameLower && lower.includes(nameLower)) || (idLower && lower.includes(idLower))) {
+      return v;
+    }
+  }
+
+  // 2. Vehicle synonyms
+  for (const v of vehicleTypes) {
+    if (!v) continue;
+    const id = (v.id ?? '').toLowerCase();
+    const name = (v.name ?? '').toLowerCase();
+
+    // Car / Cab / Taxi / Sedan
+    if (id.includes('car') || name.includes('car') || id.includes('cab')) {
+      if (
+        lower.includes('cab') ||
+        lower.includes('car') ||
+        lower.includes('taxi') ||
+        lower.includes('sedan')
+      ) {
+        return v;
+      }
+    }
+
+    // Auto / Rickshaw
+    if (id.includes('auto') || name.includes('auto')) {
+      if (
+        lower.includes('auto') ||
+        lower.includes('rickshaw') ||
+        lower.includes('autorickshaw')
+      ) {
+        return v;
+      }
+    }
+
+    // Vikram / Tempo
+    if (id.includes('vikram') || name.includes('vikram')) {
+      if (lower.includes('vikram') || lower.includes('tempo')) {
+        return v;
+      }
+    }
+  }
+
+  return null;
+}
 
 /** Extract a ride UUID or numeric ID if mentioned in the text. */
 function extractRideId(text: string): string | null {
@@ -358,7 +545,11 @@ function extractTargetName(text: string): string | null {
 }
 
 /** Check if rider is asking to change preferences (FR-RD-05.3, US-RD-14-AC1). */
-function checkPreferenceChangeRequest(text: string): ProposedPreferenceChanges | null {
+function checkPreferenceChangeRequest(
+  text: string,
+  vehicleTypes: VehicleType[],
+  campusPlaces: Place[],
+): ProposedPreferenceChanges | null {
   const lower = text.toLowerCase();
   const isPrefChange =
     lower.includes('prefer') ||
@@ -374,19 +565,15 @@ function checkPreferenceChangeRequest(text: string): ProposedPreferenceChanges |
   const changes: ProposedPreferenceChanges = {};
 
   // Vehicle type
-  for (const v of VEHICLE_TYPES) {
-    if (v.keywords.some((k) => lower.includes(k))) {
-      changes.preferredVehicleTypeId = v.id;
-      break;
-    }
+  const matchedVehicle = matchVehicleType(lower, vehicleTypes);
+  if (matchedVehicle) {
+    changes.preferredVehicleTypeId = matchedVehicle.id;
   }
 
   // Campus location
-  for (const loc of CAMPUS_LOCATIONS) {
-    if (loc.keywords.some((k) => lower.includes(k))) {
-      changes.defaultPickupPointId = loc.id;
-      break;
-    }
+  const matchedCampus = matchCampusLocation(lower, campusPlaces);
+  if (matchedCampus) {
+    changes.defaultPickupPointId = matchedCampus.id;
   }
 
   // Max fare
@@ -613,8 +800,13 @@ export async function processChatbotMessage(
     }
   }
 
+  // Use configured options passed from server or default active options
+  const configuredHubs = options?.rideOptions?.hubs?.length ? options.rideOptions.hubs : DEFAULT_HUBS;
+  const configuredCampus = options?.rideOptions?.campusPlaces?.length ? options.rideOptions.campusPlaces : DEFAULT_CAMPUS_LOCATIONS;
+  const configuredVehicles = options?.rideOptions?.vehicleTypes?.length ? options.rideOptions.vehicleTypes : DEFAULT_VEHICLE_TYPES;
+
   // 5. Check for Preference and Tag Changes (FR-RD-05.3, US-RD-14-AC1, AI-RD-04)
-  const proposedChanges = checkPreferenceChangeRequest(trimmed);
+  const proposedChanges = checkPreferenceChangeRequest(trimmed, configuredVehicles, configuredCampus);
   if (proposedChanges) {
     try {
       const proposal = await executeProposePreferenceUpdate(viewerId, proposedChanges, now);
@@ -635,14 +827,8 @@ export async function processChatbotMessage(
   // 6. Natural Language Ride Search (FR-RD-05.1, US-RD-12-AC1)
   const lower = trimmed.toLowerCase();
 
-  // Resolve hub
-  let matchedHub = HUBS.find((h) => h.keywords.some((k) => lower.includes(k)));
-  // Default to Kanpur Central if generic "station" or "train", or airport
-  if (!matchedHub) {
-    if (lower.includes('airport')) {
-      matchedHub = HUBS.find((h) => h.id === 'lucknow-airport');
-    }
-  }
+  // Resolve hub from configured active hubs (source of truth)
+  const matchedHub = matchHub(lower, configuredHubs);
 
   if (!matchedHub) {
     return {
@@ -655,17 +841,18 @@ export async function processChatbotMessage(
 
   // Resolve direction
   const direction: 'to_hub' | 'from_hub' =
-    lower.includes('from ' + matchedHub.keywords[0]) ||
+    lower.includes('from ' + matchedHub.name.toLowerCase()) ||
+    lower.includes('from ' + matchedHub.id.toLowerCase().replace(/[-_]/g, ' ')) ||
     lower.includes('coming to campus') ||
     lower.includes('to campus')
       ? 'from_hub'
       : 'to_hub';
 
   // Resolve campus location (or default from rider preferences)
-  let matchedCampus = CAMPUS_LOCATIONS.find((loc) => loc.keywords.some((k) => lower.includes(k)));
+  const matchedCampus = matchCampusLocation(lower, configuredCampus);
 
-  let defaultCampusId = 'hall-1';
-  let defaultCampusName = 'Hall 1';
+  let defaultCampusId = configuredCampus[0]?.id ?? 'hall-1';
+  let defaultCampusName = configuredCampus[0]?.name ?? 'Hall 1';
 
   try {
     const prefs = await executeGetRiderPreferences(viewerId);
@@ -678,8 +865,8 @@ export async function processChatbotMessage(
   const campusLocationId = matchedCampus ? matchedCampus.id : defaultCampusId;
   const campusLocationName = matchedCampus ? matchedCampus.name : defaultCampusName;
 
-  // Resolve vehicle
-  const matchedVehicle = VEHICLE_TYPES.find((v) => v.keywords.some((k) => lower.includes(k)));
+  // Resolve vehicle from configured vehicle types
+  const matchedVehicle = matchVehicleType(lower, configuredVehicles);
 
   // Resolve max fare
   let maxFareShare: number | undefined;

@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { getCurrentUser, guard, json, rateLimit, readJson } from '../../../lib/auth';
 import { routes } from '../../../lib/routes';
 import { processChatbotMessage, MAX_MESSAGE_LENGTH } from '../../../lib/ai/chatbot';
+import { getRideFormOptions } from '../../../lib/ride-options';
 import { logChatbotAudit, type ChatbotToolAudit } from '../../../lib/ai/chatbot-audit';
 
 export const CHATBOT_HOURLY_LIMIT = 20; // AI-RD-09: 20 AI requests/hr per rider
@@ -67,8 +68,10 @@ export async function POST(req: Request) {
       timeoutTimer = setTimeout(() => reject(new Error('CHATBOT_TIMEOUT')), CHATBOT_TIMEOUT_MS);
     });
 
+    const rideOptions = await getRideFormOptions().catch(() => undefined);
+
     const response = await Promise.race([
-      processChatbotMessage(user.id, rawMessage.trim()),
+      processChatbotMessage(user.id, rawMessage.trim(), { rideOptions }),
       timeoutPromise,
     ]).finally(() => {
       if (timeoutTimer) clearTimeout(timeoutTimer);

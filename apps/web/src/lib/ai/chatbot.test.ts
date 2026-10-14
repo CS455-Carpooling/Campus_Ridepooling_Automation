@@ -370,6 +370,45 @@ describe('Natural-Language Ride Search (FR-RD-05.1, US-RD-12-AC1)', () => {
     expect(morningWindow.departureStart).toBe('2026-10-15T08:00:00+05:30');
     expect(morningWindow.departureEnd).toBe('2026-10-15T11:00:00+05:30');
   });
+
+  it('uses configured database options as parser source of truth for newly added hubs, campus places, and vehicles', async () => {
+    // Operations admin configured options
+    const customOptions = {
+      hubs: [
+        { id: 'civil-aerodrome', name: 'Civil Aerodrome', detail: 'Chakeri airstrip' },
+        { id: 'zsquare-mall', name: 'ZSquare Mall', detail: 'City center' },
+      ],
+      campusPlaces: [
+        { id: 'hall-15', name: 'Hall 15' },
+        { id: 'faculty-building', name: 'Faculty Building' },
+      ],
+      vehicleTypes: [
+        { id: 'suv', name: 'SUV', capacity: 6 },
+        { id: 'electric-bus', name: 'Electric Bus', capacity: 20 },
+      ],
+    };
+
+    searchRidesMock.mockResolvedValueOnce([]);
+
+    const response = await processChatbotMessage(
+      VIEWER_ID,
+      'Find an SUV to Civil Aerodrome from Hall 15 tomorrow morning',
+      {
+        now: NOW,
+        rideOptions: customOptions,
+      },
+    );
+
+    expect(response.kind).toBe('search_results');
+    if (response.kind !== 'search_results') return;
+
+    expect(response.interpretedFilters.hubId).toBe('civil-aerodrome');
+    expect(response.interpretedFilters.hubName).toBe('Civil Aerodrome');
+    expect(response.interpretedFilters.campusLocationId).toBe('hall-15');
+    expect(response.interpretedFilters.campusLocationName).toBe('Hall 15');
+    expect(response.interpretedFilters.vehicleTypeId).toBe('suv');
+    expect(response.interpretedFilters.vehicleTypeName).toBe('SUV');
+  });
 });
 
 describe('Graceful Service Failure (FR-RD-05.7, US-RD-12-AC4)', () => {
