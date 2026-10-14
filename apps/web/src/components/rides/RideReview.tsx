@@ -74,7 +74,7 @@ export function RideReview({ page }: { page: RatingPage }) {
         Back to the ride
       </ButtonLink>
 
-      <header className="mt-6">
+      <header className="ds-page-heading mt-6">
         <p className="text-sm font-semibold uppercase tracking-wide text-accent-text">
           Rate this ride
         </p>

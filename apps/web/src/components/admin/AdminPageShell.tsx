@@ -52,7 +52,10 @@ export function AdminPageShell({
           </Link>
         )}
         <header
-          className={cx('flex flex-wrap items-end justify-between gap-4', back ? 'mt-4' : 'mt-8')}
+          className={cx(
+            'ds-page-heading flex flex-wrap items-end justify-between gap-4',
+            back ? 'mt-4' : 'mt-8',
+          )}
         >
           <div className="min-w-0">
             {eyebrow && (
@@ -72,7 +75,7 @@ export function AdminPageShell({
           </div>
           {actions && <div className="flex flex-wrap gap-3">{actions}</div>}
         </header>
-        <div className="mt-8">{children}</div>
+        <div className="ds-content mt-8">{children}</div>
       </main>
     </DesignSystem>
   );

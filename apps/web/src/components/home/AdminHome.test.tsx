@@ -32,7 +32,7 @@ describe('AdminHome (CS455-49)', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Operations' })).toBeInTheDocument();
     const nav = screen.getByRole('navigation', { name: 'Operations admin' });
     expect(within(nav).getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page');
-    expect(within(nav).getByRole('link', { name: 'Profile' })).toHaveAttribute('href', '/profile');
+    expect(within(nav).queryByRole('link', { name: 'Profile' })).not.toBeInTheDocument();
   });
 
   it('shows the real count of each queue with a link to it', () => {

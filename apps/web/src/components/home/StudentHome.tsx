@@ -26,7 +26,7 @@ export function StudentHome({ data }: { data: StudentHomeData }) {
 
   return (
     <DesignSystem className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="ds-page-heading flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
           {activeTab === 'upcoming' ? 'Your rides' : 'Ride history'}
         </h1>
@@ -86,7 +86,10 @@ function UpcomingRides({ rides }: { rides: UpcomingRide[] }) {
           No upcoming rides. Rides you join or offer will be listed here.
         </p>
       ) : (
-        <ul aria-label="Upcoming rides" className="mt-3 divide-y divide-line border-y border-line">
+        <ul
+          aria-label="Upcoming rides"
+          className="ds-list mt-3 divide-y divide-line border-y border-line"
+        >
           {rides.map((ride) => (
             <li key={ride.rideId} className="py-2">
               <div className="flex flex-wrap items-center justify-between gap-x-4">
@@ -145,7 +148,7 @@ function WaitingRequests({
       ) : (
         <ul
           aria-label="Waiting requests"
-          className="mt-3 divide-y divide-line border-y border-line"
+          className="ds-list mt-3 divide-y divide-line border-y border-line"
         >
           {requests.map((request) => {
             const ride = <Link href={routes.ride(request.rideId)}>{request.destination}</Link>;
@@ -238,7 +241,7 @@ function JoinRequestHistory({ requests }: { requests: RiderJoinRequest[] }) {
       ) : (
         <ul
           aria-label="Join request history"
-          className="mt-3 divide-y divide-line border-y border-line"
+          className="ds-list mt-3 divide-y divide-line border-y border-line"
         >
           {requests.map((request) => (
             <li key={request.requestId} className="py-3">

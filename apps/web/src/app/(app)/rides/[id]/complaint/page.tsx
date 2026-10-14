@@ -55,7 +55,7 @@ export default async function RideComplaintPage({
       >
         Back to the ride
       </Link>
-      <header className="mt-6">
+      <header className="ds-page-heading mt-6">
         <p className="text-sm font-semibold uppercase tracking-wide text-accent-text">
           Report a problem
         </p>

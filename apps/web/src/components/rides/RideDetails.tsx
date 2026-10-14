@@ -52,7 +52,7 @@ export function RideDetails({
         Your rides
       </ButtonLink>
 
-      <header className="mt-6">
+      <header className="ds-page-heading mt-6">
         <p className="text-sm font-semibold uppercase tracking-wide text-accent-text">
           {directionLabels[ride.direction]}
         </p>
