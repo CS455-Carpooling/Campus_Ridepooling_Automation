@@ -26,14 +26,12 @@ alt authorization OK
     DB --> Backend: RideState (LockStatus, AcceptedRiders)
     deactivate DB
     
-    alt LockStatus == "Locked"
-        note over Backend: FR-RO-04.5 / P-06: Prevent edit/cancel if ride is locked
-        Backend --> UI: Error (Ride Locked)
-        UI --> RO: Display "Locked rides cannot be modified"
-        
-    else LockStatus == "Unlocked"
-        alt Action == "Cancel"
-            note over Backend: FR-RO-04.4: Cancel ride and notify accepted Riders
+    alt Action == "Cancel"
+        note over Backend: FR-RO-04.4 / FR-RO-04.5 / FR-RD-06.11: A locked ride may be cancelled until pickup starts and the departure window ends
+        alt Trip started or departure window ended
+            Backend --> UI: Error (Cancellation unavailable)
+            UI --> RO: Display cancellation refusal
+        else Trip not started and departure window open
             group #EBF5FF Atomic Transaction
                 Backend -> DB: updateRideState(RideID, "Cancelled")
                 activate DB
@@ -46,18 +44,23 @@ alt authorization OK
             deactivate Notify
             Backend --> UI: Message (Cancel OK)
             UI --> RO: Display cancellation confirmation
-            
-        else Action == "Edit"
+        end
+    else Action == "Edit"
+        alt LockStatus == "Locked"
+            note over Backend: FR-RO-04.5: Locked rides cannot be edited
+            Backend --> UI: Error (Ride Locked)
+            UI --> RO: Display "Locked rides cannot be edited"
+        else LockStatus == "Unlocked"
             note over Backend: FR-RO-04.3: Check if accepted Riders are affected
             Backend -> Backend: checkImpact(NewDetails, AcceptedRiders)
-            
+
             alt Riders Affected == True
                 Backend --> UI: Prompt (Confirm Impact)
                 UI --> RO: Display "Edit affects accepted Riders. Confirm?"
                 RO -> UI: Submit Confirmation
                 UI -> Backend: confirmModification(RideID, NewDetails)
             end
-            
+
             group #EBF5FF Atomic Transaction
                 Backend -> DB: updateRideDetails(RideID, NewDetails)
                 activate DB
