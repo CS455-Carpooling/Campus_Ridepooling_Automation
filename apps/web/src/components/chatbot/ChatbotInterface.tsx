@@ -29,7 +29,12 @@ const SUGGESTIONS = [
   'Can you book me a seat in ride #1?',
 ];
 
-const INITIAL_GREETING: ChatMessage = {
+import {
+  resolveChatbotInitialMessages,
+  CHATBOT_STORAGE_PREFIX,
+} from '../../lib/ai/chatbot-session';
+
+export const INITIAL_GREETING: ChatMessage = {
   id: 'greeting',
   sender: 'assistant',
   timestamp: new Date().toISOString(),
@@ -43,19 +48,10 @@ export function ChatbotInterface({
   userId: string;
   options: RideFormOptions;
 }) {
-  const storageKey = `crp_chatbot_session_${userId}`;
-
-  const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    if (typeof window === 'undefined') return [INITIAL_GREETING];
-    try {
-      const stored = window.sessionStorage.getItem(storageKey);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch {}
-    return [INITIAL_GREETING];
-  });
+  const storageKey = `${CHATBOT_STORAGE_PREFIX}${userId}`;
+  const [messages, setMessages] = useState<ChatMessage[]>(() =>
+    resolveChatbotInitialMessages(storageKey, INITIAL_GREETING),
+  );
 
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);

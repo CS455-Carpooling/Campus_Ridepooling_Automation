@@ -1,5 +1,5 @@
 import type { ComponentProps } from 'react';
-import { cx } from '@/lib/cx';
+import { cx } from '../../lib/cx';
 
 /**
  * primary: the main action on a page. secondary: a second, less important

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ChatbotInterface } from './ChatbotInterface';
+import { clearChatbotStorage } from '../ui/LogoutButton';
 
 const push = vi.hoisted(() => vi.fn());
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }));
@@ -68,6 +69,57 @@ describe('ChatbotInterface (FR-RD-05, UI & Session Isolation)', () => {
 
     expect(screen.queryByText('Find rides to station tomorrow')).not.toBeInTheDocument();
     expect(sessionStorage.getItem(sessionKey)).toBeNull();
+  });
+
+  it('discards conversation content on page reload (FR-RD-05.6)', () => {
+    const sessionKey = `crp_chatbot_session_${USER_ID}`;
+    sessionStorage.setItem(
+      sessionKey,
+      JSON.stringify([
+        {
+          id: 'msg-prev',
+          sender: 'user',
+          text: 'Rides to airport on Friday',
+          timestamp: new Date().toISOString(),
+        },
+      ]),
+    );
+
+    // Mock navigation reload
+    const originalGetEntries = window.performance.getEntriesByType;
+    window.performance.getEntriesByType = vi.fn().mockReturnValue([{ type: 'reload' }]);
+
+    try {
+      render(<ChatbotInterface userId={USER_ID} options={mockOptions} />);
+
+      // Content from before the reload must be discarded
+      expect(screen.queryByText('Rides to airport on Friday')).not.toBeInTheDocument();
+      // Storage must be purged
+      expect(sessionStorage.getItem(sessionKey)).toBeNull();
+      // Initial greeting must be displayed
+      expect(
+        screen.getByText(/Hi! I am your Campus Ride-Pooling Assistant/i),
+      ).toBeInTheDocument();
+    } finally {
+      window.performance.getEntriesByType = originalGetEntries;
+    }
+  });
+
+  it('discards conversation content on rider sign-out via clearChatbotStorage (FR-RD-05.6)', () => {
+    const sessionKey1 = `crp_chatbot_session_${USER_ID}`;
+    const sessionKey2 = `crp_chatbot_session_22222222-2222-4222-8222-222222222222`;
+    const unrelatedKey = 'crp_unrelated_key';
+
+    sessionStorage.setItem(sessionKey1, JSON.stringify([{ id: '1', text: 'Chat 1' }]));
+    sessionStorage.setItem(sessionKey2, JSON.stringify([{ id: '2', text: 'Chat 2' }]));
+    sessionStorage.setItem(unrelatedKey, 'preserved_value');
+
+    // Sign out executes clearChatbotStorage
+    clearChatbotStorage();
+
+    expect(sessionStorage.getItem(sessionKey1)).toBeNull();
+    expect(sessionStorage.getItem(sessionKey2)).toBeNull();
+    expect(sessionStorage.getItem(unrelatedKey)).toBe('preserved_value');
   });
 
   it('displays service-unavailable banner and links to manual search on 503 (FR-RD-05.7)', async () => {
