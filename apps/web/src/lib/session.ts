@@ -2,6 +2,8 @@ import 'server-only';
 import { redirect } from 'next/navigation';
 import { cache } from 'react';
 import { getCurrentUser } from './auth';
+import { hasCompletedProfileSetup } from './profile-data';
+import { hasPendingRiderWarnings } from './warnings';
 import type { Role } from './roles';
 import { routes } from './routes';
 
@@ -28,7 +30,10 @@ export type Session = {
  * real account. Production builds ignore it.
  */
 export const getSession = cache(async (): Promise<Session | null> => {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser({
+    allowIncompleteProfile: true,
+    allowUnacknowledgedWarnings: true,
+  });
   if (user) {
     return {
       userId: user.id,
@@ -40,11 +45,38 @@ export const getSession = cache(async (): Promise<Session | null> => {
   return developmentSession();
 });
 
-/** For pages and server actions: the signed-in user, or a redirect to the sign-in page. */
-export async function verifySession(): Promise<Session> {
+/** For pages and server actions: the signed-in user, with first-sign-in profile setup enforced. */
+export async function verifySession(
+  options: {
+    allowIncompleteProfile?: boolean;
+    allowWarningAcknowledgement?: boolean;
+  } = {},
+): Promise<Session> {
   const session = await getSession();
   if (!session) redirect(routes.login);
+  if (
+    !options.allowWarningAcknowledgement &&
+    session.role === 'student' &&
+    !session.userId.startsWith('dev-') &&
+    (await hasPendingRiderWarnings(session.userId))
+  ) {
+    redirect(routes.warnings);
+  }
+  if (
+    !options.allowIncompleteProfile &&
+    session.role === 'student' &&
+    !session.userId.startsWith('dev-') &&
+    !(await hasCompletedProfileSetup(session.userId))
+  ) {
+    redirect(routes.profile);
+  }
   return session;
+}
+
+export async function requireRiderProfileSetup(userId: string, role: string): Promise<void> {
+  if (role === 'admin' || userId.startsWith('dev-')) return;
+  if (await hasPendingRiderWarnings(userId)) redirect(routes.warnings);
+  if (!(await hasCompletedProfileSetup(userId))) redirect(routes.profile);
 }
 
 function developmentSession(): Session | null {

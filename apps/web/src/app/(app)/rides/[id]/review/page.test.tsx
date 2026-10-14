@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('@/lib/auth', () => ({ getCurrentUser: mocks.getCurrentUser }));
+vi.mock('@/lib/session', () => ({ requireRiderProfileSetup: vi.fn() }));
 vi.mock('@/lib/ride-ratings', () => ({ getRatingPage: mocks.getRatingPage }));
 vi.mock('next/navigation', () => ({
   redirect: mocks.redirect,

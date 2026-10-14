@@ -8,6 +8,7 @@ import { getCurrentUser } from '@/lib/auth';
 import { searchRides } from '@/lib/ride-search';
 import { parseSearchRequest } from '@/lib/ride-search-rules';
 import { routes } from '@/lib/routes';
+import { requireRiderProfileSetup } from '@/lib/session';
 
 export const metadata: Metadata = { title: 'Ride results' };
 
@@ -21,8 +22,12 @@ type Props = {
  * and renders them. loading.tsx fires the instant Next.js starts rendering this.
  */
 export default async function RideResultsPage({ searchParams }: Props) {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser({
+    allowIncompleteProfile: true,
+    allowUnacknowledgedWarnings: true,
+  });
   if (!user) redirect(routes.login);
+  await requireRiderProfileSetup(user.id, user.role);
 
   // The URL can be edited by hand: anything missing or invalid goes back to the search form
   // rather than reaching the database.

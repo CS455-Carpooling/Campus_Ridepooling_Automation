@@ -7,7 +7,7 @@ A carpool app for IIT Kanpur. Next.js (App Router) + PostgreSQL, with IITK-only 
 | Feature | Details |
 |---|---|
 | Register | `@iitk.ac.in` only (checked in the browser, the API and a database constraint). Needs email verification. |
-| Login / logout | Verified accounts only. Sessions last 1 day, or 30 days with "Keep me signed in". |
+| Login / logout | Verified `@iitk.ac.in` accounts only. Sessions expire after 1 day, or 30 days with "Keep me signed in", and always end after 7 days without activity. |
 | Forgot / reset password | Single-use link valid for 30 minutes. Resetting signs the user out everywhere. |
 | Security | scrypt password hashing, httpOnly session cookies (only a token hash is stored), CSRF origin check, database-backed rate limiting, no account enumeration, security headers and CSP. |
 | Email | Sent through a small Google Apps Script web app (free, no domain needed). |

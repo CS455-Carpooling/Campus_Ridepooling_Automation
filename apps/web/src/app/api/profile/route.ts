@@ -87,7 +87,7 @@ async function rollback(client: PoolClient) {
 }
 
 export async function GET() {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser({ allowIncompleteProfile: true });
   if (!user) return json({ error: 'Authentication required.' }, 401);
 
   const profile = await getProfileData(user.id);
@@ -99,7 +99,7 @@ export async function PUT(req: Request) {
   const blocked = await guard('profile-update', 20, 900);
   if (blocked) return blocked;
 
-  const user = await getCurrentUser();
+  const user = await getCurrentUser({ allowIncompleteProfile: true });
   if (!user) return json({ error: 'Authentication required.' }, 401);
 
   const update = parseUpdate(await readJson(req));
@@ -108,6 +108,14 @@ export async function PUT(req: Request) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    await client.query(
+      `INSERT INTO user_profiles (user_id, display_name)
+       SELECT id, CASE WHEN char_length(trim(full_name)) < 2 THEN 'User'
+                       ELSE left(trim(full_name), 40) END
+       FROM users WHERE id = $1
+       ON CONFLICT (user_id) DO NOTHING`,
+      [user.id],
+    );
 
     const [pickup, vehicle, tags] = await Promise.all([
       client.query(

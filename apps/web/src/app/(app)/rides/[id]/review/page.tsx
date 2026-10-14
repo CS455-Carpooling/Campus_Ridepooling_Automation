@@ -4,6 +4,7 @@ import { RideReview } from '@/components/rides/RideReview';
 import { getCurrentUser } from '@/lib/auth';
 import { getRatingPage } from '@/lib/ride-ratings';
 import { routes } from '@/lib/routes';
+import { requireRiderProfileSetup } from '@/lib/session';
 
 export const metadata: Metadata = { title: 'Rate this ride' };
 
@@ -13,8 +14,12 @@ export const metadata: Metadata = { title: 'Rate this ride' };
  * does not exist, getRatingPage answers null and the page shows "Ride not found".
  */
 export default async function RideReviewPage({ params }: PageProps<'/rides/[id]/review'>) {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser({
+    allowIncompleteProfile: true,
+    allowUnacknowledgedWarnings: true,
+  });
   if (!user) redirect(routes.login);
+  await requireRiderProfileSetup(user.id, user.role);
 
   const { id } = await params;
   const page = await getRatingPage(id, user.id);

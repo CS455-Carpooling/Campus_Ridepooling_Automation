@@ -7,7 +7,13 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ notice?: string }>;
 }) {
-  if (await getCurrentUser()) redirect('/dashboard');
+  if (
+    await getCurrentUser({
+      allowIncompleteProfile: true,
+      allowUnacknowledgedWarnings: true,
+    })
+  )
+    redirect('/dashboard');
   const { notice } = await searchParams;
   return <NextPage page="login" notice={notice} />;
 }

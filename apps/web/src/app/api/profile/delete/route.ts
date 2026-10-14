@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   const blocked = await guard('profile-delete', 3, 3600);
   if (blocked) return blocked;
 
-  const user = await getCurrentUser();
+  const user = await getCurrentUser({ allowIncompleteProfile: true });
   if (!user) return json({ error: 'Authentication required.' }, 401);
 
   let confirmation: unknown;

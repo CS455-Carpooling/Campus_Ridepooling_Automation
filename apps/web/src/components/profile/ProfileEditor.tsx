@@ -12,7 +12,13 @@ import { CommentsAboutYou, YourRating } from './RatingSummary';
 
 type SelectedTag = { id: string; visible: boolean };
 
-export function ProfileEditor({ profile }: { profile: ProfileData }) {
+export function ProfileEditor({
+  profile,
+  setupRequired = false,
+}: {
+  profile: ProfileData;
+  setupRequired?: boolean;
+}) {
   const router = useRouter();
   const [displayName, setDisplayName] = useState(profile.displayName);
   const [pickupPoint, setPickupPoint] = useState(profile.defaultPickupPointId ?? '');
@@ -93,6 +99,10 @@ export function ProfileEditor({ profile }: { profile: ProfileData }) {
         return;
       }
       setSaved(true);
+      if (setupRequired) {
+        router.replace(routes.home);
+        router.refresh();
+      }
     } catch {
       setError('Network error. Check your connection and try again.');
     } finally {
@@ -133,16 +143,20 @@ export function ProfileEditor({ profile }: { profile: ProfileData }) {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-accent-text">
-            Account settings
+            {setupRequired ? 'First sign-in' : 'Account settings'}
           </p>
           <h1 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Your profile</h1>
           <p className="mt-3 max-w-2xl text-ink-muted">
-            Update the details and preferences used for your future rides and suggestions.
+            {setupRequired
+              ? 'Choose your display name and default pickup point, and decide whether your interest tags may inform AI suggestions before using the ride-pooling features.'
+              : 'Update the details and preferences used for your future rides and suggestions.'}
           </p>
         </div>
-        <ButtonLink href={routes.home} variant="secondary">
-          Back to dashboard
-        </ButtonLink>
+        {!setupRequired && (
+          <ButtonLink href={routes.home} variant="secondary">
+            Back to dashboard
+          </ButtonLink>
+        )}
       </div>
 
       <section
@@ -437,9 +451,11 @@ export function ProfileEditor({ profile }: { profile: ProfileData }) {
           <Button type="submit" disabled={saving}>
             {saving ? 'Saving…' : 'Save profile'}
           </Button>
-          <ButtonLink href={routes.home} variant="secondary">
-            Cancel
-          </ButtonLink>
+          {!setupRequired && (
+            <ButtonLink href={routes.home} variant="secondary">
+              Cancel
+            </ButtonLink>
+          )}
         </div>
       </form>
     </DesignSystem>
