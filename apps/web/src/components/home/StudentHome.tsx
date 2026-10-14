@@ -47,6 +47,9 @@ export function StudentHome({ data }: { data: StudentHomeData }) {
         <ButtonLink href={routes.offerRide} variant="secondary">
           Offer a ride
         </ButtonLink>
+        <ButtonLink href={routes.chatbot} variant="secondary">
+          AI Assistant
+        </ButtonLink>
       </div>
 
       <DashboardTabs current={activeTab} onChange={setActiveTab} />
