@@ -2102,3 +2102,75 @@ see ai log in d2 add our chat session in appropriate format to it
 ````text
 Added the available prompts and assistant responses from this conversation to Deliverables/D2/AI_LOG.md in chronological order and the existing numbered-turn format. Account credentials were redacted and were not added to the log.
 ````
+
+## 2026-10-14 — Align current fare sharing across roles
+
+#### Turn 33
+
+**User prompt**
+
+````text
+there is an issue admin is based on segmented fare sharing while rider and ride owner are based on equal split based check this i want to move on with equal fare split for now in all places
+````
+
+**Assistant response**
+
+````text
+Checked the implementation and Rider, Ride Owner, and Operations Admin fare requirements. The code already uses a whole-ride equal split across the owner and active Riders, with whole-rupee remainder handling. Updated the Admin requirements and traceability matrix to match the existing fare rule, clarified the Rider Table T-2 and Ride Owner requirement, and marked route-segment and rider-specific fare calculation out of scope for now. The prior segment-based clarification and recommendation remain in the logs as historical context, superseded by this current decision.
+````
+
+#### Turn 34
+
+**User prompt**
+
+````text
+see the admin block in the code it asks for intra iitk fares see the codebase completely in full depth and fix it see all the code files in the codebase and then make the patch
+````
+
+**Assistant response**
+
+````text
+Traced the Admin campus-pair fare editor through its page, configuration loader, validation, API route, database helper, tests, schema, and requirements. Removed the intra-campus fare editor and write API, their unused runtime loading and validation paths, and updated the Admin fare requirements, traceability, use case, story, and app documentation to match equal whole-ride splitting. Kept external hub fare ranges as estimates and retained any existing campus_fares table/data rather than dropping it during the application-code change.
+````
+
+#### Turn 35
+
+**User prompt**
+
+````text
+see for the database do one thing delete it completely and setup a newone so that consistency is there
+````
+
+**Assistant response**
+
+````text
+After clarifying scope, the user selected a full reset of the local/development database. Verified the app's configured target was the local Docker Compose PostgreSQL 16 database `crp` on port 5433, then dropped and recreated that database and ran `npm run db:migrate`. Verification found 34 public tables, the expected core tables and seed data (21 locations and 3 vehicle types), and no `campus_fares` table. This reset permanently deleted the previous local database contents; the separate stopped `crp-pg` container was left untouched.
+````
+
+#### Turn 36
+
+**User prompt**
+
+````text
+make mahirj23 the admin
+````
+
+**Assistant response**
+
+````text
+Verified that the specified account existed and had a verified email in the freshly initialized local database. Granted it the operations-admin role using the repository's audited admin-role script, then confirmed the role change and successful audit entry. The account's full email address and credentials are omitted from this log.
+````
+
+#### Turn 37
+
+**User prompt**
+
+````text
+add our chat seesion logs to ai log of d2
+````
+
+**Assistant response**
+
+````text
+Recorded this session's Admin fare-configuration change, local database reset, and audited Admin-role grant in this D2 AI log. Passwords and the full account email address were not included.
+````

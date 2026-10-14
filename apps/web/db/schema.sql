@@ -663,19 +663,8 @@ CREATE INDEX IF NOT EXISTS admin_audit_log_entity_idx
 ALTER TABLE locations ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 1;
 ALTER TABLE vehicle_types ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 1;
 
--- One fixed fare per pair of campus places and vehicle type (OA-FR-10). A pair is stored once,
--- in ID order. That both places are campus places is checked by the configuration API.
-CREATE TABLE IF NOT EXISTS campus_fares (
-  from_location_id TEXT NOT NULL REFERENCES locations(id),
-  to_location_id TEXT NOT NULL REFERENCES locations(id),
-  vehicle_type_id TEXT NOT NULL REFERENCES vehicle_types(id),
-  fare INTEGER NOT NULL CHECK (fare BETWEEN 1 AND 50000),
-  version INTEGER NOT NULL DEFAULT 1,
-  updated_by UUID REFERENCES users(id),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  PRIMARY KEY (from_location_id, to_location_id, vehicle_type_id),
-  CONSTRAINT campus_fares_pair_once CHECK (from_location_id < to_location_id)
-);
+-- Older installations may have a campus_fares table from the retired campus-pair fare editor.
+-- The current app does not read or write it. Do not drop it here: preserve any existing records.
 
 -- An approximate fare range for a trip to or from an external hub, per vehicle type (OA-FR-11).
 -- Riders see it only as an estimate; the ride owner sets the exact fare (SYS-FR-12, 13).

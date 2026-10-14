@@ -4,7 +4,6 @@ import {
   adminConfigMessages,
   idFromName,
   locationTypeLabels,
-  parseCampusFare,
   parseExternalFareRange,
   parseLocationCreate,
   parseLocationUpdate,
@@ -137,49 +136,7 @@ describe('places and hubs (OA-FR-05 to 07)', () => {
   });
 });
 
-describe('fares (OA-FR-10, 11)', () => {
-  it('stores a campus pair in ID order, new (no version) or edited', () => {
-    expect(
-      parseCampusFare({ fromId: 'hall-5', toId: 'hall-3', vehicleTypeId: 'car', fare: 60 }),
-    ).toEqual({
-      ok: true,
-      value: { fromId: 'hall-3', toId: 'hall-5', vehicleTypeId: 'car', fare: 60, version: null },
-    });
-    expect(
-      parseCampusFare({
-        fromId: 'hall-3',
-        toId: 'hall-5',
-        vehicleTypeId: 'car',
-        fare: 60,
-        version: 2,
-      }),
-    ).toMatchObject({
-      ok: true,
-      value: { version: 2 },
-    });
-  });
-
-  it('refuses the same place twice, unknown IDs, bad fares and versions', () => {
-    expect(
-      parseCampusFare({ fromId: 'hall-3', toId: 'hall-3', vehicleTypeId: 'car', fare: 60 }),
-    ).toEqual({
-      ok: false,
-      errors: { toId: adminConfigMessages.samePlace },
-    });
-    expect(
-      parseCampusFare({ fromId: 'Hall 3', toId: 7, vehicleTypeId: '', fare: 0, version: -1 }),
-    ).toEqual({
-      ok: false,
-      errors: {
-        fromId: adminConfigMessages.place,
-        toId: adminConfigMessages.place,
-        vehicleTypeId: adminConfigMessages.vehicleType,
-        fare: adminConfigMessages.fare,
-        version: adminConfigMessages.version,
-      },
-    });
-  });
-
+describe('external fares (OA-FR-11)', () => {
   it('SYS-FR-12: accepts an external range only when its lowest fare is not above its highest', () => {
     expect(
       parseExternalFareRange({

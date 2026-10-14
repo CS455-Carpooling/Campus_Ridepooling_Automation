@@ -17,14 +17,17 @@ Riders may select only configured destination hubs. The configured hubs
 include campus locations such as the fourteen halls and Main Gate, as
 well as specified common external travel points.
 
-The Operations Admin configures fixed campus fares and approximate
-external fare ranges. The Admin does not set the final exact fare for an
-external trip; the ride owner is responsible for the exact external
-fare.
+The Operations Admin configures approximate external fare ranges. The
+Admin does not set the final exact fare for an external trip; the ride
+owner is responsible for the exact external fare. The Admin does not
+configure fares between campus places: the ride owner's expected whole-
+ride fare is split equally among all occupants under the shared fare rule.
 
-Fare sharing is segment-based. A common segment is divided equally among
-the riders sharing that segment. Each rider's fare also includes any
-rider-specific segment after the rider's last common point.
+For the current system scope, the ride owner's expected total fare for the
+whole ride is split as evenly as possible among all occupants, including the
+owner. Any whole-rupee remainder follows the deterministic owner-first,
+request-acceptance order in the shared Rider fare rule (Table T-2). Route
+segments and rider-specific fare additions are outside the current scope.
 
 SOS is a rider-to-rider complaint category. The Operations Admin reviews
 such complaints; the application does not provide an Admin workflow for
@@ -207,28 +210,28 @@ ride. - Existing rides referencing the hub remain unchanged.
 
 #### OA-FR-10
 
-**Requirement:** The system shall allow an Operations Admin to configure
-one fixed fare for each supported pair of campus destination hubs for
-each supported vehicle type.
+**Requirement:** The system shall not provide an Operations Admin
+configuration for fixed fares between campus destination hubs. Campus
+rides use the same equal whole-ride fare-sharing rule as other rides.
 
 **Type:** Functional — Operations Admin
 
-**Rationale:** Campus fares are fixed but depend on vehicle type.
+**Rationale:** Per-segment campus fares are outside the current scope.
+The owner-entered total fare for a ride is split equally among its
+occupants, including the owner.
 
-**Assumptions:** The fare is non-directional: the same configured fare
-applies in either direction between the same pair of campus hubs.
+**Assumptions:** The existing whole-ride equal-split rule applies
+regardless of whether a ride is within campus or travels to an external
+hub. Route segments and rider-specific fare additions are out of scope.
 
-**Dependencies:** Hub configuration, vehicle-type configuration, and
-fare calculation.
+**Dependencies:** The shared whole-ride fare calculation.
 
-**Acceptance criteria:** - An Admin can configure a fare for a
-campus-hub pair and vehicle type. - The same configured fare is used for
-both directions between the pair. - A different vehicle type may have a
-different configured fare for the same hub pair. - The configured fare
-is available to fare calculation.
+**Acceptance criteria:** - The Admin fare configuration page does not
+ask for or accept fares between campus places. - The whole-ride fare is
+split equally among all occupants, including the owner, with the
+documented deterministic whole-rupee remainder allocation.
 
-**Potential ambiguities:** None for directionality or vehicle-type
-dependency.
+**Potential ambiguities:** None currently identified.
 
 **Unknowns:** None.
 
@@ -647,21 +650,23 @@ external fare.
 
 #### SYS-FR-14
 
-**Requirement:** The system shall divide the fare of a common travel
-segment equally among all riders sharing that segment.
+**Requirement:** The system shall divide the ride's expected total fare
+as evenly as possible among all occupants, including the ride owner.
 
 **Type:** Functional — System
 
-**Rationale:** Riders may share only part of a journey.
+**Rationale:** The current fare model uses one whole-ride fare and one
+consistent split across the ride pool.
 
-**Assumptions:** A common segment has an identifiable total fare.
+**Assumptions:** The ride owner supplies the expected total fare for the
+whole ride.
 
-**Dependencies:** Ride segmentation and fare calculation.
+**Dependencies:** The current occupant list and fare calculation.
 
-**Acceptance criteria:** - The system identifies the riders sharing a
-common segment. - The common-segment fare is divided into equal shares
-among those riders. - Each rider receives exactly one equal share for
-that common segment.
+**Acceptance criteria:** - The system divides the whole-ride fare among
+the owner and all accepted, active riders. - Shares differ by at most
+one rupee when a remainder exists. - The remainder follows the
+deterministic order in Table T-2.
 
 **Potential ambiguities:** None.
 
@@ -672,27 +677,28 @@ that common segment.
 
 #### SYS-FR-15
 
-**Requirement:** The system shall add each rider's fare for travel after
-the rider's last common travel point to that rider's total fare.
+**Requirement:** The system shall calculate whole-rupee fare shares that
+sum exactly to the ride's expected total fare, applying the deterministic
+rounding rule in Table T-2.
 
 **Type:** Functional — System
 
-**Rationale:** Riders may diverge to different campus halls or other
-destinations after sharing a common segment.
+**Rationale:** Whole-rupee payments require a consistent way to allocate
+any division remainder without changing the total fare.
 
-**Assumptions:** Rider-specific segment fares are available.
+**Assumptions:** The expected total fare is a whole number of rupees and
+the occupant order is defined.
 
-**Dependencies:** Ride segmentation and fare calculation.
+**Dependencies:** SYS-FR-14 and the shared Rider fare rule (Table T-2).
 
-**Acceptance criteria:** - The system identifies each rider's last
-common travel point. - The fare for the rider-specific segment is added
-to that rider's total. - The rider-specific fare is not allocated to
-riders who do not travel on that segment.
+**Acceptance criteria:** - All shares are whole rupees. - Shares sum
+exactly to the expected total fare. - Any remainder is assigned
+deterministically in owner-first, request-acceptance order.
 
-**Potential ambiguities:** None at the requirement level.
+**Potential ambiguities:** None.
 
-**Unknowns:** Exact route/segment representation belongs to the broader
-ride requirements.
+**Unknowns:** None for the current whole-ride fare model. Segment-based
+pricing may be considered in a future scope revision.
 
 ------------------------------------------------------------------------
 
@@ -1595,8 +1601,7 @@ added through elicitation:
 -   Admin setting the final exact fare for an external trip;
 -   arbitrary rider-selected destinations;
 -   Admin-managed emergency response for external drivers or vehicles;
--   equal splitting of an entire trip when riders share only part of the
-    route;
+-   route-segment fare calculation or rider-specific fare additions;
 -   rider appeal workflow;
 -   Admin editing of rider profile information;
 -   Admin sub-roles or differentiated Admin permissions.

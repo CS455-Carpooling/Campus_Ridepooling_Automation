@@ -20,7 +20,7 @@ Verification entries describe how the requirement can be tested or inspected lat
 | OA-FR-05 | US-OA-04 — A New Destination Needs to Be Supported | UC-OA-03 | Functional test: add a hub and verify it becomes an active configured destination. |
 | OA-FR-06 | US-OA-05 — A Destination Changes or Stops Being Supported | UC-OA-03 | Functional test: modify a hub and verify existing ride references remain unchanged. |
 | OA-FR-07 | US-OA-05 — A Destination Changes or Stops Being Supported | UC-OA-03 | Functional test: deactivate a hub and verify it is unavailable for new rides while historical references remain. |
-| OA-FR-10 | US-OA-06 — Different Vehicle Types Need Different Campus Fares | UC-OA-04 | Functional test: configure fares for campus-place pairs and vehicle types, and verify non-directionality. |
+| OA-FR-10 | US-OA-06 — Campus Fares Use the Equal Whole-Ride Rule | UC-OA-04 | Verify the Admin fare page has no campus-pair fare editor and fare calculation equally splits the whole-ride fare among all occupants. |
 | OA-FR-11 | US-OA-07 — Riders Need an External Fare Estimate | UC-OA-04 | Functional test: configure an external fare range for a segment and vehicle type. |
 | OA-FR-16 | US-OA-08 — An Admin Needs to Investigate a Ride Without Interfering With It | UC-OA-05 | Functional/access test: authorized Admin can view ride information. |
 | OA-FR-18 | US-OA-09, US-OA-10 — Fare-share complaint / SOS complaint | UC-OA-06 | Functional/privacy test: authorized Admin can view rider complaints. |
@@ -43,8 +43,8 @@ Verification entries describe how the requirement can be tested or inspected lat
 | SYS-FR-09 | US-OA-04 | UC-OA-03 | Configuration inspection / initialization test: required initial hubs are present. |
 | SYS-FR-12 | US-OA-07 | UC-OA-04 | Functional test: external range is displayed as an estimate. |
 | SYS-FR-13 | US-OA-07 | UC-OA-04 | Authorization/function test: Admin cannot set final exact external fare. |
-| SYS-FR-14 | US-OA-06 | UC-OA-04 | Fare calculation test: common segment is divided equally among riders sharing it. |
-| SYS-FR-15 | US-OA-06 | UC-OA-04 | Fare calculation test: rider-specific post-common-segment fare is added to that rider's total. |
+| SYS-FR-14 | US-OA-06 | UC-OA-04 | Fare calculation test: whole-ride fare is divided as evenly as possible among all occupants, including the owner. |
+| SYS-FR-15 | US-OA-06 | UC-OA-04 | Rounding test: whole-rupee shares sum exactly to the total and any remainder follows owner-first acceptance order. |
 | SYS-FR-17 | US-OA-08 | UC-OA-05 | Authorization test: Admin ride modification is rejected. |
 | SYS-FR-19 | US-OA-10 | UC-OA-06 | Functional test: rider can submit SOS complaint against another rider. |
 | SYS-FR-45 | US-OA-01, 02, 03, 04, 05, 06, 07, 09, 11, 12, 13, 14, 15, 16, 18, 20 | UC-OA-02, 03, 04, 06, 07, 08, 09, 12, 13 | Audit verification: each state-changing Admin action records authenticated Admin identity, timestamp, action, affected entity, and required reason where applicable. |
@@ -157,7 +157,7 @@ are not considered end-to-end complete:
 
 | Requirement | Current implementation | Remaining dependency |
 |---|---|---|
-| OA-FR-10, SYS-FR-14, SYS-FR-15 | Admin campus fares are versioned and audited; external-hub fare ranges are supplied to ride forms as estimates. | The current ride fare flow accepts a whole-vehicle fare from the owner and does not consume the configured campus-fare matrix or calculate shared and rider-specific route segments. |
+| OA-FR-10, SYS-FR-14, SYS-FR-15 | No campus fare matrix is configured; the owner-entered whole-ride fare is split equally among all occupants with deterministic whole-rupee remainder handling. External-hub ranges are estimates. | Verify the Admin UI and API do not expose campus-pair fare configuration; test that equal whole-ride shares sum to the total. Route-segment and rider-specific fare calculation are outside the current scope. |
 | SYS-FR-24 | Active suspensions block ride creation. | No ride-join API exists in the current codebase, so enforcement at join time cannot yet be implemented or verified. |
 | SYS-FR-25 | The suspension record stores its expiry, and active status is derived from that timestamp without a scheduled job. | No separate audit-log event is emitted when a temporary suspension expires; add one if the acceptance criterion requires an explicit expiry event in addition to the retained end time. |
 

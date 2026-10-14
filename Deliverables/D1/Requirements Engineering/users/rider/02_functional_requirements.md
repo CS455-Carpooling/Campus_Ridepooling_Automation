@@ -276,6 +276,9 @@ All conditions are evaluated together, inside the atomic operation.
 Let **F** be the ride's total fare in rupees and **n** the number of occupants (owner first, then
 accepted riders in order of acceptance). Let **q** = ⌊F / n⌋ and **r** = F − n·q.
 
+The whole-ride fare is shared as evenly as possible across all occupants; this current rule does not
+calculate separate route-segment or rider-specific fares.
+
 | Occupants | Share |
 |---|---|
 | The first r occupants | q + 1 |

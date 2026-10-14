@@ -388,3 +388,23 @@ Reworked the Operations Admin user stories to use concrete contextual situations
 
 **AI action:**
 Reviewed the validated Operations Admin requirements for semantic duplication across Operations Admin requirements, System functional requirements, and System non-functional requirements. Consolidated duplicate audit requirements into `SYS-FR-45`, which now records Admin identity, timestamp, action, affected entity, and required reason for state-changing Admin actions. Removed the separate `SYS-FR-22` and `SYS-FR-29` requirements. Removed redundant `SYS-NFR-04` (historical fare integrity) and `SYS-NFR-10` (atomic administrative state changes), because their content is already covered by broader validated requirements (`SYS-NFR-11` after renumbering for historical-record integrity and `SYS-FR-48` for atomic success reporting). Renumbered the remaining NFRs to keep the NFR sequence clean and updated the User Stories, Use Cases, and Traceability Matrix references accordingly. No new functionality was introduced.
+
+------------------------------------------------------------------------
+
+## Entry 12 --- Align the current fare-sharing scope
+
+**Date:** 2026-10-14
+
+**User clarification:**
+
+> there is an issue admin is based on segmented fare sharing while rider and ride owner are based on equal split based check this i want to move on with equal fare split for now in all places
+
+**AI action:**
+
+Checked the implemented fare calculation and the Rider, Ride Owner, and Operations Admin requirements. The implementation already divides the ride owner's whole-ride expected fare among all occupants using the shared whole-rupee rounding rule in Rider Table T-2. Updated the Admin requirements and traceability text to use that same current policy, and explicitly left route-segment and rider-specific fares out of scope for now. Updated the Rider and Ride Owner functional requirements to state the shared policy consistently. The earlier elicitation record describing segment-based sharing remains as historical context; this clarification supersedes it as the current decision.
+
+**Current fare policy:**
+
+- Split the whole-ride expected total equally across the owner and active Riders.
+- Allocate whole-rupee remainders deterministically, owner first and then in request-acceptance order, as specified in Rider Table T-2.
+- Do not calculate separate common-route or rider-specific segment fares in the current scope.

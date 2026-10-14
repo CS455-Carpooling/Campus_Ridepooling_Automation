@@ -153,7 +153,8 @@ to use this endpoint for its health check.
   shows "Ratings given" on completed rides, with a link to rate while rating is open.
 - **Operations admin data** (`db/schema.sql`, CS455-46 and CS455-47): `users.role` (`student` or
   `admin`), the append-only `admin_audit_log`, versioned vehicle types and places,
-  `campus_fares`, `external_fare_ranges`, `complaints` (with `complaint_chat_messages`),
+  any legacy `campus_fares` table from an older schema (not read or written by the app),
+  `external_fare_ranges`, `complaints` (with `complaint_chat_messages`),
   `rider_warnings`, `rider_suspensions` (and the `active_rider_suspensions` view),
   `complaint_ai_analyses` and `ai_enforcement_decisions`. The database itself refuses what must
   never happen: changing or deleting audit rows, editing an original complaint, a warning,
@@ -198,7 +199,7 @@ to use this endpoint for its health check.
 - **Admin APIs** (CS455-50, 52): each checks `requireAdminApi({ write: true })`, makes its change
   in `withAdminAction()` and answers `{ error, code, fields?, current? }`.
   - Configuration: `POST /api/admin/vehicle-types` and `PATCH .../[id]`, `POST /api/admin/locations`
-    and `PATCH .../[id]`, `PUT /api/admin/campus-fares`, `PUT /api/admin/external-fares`
+    and `PATCH .../[id]`, `PUT /api/admin/external-fares`
     (`src/lib/admin-config.ts`). Every edit sends the `version` it loaded, and a stale one gets 409
     `version_conflict` with the item as it is now. Nothing is deleted: a vehicle type or place is
     deactivated, leaves the forms and stays on the rides that use it.

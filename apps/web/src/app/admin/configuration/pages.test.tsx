@@ -47,7 +47,6 @@ const data: ConfigurationData = {
       version: 1,
     },
   ],
-  campusFares: [],
   externalFareRanges: [
     {
       hubId: 'kanpur-central',
@@ -98,7 +97,7 @@ describe('configuration pages (CS455-51)', () => {
     );
     const fares = screen.getByRole('link', { name: 'Fares' }).closest('li') as HTMLElement;
     expect(fares).toHaveTextContent('1 of 2 hub ranges set');
-    expect(fares).toHaveTextContent('0 campus fares');
+    expect(fares).toHaveTextContent('Ride fares are split equally among occupants.');
   });
 
   it('the vehicle types page edits the list, with a way back', async () => {
@@ -120,9 +119,10 @@ describe('configuration pages (CS455-51)', () => {
     ).toBeInTheDocument();
   });
 
-  it('the fares page edits hub ranges and campus fares', async () => {
+  it('the fares page only edits external hub ranges, not intra-campus fares', async () => {
     render(await FaresPage());
     expect(screen.getByRole('form', { name: 'Auto from Kanpur Central' })).toBeInTheDocument();
-    expect(screen.getByRole('form', { name: 'Set a campus fare' })).toBeInTheDocument();
+    expect(screen.queryByRole('form', { name: 'Set a campus fare' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Fares between campus places')).not.toBeInTheDocument();
   });
 });
