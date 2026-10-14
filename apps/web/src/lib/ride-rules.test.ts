@@ -169,7 +169,7 @@ describe('validateRideRequest', () => {
         }),
       ).toEqual({});
       // JavaScript accepts these, but PostgreSQL rejects offsets this large.
-      for (const offset of ['+14:30', '+18:00', '-15:00', '+05:60']) {
+      for (const offset of ['+14:30', '+18:00', '-12:01', '-14:00', '-15:00', '+05:60']) {
         expect(errorsFor({ departureStart: `2026-10-10T06:30:00${offset}` }), offset).toEqual({
           departureStart: rideMessages.startMissing,
         });

@@ -155,6 +155,52 @@ describe('decideComplaintAi (OA-FR-34, 36; SYS-FR-35, 37, 38)', () => {
     expect(h.warnRider).not.toHaveBeenCalled();
   });
 
+  it('requires an override to choose an action different from the recommendation', async () => {
+    const { client: db, query } = client();
+    await expect(
+      decideComplaintAi(
+        db,
+        COMPLAINT,
+        ANALYSIS,
+        {
+          decision: 'overridden',
+          finalAction: 'warning',
+          reason: 'Admin reviewed the recommendation.',
+          days: null,
+          indefinite: false,
+        },
+        ADMIN,
+        now,
+      ),
+    ).resolves.toEqual({ kind: 'recommendation_mismatch' });
+    expect(h.warnRider).not.toHaveBeenCalled();
+    expect(h.suspendRider).not.toHaveBeenCalled();
+    expect(
+      query.mock.calls.some(([sql]) =>
+        String(sql).includes('INSERT INTO ai_enforcement_decisions'),
+      ),
+    ).toBe(false);
+
+    const differentAction = await decideComplaintAi(
+      db,
+      COMPLAINT,
+      ANALYSIS,
+      {
+        decision: 'overridden',
+        finalAction: 'none',
+        reason: 'The evidence does not justify enforcement.',
+        days: null,
+        indefinite: false,
+      },
+      ADMIN,
+      now,
+    );
+    expect(differentAction).toMatchObject({
+      kind: 'done',
+      record: { decision: 'overridden', finalAction: 'none' },
+    });
+  });
+
   it('refuses enforcement against a resolved complaint without warning the rider', async () => {
     const { client: db, query } = client({ complaint_status: 'resolved' });
     const result = await decideComplaintAi(
