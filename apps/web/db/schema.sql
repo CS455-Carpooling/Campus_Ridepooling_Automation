@@ -1116,6 +1116,8 @@ CREATE TABLE IF NOT EXISTS chatbot_audits (
   prompt_version TEXT NOT NULL,
   tool_calls JSONB NOT NULL DEFAULT '[]',
   outcome TEXT NOT NULL,
+  validation_outcome TEXT,
+  fallback_used BOOLEAN NOT NULL DEFAULT false,
   latency_ms INTEGER NOT NULL CHECK (latency_ms >= 0),
   input_tokens INTEGER CHECK (input_tokens IS NULL OR input_tokens >= 0),
   output_tokens INTEGER CHECK (output_tokens IS NULL OR output_tokens >= 0),
@@ -1123,4 +1125,6 @@ CREATE TABLE IF NOT EXISTS chatbot_audits (
 );
 CREATE INDEX IF NOT EXISTS chatbot_audits_created_idx ON chatbot_audits(created_at);
 CREATE INDEX IF NOT EXISTS chatbot_audits_user_created_idx ON chatbot_audits(user_id, created_at DESC);
+ALTER TABLE chatbot_audits ADD COLUMN IF NOT EXISTS validation_outcome TEXT;
+ALTER TABLE chatbot_audits ADD COLUMN IF NOT EXISTS fallback_used BOOLEAN NOT NULL DEFAULT false;
 

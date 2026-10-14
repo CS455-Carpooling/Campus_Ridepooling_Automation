@@ -28,6 +28,8 @@ export async function POST(req: Request) {
       requestId,
       userId: user.id,
       outcome: 'rate_limited',
+      validationOutcome: 'rate_limit_exceeded',
+      fallbackUsed: true,
       latencyMs,
     });
     return json(
@@ -81,18 +83,64 @@ export async function POST(req: Request) {
 
     // Derive executed tool for audit logging (AI-RD-12)
     const toolCalls: ChatbotToolAudit[] = [];
+    let validationOutcome = 'valid';
+    let fallbackUsed = false;
+
     if (response.kind === 'search_results') {
-      toolCalls.push({ tool: 'search_rides', success: true });
+      toolCalls.push({
+        tool: 'search_rides',
+        arguments: {
+          hubId: response.interpretedFilters.hubId,
+          direction: response.interpretedFilters.direction,
+          departureStart: response.interpretedFilters.departureStart,
+          departureEnd: response.interpretedFilters.departureEnd,
+          vehicleTypeId: response.interpretedFilters.vehicleTypeId,
+          maxFareShare: response.interpretedFilters.maxFareShare,
+        },
+        resultSize: response.rides.length,
+        success: true,
+      });
+      validationOutcome = 'valid';
     } else if (response.kind === 'public_profile') {
-      toolCalls.push({ tool: 'get_public_profile', success: true });
+      toolCalls.push({
+        tool: 'get_public_profile',
+        arguments: {
+          displayName: response.profile.displayName,
+        },
+        resultSize: 1,
+        success: true,
+      });
+      validationOutcome = 'valid';
     } else if (response.kind === 'preference_proposal') {
-      toolCalls.push({ tool: 'propose_preference_update', success: true });
+      toolCalls.push({
+        tool: 'propose_preference_update',
+        arguments: {
+          changes: response.proposal.changes,
+        },
+        resultSize: Object.keys(response.proposal.changes ?? {}).length,
+        success: true,
+      });
+      validationOutcome = 'valid';
+    } else if (response.kind === 'clarification') {
+      validationOutcome = response.missingField
+        ? `needs_clarification_${response.missingField}`
+        : 'needs_clarification';
+    } else if (response.kind === 'prohibited_action') {
+      validationOutcome = `prohibited_action_${response.actionType}`;
+      fallbackUsed = true;
+    } else if (response.kind === 'out_of_scope') {
+      validationOutcome = 'out_of_scope';
+    } else if (response.kind === 'service_unavailable') {
+      validationOutcome = 'service_unavailable';
+      fallbackUsed = true;
     }
 
     await logChatbotAudit({
       requestId,
       userId: user.id,
       outcome: response.kind,
+      validationOutcome,
+      fallbackUsed,
       toolCalls,
       latencyMs,
     });
@@ -106,6 +154,8 @@ export async function POST(req: Request) {
       requestId,
       userId: user.id,
       outcome: isTimeout ? 'timeout' : 'error',
+      validationOutcome: isTimeout ? 'timeout' : 'internal_error',
+      fallbackUsed: true,
       latencyMs,
     });
 

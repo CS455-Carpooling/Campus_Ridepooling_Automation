@@ -180,7 +180,16 @@ describe('POST /api/chatbot (Backend API Route & Guardrails)', () => {
       expect.objectContaining({
         userId: USER.id,
         outcome: 'search_results',
-        toolCalls: [{ tool: 'search_rides', success: true }],
+        validationOutcome: 'valid',
+        fallbackUsed: false,
+        toolCalls: [
+          expect.objectContaining({
+            tool: 'search_rides',
+            arguments: expect.any(Object),
+            resultSize: 0,
+            success: true,
+          }),
+        ],
       }),
     );
   });
@@ -209,7 +218,15 @@ describe('POST /api/chatbot (Backend API Route & Guardrails)', () => {
     expect(h.logChatbotAudit).toHaveBeenCalledWith(
       expect.objectContaining({
         outcome: 'preference_proposal',
-        toolCalls: [{ tool: 'propose_preference_update', success: true }],
+        validationOutcome: 'valid',
+        fallbackUsed: false,
+        toolCalls: [
+          expect.objectContaining({
+            tool: 'propose_preference_update',
+            arguments: expect.any(Object),
+            success: true,
+          }),
+        ],
       }),
     );
   });
@@ -232,6 +249,8 @@ describe('POST /api/chatbot (Backend API Route & Guardrails)', () => {
       expect.objectContaining({
         userId: USER.id,
         outcome: 'error',
+        validationOutcome: 'internal_error',
+        fallbackUsed: true,
       }),
     );
   });

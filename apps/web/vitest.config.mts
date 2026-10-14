@@ -1,11 +1,13 @@
+import path from 'node:path';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    // Resolve the @/* alias from tsconfig.json (built into Vite 8).
-    tsconfigPaths: true,
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
   },
   test: {
     environment: 'jsdom',
