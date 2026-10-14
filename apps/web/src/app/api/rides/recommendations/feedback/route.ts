@@ -1,5 +1,6 @@
 import { getCurrentUser, guard, json, readJson } from '@/lib/auth';
 import { pool } from '@/lib/db';
+import { pseudonymizeRecommendationRider } from '@/lib/ai/recommendation-audit';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -23,15 +24,15 @@ export async function POST(req: Request) {
 
   try {
     const result = await pool.query(
-      `INSERT INTO ride_recommendation_feedback (request_id, user_id, ride_id, value)
-       SELECT a.request_id, a.user_id, $3::uuid, $4
+      `INSERT INTO ride_recommendation_feedback (request_id, rider_pseudonym, ride_id, value)
+       SELECT a.request_id, a.rider_pseudonym, $3::uuid, $4
          FROM ride_recommendation_audits a
         WHERE a.request_id = $1::uuid
-          AND a.user_id = $2::uuid
+          AND a.rider_pseudonym = $2
           AND $3::uuid = ANY(a.suggested_ride_ids)
-       ON CONFLICT (request_id, user_id, ride_id) DO NOTHING
+       ON CONFLICT (request_id, rider_pseudonym, ride_id) DO NOTHING
        RETURNING id`,
-      [requestId, user.id, rideId, value],
+      [requestId, pseudonymizeRecommendationRider(user.id), rideId, value],
     );
     if (!result.rowCount) {
       return json(
@@ -40,7 +41,8 @@ export async function POST(req: Request) {
       );
     }
     return json({ success: true }, 201);
-  } catch {
+  } catch (error) {
+    console.error('Save recommendation feedback failed:', error);
     return json({ error: 'Unable to save feedback right now.' }, 500);
   }
 }

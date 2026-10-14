@@ -26,6 +26,7 @@ describe('AdminPageShell (CS455-49)', () => {
       'SOS incidents',
       'Complaints',
       'AI decisions',
+      'AI recommendations',
       'Riders',
       'Configuration',
       'Profile',

@@ -57,10 +57,17 @@ describe('rankRideRecommendations fallback', () => {
   });
 
   it('returns current trusted ride details if the model fails', async () => {
-    const response = await rankRideRecommendations('viewer-1', filters, async () => {
-      throw new Error('Gemini unavailable');
-    });
+    const onValidation = vi.fn();
+    const response = await rankRideRecommendations(
+      'viewer-1',
+      filters,
+      async () => {
+        throw new Error('Gemini unavailable');
+      },
+      onValidation,
+    );
     expect(response.source).toBe('fallback');
+    expect(onValidation).toHaveBeenCalledWith('not_run');
     expect(response.suggestions).toHaveLength(1);
     expect(response.suggestions[0].ride).toEqual(ride);
     expect(response.suggestions[0].ride.estimatedShare).toBe(150);
@@ -69,11 +76,31 @@ describe('rankRideRecommendations fallback', () => {
   });
 
   it('falls back when the model returns only ineligible IDs', async () => {
-    const response = await rankRideRecommendations('viewer-1', filters, async () => ({
-      rankedRides: [{ rideId: 'not-eligible', factors: ['fare'], pros: [], cons: [] }],
-    }));
+    const onValidation = vi.fn();
+    const response = await rankRideRecommendations(
+      'viewer-1',
+      filters,
+      async () => ({
+        rankedRides: [{ rideId: 'not-eligible', factors: ['fare'], pros: [], cons: [] }],
+      }),
+      onValidation,
+    );
     expect(response.source).toBe('fallback');
+    expect(onValidation).toHaveBeenCalledWith('failed');
     expect(response.suggestions[0].ride.id).toBe('ride-1');
+  });
+
+  it('records successful validation of eligible model output', async () => {
+    const onValidation = vi.fn();
+    await rankRideRecommendations(
+      'viewer-1',
+      filters,
+      async () => ({
+        rankedRides: [{ rideId: 'ride-1', factors: ['fare'], pros: [], cons: [] }],
+      }),
+      onValidation,
+    );
+    expect(onValidation).toHaveBeenCalledWith('passed');
   });
 
   it('returns empty fallback when no eligible rides exist', async () => {

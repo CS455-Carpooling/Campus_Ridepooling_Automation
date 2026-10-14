@@ -124,4 +124,67 @@ describe('AskAiRecommendations', () => {
 
     expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
   });
+
+  it.each([
+    { reason: 'wrong', label: 'Wrong recommendation' },
+    { reason: 'inappropriate', label: 'Inappropriate recommendation' },
+  ])(
+    'submits an AI-RD-15 $reason report with its matching request ID',
+    async ({ reason, label }) => {
+      const reportResponse = { ...response, requestId: 'request-123' };
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(new Response(JSON.stringify(reportResponse), { status: 200 }))
+        .mockResolvedValueOnce(new Response(JSON.stringify({ success: true }), { status: 201 }));
+      vi.stubGlobal('fetch', fetchMock);
+
+      render(<AskAiRecommendations filters={filters} />);
+      fireEvent.click(screen.getByRole('button', { name: 'Ask AI to Suggest' }));
+      await screen.findByRole('button', { name: label });
+      fireEvent.click(screen.getByRole('button', { name: label }));
+
+      await screen.findByText('Report sent to the operations team.');
+      expect(fetchMock).toHaveBeenNthCalledWith(
+        2,
+        '/api/rides/recommendations/report',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({
+            requestId: 'request-123',
+            rideId: ride.id,
+            reason,
+          }),
+        }),
+      );
+      expect(screen.getByRole('button', { name: 'Helpful' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Not helpful' })).toBeInTheDocument();
+    },
+  );
+
+  it('keeps helpful/not-helpful feedback on its original endpoint and request ID', async () => {
+    const feedbackResponse = { ...response, requestId: 'request-456' };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify(feedbackResponse), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ success: true }), { status: 201 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(<AskAiRecommendations filters={filters} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Ask AI to Suggest' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Not helpful' }));
+
+    await screen.findByText('Thanks for your feedback.');
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      '/api/rides/recommendations/feedback',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          requestId: 'request-456',
+          rideId: ride.id,
+          value: 'not_helpful',
+        }),
+      }),
+    );
+  });
 });
