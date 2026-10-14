@@ -10,6 +10,7 @@ import {
 import { formatDeparture } from './format';
 import { getActiveSuspension } from './suspensions';
 import { withdrawWaitingRequestsForSuspendedRider } from './join-requests';
+import type { NotificationType } from './notification-types';
 
 /**
  * An admin's warnings, suspensions and reactivations (OA-FR-21 to 28, SYS-FR-24 to 27,
@@ -69,7 +70,7 @@ async function complaintIsAbout(
 async function notify(
   client: PoolClient,
   userId: string,
-  type: string,
+  type: NotificationType,
   title: string,
   body: string,
 ) {
@@ -150,7 +151,7 @@ export async function suspendRider(
     userId,
     'account_suspended',
     'Your account is suspended',
-    `Your account is suspended ${until} (reason: ${complaintCategoryLabels[request.reasonCategory]}). You cannot offer rides or rate others until then. You can still file a complaint and see your rides.`,
+    `Your account is suspended ${until} (reason: ${complaintCategoryLabels[request.reasonCategory]}). You cannot offer or join rides, post in pool chats or rate others until then. You can still file a complaint, raise an SOS and see your rides.`,
   );
   await withdrawWaitingRequestsForSuspendedRider(client, userId, now);
   return {

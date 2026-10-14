@@ -89,7 +89,8 @@ export default async function AdminAiDecisionsPage() {
               Chatbot interaction audit logs (AI-RD-12)
             </h2>
             <p className="text-sm text-ink-muted">
-              Immutable traces retained for 90 days (P-28). Exposes tool arguments, result sizes, validation outcomes, and pseudonymous rider IDs without private message content.
+              Immutable traces retained for 90 days (P-28). Exposes tool arguments, result sizes,
+              validation outcomes, and pseudonymous rider IDs without private message content.
             </p>
           </div>
         </div>
@@ -97,17 +98,31 @@ export default async function AdminAiDecisionsPage() {
         {chatbotAudits.length === 0 ? (
           <p className="text-ink-muted">No chatbot audit records recorded yet.</p>
         ) : (
-          <div className="overflow-x-auto border border-line rounded-lg">
+          <div className="overflow-x-auto rounded-control border border-line">
             <table className="w-full text-left text-sm" aria-label="Chatbot audit records">
               <thead className="bg-canvas-subtle border-b border-line text-xs font-semibold uppercase text-ink-muted">
                 <tr>
-                  <th scope="col" className="px-4 py-3">Time</th>
-                  <th scope="col" className="px-4 py-3">Rider ID</th>
-                  <th scope="col" className="px-4 py-3">Model / Version</th>
-                  <th scope="col" className="px-4 py-3">Tool Calls & Arguments</th>
-                  <th scope="col" className="px-4 py-3">Validation Outcome</th>
-                  <th scope="col" className="px-4 py-3">Fallback</th>
-                  <th scope="col" className="px-4 py-3">Latency</th>
+                  <th scope="col" className="px-4 py-3">
+                    Time
+                  </th>
+                  <th scope="col" className="px-4 py-3">
+                    Rider ID
+                  </th>
+                  <th scope="col" className="px-4 py-3">
+                    Model / Version
+                  </th>
+                  <th scope="col" className="px-4 py-3">
+                    Tool Calls & Arguments
+                  </th>
+                  <th scope="col" className="px-4 py-3">
+                    Validation Outcome
+                  </th>
+                  <th scope="col" className="px-4 py-3">
+                    Fallback
+                  </th>
+                  <th scope="col" className="px-4 py-3">
+                    Latency
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
@@ -132,7 +147,9 @@ export default async function AdminAiDecisionsPage() {
                             <li key={idx}>
                               <span className="font-semibold text-accent-text">{tc.tool}</span>
                               {tc.resultSize !== undefined && (
-                                <span className="text-ink-muted ml-1">({tc.resultSize} results)</span>
+                                <span className="text-ink-muted ml-1">
+                                  ({tc.resultSize} results)
+                                </span>
                               )}
                               {tc.arguments && Object.keys(tc.arguments).length > 0 && (
                                 <div className="text-[11px] font-mono text-ink-muted truncate max-w-xs">

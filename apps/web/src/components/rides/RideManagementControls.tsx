@@ -34,7 +34,8 @@ export function RideManagementControls({ ride, hubs }: { ride: RideView; hubs: P
   const [confirmEdit, setConfirmEdit] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
 
-  if (ride.viewerRole !== 'owner' || ride.state !== 'scheduled') return null;
+  // Nothing to manage once the departure window is over: such a ride did not run (code review).
+  if (ride.viewerRole !== 'owner' || ride.state !== 'scheduled' || ride.windowEnded) return null;
 
   async function save(form: HTMLFormElement, confirmAffectedRiders: boolean) {
     const data = new FormData(form);
@@ -222,8 +223,7 @@ export function RideManagementControls({ ride, hubs }: { ride: RideView; hubs: P
         <div className="mt-5 rounded-panel border border-danger p-4">
           <p className="font-semibold">Cancel this ride?</p>
           <p className="mt-1 text-sm text-ink-muted">
-            Every pending or accepted request will be cancelled, any locked fare liability will be
-            released, and riders will be notified.
+            Every pending or accepted request will be cancelled and riders will be notified.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Button onClick={() => void cancel()} disabled={busy}>
@@ -238,6 +238,12 @@ export function RideManagementControls({ ride, hubs }: { ride: RideView; hubs: P
         <Button className="mt-5" variant="secondary" onClick={() => setConfirmCancel(true)}>
           Cancel ride
         </Button>
+      )}
+      {ride.isLocked && (
+        <p className="mt-5 text-sm text-ink-muted">
+          This ride is locked and can no longer be edited. You may still cancel it before its
+          departure window ends.
+        </p>
       )}
       {message && (
         <p role="status" className="mt-3 text-sm text-ink-muted">

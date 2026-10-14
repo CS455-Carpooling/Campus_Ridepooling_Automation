@@ -70,4 +70,44 @@ describe('POST /api/profile/delete', () => {
     expect(m.destroySession).toHaveBeenCalledOnce();
     expect(m.release).toHaveBeenCalledOnce();
   });
+
+  it('does not treat an elapsed scheduled window as an active ride', async () => {
+    m.clientQuery.mockImplementation(async (sql: string) =>
+      sql.includes('AS busy') ? { rows: [{ busy: false }] } : { rows: [] },
+    );
+
+    const response = await post('DELETE');
+    expect(response.status).toBe(200);
+    const check = m.clientQuery.mock.calls.find(([sql]) => String(sql).includes('AS busy'));
+    expect(check?.[0]).toContain("r.state = 'scheduled' AND r.departure_end > now()");
+  });
+
+  it('keeps an account that has an upcoming ride or a waiting request (FR-RD-16.3)', async () => {
+    m.clientQuery.mockImplementation(async (sql: string) =>
+      sql.includes('AS busy') ? { rows: [{ busy: true }] } : { rows: [] },
+    );
+    const response = await post('DELETE');
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({
+      error:
+        'Cancel or leave your upcoming rides and withdraw your waiting requests before deleting your account.',
+      code: 'active_rides',
+    });
+    const check = m.clientQuery.mock.calls.find(([sql]) => String(sql).includes('AS busy'));
+    expect(check?.[0]).toContain('seat.left_at IS NULL AND seat.no_show_at IS NULL');
+    expect(check?.[0]).toContain("r.state = 'scheduled' AND r.departure_end > now()");
+    expect(check?.[0]).toContain("request.status IN ('pending', 'needs_reconfirmation')");
+    expect(check?.[1]).toEqual(['u1']);
+    expect(m.clientQuery.mock.calls[1]).toEqual([
+      'SELECT 1 FROM users WHERE id = $1 FOR UPDATE',
+      ['u1'],
+    ]);
+    expect(m.clientQuery).toHaveBeenCalledWith('ROLLBACK');
+    expect(m.clientQuery.mock.calls.some(([sql]) => String(sql).includes('UPDATE users'))).toBe(
+      false,
+    );
+    expect(m.destroySession).not.toHaveBeenCalled();
+    // The slow password hash is not paid for a refused attempt.
+    expect(m.hashPassword).not.toHaveBeenCalled();
+  });
 });

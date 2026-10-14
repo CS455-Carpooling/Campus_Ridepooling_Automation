@@ -20,9 +20,9 @@ describe('navigationFor', () => {
       'SOS incidents',
       'Complaints',
       'AI decisions',
+      'AI recommendations',
       'Riders',
       'Configuration',
-      'Profile',
     ]);
   });
 

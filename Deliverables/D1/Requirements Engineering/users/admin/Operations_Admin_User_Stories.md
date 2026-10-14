@@ -205,17 +205,17 @@ A configured destination changes its details, or the campus stops accepting it f
 
 ---
 
-## US-OA-06 — Different Vehicle Types Need Different Campus Fares
+## US-OA-06 — Campus Fares Use the Equal Whole-Ride Rule
 
 ### User story
 
 > **As an Operations Admin,**
-> **I want to configure the campus fare for a hub pair separately for each vehicle type,**
-> **so that the fare reflects the supported vehicle type.**
+> **I want campus rides to use the shared equal whole-ride fare rule,**
+> **so that fare configuration does not require a separate campus-place fare matrix.**
 
 ### Situation / story
 
-Students travelling between two campus hubs can choose different vehicle types. The Admin needs to configure the fare for that hub pair for each supported vehicle type. The fare is the same in either direction.
+The ride owner enters one total fare for the ride. The system splits that total equally among all occupants, including the owner, using deterministic whole-rupee remainder allocation. The Admin does not configure fares between campus places.
 
 **Related requirements:**`OA-FR-10`, `SYS-FR-14`, `SYS-FR-15`
 
@@ -223,25 +223,21 @@ Students travelling between two campus hubs can choose different vehicle types. 
 
 ### Preconditions
 - The Admin is authenticated and authorized.
-- The hubs and vehicle type are configured.
+- The ride has a valid whole-ride fare and a known set of occupants.
 
 ### Acceptance criteria
-- A fixed fare can be configured for each supported hub pair and vehicle type.
-- The fare is non-directional.
-- Existing rides retain fare information already established for them.
-- The configuration change is auditable.
+- The Admin fare configuration does not provide a campus-pair fare matrix.
+- Every occupant, including the owner, is included in the split.
+- Whole-rupee shares sum exactly to the ride total.
 
 ### Main scenario
-1. The Admin selects the hub pair and vehicle type.
-2. The Admin enters the applicable campus fare.
-3. The system persists the configuration.
-4. The configured fare becomes applicable to that combination.
-5. The same configured fare applies regardless of direction between the pair.
+1. The owner enters the ride's total fare.
+2. The system determines the occupants liable for the ride fare.
+3. The system calculates equal shares and distributes any remainder in the shared deterministic order.
 
 ### Alternative / exception scenarios
-- **A1 — Reverse direction:** The fare remains the same.
-- **A2 — Fare later changes:** Existing ride fare information remains preserved.
-- **A3 — Stale update:** A stale configuration update is rejected and identified.
+- **A1 — Intra-campus ride:** The same whole-ride equal split applies; no campus-pair fare is looked up.
+- **A2 — Remainder:** Remaining whole rupees follow the shared owner-first, request-acceptance order.
 
 ---
 

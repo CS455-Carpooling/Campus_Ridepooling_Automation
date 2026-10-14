@@ -125,6 +125,69 @@ describe('fileComplaint (FR-RD-13.1 to 13.4)', () => {
     expect(link?.[1]).toEqual(['c-1', MESSAGE]);
   });
 
+  it('keeps trip complaints between people who stayed on the ride (FR-RD-13.1)', async () => {
+    const left = new Date('2026-10-09T18:00:00+05:30');
+    const completed = new Date('2026-10-10T08:00:00+05:30');
+    const { client: leaver, query } = filingClient({
+      ride: [{ state: 'completed', completed_at: completed, no_show_at: null, left_at: left }],
+    });
+    await expect(fileComplaint(leaver, RIDE, ME, request, now)).resolves.toEqual({
+      kind: 'not_found',
+    });
+    expect(sql(query).find((text) => text.includes('FROM rides r'))).toContain('me.left_at');
+    expect(sql(query).some((text) => text.includes('INSERT INTO complaints'))).toBe(false);
+
+    const { client: aboutLeaver } = filingClient({ accused: [{ user_id: OTHER, left_at: left }] });
+    await expect(fileComplaint(aboutLeaver, RIDE, ME, request, now)).resolves.toEqual({
+      kind: 'not_on_ride',
+    });
+  });
+
+  it('still lets a late leaver, who owes their locked share, complain and be complained about', async () => {
+    const left = new Date('2026-10-10T07:45:00+05:30');
+    const completed = new Date('2026-10-10T08:00:00+05:30');
+    const { client: aboutLateLeaver, query } = filingClient({
+      accused: [{ user_id: OTHER, left_at: left, locked_share: 150 }],
+    });
+    await expect(
+      fileComplaint(aboutLateLeaver, RIDE, ME, { ...request, category: 'payment' }, now),
+    ).resolves.toEqual({ kind: 'filed', id: 'c-1', reference: 'CMP-1A2B3C4D' });
+    expect(sql(query).find((text) => text.includes('FROM riders WHERE id'))).toContain(
+      'locked_share',
+    );
+
+    const { client: byLateLeaver } = filingClient({
+      ride: [
+        {
+          state: 'completed',
+          completed_at: completed,
+          no_show_at: null,
+          left_at: left,
+          locked_share: 150,
+        },
+      ],
+    });
+    await expect(fileComplaint(byLateLeaver, RIDE, ME, request, now)).resolves.toMatchObject({
+      kind: 'filed',
+    });
+  });
+
+  it('still takes a reported message from someone who has since left the ride', async () => {
+    const { client } = filingClient({
+      ride: [{ state: 'scheduled', completed_at: null, no_show_at: null, left_at: null }],
+      accused: [{ user_id: OTHER, left_at: new Date('2026-10-12T10:00:00+05:30') }],
+    });
+    await expect(
+      fileComplaint(
+        client,
+        RIDE,
+        ME,
+        { ...request, category: 'harassment', messageId: MESSAGE },
+        now,
+      ),
+    ).resolves.toEqual({ kind: 'filed', id: 'c-1', reference: 'CMP-1A2B3C4D' });
+  });
+
   it("refuses a message that is not this person's message in this ride's chat", async () => {
     const { client } = filingClient({ message: [] });
     await expect(

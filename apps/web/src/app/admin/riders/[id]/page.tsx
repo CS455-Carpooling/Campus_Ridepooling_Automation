@@ -164,6 +164,11 @@ export default async function AdminRiderPage({ params }: PageProps<'/admin/rider
                     {formatDeparture(warning.issuedAt)}, by {warning.issuedBy}
                     {warning.complaintReference ? `, for ${warning.complaintReference}` : ''}
                   </p>
+                  <p className="mt-1 text-sm text-ink-muted">
+                    {warning.acknowledgedAt
+                      ? `Acknowledged ${formatDeparture(warning.acknowledgedAt)}`
+                      : 'Not acknowledged'}
+                  </p>
                 </li>
               ))}
             </ul>

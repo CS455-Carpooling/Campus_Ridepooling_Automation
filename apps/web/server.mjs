@@ -5,6 +5,8 @@ import { Client, Pool } from 'pg';
 import next from 'next';
 import { Server } from 'socket.io';
 import {
+  CHAT_KEPT_FOR_COMPLAINT_SQL,
+  chatSendRefusal,
   registerRideChatMessageHandler,
   rideChatAvailable,
 } from './src/lib/ride-chat-realtime.mjs';
@@ -157,6 +159,9 @@ async function createChatMessageForSocket(rideId, senderId, rawMessage, now = ne
   if (!isMember) {
     return { ok: false, code: 'FORBIDDEN', error: 'Only current pool members may post here.' };
   }
+
+  const refusal = await chatSendRefusal(pool, ride, senderId, now);
+  if (refusal) return refusal;
 
   if (!rideChatAvailable(ride, now)) {
     return { ok: false, code: 'CHAT_UNAVAILABLE', error: 'Pool chat opens once the ride locks.' };
@@ -372,10 +377,7 @@ app.prepare().then(() => {
          WHERE ride.id = chat.ride_id
            AND ((ride.state = 'completed' AND ride.completed_at <= now() - interval '31 days')
              OR (ride.state = 'cancelled' AND ride.cancelled_at <= now() - interval '31 days'))
-           AND NOT EXISTS (
-             SELECT 1 FROM ride_chat_complaints complaint
-             WHERE complaint.chat_id = chat.id AND complaint.status = 'open'
-           )`,
+           AND NOT ${CHAT_KEPT_FOR_COMPLAINT_SQL}`,
       );
     } catch (error) {
       console.error('Ride chat maintenance failed:', error);

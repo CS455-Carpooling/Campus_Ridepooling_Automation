@@ -176,7 +176,12 @@ const errorByKind: Record<string, { status: number; error: string }> = {
   },
   departure_conflict: {
     status: 409,
-    error: 'This ride departs within two hours of another ride you have joined.',
+    error: 'This ride departs within two hours of another ride you offered or joined.',
+  },
+  payment_overdue: {
+    status: 409,
+    error:
+      'Settle ride shares that have been due for more than seven days before requesting another seat.',
   },
 };
 

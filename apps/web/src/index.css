@@ -1181,6 +1181,9 @@ input[type='checkbox']:checked::after {
   .hero-copy {
     text-align: center;
   }
+  .hero h1 em {
+    margin-inline: auto;
+  }
   .hero-copy > p {
     margin-inline: auto;
   }

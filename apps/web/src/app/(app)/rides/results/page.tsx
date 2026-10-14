@@ -8,6 +8,7 @@ import { getCurrentUser } from '@/lib/auth';
 import { searchRides } from '@/lib/ride-search';
 import { parseSearchRequest } from '@/lib/ride-search-rules';
 import { routes } from '@/lib/routes';
+import { requireRiderProfileSetup } from '@/lib/session';
 
 export const metadata: Metadata = { title: 'Ride results' };
 
@@ -21,8 +22,12 @@ type Props = {
  * and renders them. loading.tsx fires the instant Next.js starts rendering this.
  */
 export default async function RideResultsPage({ searchParams }: Props) {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser({
+    allowIncompleteProfile: true,
+    allowUnacknowledgedWarnings: true,
+  });
   if (!user) redirect(routes.login);
+  await requireRiderProfileSetup(user.id, user.role);
 
   // The URL can be edited by hand: anything missing or invalid goes back to the search form
   // rather than reaching the database.
@@ -33,7 +38,7 @@ export default async function RideResultsPage({ searchParams }: Props) {
 
   return (
     <DesignSystem className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-      <header className="mt-6">
+      <header className="ds-page-heading mt-6">
         <p className="text-sm font-semibold uppercase tracking-wide text-accent-text">
           Find a ride
         </p>
@@ -68,7 +73,7 @@ export default async function RideResultsPage({ searchParams }: Props) {
           <ol className="mt-8 flex flex-col gap-6" aria-label="Search results">
             {rides.map((ride) => (
               <li key={ride.id}>
-                <RideCard ride={ride} />
+                <RideCard ride={ride} pickupPointId={filters.campusLocationId} />
               </li>
             ))}
           </ol>

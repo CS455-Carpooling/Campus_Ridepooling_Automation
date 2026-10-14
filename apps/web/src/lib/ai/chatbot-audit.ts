@@ -156,9 +156,7 @@ export async function listChatbotAudits(limit = 50): Promise<ChatbotAuditRecord[
       inputTokens: row.input_tokens,
       outputTokens: row.output_tokens,
       createdAt:
-        row.created_at instanceof Date
-          ? row.created_at.toISOString()
-          : String(row.created_at),
+        row.created_at instanceof Date ? row.created_at.toISOString() : String(row.created_at),
     }));
   } catch (error) {
     console.error('Failed to list chatbot audits:', error);

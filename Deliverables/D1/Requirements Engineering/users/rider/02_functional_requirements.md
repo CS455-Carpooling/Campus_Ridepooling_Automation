@@ -84,7 +84,7 @@ Agent permissions, guardrails and failure handling are specified in `04_ai_agent
 | FR-RD-06.8 | When a request is accepted, the system shall withdraw the rider's other active requests for rides departing within 2 hours (P-08) of the accepted ride and notify the affected owners. | Must | Test | Shared: RO |
 | FR-RD-06.9 | The system shall treat repeated submissions carrying the same idempotency key within 24 hours (P-20) as one request.<br>*Rationale: retries and double taps on a slow network must not create duplicate requests.* | Must | Test | — |
 | FR-RD-06.10 | The system shall show the rider the current state, state history and reason codes of each of their requests. | Must | Test | — |
-| FR-RD-06.11 | When the owner cancels a ride on which the rider holds an accepted seat, before or after lock time, the system shall set the request to Ride Cancelled, release the rider from any share of that ride's fare, close its pool chat to new messages, and notify the rider within 2 seconds (P-13); pool chat retention (FR-RD-09.5) runs from the cancellation time.<br>*Rationale: no fare liability may outlive the ride it pays for.* | Must | Test | Shared: RO |
+| FR-RD-06.11 | When the owner cancels a ride on which the rider holds an accepted seat, before or after lock time but before the trip starts and before the departure window ends, the system shall set the request to Ride Cancelled, release the rider from any share of that ride's fare, close its pool chat to new messages, and notify the rider within 2 seconds (P-13); pool chat retention (FR-RD-09.5) runs from the cancellation time.<br>*Rationale: no fare liability may outlive a ride the owner cancels before the ride starts.* | Must | Test | Shared: RO |
 
 ## UR-RD-07 — Withdrawing and leaving
 
@@ -276,6 +276,9 @@ All conditions are evaluated together, inside the atomic operation.
 Let **F** be the ride's total fare in rupees and **n** the number of occupants (owner first, then
 accepted riders in order of acceptance). Let **q** = ⌊F / n⌋ and **r** = F − n·q.
 
+The whole-ride fare is shared as evenly as possible across all occupants; this current rule does not
+calculate separate route-segment or rider-specific fares.
+
 | Occupants | Share |
 |---|---|
 | The first r occupants | q + 1 |
@@ -309,7 +312,7 @@ assigned on joining.
 | Verifiability | Each requirement names a verification method; quantities are explicit rather than "fast" or "secure" |
 
 **Open items for reconciliation with the Ride Owner and Admin sections:** lock-time rule (P-06);
-trip state transitions; no-show procedure; liability when leaving after lock (FR-RD-07.3); owner
-cancellation after lock (FR-RD-06.11); drift-induced conflicts between accepted rides (FR-RD-07.6);
-dispute handling for settlements; complaint outcomes shown to riders; SOS handling, including
-administrator access to the rider's mobile number (FR-RD-02.7).
+trip state transitions; no-show procedure; liability when leaving after lock (FR-RD-07.3);
+drift-induced conflicts between accepted rides (FR-RD-07.6); dispute handling for settlements;
+complaint outcomes shown to riders; SOS handling, including administrator access to the rider's
+mobile number (FR-RD-02.7).

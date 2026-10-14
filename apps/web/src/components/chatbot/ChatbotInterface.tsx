@@ -1,10 +1,10 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '../ui/Button';
 import { routes } from '../../lib/routes';
-import { formatDepartureWindow, formatRupees } from '../../lib/format';
+import { formatRupees } from '../../lib/format';
 import { directionLabels } from '../../lib/ride-status';
 import type { SearchRideResult } from '../../lib/ride-search';
 import type { RideFormOptions } from '../../lib/ride-options';
@@ -56,6 +56,8 @@ export function ChatbotInterface({
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const messageSequence = useRef(0);
+  const nextMessageId = (prefix: string) => `${prefix}-${++messageSequence.current}`;
 
   // Sync to tab-local sessionStorage (FR-RD-05.6)
   useEffect(() => {
@@ -71,7 +73,7 @@ export function ChatbotInterface({
     setMessages([
       {
         ...INITIAL_GREETING,
-        id: `greeting-${Date.now()}`,
+        id: nextMessageId('greeting'),
         timestamp: new Date().toISOString(),
       },
     ]);
@@ -89,7 +91,7 @@ export function ChatbotInterface({
 
     setErrorMessage(null);
     const userMsg: ChatMessage = {
-      id: `user-${Date.now()}`,
+      id: nextMessageId('user'),
       sender: 'user',
       timestamp: new Date().toISOString(),
       text,
@@ -115,7 +117,7 @@ export function ChatbotInterface({
           data?.message ||
           'The AI assistant is temporarily unavailable. Please try manual ride search.';
         const assistantMsg: ChatMessage = {
-          id: `bot-${Date.now()}`,
+          id: nextMessageId('bot'),
           sender: 'assistant',
           timestamp: new Date().toISOString(),
           text: errorText,
@@ -132,16 +134,16 @@ export function ChatbotInterface({
       }
 
       const assistantMsg: ChatMessage = {
-        id: `bot-${Date.now()}`,
+        id: nextMessageId('bot'),
         sender: 'assistant',
         timestamp: new Date().toISOString(),
         text: data.message || 'Here is what I found:',
         responsePayload: data,
       };
       setMessages((prev) => [...prev, assistantMsg]);
-    } catch (err) {
+    } catch {
       const fallbackMsg: ChatMessage = {
-        id: `bot-${Date.now()}`,
+        id: nextMessageId('bot'),
         sender: 'assistant',
         timestamp: new Date().toISOString(),
         text: 'Network error or service unavailable. You can use standard manual ride search.',
@@ -180,7 +182,7 @@ export function ChatbotInterface({
             className="hidden text-xs text-ink-muted sm:inline-block"
             title="Conversation is stored only in this tab's memory and is discarded on tab closure or sign-out (FR-RD-05.6)."
           >
-            🔒 Tab-local session
+            Tab-local session
           </span>
           <Button
             variant="secondary"
@@ -200,7 +202,7 @@ export function ChatbotInterface({
             key={suggestion}
             type="button"
             onClick={() => sendMessage(suggestion)}
-            className="rounded-full border border-line-strong bg-panel px-3 py-1 text-xs font-medium text-ink hover:border-primary hover:text-primary transition-colors"
+            className="rounded-full border border-line-strong bg-panel px-3 py-1 text-xs font-medium text-ink hover:border-primary hover:text-primary"
           >
             {suggestion}
           </button>
@@ -281,7 +283,6 @@ export function ChatbotInterface({
 
         {loading && (
           <div className="flex items-center gap-2 text-sm text-ink-muted">
-            <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
             <span>Thinking...</span>
           </div>
         )}
@@ -476,7 +477,7 @@ function SearchResultsView({
             Found {rides.length} matching {rides.length === 1 ? 'ride' : 'rides'}:
           </p>
           {rides.map((ride) => (
-            <RideCard key={ride.id} ride={ride} />
+            <RideCard key={ride.id} ride={ride} pickupPointId={filters.campusLocationId} />
           ))}
         </div>
       )}
@@ -524,8 +525,8 @@ function PublicProfileView({ profile }: { profile: PublicProfileResult }) {
         )}
 
         <p className="mt-2 text-xs italic text-ink-muted">
-          🔒 Contact details (phone numbers, emails) are protected under FR-RD-05.2. Direct contact
-          occurs via verified in-app pool chat once accepted into a ride.
+          Privacy: Contact details (phone numbers, emails) are protected under FR-RD-05.2. Direct
+          contact occurs via verified in-app pool chat once accepted into a ride.
         </p>
       </div>
     </div>
@@ -650,7 +651,7 @@ function PreferenceProposalCard({ proposal }: { proposal: PreferenceProposal }) 
 
       {status === 'confirmed' && (
         <span className="mt-3 inline-block rounded-control bg-panel px-3 py-1 text-xs font-semibold text-primary">
-          ✓ Changes Applied
+          Changes applied
         </span>
       )}
 

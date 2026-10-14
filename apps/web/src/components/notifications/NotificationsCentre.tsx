@@ -262,7 +262,7 @@ export function NotificationsCentre() {
 
   return (
     <DesignSystem className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-      <header className="flex flex-wrap items-start justify-between gap-4">
+      <header className="ds-page-heading flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-accent-text">
             Your account
@@ -309,7 +309,7 @@ export function NotificationsCentre() {
           ))}
         </LoadingRegion>
       ) : items.length === 0 && !error ? (
-        <section className="mt-8 border-y border-line py-10" aria-labelledby="empty-heading">
+        <section className="ds-card mt-8" aria-labelledby="empty-heading">
           <h2 id="empty-heading" className="text-xl font-bold">
             You&apos;re all caught up
           </h2>
@@ -318,7 +318,7 @@ export function NotificationsCentre() {
       ) : items.length > 0 ? (
         <ul
           aria-label="Your notifications"
-          className="mt-8 divide-y divide-line border-y border-line"
+          className="ds-list mt-8 divide-y divide-line border-y border-line"
         >
           {items.map((item) => {
             const destination = rideDestination(item.relatedRideId);

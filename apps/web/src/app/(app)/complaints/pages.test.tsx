@@ -20,6 +20,7 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn() }),
 }));
 vi.mock('@/lib/auth', () => ({ getCurrentUser: mocks.getCurrentUser }));
+vi.mock('@/lib/session', () => ({ requireRiderProfileSetup: vi.fn() }));
 vi.mock('@/lib/complaint-queries', () => ({
   getMyComplaints: mocks.getMyComplaints,
   getComplaintFormPage: mocks.getComplaintFormPage,

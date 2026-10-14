@@ -80,7 +80,7 @@ Configurable values referenced by the requirements.
 | P-03 | No-show grace period | 5 minutes after the rider's pickup time |
 | P-04 | Rating window | 72 hours after completion |
 | P-05 | Settlement reminders; blocking | 24 h and 72 h after completion; block new requests after 7 days due |
-| P-06 | Ride modification policy | Changes to an open ride notify accepted Riders; locked rides cannot be edited or cancelled through the normal flow |
+| P-06 | Ride modification policy | Changes to an open ride notify accepted Riders; locked rides cannot be edited. An owner may cancel a locked ride before its trip starts and before its departure window ends (FR-RO-04.4, FR-RO-04.5, FR-RD-06.11) |
 
 ## 6. User requirements
 

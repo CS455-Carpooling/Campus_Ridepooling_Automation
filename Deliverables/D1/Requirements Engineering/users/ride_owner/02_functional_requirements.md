@@ -20,7 +20,7 @@ This document refines the Ride Owner user requirements in `01_requirements_speci
 | FR-RO-04.2 | The system shall notify accepted Riders when an edit to their ride is saved. | UR-RO-04 |
 | FR-RO-04.3 | The system shall require the Ride Owner to confirm an edit that may affect already accepted Riders. | UR-RO-04 |
 | FR-RO-04.4 | The system shall allow a Ride Owner to cancel a ride that has not started and shall notify all accepted Riders of the cancellation. | UR-RO-04 |
-| FR-RO-04.5 | The system shall prevent normal edit and cancellation actions after a ride is locked, in accordance with P-06. | UR-RO-04 |
+| FR-RO-04.5 | The system shall prevent normal edit actions after a ride is locked. A locked ride may still be cancelled before its departure window ends and before the trip starts, in accordance with FR-RD-06.11. | UR-RO-04 |
 
 ## 3. Join-Request and Pool Management
 
@@ -42,7 +42,7 @@ This document refines the Ride Owner user requirements in `01_requirements_speci
 |---|---|---|
 | FR-RO-07.1 | The system shall display the expected total fare and the current calculated share for each confirmed occupant. | UR-RO-07 |
 | FR-RO-07.2 | The system shall recalculate and display fare shares whenever a Rider is accepted, leaves before lock time, or is marked as a no-show. | UR-RO-07 |
-| FR-RO-07.3 | The system shall ensure that the displayed occupant shares total the expected total fare, subject to the system rounding rule. | UR-RO-07 |
+| FR-RO-07.3 | The system shall divide the whole-ride expected total fare as evenly as possible among the owner and all active Riders; shares shall sum exactly to that fare, with any whole-rupee remainder assigned in the owner-first, request-acceptance order defined by Rider Table T-2. | UR-RO-07 |
 | FR-RO-09.1 | The system shall allow the Ride Owner to transition a locked ride from `Scheduled` to `Pickup in Progress`. | UR-RO-09 |
 | FR-RO-09.2 | The system shall notify confirmed Riders when pickup starts. | UR-RO-09 |
 | FR-RO-09.3 | During `Pickup in Progress`, the system shall display the arrival status of each confirmed Rider and allow the Ride Owner to mark a Rider as `Arrived`. | UR-RO-09 |

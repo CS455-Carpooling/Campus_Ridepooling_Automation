@@ -9,6 +9,7 @@ export const routes = {
   home: '/dashboard',
   profile: '/profile',
   chatbot: '/chatbot',
+  warnings: '/warnings',
   login: '/login',
   register: '/register',
   terms: '/terms',
@@ -27,6 +28,7 @@ export const routes = {
   adminComplaints: '/admin/complaints',
   adminComplaint: (complaintId: string) => `/admin/complaints/${encodeURIComponent(complaintId)}`,
   adminAiDecisions: '/admin/ai-decisions',
+  adminAiRecommendations: '/admin/ai-recommendations',
   adminRiders: '/admin/riders',
   adminRider: (userId: string) => `/admin/riders/${encodeURIComponent(userId)}`,
   adminRide: (rideId: string) => `/admin/rides/${encodeURIComponent(rideId)}`,
@@ -53,9 +55,9 @@ const navigation: Record<Role, NavItem[]> = {
     { href: routes.adminIncidents, label: 'SOS incidents' },
     { href: routes.adminComplaints, label: 'Complaints' },
     { href: routes.adminAiDecisions, label: 'AI decisions' },
+    { href: routes.adminAiRecommendations, label: 'AI recommendations' },
     { href: routes.adminRiders, label: 'Riders' },
     { href: routes.adminConfiguration, label: 'Configuration' },
-    { href: routes.profile, label: 'Profile' },
   ],
 };
 

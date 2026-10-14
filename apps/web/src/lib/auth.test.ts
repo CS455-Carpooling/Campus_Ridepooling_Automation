@@ -180,6 +180,7 @@ describe('rate limiting and request guards', () => {
     await auth.cleanup();
     const sql = h.query.mock.calls.map((c) => c[0] as string).join('\n');
     expect(sql).toMatch(/sessions/);
+    expect(sql).toMatch(/last_activity_at<=now\(\)-interval '7 days'/);
     expect(sql).toMatch(/auth_tokens/);
     expect(sql).toMatch(/rate_limits/);
   });
@@ -219,6 +220,30 @@ describe('sessions', () => {
     h.query.mockResolvedValueOnce({ rows: [{ id: '1', email: 'a@iitk.ac.in' }] });
     expect(await auth.getCurrentUser()).toEqual({ id: '1', email: 'a@iitk.ac.in' });
     expect(h.query.mock.calls[0][1]).toEqual([auth.sha256('tok')]);
+    expect(h.query.mock.calls[0][0]).toMatch(/last_activity_at>now\(\)-interval '7 days'/);
+    expect(h.query.mock.calls[0][0]).toMatch(/SET last_activity_at=now\(\)/);
+    expect(h.query.mock.calls[0][0]).toMatch(/l\.type='campus' AND l\.is_active=TRUE/);
+    expect(h.query.mock.calls[0][0]).toContain('w.acknowledged_at IS NULL');
+  });
+
+  it('can read an authenticated but incomplete profile for first-sign-in setup', async () => {
+    h.jar.get.mockReturnValue({ value: 'tok' });
+    h.query.mockResolvedValueOnce({ rows: [{ id: '1', email: 'a@iitk.ac.in' }] });
+    expect(await auth.getCurrentUser({ allowIncompleteProfile: true })).toEqual({
+      id: '1',
+      email: 'a@iitk.ac.in',
+    });
+    expect(h.query.mock.calls[0][0]).not.toMatch(/user_profiles/);
+  });
+
+  it('allows reading the authenticated account while routing a warning acknowledgement', async () => {
+    h.jar.get.mockReturnValue({ value: 'tok' });
+    h.query.mockResolvedValueOnce({ rows: [{ id: '1', email: 'a@iitk.ac.in' }] });
+    await auth.getCurrentUser({
+      allowIncompleteProfile: true,
+      allowUnacknowledgedWarnings: true,
+    });
+    expect(h.query.mock.calls[0][0]).not.toContain('w.acknowledged_at IS NULL');
   });
 
   it('getCurrentUser returns null for an unknown or expired session', async () => {

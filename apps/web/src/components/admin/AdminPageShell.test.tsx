@@ -26,10 +26,11 @@ describe('AdminPageShell (CS455-49)', () => {
       'SOS incidents',
       'Complaints',
       'AI decisions',
+      'AI recommendations',
       'Riders',
       'Configuration',
-      'Profile',
     ]);
+    expect(within(nav).queryByRole('link', { name: 'Profile' })).not.toBeInTheDocument();
     expect(within(nav).getByRole('link', { name: 'Complaints' })).toHaveAttribute(
       'aria-current',
       'page',

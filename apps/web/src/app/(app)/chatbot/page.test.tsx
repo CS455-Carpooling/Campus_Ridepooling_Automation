@@ -34,6 +34,6 @@ describe('ChatbotPage (/chatbot Route)', () => {
     const jsx = await ChatbotPage();
     render(jsx);
 
-    expect(screen.getByText('Campus AI Assistant')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Ride-Pooling Assistant' })).toBeInTheDocument();
   });
 });

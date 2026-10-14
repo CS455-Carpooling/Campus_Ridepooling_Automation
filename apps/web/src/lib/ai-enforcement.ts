@@ -98,6 +98,9 @@ export async function decideComplaintAi(
       return { kind: 'recommendation_mismatch' };
     }
   }
+  if (request.decision === 'overridden' && finalAction === analysis.recommended_action) {
+    return { kind: 'recommendation_mismatch' };
+  }
 
   let warningId: string | null = null;
   let suspensionId: string | null = null;

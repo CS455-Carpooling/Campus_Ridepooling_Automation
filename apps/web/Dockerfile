@@ -32,6 +32,7 @@ COPY --chown=node:node apps/web/next.config.ts apps/web/
 COPY --chown=node:node apps/web/server.mjs apps/web/
 COPY --chown=node:node apps/web/src/lib/ride-chat-realtime.mjs apps/web/src/lib/
 COPY --chown=node:node apps/web/src/lib/notification-realtime.mjs apps/web/src/lib/
+COPY --chown=node:node apps/web/src/lib/suspension-rule.mjs apps/web/src/lib/
 COPY --chown=node:node apps/web/db apps/web/db
 COPY --chown=node:node apps/web/scripts apps/web/scripts
 

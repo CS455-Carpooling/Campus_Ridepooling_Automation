@@ -5,12 +5,17 @@ import { getCurrentUser } from '@/lib/auth';
 import { getRideFormOptions } from '@/lib/ride-options';
 import { getRideProfileDefaults } from '@/lib/profile-data';
 import { routes } from '@/lib/routes';
+import { requireRiderProfileSetup } from '@/lib/session';
 
 export const metadata: Metadata = { title: 'Offer a ride' };
 
 export default async function NewRidePage() {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser({
+    allowIncompleteProfile: true,
+    allowUnacknowledgedWarnings: true,
+  });
   if (!user) redirect(routes.login);
+  await requireRiderProfileSetup(user.id, user.role);
 
   const [options, defaults] = await Promise.all([
     getRideFormOptions(),

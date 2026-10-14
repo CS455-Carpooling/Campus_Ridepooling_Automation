@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { getSession, verifySession } from './session';
+import { getSession, requireRiderProfileSetup, verifySession } from './session';
 
 type Account = {
   id: string;
@@ -9,13 +9,19 @@ type Account = {
   role: string;
 };
 
-const { getCurrentUser, redirect } = vi.hoisted(() => ({
-  getCurrentUser: vi.fn<() => Promise<Account | null>>(),
-  redirect: vi.fn((url: string) => {
-    throw new Error(`NEXT_REDIRECT ${url}`);
+const { getCurrentUser, redirect, hasCompletedProfileSetup, hasPendingRiderWarnings } = vi.hoisted(
+  () => ({
+    getCurrentUser: vi.fn<() => Promise<Account | null>>(),
+    hasCompletedProfileSetup: vi.fn<() => Promise<boolean>>(),
+    hasPendingRiderWarnings: vi.fn<() => Promise<boolean>>(),
+    redirect: vi.fn((url: string) => {
+      throw new Error(`NEXT_REDIRECT ${url}`);
+    }),
   }),
-}));
+);
 vi.mock('./auth', () => ({ getCurrentUser }));
+vi.mock('./profile-data', () => ({ hasCompletedProfileSetup }));
+vi.mock('./warnings', () => ({ hasPendingRiderWarnings }));
 vi.mock('next/navigation', () => ({ redirect }));
 
 const account: Account = {
@@ -28,12 +34,16 @@ const account: Account = {
 
 beforeEach(() => {
   getCurrentUser.mockResolvedValue(null);
+  hasCompletedProfileSetup.mockResolvedValue(true);
+  hasPendingRiderWarnings.mockResolvedValue(false);
 });
 
 afterEach(() => {
   vi.unstubAllEnvs();
   redirect.mockClear();
   getCurrentUser.mockReset();
+  hasCompletedProfileSetup.mockReset();
+  hasPendingRiderWarnings.mockReset();
 });
 
 describe('getSession with an account signed in through /login', () => {
@@ -156,5 +166,62 @@ describe('verifySession', () => {
     vi.stubEnv('NODE_ENV', 'production');
     await expect(verifySession()).rejects.toThrow('NEXT_REDIRECT /login');
     expect(redirect).toHaveBeenCalledWith('/login');
+  });
+
+  it('requires first-sign-in profile setup before opening rider pages', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    getCurrentUser.mockResolvedValue(account);
+    hasCompletedProfileSetup.mockResolvedValue(false);
+    await expect(verifySession()).rejects.toThrow('NEXT_REDIRECT /profile');
+    expect(redirect).toHaveBeenCalledWith('/profile');
+  });
+
+  it('routes riders to warning acknowledgement before opening protected pages', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    getCurrentUser.mockResolvedValue(account);
+    hasPendingRiderWarnings.mockResolvedValue(true);
+    await expect(verifySession()).rejects.toThrow('NEXT_REDIRECT /warnings');
+    expect(redirect).toHaveBeenCalledWith('/warnings');
+  });
+
+  it('allows the warning page to read pending warnings without looping', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    getCurrentUser.mockResolvedValue(account);
+    hasPendingRiderWarnings.mockResolvedValue(true);
+    await expect(
+      verifySession({ allowIncompleteProfile: true, allowWarningAcknowledgement: true }),
+    ).resolves.toMatchObject({ userId: account.id });
+    expect(redirect).not.toHaveBeenCalled();
+  });
+
+  it('allows the profile page to complete first-sign-in setup', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    getCurrentUser.mockResolvedValue(account);
+    hasCompletedProfileSetup.mockResolvedValue(false);
+    await expect(verifySession({ allowIncompleteProfile: true })).resolves.toMatchObject({
+      userId: account.id,
+    });
+    expect(redirect).not.toHaveBeenCalled();
+  });
+
+  it('does not require profile setup for operations admins', async () => {
+    await expect(requireRiderProfileSetup(account.id, 'admin')).resolves.toBeUndefined();
+    expect(hasCompletedProfileSetup).not.toHaveBeenCalled();
+  });
+
+  it('redirects riders without a completed profile to profile setup', async () => {
+    hasCompletedProfileSetup.mockResolvedValue(false);
+    await expect(requireRiderProfileSetup(account.id, 'student')).rejects.toThrow(
+      'NEXT_REDIRECT /profile',
+    );
+    expect(redirect).toHaveBeenCalledWith('/profile');
+  });
+
+  it('routes riders with pending warnings to acknowledgement before profile setup', async () => {
+    hasPendingRiderWarnings.mockResolvedValue(true);
+    await expect(requireRiderProfileSetup(account.id, 'student')).rejects.toThrow(
+      'NEXT_REDIRECT /warnings',
+    );
+    expect(hasCompletedProfileSetup).not.toHaveBeenCalled();
   });
 });

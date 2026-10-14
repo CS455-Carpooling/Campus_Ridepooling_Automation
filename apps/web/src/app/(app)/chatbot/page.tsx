@@ -6,7 +6,7 @@ import { routes } from '@/lib/routes';
 import { ChatbotInterface } from '@/components/chatbot/ChatbotInterface';
 
 export const metadata: Metadata = {
-  title: 'AI Assistant — Campus Ride-Pooling',
+  title: 'AI Assistant: Campus Ride-Pooling',
   description:
     'Natural-language ride search, public profile queries, and preference management assistant.',
 };

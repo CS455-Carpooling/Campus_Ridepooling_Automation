@@ -86,6 +86,7 @@ describe('/api/profile', () => {
   it('returns only the signed-in user profile', async () => {
     const response = await GET();
     expect(await response.json()).toEqual({ profile });
+    expect(m.getCurrentUser).toHaveBeenCalledWith({ allowIncompleteProfile: true });
     expect(m.getProfileData).toHaveBeenCalledWith('u1');
   });
 
@@ -116,6 +117,7 @@ describe('/api/profile', () => {
   it('saves profile fields and tag visibility atomically', async () => {
     const response = await post(validUpdate);
     expect(await response.json()).toEqual({ ok: true });
+    expect(m.getCurrentUser).toHaveBeenCalledWith({ allowIncompleteProfile: true });
     expect(m.connect).toHaveBeenCalledOnce();
     expect(m.clientQuery.mock.calls[0][0]).toBe('BEGIN');
     expect(m.clientQuery).toHaveBeenCalledWith(expect.stringContaining('UPDATE user_profiles'), [

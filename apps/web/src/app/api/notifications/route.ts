@@ -59,6 +59,8 @@ export async function GET(req: Request) {
               related_message_id, read_at, created_at
        FROM notifications
        WHERE user_id = $1
+         AND created_at >= now() - interval '30 days'
+         AND created_at <= now()
        ORDER BY created_at DESC, id DESC
        LIMIT $2 OFFSET $3`,
       [user.id, limit + 1, offset],

@@ -7,6 +7,7 @@ import {
   validateRideRequest,
   type CreateRideRequest,
 } from '@/lib/ride-rules';
+import { travelConflict, withdrawRequestsNearOwnRide } from '@/lib/join-requests';
 import { getActiveSuspension } from '@/lib/suspensions';
 import type { PoolClient } from 'pg';
 
@@ -106,6 +107,12 @@ async function createRide(
 
   if (conflict.rows.length > 0) return { kind: 'conflict' as const };
 
+  // Nor within two hours of any ride they travel on, offered or joined: one person travels in
+  // one pool at a time (FR-RO-03.2, P-08), by the same rule as joining a ride.
+  if (await travelConflict(client, userId, request.departureStart)) {
+    return { kind: 'seat_conflict' as const };
+  }
+
   const ride = await client.query<RideRow>(
     `INSERT INTO rides
       (owner_id,direction,hub_id,vehicle_type_id,capacity_snapshot,departure_start,departure_end,expected_total_fare,state)
@@ -129,6 +136,8 @@ async function createRide(
      VALUES ($1,$2,$3)`,
     [ride.rows[0].id, userId, request.campusLocationId],
   );
+  // Their requests still waiting on rides near this one could no longer be accepted.
+  await withdrawRequestsNearOwnRide(client, userId, new Date(request.departureStart), new Date());
 
   return { kind: 'created' as const, ride: ride.rows[0] };
 }
@@ -191,6 +200,17 @@ export async function POST(req: Request) {
       return json(
         {
           error: 'You already have a scheduled or active ride that overlaps this departure window.',
+        },
+        409,
+      );
+    }
+    if (result.kind === 'seat_conflict') {
+      await client.query('ROLLBACK');
+      return json(
+        {
+          error:
+            'You already have a ride, offered or joined, departing within two hours of this one.',
+          code: 'departure_conflict',
         },
         409,
       );

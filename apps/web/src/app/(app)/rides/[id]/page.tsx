@@ -6,6 +6,7 @@ import { getRideProfileDefaults } from '@/lib/profile-data';
 import { getRideFormOptions } from '@/lib/ride-options';
 import { getRideView } from '@/lib/ride-view';
 import { routes } from '@/lib/routes';
+import { requireRiderProfileSetup } from '@/lib/session';
 
 export const metadata: Metadata = { title: 'Ride details' };
 
@@ -15,8 +16,12 @@ export const metadata: Metadata = { title: 'Ride details' };
  * that the viewer may not see, which both show "Ride not found".
  */
 export default async function RidePage({ params }: PageProps<'/rides/[id]'>) {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser({
+    allowIncompleteProfile: true,
+    allowUnacknowledgedWarnings: true,
+  });
   if (!user) redirect(routes.login);
+  await requireRiderProfileSetup(user.id, user.role);
 
   const { id } = await params;
   const [ride, options, defaults] = await Promise.all([

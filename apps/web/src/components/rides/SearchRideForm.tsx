@@ -126,7 +126,7 @@ export function SearchRideForm({
   return (
     <DesignSystem className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       {/* Page header: mirrors CreateRideForm's header structure */}
-      <header>
+      <header className="ds-page-heading">
         <p className="text-sm font-semibold uppercase tracking-wide text-accent-text">
           Find a ride
         </p>

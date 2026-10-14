@@ -122,7 +122,7 @@ The non-functional requirements are treated as constraints on the relevant use c
 
 **Actor:** Operations Admin
 
-**Goal:** Configure campus fares and approximate external fare ranges by vehicle type so that the system has the approved fare information for supported travel segments.
+**Goal:** Configure approximate external fare ranges by vehicle type. Whole-ride fares are entered by ride owners and split equally among all occupants; no intra-campus fare matrix is configured.
 
 **Preconditions:**
 - The Admin is authenticated and authorized.
@@ -133,29 +133,28 @@ The non-functional requirements are treated as constraints on the relevant use c
 ### Main success scenario
 
 1. The Admin opens fare configuration.
-2. The Admin selects a supported vehicle type and supported campus hub pair.
-3. The Admin enters or changes the fixed campus fare.
-4. The Admin may enter or change an approximate external fare range for a supported external travel segment and vehicle type.
-5. The Admin saves the configuration.
-6. The system accepts the configuration.
-7. The configured fare information is available for the applicable travel segment and vehicle type.
+2. The Admin selects a supported external hub and vehicle type.
+3. The Admin enters or changes the approximate external fare range.
+4. The Admin saves the configuration.
+5. The system validates and accepts the range.
+6. The range is available to be shown as an estimate; it does not set a ride's fare.
 
 ### Alternative / exception flows
 
-- **A1 — Direction reversal:** The configured campus fare remains the same in either travel direction for the supported hub pair.
+- **A1 — Intra-campus ride:** No campus-pair fare is configured or looked up; the whole-ride equal-split rule applies.
 - **A2 — External fare:** The configured external value is treated as an estimate; the Admin does not set the final exact external fare.
-- **A3 — Existing ride:** Fare information established for an existing ride remains preserved even if the fare configuration is changed later.
-- **A4 — Stale configuration:** If another Admin has changed the same fare configuration since it was read, the requested change is rejected and the Admin is informed that the configuration is stale.
-- **A5 — Failed change:** If the requested fare configuration cannot be successfully completed, the system does not report it as successful.
+- **A3 — Existing ride:** A configuration change does not alter the fare already established for an existing ride.
+- **A4 — Stale configuration:** If another Admin has changed the external range since it was read, the requested change is rejected and the Admin is informed that the configuration is stale.
+- **A5 — Failed change:** If the requested external fare range cannot be successfully saved, the system does not report it as successful.
 
 **Postconditions:**
-- The accepted fare configuration is available for subsequent applicable use.
+- The accepted external fare range is available for subsequent use as an estimate.
 - Existing ride fare information remains preserved.
 - No final exact external fare is set by the Admin.
 
 **Related requirements:**`OA-FR-10`, `OA-FR-11`, `SYS-FR-12`, `SYS-FR-13`, `SYS-FR-14`, `SYS-FR-15`, `SYS-FR-45`, `SYS-FR-48`, `SYS-NFR-01`, `SYS-NFR-02`, `SYS-NFR-03`, `SYS-NFR-04`, `SYS-NFR-05`, `SYS-NFR-06`, `SYS-NFR-08`, `SYS-NFR-11`, `SYS-NFR-12`
 
-**Note:** `SYS-FR-14` and `SYS-FR-15` describe the fare-sharing behavior that follows from the configured fare rules; they do not introduce a separate Admin interaction.
+**Note:** `SYS-FR-14` and `SYS-FR-15` describe the shared whole-ride fare calculation; they do not introduce an Admin configuration interaction.
 
 ---
 

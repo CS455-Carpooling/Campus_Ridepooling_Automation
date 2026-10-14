@@ -145,6 +145,7 @@ export async function buildRecommendationCandidates(
 }
 
 export type RankingRunner = (request: RecommendationRequest) => Promise<unknown>;
+export type OutputValidationOutcome = 'passed' | 'failed' | 'not_run';
 
 /** Distance in minutes between two time windows; overlapping windows have distance zero. */
 export function departureWindowDistanceMinutes(
@@ -199,9 +200,11 @@ export async function rankRideRecommendations(
   viewerId: string,
   filters: SearchRideRequest,
   runRanking: RankingRunner,
+  onValidationOutcome?: (outcome: OutputValidationOutcome) => void,
 ): Promise<RideRecommendationResponse> {
   const initial = await buildRecommendationCandidates(viewerId, filters);
   if (!initial.rides.length) {
+    onValidationOutcome?.('not_run');
     return {
       source: 'fallback',
       suggestions: [],
@@ -210,8 +213,10 @@ export async function rankRideRecommendations(
   }
 
   let ranking: AiRankedRide[] = [];
+  let raw: unknown;
+  let rankingReturned = false;
   try {
-    const raw = await runRanking({
+    raw = await runRanking({
       filters: {
         direction: filters.direction,
         departureStart: filters.departureStart,
@@ -221,16 +226,26 @@ export async function rankRideRecommendations(
       },
       candidates: initial.candidates,
     });
-
-    ranking = validateAiRanking(raw, initial.candidates);
-
-    if (ranking.length === 0) {
-      console.error('[AI recommendations] Ranking validation returned no eligible results.');
-    }
+    rankingReturned = true;
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('[AI recommendations] Ranking request failed:', message);
-    ranking = [];
+  }
+  if (rankingReturned) {
+    try {
+      ranking = validateAiRanking(raw, initial.candidates);
+      if (ranking.length === 0) {
+        console.error('[AI recommendations] Ranking validation returned no eligible results.');
+      }
+      onValidationOutcome?.(ranking.length > 0 ? 'passed' : 'failed');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[AI recommendations] Ranking validation failed:', message);
+      ranking = [];
+      onValidationOutcome?.('failed');
+    }
+  } else {
+    onValidationOutcome?.('not_run');
   }
 
   const currentRides = await searchRides(viewerId, filters);

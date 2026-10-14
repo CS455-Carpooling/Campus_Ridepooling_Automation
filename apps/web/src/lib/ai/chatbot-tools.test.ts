@@ -24,7 +24,6 @@ import {
 import {
   createPreferenceProposal,
   confirmPreferenceProposal,
-  getPreferenceProposal,
   PROPOSAL_TTL_MS,
 } from './preference-proposals';
 
@@ -139,7 +138,7 @@ describe('get_ride_details Tool (FR-RD-03.6, AI-RD-05)', () => {
 
   it('returns sanitized public ride details without private data', async () => {
     const mockRideView = {
-      rideId: RIDE_ID,
+      id: RIDE_ID,
       direction: 'to_hub',
       departureStart: '2026-10-15T08:00:00+05:30',
       departureEnd: '2026-10-15T08:30:00+05:30',
@@ -148,8 +147,6 @@ describe('get_ride_details Tool (FR-RD-03.6, AI-RD-05)', () => {
       vehicleName: 'Auto',
       totalFare: 300,
       estimatedShare: 150,
-      ownerName: 'Arjun Verma',
-      ownerRating: { average: 4.8, count: 5 },
       occupants: [
         {
           occupantId: 'occ-1',
@@ -162,14 +159,16 @@ describe('get_ride_details Tool (FR-RD-03.6, AI-RD-05)', () => {
           isViewer: false,
         },
       ],
-      itinerary: [
-        {
-          kind: 'pickup',
-          placeName: 'Hall 3',
-          estimatedAt: '2026-10-15T08:00:00+05:30',
-          occupantName: 'Arjun Verma',
-        },
-      ],
+      trip: {
+        stops: [
+          {
+            place: 'Hall 3',
+            estimatedAt: '2026-10-15T08:00:00+05:30',
+            occupantIds: ['occ-1'],
+            people: ['Arjun Verma'],
+          },
+        ],
+      },
     };
     getRideViewMock.mockResolvedValueOnce(mockRideView);
 
@@ -201,7 +200,7 @@ describe('get_ride_details Tool (FR-RD-03.6, AI-RD-05)', () => {
           rating: { average: 4.8, count: 5 },
         },
       ],
-      itinerary: mockRideView.itinerary,
+      itinerary: mockRideView.trip.stops,
     });
 
     // Ensure private fields never exist on output

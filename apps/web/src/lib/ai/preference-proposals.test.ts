@@ -16,7 +16,6 @@ import {
 import { RIDE_RULES } from '../ride-rules';
 
 const USER_ID = 'aaaaaaaa-aaaa-4000-8000-aaaaaaaaaaaa';
-const OTHER_USER_ID = 'bbbbbbbb-bbbb-4000-8000-bbbbbbbbbbbb';
 const PROPOSAL_ID = 'cccccccc-cccc-4000-8000-cccccccccccc';
 const NOW = new Date('2026-10-14T12:00:00.000Z');
 

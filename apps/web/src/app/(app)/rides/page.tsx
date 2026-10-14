@@ -5,6 +5,7 @@ import { getCurrentUser } from '@/lib/auth';
 import { getRideFormOptions } from '@/lib/ride-options';
 import { getSearchDefaults } from '@/lib/ride-search';
 import { routes } from '@/lib/routes';
+import { requireRiderProfileSetup } from '@/lib/session';
 
 export const metadata: Metadata = { title: 'Find a ride' };
 
@@ -15,8 +16,12 @@ export const metadata: Metadata = { title: 'Find a ride' };
  * saved preferences, which pre-fill the optional filters (FR-RD-02.5).
  */
 export default async function RidesPage() {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser({
+    allowIncompleteProfile: true,
+    allowUnacknowledgedWarnings: true,
+  });
   if (!user) redirect(routes.login);
+  await requireRiderProfileSetup(user.id, user.role);
 
   const [options, defaults] = await Promise.all([getRideFormOptions(), getSearchDefaults(user.id)]);
   return <SearchRideForm options={options} defaults={defaults} />;

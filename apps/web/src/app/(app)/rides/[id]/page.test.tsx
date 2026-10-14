@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('@/lib/auth', () => ({ getCurrentUser: mocks.getCurrentUser }));
+vi.mock('@/lib/session', () => ({ requireRiderProfileSetup: vi.fn() }));
 vi.mock('@/lib/ride-view', () => ({ getRideView: mocks.getRideView }));
 vi.mock('@/lib/ride-options', () => ({ getRideFormOptions: mocks.getRideFormOptions }));
 vi.mock('@/lib/profile-data', () => ({ getRideProfileDefaults: mocks.getRideProfileDefaults }));

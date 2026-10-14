@@ -34,7 +34,6 @@ export const adminConfigMessages = {
   version: 'Reload the page: this item is out of date.',
   fare: `Enter a fare in whole rupees, from ${ADMIN_CONFIG_RULES.fareMin} to ${ADMIN_CONFIG_RULES.fareMax}.`,
   range: 'The lowest fare must not be above the highest.',
-  samePlace: 'Choose two different campus places.',
   place: 'Choose a place from the list.',
   vehicleType: 'Choose a vehicle type from the list.',
 } as const;
@@ -186,41 +185,6 @@ const isId = (value: unknown): value is string =>
 /** `version` is null for a fare that has not been set yet. */
 const versionOrNull = (value: unknown): number | null | false =>
   value === null || value === undefined ? null : isVersion(value) ? value : false;
-
-export type CampusFareInput = {
-  /** The two places in ID order, as the database stores the pair. */
-  fromId: string;
-  toId: string;
-  vehicleTypeId: string;
-  fare: number;
-  version: number | null;
-};
-
-export function parseCampusFare(body: unknown): ConfigResult<CampusFareInput> {
-  const input = isRecord(body) ? body : {};
-  const errors: ConfigErrors = {};
-  if (!isId(input.fromId)) errors.fromId = adminConfigMessages.place;
-  if (!isId(input.toId)) errors.toId = adminConfigMessages.place;
-  if (isId(input.fromId) && input.fromId === input.toId)
-    errors.toId = adminConfigMessages.samePlace;
-  if (!isId(input.vehicleTypeId)) errors.vehicleTypeId = adminConfigMessages.vehicleType;
-  const { fareMin, fareMax } = ADMIN_CONFIG_RULES;
-  if (!isWholeNumberIn(input.fare, fareMin, fareMax)) errors.fare = adminConfigMessages.fare;
-  const version = versionOrNull(input.version);
-  if (version === false) errors.version = adminConfigMessages.version;
-  if (Object.keys(errors).length > 0) return { ok: false, errors };
-  const [fromId, toId] = [input.fromId as string, input.toId as string].sort();
-  return {
-    ok: true,
-    value: {
-      fromId,
-      toId,
-      vehicleTypeId: input.vehicleTypeId as string,
-      fare: input.fare as number,
-      version: version as number | null,
-    },
-  };
-}
 
 export type ExternalFareRangeInput = {
   hubId: string;

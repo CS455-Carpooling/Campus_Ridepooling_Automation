@@ -30,9 +30,11 @@ describe('ChatbotInterface (FR-RD-05, UI & Session Isolation)', () => {
   it('renders initial welcome state and character counter', () => {
     render(<ChatbotInterface userId={USER_ID} options={mockOptions} />);
 
-    expect(screen.getByText('Campus AI Assistant')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Ride-Pooling Assistant' })).toBeInTheDocument();
     expect(screen.getByText('0 / 500')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/Ask about rides, drivers/i)).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText(/Ask about rides, check rider profiles/i),
+    ).toBeInTheDocument();
   });
 
   it('enforces tab-local sessionStorage isolation and Clear action (FR-RD-05.6)', async () => {
@@ -68,7 +70,10 @@ describe('ChatbotInterface (FR-RD-05, UI & Session Isolation)', () => {
     await user.click(clearButton);
 
     expect(screen.queryByText('Find rides to station tomorrow')).not.toBeInTheDocument();
-    expect(sessionStorage.getItem(sessionKey)).toBeNull();
+    const storedMessages = JSON.parse(sessionStorage.getItem(sessionKey) ?? '[]');
+    expect(storedMessages).toHaveLength(1);
+    expect(storedMessages[0].sender).toBe('assistant');
+    expect(storedMessages[0].text).toMatch(/Hi! I am your Campus Ride-Pooling Assistant/);
   });
 
   it('discards conversation content on page reload (FR-RD-05.6)', () => {
@@ -94,12 +99,12 @@ describe('ChatbotInterface (FR-RD-05, UI & Session Isolation)', () => {
 
       // Content from before the reload must be discarded
       expect(screen.queryByText('Rides to airport on Friday')).not.toBeInTheDocument();
-      // Storage must be purged
-      expect(sessionStorage.getItem(sessionKey)).toBeNull();
+      // Previous messages must be purged; the initial greeting may be saved.
+      const storedMessages = JSON.parse(sessionStorage.getItem(sessionKey) ?? '[]');
+      expect(storedMessages).toHaveLength(1);
+      expect(storedMessages[0].sender).toBe('assistant');
       // Initial greeting must be displayed
-      expect(
-        screen.getByText(/Hi! I am your Campus Ride-Pooling Assistant/i),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Hi! I am your Campus Ride-Pooling Assistant/i)).toBeInTheDocument();
     } finally {
       window.performance.getEntriesByType = originalGetEntries;
     }
@@ -129,21 +134,20 @@ describe('ChatbotInterface (FR-RD-05, UI & Session Isolation)', () => {
       status: 503,
       json: async () => ({
         error: 'AI service temporarily unavailable',
-        serviceUnavailable: true,
       }),
     });
 
     render(<ChatbotInterface userId={USER_ID} options={mockOptions} />);
 
-    const input = screen.getByPlaceholderText(/Ask about rides, drivers/i);
+    const input = screen.getByPlaceholderText(/Ask about rides, check rider profiles/i);
     await user.type(input, 'Any ride to Kanpur Central?');
     await user.click(screen.getByRole('button', { name: /send/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/AI service is temporarily unavailable/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/AI service temporarily unavailable/i)).toHaveLength(2);
     });
 
-    const manualLink = screen.getByRole('link', { name: /go to manual ride search/i });
+    const manualLink = screen.getByRole('link', { name: /manual ride search/i });
     expect(manualLink).toHaveAttribute('href', '/rides');
   });
 
@@ -153,25 +157,21 @@ describe('ChatbotInterface (FR-RD-05, UI & Session Isolation)', () => {
       ok: true,
       status: 200,
       json: async () => ({
-        botResponse: {
-          text: 'I cannot submit a join request for you.',
-          actionLink: {
-            title: 'Browse and Join Rides',
-            href: '/rides',
-            description: 'You can review ride details and submit your join request here.',
-          },
-        },
+        kind: 'prohibited_action',
+        actionType: 'join',
+        message: 'I cannot submit a join request for you.',
+        targetLink: { href: '/rides', label: 'Browse and Join Rides' },
       }),
     });
 
     render(<ChatbotInterface userId={USER_ID} options={mockOptions} />);
 
-    const input = screen.getByPlaceholderText(/Ask about rides, drivers/i);
+    const input = screen.getByPlaceholderText(/Ask about rides, check rider profiles/i);
     await user.type(input, 'Please join ride 123 for me');
     await user.click(screen.getByRole('button', { name: /send/i }));
 
     await waitFor(() => {
-      expect(screen.getByText('I cannot submit a join request for you.')).toBeInTheDocument();
+      expect(screen.getAllByText('I cannot submit a join request for you.')).toHaveLength(2);
     });
 
     const link = screen.getByRole('link', { name: /browse and join rides/i });
@@ -184,34 +184,33 @@ describe('ChatbotInterface (FR-RD-05, UI & Session Isolation)', () => {
       ok: true,
       status: 200,
       json: async () => ({
-        botResponse: {
-          text: 'Here are matching rides leaving campus.',
-          interpretedFilters: {
-            direction: 'to_hub',
-            hubId: 'kanpur-central',
-            hubName: 'Kanpur Central',
-            campusLocationId: 'hall-6',
-            campusLocationName: 'Hall 6',
-            departureStart: '2026-10-15T08:00',
-            departureEnd: '2026-10-15T09:00',
-          },
-          matchingRides: [],
+        kind: 'search_results',
+        message: 'Here are matching rides leaving campus.',
+        interpretedFilters: {
+          direction: 'to_hub',
+          hubId: 'kanpur-central',
+          hubName: 'Kanpur Central',
+          campusLocationId: 'hall-6',
+          campusLocationName: 'Hall 6',
+          departureStart: '2026-10-15T08:00',
+          departureEnd: '2026-10-15T09:00',
         },
+        rides: [],
       }),
     });
 
     render(<ChatbotInterface userId={USER_ID} options={mockOptions} />);
 
-    const input = screen.getByPlaceholderText(/Ask about rides, drivers/i);
+    const input = screen.getByPlaceholderText(/Ask about rides, check rider profiles/i);
     await user.type(input, 'Need a ride to Kanpur Central tomorrow 8am');
     await user.click(screen.getByRole('button', { name: /send/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Interpreted Search Filters/i)).toBeInTheDocument();
-      expect(screen.getByText(/No matching open rides found/i)).toBeInTheDocument();
+      expect(screen.getByText(/No matching rides found/i)).toBeInTheDocument();
     });
 
-    // Check that editable controls exist and "Update Search" button is present
+    await user.click(screen.getByRole('button', { name: /edit filters/i }));
     expect(screen.getByRole('button', { name: /update search/i })).toBeInTheDocument();
   });
 });

@@ -4,9 +4,9 @@ import { estimateShare } from '../fare';
 import { isUuid } from '../ids';
 import { publicRatingJoin } from '../rating-summary';
 import { RATING_RULES } from '../rating-rules';
-import { searchRides, type SearchRideRequest, type SearchRideResult } from '../ride-search';
+import { searchRides, type SearchRideResult } from '../ride-search';
 import { parseSearchRequest } from '../ride-search-rules';
-import { getRideView, type RideView } from '../ride-view';
+import { getRideView } from '../ride-view';
 import {
   createPreferenceProposal,
   type PreferenceProposal,
@@ -137,15 +137,15 @@ export async function executeGetRideDetails(
 
   if (!isUuid(rideId)) return null;
 
-  const view = (await getRideView(rideId, viewerId, now)) as any;
+  const view = await getRideView(rideId, viewerId, now);
   if (!view) return null;
 
-  const ownerOccupant = view.occupants?.find((o: any) => o.isOwner);
-  const ownerName = view.ownerName ?? ownerOccupant?.name ?? 'Ride Owner';
-  const ownerRating = view.ownerRating ?? ownerOccupant?.rating ?? null;
+  const ownerOccupant = view.occupants.find((occupant) => occupant.isOwner);
+  const ownerName = ownerOccupant?.name ?? 'Ride Owner';
+  const ownerRating = ownerOccupant?.rating ?? null;
 
   return {
-    rideId: view.rideId ?? view.id,
+    rideId: view.id,
     direction: view.direction,
     departureStart: view.departureStart,
     departureEnd: view.departureEnd,
@@ -158,14 +158,14 @@ export async function executeGetRideDetails(
       name: ownerName,
       rating: ownerRating,
     },
-    occupants: (view.occupants || []).map((occ: any) => ({
+    occupants: view.occupants.map((occ) => ({
       name: occ.name,
       campusPlace: occ.campusPlace,
       visibleTags: occ.visibleTags,
       completedTrips: occ.completedTrips,
       rating: occ.rating,
     })),
-    itinerary: view.itinerary ?? view.trip?.stops ?? null,
+    itinerary: view.trip?.stops ?? null,
   };
 }
 

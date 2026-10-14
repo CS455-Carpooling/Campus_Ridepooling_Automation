@@ -61,11 +61,12 @@ export const rideMessages = {
 const MINUTE = 60_000;
 // Year, month, day, hour, minute, optional second, and the offset's hours and minutes (none for Z).
 const ISO_WITH_OFFSET =
-  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,3})?)?(?:Z|[+-](\d{2}):(\d{2}))$/;
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,3})?)?(?:Z|([+-])(\d{2}):(\d{2}))$/;
 const LOCAL_DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 // Indian Standard Time has no daylight saving: always UTC+05:30.
 const IST_OFFSET_MINUTES = 330;
 // Real time zones run from UTC-12:00 to UTC+14:00.
+const MIN_OFFSET_MINUTES = 12 * 60;
 const MAX_OFFSET_MINUTES = 14 * 60;
 const DAYS_IN_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
@@ -84,12 +85,18 @@ export function parseTime(value: unknown): Date | null {
   if (typeof value !== 'string') return null;
   const match = ISO_WITH_OFFSET.exec(value);
   if (!match) return null;
-  const [year, month, day, hour, minute, second, offsetHours, offsetMinutes] = match
-    .slice(1)
-    .map((part) => Number(part ?? 0));
+  const [year, month, day, hour, minute, second] = [...match.slice(1, 6), match[6] ?? '0'].map(
+    Number,
+  );
+  const offsetSign = match[7];
+  const offsetHours = Number(match[8] ?? 0);
+  const offsetMinutes = Number(match[9] ?? 0);
   const realDate = month >= 1 && month <= 12 && day >= 1 && day <= daysInMonth(year, month);
   const realClock = hour <= 23 && minute <= 59 && second <= 59;
-  const realOffset = offsetMinutes <= 59 && offsetHours * 60 + offsetMinutes <= MAX_OFFSET_MINUTES;
+  const offsetTotalMinutes = offsetHours * 60 + offsetMinutes;
+  const realOffset =
+    offsetMinutes <= 59 &&
+    offsetTotalMinutes <= (offsetSign === '-' ? MIN_OFFSET_MINUTES : MAX_OFFSET_MINUTES);
   if (!realDate || !realClock || !realOffset) return null;
   const time = new Date(value);
   return Number.isNaN(time.getTime()) ? null : time;

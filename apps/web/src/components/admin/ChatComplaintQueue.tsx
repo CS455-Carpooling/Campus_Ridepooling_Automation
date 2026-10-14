@@ -43,7 +43,7 @@ export function ChatComplaintQueue({ initialReports }: { initialReports: ChatCom
 
   return (
     <DesignSystem className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
-      <header className="flex flex-wrap items-center justify-between gap-4">
+      <header className="ds-page-heading flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-3xl font-extrabold tracking-tight">Ride chat complaints</h1>
         <div className="flex gap-3">
           <ButtonLink href={routes.home} variant="secondary">

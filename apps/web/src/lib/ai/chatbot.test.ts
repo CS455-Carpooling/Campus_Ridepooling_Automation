@@ -12,12 +12,7 @@ const queryMock = vi.hoisted(() => vi.fn());
 const connectMock = vi.hoisted(() => vi.fn());
 vi.mock('../db', () => ({ pool: { query: queryMock, connect: connectMock } }));
 
-import {
-  processChatbotMessage,
-  extractDepartureWindow,
-  MAX_MESSAGE_LENGTH,
-  type ChatbotResponse,
-} from './chatbot';
+import { processChatbotMessage, extractDepartureWindow } from './chatbot';
 import { routes } from '../routes';
 
 const VIEWER_ID = '11111111-1111-4000-8000-111111111111';

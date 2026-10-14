@@ -120,7 +120,7 @@ export function CreateRideForm({
 
   return (
     <DesignSystem className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-      <header>
+      <header className="ds-page-heading">
         <p className="text-sm font-semibold uppercase tracking-wide text-accent-text">
           Offer a ride
         </p>

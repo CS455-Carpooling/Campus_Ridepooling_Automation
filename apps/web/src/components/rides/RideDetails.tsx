@@ -22,6 +22,7 @@ import { RideStateLabel } from './RideStateLabel';
 import { SosPanel } from './SosPanel';
 import { TripRefresh } from './trip-hooks';
 import { TripPanel, TripStatus } from './TripPanel';
+import { SettlementPanel } from './SettlementPanel';
 
 /**
  * One ride (CS455-29): where and when it goes, its state, seats, fare split
@@ -51,7 +52,7 @@ export function RideDetails({
         Your rides
       </ButtonLink>
 
-      <header className="mt-6">
+      <header className="ds-page-heading mt-6">
         <p className="text-sm font-semibold uppercase tracking-wide text-accent-text">
           {directionLabels[ride.direction]}
         </p>
@@ -79,6 +80,7 @@ export function RideDetails({
       {liveTrip &&
         (ride.viewerRole === 'owner' ? <TripPanel ride={ride} /> : <TripStatus ride={ride} />)}
       <RateLink ride={ride} />
+      <SettlementPanel ride={ride} />
       {ride.canComplain && (
         <p className="mt-4 text-sm text-ink-muted">
           Something went wrong on this trip?{' '}

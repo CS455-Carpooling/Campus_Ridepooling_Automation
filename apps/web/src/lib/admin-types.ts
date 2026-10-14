@@ -35,15 +35,6 @@ export type LocationRecord = {
   version: number;
 };
 
-export type CampusFareRecord = {
-  fromId: string;
-  toId: string;
-  vehicleTypeId: string;
-  fare: number;
-  version: number;
-  updatedAt: string;
-};
-
 export type ExternalFareRangeRecord = {
   hubId: string;
   vehicleTypeId: string;

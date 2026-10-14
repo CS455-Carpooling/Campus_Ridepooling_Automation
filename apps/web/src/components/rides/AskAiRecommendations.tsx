@@ -21,6 +21,7 @@ export function AskAiRecommendations({ filters }: { filters: SearchRideRequest }
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [feedbackStatus, setFeedbackStatus] = useState<Record<string, string>>({});
+  const [reportStatus, setReportStatus] = useState<Record<string, string>>({});
 
   async function submitFeedback(rideId: string, value: 'helpful' | 'not_helpful') {
     if (!result?.requestId) return;
@@ -43,6 +44,31 @@ export function AskAiRecommendations({ filters }: { filters: SearchRideRequest }
       setFeedbackStatus((old) => ({
         ...old,
         [rideId]: e instanceof Error ? e.message : 'Could not save feedback.',
+      }));
+    }
+  }
+
+  async function reportRecommendation(rideId: string, reason: 'wrong' | 'inappropriate') {
+    if (!result?.requestId) return;
+    setReportStatus((old) => ({ ...old, [rideId]: 'Submitting…' }));
+    try {
+      const response = await fetch('/api/rides/recommendations/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requestId: result.requestId, rideId, reason }),
+      });
+      const body: unknown = await response.json().catch(() => null);
+      if (!response.ok)
+        throw new Error(
+          body && typeof body === 'object' && 'error' in body && typeof body.error === 'string'
+            ? body.error
+            : 'Could not submit the report.',
+        );
+      setReportStatus((old) => ({ ...old, [rideId]: 'Report sent to the operations team.' }));
+    } catch (e) {
+      setReportStatus((old) => ({
+        ...old,
+        [rideId]: e instanceof Error ? e.message : 'Could not submit the report.',
       }));
     }
   }
@@ -153,7 +179,7 @@ export function AskAiRecommendations({ filters }: { filters: SearchRideRequest }
                     )}
                   </div>
                   {/* RideCard renders only trusted SearchRideResult fields from the server. */}
-                  <RideCard ride={suggestion.ride} />
+                  <RideCard ride={suggestion.ride} pickupPointId={filters.campusLocationId} />
                   <div className="mt-4 grid gap-4 sm:grid-cols-2">
                     <div>
                       <h4 className="text-sm font-semibold">Why it may suit you</h4>
@@ -205,6 +231,36 @@ export function AskAiRecommendations({ filters }: { filters: SearchRideRequest }
                           Not helpful
                         </button>
                       </div>
+                      <p className="mt-4 text-sm font-semibold">
+                        Report a problem with this recommendation
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          className="rounded-control border border-line px-3 py-2 text-sm"
+                          onClick={() => reportRecommendation(suggestion.ride.id, 'wrong')}
+                          disabled={Boolean(
+                            reportStatus[suggestion.ride.id]?.startsWith('Report sent'),
+                          )}
+                        >
+                          Wrong recommendation
+                        </button>
+                        <button
+                          type="button"
+                          className="rounded-control border border-line px-3 py-2 text-sm"
+                          onClick={() => reportRecommendation(suggestion.ride.id, 'inappropriate')}
+                          disabled={Boolean(
+                            reportStatus[suggestion.ride.id]?.startsWith('Report sent'),
+                          )}
+                        >
+                          Inappropriate recommendation
+                        </button>
+                      </div>
+                      {reportStatus[suggestion.ride.id] && (
+                        <p className="mt-2 text-xs text-ink-muted" role="status">
+                          {reportStatus[suggestion.ride.id]}
+                        </p>
+                      )}
                       {feedbackStatus[suggestion.ride.id] && (
                         <p className="mt-2 text-xs text-ink-muted" role="status">
                           {feedbackStatus[suggestion.ride.id]}

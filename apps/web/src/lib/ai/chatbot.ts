@@ -2,22 +2,15 @@ import 'server-only';
 import { routes } from '../routes';
 import { isUuid } from '../ids';
 import {
-  executeChatbotTool,
   executeGetPublicProfile,
   executeGetRiderPreferences,
   executeSearchRides,
   executeProposePreferenceUpdate,
   type PublicProfileResult,
-  type PublicRideDetailsResult,
 } from './chatbot-tools';
 import type { PreferenceProposal, ProposedPreferenceChanges } from './preference-proposals';
 import type { SearchRideResult } from '../ride-search';
-import {
-  getRideFormOptions,
-  type RideFormOptions,
-  type Place,
-  type VehicleType,
-} from '../ride-options';
+import { type RideFormOptions, type Place, type VehicleType } from '../ride-options';
 
 export const MAX_MESSAGE_LENGTH = 500; // AI-RD-09, US-RD-12-AC3
 
@@ -86,7 +79,11 @@ export type ChatbotOptions = {
 
 export const DEFAULT_HUBS: Place[] = [
   { id: 'kanpur-central', name: 'Kanpur Central', detail: 'Station' },
-  { id: 'lucknow-airport', name: 'Lucknow airport', detail: 'Chaudhary Charan Singh International Airport' },
+  {
+    id: 'lucknow-airport',
+    name: 'Lucknow airport',
+    detail: 'Chaudhary Charan Singh International Airport',
+  },
   { id: 'kanpur-airport', name: 'Kanpur airport', detail: 'Chakeri' },
   { id: 'bus-stand', name: 'Bus stand', detail: 'Jhakarkati' },
   { id: 'metro-station', name: 'Metro station', detail: 'IIT Kanpur Metro Station' },
@@ -127,7 +124,10 @@ export function matchHub(text: string, hubs: Place[]): Place | null {
     if (!h) continue;
     const hubNameLower = (h.name ?? '').toLowerCase();
     const hubIdNorm = (h.id ?? '').toLowerCase().replace(/[-_]/g, ' ');
-    if ((hubNameLower && lower.includes(hubNameLower)) || (hubIdNorm && lower.includes(hubIdNorm))) {
+    if (
+      (hubNameLower && lower.includes(hubNameLower)) ||
+      (hubIdNorm && lower.includes(hubIdNorm))
+    ) {
       return h;
     }
   }
@@ -205,7 +205,10 @@ export function matchHub(text: string, hubs: Place[]): Place | null {
   // 3. Generic "airport" defaults to the first airport hub available in configured hubs
   if (lower.includes('airport')) {
     const airportHub = hubs.find(
-      (h) => h && ((h.id ?? '').toLowerCase().includes('airport') || (h.name ?? '').toLowerCase().includes('airport')),
+      (h) =>
+        h &&
+        ((h.id ?? '').toLowerCase().includes('airport') ||
+          (h.name ?? '').toLowerCase().includes('airport')),
     );
     if (airportHub) return airportHub;
   }
@@ -257,7 +260,10 @@ export function matchCampusLocation(text: string, campusPlaces: Place[]): Place 
   // 3. Gate
   if (lower.includes('main gate') || lower.includes('gate')) {
     const gateLoc = campusPlaces.find(
-      (loc) => loc && ((loc.id ?? '').toLowerCase().includes('gate') || (loc.name ?? '').toLowerCase().includes('gate')),
+      (loc) =>
+        loc &&
+        ((loc.id ?? '').toLowerCase().includes('gate') ||
+          (loc.name ?? '').toLowerCase().includes('gate')),
     );
     if (gateLoc) return gateLoc;
   }
@@ -300,11 +306,7 @@ export function matchVehicleType(text: string, vehicleTypes: VehicleType[]): Veh
 
     // Auto / Rickshaw
     if (id.includes('auto') || name.includes('auto')) {
-      if (
-        lower.includes('auto') ||
-        lower.includes('rickshaw') ||
-        lower.includes('autorickshaw')
-      ) {
+      if (lower.includes('auto') || lower.includes('rickshaw') || lower.includes('autorickshaw')) {
         return v;
       }
     }
@@ -801,12 +803,22 @@ export async function processChatbotMessage(
   }
 
   // Use configured options passed from server or default active options
-  const configuredHubs = options?.rideOptions?.hubs?.length ? options.rideOptions.hubs : DEFAULT_HUBS;
-  const configuredCampus = options?.rideOptions?.campusPlaces?.length ? options.rideOptions.campusPlaces : DEFAULT_CAMPUS_LOCATIONS;
-  const configuredVehicles = options?.rideOptions?.vehicleTypes?.length ? options.rideOptions.vehicleTypes : DEFAULT_VEHICLE_TYPES;
+  const configuredHubs = options?.rideOptions?.hubs?.length
+    ? options.rideOptions.hubs
+    : DEFAULT_HUBS;
+  const configuredCampus = options?.rideOptions?.campusPlaces?.length
+    ? options.rideOptions.campusPlaces
+    : DEFAULT_CAMPUS_LOCATIONS;
+  const configuredVehicles = options?.rideOptions?.vehicleTypes?.length
+    ? options.rideOptions.vehicleTypes
+    : DEFAULT_VEHICLE_TYPES;
 
   // 5. Check for Preference and Tag Changes (FR-RD-05.3, US-RD-14-AC1, AI-RD-04)
-  const proposedChanges = checkPreferenceChangeRequest(trimmed, configuredVehicles, configuredCampus);
+  const proposedChanges = checkPreferenceChangeRequest(
+    trimmed,
+    configuredVehicles,
+    configuredCampus,
+  );
   if (proposedChanges) {
     try {
       const proposal = await executeProposePreferenceUpdate(viewerId, proposedChanges, now);

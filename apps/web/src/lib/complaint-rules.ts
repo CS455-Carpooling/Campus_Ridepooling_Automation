@@ -41,7 +41,7 @@ export const complaintStatusLabels: Record<ComplaintStatus, string> = {
 };
 
 /** Where a complaint came from: the complaint form, or a reported chat message (FR-RD-09.6). */
-export type ComplaintSource = 'form' | 'chat_report';
+export type ComplaintSource = 'form' | 'chat_report' | 'payment_dispute';
 
 /** P-17. */
 export const COMPLAINT_RULES = {
@@ -70,6 +70,19 @@ export function complaintWindowStart(
 ): Date | null {
   if (completedAt && noShowAt) return completedAt > noShowAt ? completedAt : noShowAt;
   return completedAt ?? noShowAt;
+}
+
+/**
+ * Whether someone left a ride owing nothing: before the lock, or after it on changed terms
+ * (FR-RD-07.2, 07.4). They were not part of the trip, so a trip complaint is not theirs to file
+ * or to answer (FR-RD-13.1). Someone who left after the lock still owes their locked share
+ * (FR-RD-07.3), so complaints by and about them stay possible, a payment complaint included.
+ */
+export function leftBeforeTrip(seat: {
+  leftAt: Date | string | null;
+  lockedShare: number | null;
+}): boolean {
+  return (seat.leftAt ?? null) !== null && (seat.lockedShare ?? null) === null;
 }
 
 /**

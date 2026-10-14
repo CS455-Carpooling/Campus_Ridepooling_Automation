@@ -59,6 +59,15 @@ export type RideOccupant = {
   noShowAvailableAt: string | null;
 };
 
+export type RideSettlement = {
+  occupantId: string;
+  name: string;
+  share: number;
+  status: 'due' | 'paid' | 'confirmed' | 'disputed';
+  method: 'upi' | 'cash' | null;
+  reference: string | null;
+};
+
 /** One stop on the trip and the people who get in (or out) there. */
 export type TripStop = {
   place: string;
@@ -140,6 +149,10 @@ export type RideView = {
   viewerRole: ViewerRole;
   /** The viewer's own share, when they are on the ride. */
   viewerShare: number | null;
+  /** The rider's own settlement, even if they left after lock and are no longer listed as present. */
+  viewerSettlement?: RideSettlement | null;
+  /** Payment details for owner review; empty for all other viewers. */
+  ownerSettlements?: RideSettlement[];
   /** What the viewer would pay by joining (FR-RD-08.1), when they may still ask to. */
   estimatedShare: number | null;
   /** When this was read, so the page can say how fresh the seats are (FR-RD-03.3). */
@@ -192,6 +205,8 @@ type OccupantRow = {
   agreed_pickup_at: Date | null;
 };
 
+type RideSettlementRow = Omit<RideSettlement, 'occupantId'> & { occupant_id: string };
+
 // Inactive hubs and vehicle types still show: they were valid when the ride was offered.
 const RIDE_SQL = `
   SELECT r.id, r.direction, r.state, r.departure_start, r.departure_end, r.completed_at, r.locked_at,
@@ -199,7 +214,12 @@ const RIDE_SQL = `
          hub.id AS hub_id, hub.name AS hub_name, hub.detail AS hub_detail, v.name AS vehicle_name,
          (r.owner_id = $2) AS viewer_is_owner,
          EXISTS (SELECT 1 FROM riders m
-                 WHERE m.ride_id = r.id AND m.user_id = $2 AND m.left_at IS NULL) AS viewer_is_rider,
+                 WHERE m.ride_id = r.id AND m.user_id = $2
+                   AND (m.left_at IS NULL OR
+                     (r.state = 'completed' AND EXISTS (
+                       SELECT 1 FROM ride_final_shares final
+                       WHERE final.ride_id = r.id AND final.user_id = $2
+                         AND final.role = 'rider')))) AS viewer_is_rider,
          (SELECT count(*)::int FROM ride_ratings given
           WHERE given.ride_id = r.id AND given.rater_id = $2) AS viewer_ratings_given,
          -- The viewer's own SOS only (raised_by = the viewer): nobody else's is ever read here.
@@ -225,7 +245,7 @@ const OCCUPANTS_SQL = `
           FROM riders completed
           JOIN rides completed_ride ON completed_ride.id = completed.ride_id
           WHERE completed.user_id = m.user_id AND completed.left_at IS NULL
-            AND completed_ride.state = 'completed')
+            AND completed.no_show_at IS NULL AND completed_ride.state = 'completed')
            AS completed_trips,
          public_rating.rating_count, public_rating.rating_average,
          m.locked_share, m.checked_in_at, m.arrived_at, m.no_show_at,
@@ -274,6 +294,47 @@ export async function getRideView(
     return null;
 
   const { rows: people } = await pool.query<OccupantRow>(OCCUPANTS_SQL, [rideId, viewerId, now]);
+  let viewerSettlement: RideSettlement | null = null;
+  let ownerSettlements: RideSettlement[] = [];
+  if (viewerRole === 'rider') {
+    const { rows } = await pool.query<RideSettlementRow>(
+      `SELECT seat.id AS occupant_id, COALESCE(profile.display_name, u.full_name) AS name,
+              final.share, final.payment_status AS status, final.payment_method AS method,
+              final.payment_reference AS reference
+       FROM riders seat
+       JOIN ride_final_shares final ON final.ride_id = seat.ride_id AND final.user_id = seat.user_id
+       JOIN users u ON u.id = seat.user_id
+       LEFT JOIN user_profiles profile ON profile.user_id = u.id
+       WHERE seat.ride_id = $1 AND seat.user_id = $2 AND final.role = 'rider'`,
+      [rideId, viewerId],
+    );
+    const payment = rows[0];
+    if (payment?.status)
+      viewerSettlement = {
+        occupantId: payment.occupant_id,
+        name: payment.name,
+        share: payment.share,
+        status: payment.status,
+        method: payment.method,
+        reference: payment.reference,
+      };
+  } else if (viewerRole === 'owner') {
+    const { rows } = await pool.query<RideSettlementRow>(
+      `SELECT seat.id AS occupant_id, COALESCE(profile.display_name, u.full_name) AS name,
+              final.share, final.payment_status AS status, final.payment_method AS method,
+              final.payment_reference AS reference
+       FROM ride_final_shares final
+       JOIN riders seat ON seat.ride_id = final.ride_id AND seat.user_id = final.user_id
+       JOIN users u ON u.id = seat.user_id
+       LEFT JOIN user_profiles profile ON profile.user_id = u.id
+       WHERE final.ride_id = $1 AND final.role = 'rider'
+       ORDER BY final.position`,
+      [rideId],
+    );
+    ownerSettlements = rows
+      .filter((row) => Boolean(row.status))
+      .map(({ occupant_id, ...settlement }) => ({ occupantId: occupant_id, ...settlement }));
+  }
   const totalFare = ride.expected_total_fare;
   const shares = activeShares(
     people.map((person) => ({
@@ -339,8 +400,15 @@ export async function getRideView(
   const viewerNoShow = Boolean(viewerRow?.no_show_at);
   const canMoveTo = (to: TripTarget) =>
     ride.state !== to &&
-    tripTransitionRefusal(viewerRole, ride.state, to, ride.departure_start, now, ride.locked_at) ===
-      null;
+    tripTransitionRefusal(
+      viewerRole,
+      ride.state,
+      to,
+      ride.departure_start,
+      now,
+      ride.locked_at,
+      ride.departure_end,
+    ) === null;
   const nameOf = (seatId: string) =>
     people.find((person) => person.occupant_id === seatId)?.full_name ?? '';
   const viewerStop = viewerRow
@@ -432,6 +500,8 @@ export async function getRideView(
     occupants,
     viewerRole,
     viewerShare: occupants.find((person) => person.isViewer)?.share ?? null,
+    viewerSettlement,
+    ownerSettlements,
     estimatedShare: canAskToJoin
       ? activeCount > 0
         ? estimateShare(totalFare, activeCount)
@@ -545,6 +615,7 @@ type HistoricalRow = {
   completed_at: Date | null;
   ratings_given: number;
   viewer_no_show_at: Date | null;
+  viewer_left_at: Date | null;
 };
 
 const HISTORY_SQL = `
@@ -555,7 +626,7 @@ const HISTORY_SQL = `
          (SELECT COUNT(*)::int FROM riders occupants
           WHERE occupants.ride_id = r.id AND occupants.left_at IS NULL
             AND occupants.no_show_at IS NULL) AS occupant_count,
-         me.no_show_at AS viewer_no_show_at,
+         me.no_show_at AS viewer_no_show_at, me.left_at AS viewer_left_at,
          r.completed_at,
          (SELECT count(*)::int FROM ride_ratings given
           WHERE given.ride_id = r.id AND given.rater_id = $1) AS ratings_given
@@ -592,8 +663,10 @@ export async function getHistoricalRides(
     completedAt: row.completed_at ? row.completed_at.toISOString() : null,
     ratingsGiven: row.ratings_given ?? 0,
     ratingClosesAt: row.completed_at ? ratingClosesAt(row.completed_at).toISOString() : null,
+    // Only people who were on the trip rate it (FR-RD-12.2): not a no-show, not someone who left.
     canRate:
       !row.viewer_no_show_at &&
+      !row.viewer_left_at &&
       ratingWindow(row.state, row.completed_at, now) === 'open' &&
       (row.ratings_given ?? 0) < row.occupant_count - 1,
   }));

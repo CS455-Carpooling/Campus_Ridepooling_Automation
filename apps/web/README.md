@@ -11,13 +11,13 @@ Testing Library.
 
 Run these from the repository root (they cover every workspace) or from `apps/web`:
 
-| Command             | What it does                                                          |
-| ------------------- | --------------------------------------------------------------------- |
-| `npm run dev`       | Development server at http://localhost:3000                           |
-| `npm run lint`      | ESLint                                                                |
-| `npm run typecheck` | Generates the route types, then runs `tsc --noEmit`                   |
-| `npm run test`      | Unit, design-rule and contrast tests with coverage; fails below 80 %  |
-| `npm run build`     | Production build                                                      |
+| Command             | What it does                                                         |
+| ------------------- | -------------------------------------------------------------------- |
+| `npm run dev`       | Development server at http://localhost:3000                          |
+| `npm run lint`      | ESLint                                                               |
+| `npm run typecheck` | Generates the route types, then runs `tsc --noEmit`                  |
+| `npm run test`      | Unit, design-rule and contrast tests with coverage; fails below 80 % |
+| `npm run build`     | Production build                                                     |
 
 Inside `apps/web`, `npm run test:watch` reruns the tests on every change. Formatting is run from
 the root: `npm run format`.
@@ -43,27 +43,32 @@ test/                test setup, the design-rule checker and the contrast test
 Every route the app links to is defined once, in `src/lib/routes.ts`. A link to a page that does not
 exist yet shows the 404 page until the page is built.
 
-| Route | Page | Status |
-| --- | --- | --- |
-| `/` | Landing page (public); signed-in users get a link to their rides | Built |
-| `/home` | Home: one screen for students, another for admins | Built (CS455-15) |
-| `/login` | Sign in with an iitk.ac.in email and password | Built (CS455-19) |
-| `/register` | Registration with email verification, iitk.ac.in addresses only | Built (CS455-19) |
-| `/forgot-password`, `/reset-password` | Password reset by email | Built (CS455-19) |
-| `/dashboard` | Where sign-in lands: links to offering a ride and to the home page | Built (CS455-19, 26) |
-| `/terms` | Terms of service (community guidelines) | Built |
-| `/privacy` | Privacy policy | Built |
-| `/rides/new` | Offer a ride: route, vehicle, departure window, fare | Built (CS455-22 to 25) |
-| `/rides/[id]` | Ride details, join requests and history, owner decisions, fare shares, ride edit/cancel/lock; from the lock, the trip: pickup order, arrivals, no-shows, SOS, live updates | Built (CS455-28, 29, 63) |
-| `/rides/[id]/review` | Rate the people on a completed ride, for 72 hours after it is completed | Built (CS455-40 to 43) |
-| `/rides`, `/rides/results` | Find a ride: search and results, with AI recommendations | Built |
-| `/notifications` | Notifications | Not started |
-| `/admin` | Sends an admin to their home; tells a student the admin pages are not for them | Built (CS455-49) |
-| `/admin/complaints` | One complaint queue, from the form and from chat reports, Safety first | Built (CS455-45, 53) |
-| `/admin/complaints/[id]`, `/admin/riders`, `/admin/riders/[id]`, `/admin/rides/[id]` | Complaint detail, rider search and record, a read-only ride | Built (CS455-53) |
-| `/rides/[id]/complaint`, `/complaints` | File a complaint about someone on a ride; your complaints | Built (CS455-53) |
-| `/admin/configuration/...` | Vehicle types, hubs and pickup points, fares | Built (CS455-51) |
-| `/admin/incidents`, `/admin/incidents/[id]` | SOS alerts, open first; one alert with the trip as it was, the mobile number and location, Acknowledge and Close | Built (CS455-65) |
+| Route                                                                                | Page                                                                                                                                                                       | Status                   |
+| ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| `/`                                                                                  | Landing page (public); signed-in users get a link to their rides                                                                                                           | Built                    |
+| `/home`                                                                              | Home: one screen for students, another for admins                                                                                                                          | Built (CS455-15)         |
+| `/login`                                                                             | Sign in with an iitk.ac.in email and password                                                                                                                              | Built (CS455-19)         |
+| `/register`                                                                          | Registration with email verification, iitk.ac.in addresses only                                                                                                            | Built (CS455-19)         |
+| `/forgot-password`, `/reset-password`                                                | Password reset by email                                                                                                                                                    | Built (CS455-19)         |
+| `/dashboard`                                                                         | Where sign-in lands: links to offering a ride and to the home page                                                                                                         | Built (CS455-19, 26)     |
+| `/terms`                                                                             | Terms of service (community guidelines)                                                                                                                                    | Built                    |
+| `/privacy`                                                                           | Privacy policy                                                                                                                                                             | Built                    |
+| `/rides/new`                                                                         | Offer a ride: route, vehicle, departure window, fare                                                                                                                       | Built (CS455-22 to 25)   |
+| `/rides/[id]`                                                                        | Ride details, join requests and history, owner decisions, fare shares, ride edit/cancel/lock; from the lock, the trip: pickup order, arrivals, no-shows, SOS, live updates | Built (CS455-28, 29, 63) |
+| `/rides/[id]/review`                                                                 | Rate the people on a completed ride, for 72 hours after it is completed                                                                                                    | Built (CS455-40 to 43)   |
+| `/rides`, `/rides/results`                                                           | Find a ride: search and results, with AI recommendations                                                                                                                   | Built                    |
+| `/notifications`                                                                     | Notifications                                                                                                                                                              | Not started              |
+| `/admin`                                                                             | Sends an admin to their home; tells a student the admin pages are not for them                                                                                             | Built (CS455-49)         |
+| `/admin/complaints`                                                                  | One complaint queue, from the form and from chat reports, Safety first                                                                                                     | Built (CS455-45, 53)     |
+| `/admin/ai-recommendations`                                                          | Recommendation request audit trail and rider reports; pseudonymous rider IDs only                                                                                        | Built (AI-RD-12, 15)     |
+| `/admin/complaints/[id]`, `/admin/riders`, `/admin/riders/[id]`, `/admin/rides/[id]` | Complaint detail, rider search and record, a read-only ride                                                                                                                | Built (CS455-53)         |
+| `/rides/[id]/complaint`, `/complaints`                                               | File a complaint about someone on a ride; your complaints                                                                                                                  | Built (CS455-53)         |
+| `/admin/configuration/...`                                                           | Vehicle types, hubs and pickup points, fares                                                                                                                               | Built (CS455-51)         |
+| `/admin/incidents`, `/admin/incidents/[id]`                                          | SOS alerts, open first; one alert with the trip as it was, the mobile number and location, Acknowledge and Close                                                           | Built (CS455-65)         |
+
+`GET /api/health` is an uncached readiness probe: it returns `200` only when PostgreSQL answers
+and `503` otherwise, without exposing connection details. Configure the selected hosting platform
+to use this endpoint for its health check.
 
 ## Signed-in pages and roles
 
@@ -72,9 +77,18 @@ exist yet shows the 404 page until the page is built.
   registered.
 - **Access:** every signed-in page checks the sign-in itself and redirects to `/login` when nobody
   is signed in. `getCurrentUser()` in `src/lib/auth.ts` reads the session cookie that `/login`
-  sets; `getSession()` and `verifySession()` in `src/lib/session.ts` build on it for pages that
-  need a role, such as `/home`. The root layout does not protect pages, because layouts are not
-  re-rendered on navigation.
+  sets; sessions are rejected after seven days without activity. `getSession()` and
+  `verifySession()` in `src/lib/session.ts` build on it for pages that need a role, such as `/home`.
+  The root layout does not protect pages, because layouts are not re-rendered on navigation.
+- **First sign-in profile setup** (`src/lib/session.ts`, FR-RD-02.1): before opening signed-in
+  rider pages or APIs, a student must choose a display name and an active campus pickup point and
+  decide whether interest tags may inform AI suggestions. `getCurrentUser()` denies incomplete
+  accounts by default; only profile and account-maintenance flows may opt out. Operations admins
+  and development-only test sessions are not redirected.
+- **Warning acknowledgement** (`src/lib/warnings.ts`, FR-RD-01.6): riders with unacknowledged
+ warnings are routed to `/warnings` at sign-in and blocked from authenticated APIs until they
+ acknowledge each warning. The page shows only the reason category, not the admin's private
+ explanation. Acknowledgements are recorded with the warning and retained in the database.
 - **Sign-in:** `getSession()` returns the account signed in through `/login`, with its role from
   the database. Every account is a student until an operator makes it an admin (see Admin
   accounts below); the role is read on every request, so a revoked admin loses access at once.
@@ -100,6 +114,18 @@ exist yet shows the 404 page until the page is built.
   nobody is ever shown who gave a rating (P-24).
   `POST /api/rides/[id]/complete` marks a ride completed and stores the final shares; it is the
   same step as `POST /api/rides/[id]/trip` with `to: 'completed'`.
+- **Post-ride settlement** (`src/lib/payment-settlement.ts`): the app never collects or transfers
+  money. After completion each non-owner payable share is Due. That rider records an external UPI
+  or cash payment (optional reference, at most 50 characters); the owner confirms receipt or
+  disputes it. A dispute opens a Payment complaint for the admin queue. No-show seats have no
+  payable share. Payment details are returned only to that rider and the owner. Riders receive
+  one-time reminders at 24 and 72 hours while a share remains Due; a Due share older than seven
+  days blocks new join requests.
+  Configure a long random `PAYMENT_REMINDER_CRON_SECRET` in the deployment secret manager, then
+  schedule `POST /api/cron/payment-reminders` at least hourly (every 15 minutes is recommended)
+  with `Authorization: Bearer <secret>`. The endpoint returns 503 when unconfigured and 401 for
+  a missing or incorrect secret. Scheduler calls are safe to retry; only still-Due shares receive
+  each reminder. Do not expose the secret to browsers or commit it.
 - **Join requests** (`src/lib/join-requests.ts`, FR-RD-06/07 and FR-RO-05/06) are a separate,
   durable state machine from confirmed `riders` seats. A rider can submit an idempotent request,
   withdraw it, review its history, and reconfirm materially changed terms. Owners can accept or
@@ -127,7 +153,8 @@ exist yet shows the 404 page until the page is built.
   shows "Ratings given" on completed rides, with a link to rate while rating is open.
 - **Operations admin data** (`db/schema.sql`, CS455-46 and CS455-47): `users.role` (`student` or
   `admin`), the append-only `admin_audit_log`, versioned vehicle types and places,
-  `campus_fares`, `external_fare_ranges`, `complaints` (with `complaint_chat_messages`),
+  any legacy `campus_fares` table from an older schema (not read or written by the app),
+  `external_fare_ranges`, `complaints` (with `complaint_chat_messages`),
   `rider_warnings`, `rider_suspensions` (and the `active_rider_suspensions` view),
   `complaint_ai_analyses` and `ai_enforcement_decisions`. The database itself refuses what must
   never happen: changing or deleting audit rows, editing an original complaint, a warning,
@@ -146,13 +173,25 @@ exist yet shows the 404 page until the page is built.
   reaches them; every admin API calls `requireAdminApi()`, which answers 401 or 403 as
   `{ error, code }`, and passes `{ write: true }` for a change to add the origin check and rate
   limit.
+- **Rider recommendation oversight** (`src/lib/ai/recommendations.ts`, AI-RD-12 and AI-RD-15):
+  each completed request records its ID, a domain-separated SHA-256 rider pseudonym (not a user
+  ID), request time, configured model and prompt versions, validation outcome, fallback status,
+  latency, available token counts and an explicit empty tool-call list (the ranking model has no
+  tools). Audit rows, helpful/not-helpful feedback and attached wrong/inappropriate reports use
+  pseudonymous rider IDs and are retained for 90 days. Riders can report a specific recommendation;
+  the request ID and ride are checked against that rider's pseudonym before saving via
+  `POST /api/rides/recommendations/report` (`reason: wrong | inappropriate`). Existing Helpful /
+  Not helpful feedback remains separate at `POST /api/rides/recommendations/feedback`. The admin-only
+  `/admin/ai-recommendations` page displays the request audit and its reports without loading or
+  displaying rider contact/profile fields.
+  Schema changes in `db/schema.sql` backfill and remove the legacy user IDs on existing installations.
 - **Admin changes** go through `withAdminAction()` (`src/lib/admin-actions.ts`): one transaction
   that checks the role again, does the work and writes the audit row, and answers only after the
   commit. A refused or failed attempt keeps nothing and is audited as `refused` or `failed`;
   errors are logged, never shown. Each action uses a code from `src/lib/admin-activity.ts`, which
   also holds how the pages name it.
 - **Admin pages** sit in `AdminPageShell` (CS455-49): the admin navigation (Home, SOS incidents,
-  Complaints, AI decisions, Riders, Configuration, Profile) with the current page marked and a way to log out, then the
+  Complaints, AI decisions, AI recommendations, Riders, Configuration, Profile) with the current page marked and a way to log out, then the
   page's title with an optional back link, eyebrow, description and actions. The admin home
   (`/dashboard` for an admin) counts open complaints (chat reports included, safety ones called
   out), AI recommendations awaiting a decision and riders suspended now, and lists the last 10
@@ -160,7 +199,7 @@ exist yet shows the 404 page until the page is built.
 - **Admin APIs** (CS455-50, 52): each checks `requireAdminApi({ write: true })`, makes its change
   in `withAdminAction()` and answers `{ error, code, fields?, current? }`.
   - Configuration: `POST /api/admin/vehicle-types` and `PATCH .../[id]`, `POST /api/admin/locations`
-    and `PATCH .../[id]`, `PUT /api/admin/campus-fares`, `PUT /api/admin/external-fares`
+    and `PATCH .../[id]`, `PUT /api/admin/external-fares`
     (`src/lib/admin-config.ts`). Every edit sends the `version` it loaded, and a stale one gets 409
     `version_conflict` with the item as it is now. Nothing is deleted: a vehicle type or place is
     deactivated, leaves the forms and stays on the rides that use it.
@@ -214,6 +253,7 @@ exist yet shows the 404 page until the page is built.
 
   A no-show leaves the pool: the fare is split between the seats that neither left nor were
   no-shows (FR-RO-10.2).
+
 - **Trip APIs** (`src/lib/trip.ts`, CS455-62): each change runs in one transaction with the ride
   locked, through `runTripChange()` in `src/lib/trip-api.ts`, and refusals come as
   `{ error, code }`. The APIs are:
@@ -292,27 +332,27 @@ fonts: wrap the outermost element of a page in it. Pages outside it keep the sit
 class on `<html>`), and `<DesignSystem>` applies the saved choice on pages without a toggle;
 components need no `dark:` classes.
 
-| Token            | Light     | Dark      | Use                                              |
-| ---------------- | --------- | --------- | ------------------------------------------------ |
-| `paper`          | `#F4F5EF` | `#0E1714` | Page background (never pure white)               |
-| `surface`        | `#FAFBF7` | `#14201C` | Inputs, cards inside brand panels                |
-| `panel`          | `#E8EBE2` | `#1B2A25` | Filled areas, hovered secondary buttons          |
-| `ink`            | `#14231F` | `#E7EDE4` | Text                                             |
-| `ink-muted`      | `#4E5B55` | `#A2B0A9` | Secondary text                                   |
-| `line`           | `#D3D8CD` | `#2A3A34` | Dividers and skeleton blocks, never text         |
-| `line-strong`    | `#78837C` | `#6C7D75` | Borders of inputs and buttons                    |
+| Token            | Light     | Dark      | Use                                               |
+| ---------------- | --------- | --------- | ------------------------------------------------- |
+| `paper`          | `#F4F5EF` | `#0E1714` | Page background (never pure white)                |
+| `surface`        | `#FAFBF7` | `#14201C` | Inputs, cards inside brand panels                 |
+| `panel`          | `#E8EBE2` | `#1B2A25` | Filled areas, hovered secondary buttons           |
+| `ink`            | `#14231F` | `#E7EDE4` | Text                                              |
+| `ink-muted`      | `#4E5B55` | `#A2B0A9` | Secondary text                                    |
+| `line`           | `#D3D8CD` | `#2A3A34` | Dividers and skeleton blocks, never text          |
+| `line-strong`    | `#78837C` | `#6C7D75` | Borders of inputs and buttons                     |
 | `brand`          | `#143029` | `#1E463B` | Forest panels (fare card, closing call to action) |
-| `on-brand`       | `#EDF1E8` | `#EDF1E8` | Text on brand panels                             |
-| `on-brand-muted` | `#A7B8AF` | `#A9BBB1` | Secondary text on brand panels                   |
-| `primary`        | `#143029` | `#E7EDE4` | Primary buttons                                  |
-| `primary-strong` | `#0B1F1A` | `#F4F7F1` | Hovered primary buttons                          |
-| `on-primary`     | `#F4F5EF` | `#0E1714` | Text on primary buttons                          |
-| `accent`         | `#EE7A50` | `#EE7A50` | Coral fills and markers; large text on brand     |
-| `accent-strong`  | `#F39270` | `#F39270` | Hovered accent buttons                           |
-| `on-accent`      | `#14231F` | `#14231F` | Text on the accent colour                        |
-| `accent-text`    | `#B8431F` | `#EF7A52` | Coral text on the page                           |
-| `danger`         | `#B3261E` | `#F28B78` | Errors and destructive actions                   |
-| `warning`        | `#7A5200` | `#E0B04A` | Warnings                                         |
+| `on-brand`       | `#EDF1E8` | `#EDF1E8` | Text on brand panels                              |
+| `on-brand-muted` | `#A7B8AF` | `#A9BBB1` | Secondary text on brand panels                    |
+| `primary`        | `#143029` | `#E7EDE4` | Primary buttons                                   |
+| `primary-strong` | `#0B1F1A` | `#F4F7F1` | Hovered primary buttons                           |
+| `on-primary`     | `#F4F5EF` | `#0E1714` | Text on primary buttons                           |
+| `accent`         | `#EE7A50` | `#EE7A50` | Coral fills and markers; large text on brand      |
+| `accent-strong`  | `#F39270` | `#F39270` | Hovered accent buttons                            |
+| `on-accent`      | `#14231F` | `#14231F` | Text on the accent colour                         |
+| `accent-text`    | `#B8431F` | `#EF7A52` | Coral text on the page                            |
+| `danger`         | `#B3261E` | `#F28B78` | Errors and destructive actions                    |
+| `warning`        | `#7A5200` | `#E0B04A` | Warnings                                          |
 
 Coral is the only accent. Type is Manrope (headings `font-extrabold tracking-tight`), with IBM Plex
 Mono for times, fares and codes (`font-mono tabular-nums`); both include the rupee sign. Corners come

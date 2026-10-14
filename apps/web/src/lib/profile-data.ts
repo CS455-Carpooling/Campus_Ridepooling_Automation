@@ -26,6 +26,19 @@ async function ensureProfile(userId: string) {
   );
 }
 
+export async function hasCompletedProfileSetup(userId: string): Promise<boolean> {
+  const { rows } = await pool.query<{ ready: boolean }>(
+    `SELECT EXISTS (
+       SELECT 1
+       FROM user_profiles p
+       JOIN locations l ON l.id = p.default_pickup_point_id
+       WHERE p.user_id = $1 AND l.type = 'campus' AND l.is_active = TRUE
+     ) AS ready`,
+    [userId],
+  );
+  return rows[0]?.ready === true;
+}
+
 export async function getRideProfileDefaults(userId: string): Promise<{
   defaultPickupPointId: string | null;
   preferredVehicleTypeId: string | null;
@@ -77,7 +90,8 @@ export async function getProfileData(userId: string): Promise<ProfileData | null
       `SELECT count(DISTINCT r.id)::text AS count
        FROM rides r
        JOIN riders m ON m.ride_id = r.id
-       WHERE m.user_id = $1 AND r.state = 'completed'`,
+       WHERE m.user_id = $1 AND r.state = 'completed'
+         AND m.left_at IS NULL AND m.no_show_at IS NULL`,
       [userId],
     ),
     getOwnRating(userId),

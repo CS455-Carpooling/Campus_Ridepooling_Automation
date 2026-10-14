@@ -8,6 +8,7 @@ import {
   RECOMMENDATION_DEADLINE_MS,
 } from './gemini-ranking';
 import { rankRideRecommendations } from './recommendation-pipeline';
+import { pseudonymizeRecommendationRider } from './recommendation-audit';
 import type { SearchRideRequest } from '@/lib/ride-search';
 import type { RideRecommendationResponse } from './types';
 
@@ -29,49 +30,70 @@ export async function getRideRecommendations(
   const requestId = randomUUID();
   const started = Date.now();
   let timedOut = false;
+  let modelCallAttempted = false;
+  let serviceFailed = false;
+  const auditState: { outputValidationOutcome: 'passed' | 'failed' | 'not_run' } = {
+    outputValidationOutcome: 'not_run',
+  };
   let inputTokens: number | null = null;
   let outputTokens: number | null = null;
   let response: RideRecommendationResponse;
   try {
     response = await withDeadline(
-      rankRideRecommendations(viewerId, filters, async (request) => {
-        try {
-          const raw = await withDeadline(rankWithGemini(request), 8_000);
-          if (raw && typeof raw === 'object' && '__usageMetadata' in raw) {
-            const usage = (
-              raw as { __usageMetadata?: { inputTokens?: unknown; outputTokens?: unknown } }
-            ).__usageMetadata;
-            inputTokens = typeof usage?.inputTokens === 'number' ? usage.inputTokens : null;
-            outputTokens = typeof usage?.outputTokens === 'number' ? usage.outputTokens : null;
-            const ranking = { ...(raw as Record<string, unknown>) };
-            delete ranking.__usageMetadata;
-            return ranking;
+      rankRideRecommendations(
+        viewerId,
+        filters,
+        async (request) => {
+          modelCallAttempted = true;
+          try {
+            const raw = await withDeadline(rankWithGemini(request), 8_000);
+            if (raw && typeof raw === 'object' && '__usageMetadata' in raw) {
+              const usage = (
+                raw as { __usageMetadata?: { inputTokens?: unknown; outputTokens?: unknown } }
+              ).__usageMetadata;
+              inputTokens = typeof usage?.inputTokens === 'number' ? usage.inputTokens : null;
+              outputTokens = typeof usage?.outputTokens === 'number' ? usage.outputTokens : null;
+              const ranking = { ...(raw as Record<string, unknown>) };
+              delete ranking.__usageMetadata;
+              return ranking;
+            }
+            return raw;
+          } catch (error) {
+            if (error instanceof Error && error.message === 'recommendation_deadline')
+              timedOut = true;
+            throw error;
           }
-          return raw;
-        } catch (error) {
-          if (error instanceof Error && error.message === 'recommendation_deadline')
-            timedOut = true;
-          throw error;
-        }
-      }),
+        },
+        (outcome) => {
+          auditState.outputValidationOutcome = outcome;
+        },
+      ),
       RECOMMENDATION_DEADLINE_MS,
     );
   } catch (error) {
     timedOut = error instanceof Error && error.message === 'recommendation_deadline';
+    serviceFailed = !timedOut;
     // A second server-side trusted search gives a useful deterministic result if ranking failed.
-    const { searchRides } = await import('@/lib/ride-search');
-    const rides = await searchRides(viewerId, filters);
-    const { rankFallbackRides } = await import('./recommendation-pipeline');
-    response = {
-      source: 'fallback',
-      suggestions: rankFallbackRides(rides, filters)
+    let fallbackSuggestions: RideRecommendationResponse['suggestions'] = [];
+    try {
+      const { searchRides } = await import('@/lib/ride-search');
+      const rides = await searchRides(viewerId, filters);
+      const { rankFallbackRides } = await import('./recommendation-pipeline');
+      fallbackSuggestions = rankFallbackRides(rides, filters)
         .slice(0, 5)
         .map((ride) => ({
           ride,
           pros: [],
           cons: [],
           factors: ['departure', 'fare', 'vehicle', 'seats'],
-        })),
+        }));
+    } catch (error) {
+      serviceFailed = true;
+      console.error('Recommendation fallback search failed:', error);
+    }
+    response = {
+      source: 'fallback',
+      suggestions: fallbackSuggestions,
       message: timedOut
         ? 'AI ranking took too long; showing rides ranked by departure timing and fare.'
         : 'AI ranking was unavailable; showing rides ranked by departure timing and fare.',
@@ -80,15 +102,20 @@ export async function getRideRecommendations(
 
   const latencyMs = Math.max(0, Date.now() - started);
   const outcome =
-    response.suggestions.length === 0
+    response.suggestions.length === 0 && !modelCallAttempted && !serviceFailed
       ? 'fallback_no_candidates'
       : response.source === 'ai'
         ? 'ai_validated'
-        : timedOut
-          ? 'fallback_timeout'
-          : response.message?.includes('invalid')
-            ? 'fallback_invalid'
-            : 'fallback_model_error';
+        : auditState.outputValidationOutcome === 'failed'
+          ? 'fallback_invalid'
+          : serviceFailed
+            ? 'fallback_service_error'
+            : timedOut
+              ? 'fallback_timeout'
+              : modelCallAttempted && auditState.outputValidationOutcome === 'not_run'
+                ? 'fallback_model_error'
+                : 'fallback_service_error';
+  const fallbackUsed = response.source === 'fallback';
 
   try {
     await pool.query(
@@ -99,23 +126,27 @@ export async function getRideRecommendations(
     );
     await pool.query(
       `INSERT INTO ride_recommendation_audits
-         (request_id, user_id, model_version, prompt_version, outcome, suggested_ride_ids, latency_ms, input_tokens, output_tokens)
-       VALUES ($1, $2, $3, $4, $5, $6::uuid[], $7, $8, $9)`,
+         (request_id, rider_pseudonym, model_version, prompt_version, outcome,
+          output_validation_outcome, fallback_used, tool_calls, suggested_ride_ids,
+          latency_ms, input_tokens, output_tokens)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, '[]'::jsonb, $8::uuid[], $9, $10, $11)`,
       [
         requestId,
-        viewerId,
+        pseudonymizeRecommendationRider(viewerId),
         GEMINI_MODEL_VERSION,
         GEMINI_PROMPT_VERSION,
         outcome,
+        auditState.outputValidationOutcome,
+        fallbackUsed,
         response.suggestions.map((item) => item.ride.id),
         latencyMs,
         inputTokens,
         outputTokens,
       ],
     );
-  } catch {
+  } catch (error) {
     // Recommendation delivery should not fail solely because the audit sink is unavailable.
-    console.error('Recommendation audit persistence failed.');
+    console.error('Recommendation audit persistence failed:', error);
   }
 
   return { ...response, requestId };

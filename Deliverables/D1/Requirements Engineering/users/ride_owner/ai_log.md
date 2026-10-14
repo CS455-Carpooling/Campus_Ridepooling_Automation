@@ -295,3 +295,13 @@ Completed the consistency check and confirmed that the final document consistent
 
 **Action:**
 **Final Ride Owner requirements package accepted for use in the project.**
+
+---
+
+### Entry 22 — Align shared fare-split policy (2026-10-14)
+
+**User clarification:**
+> there is an issue admin is based on segmented fare sharing while rider and ride owner are based on equal split based check this i want to move on with equal fare split for now in all places
+
+**AI response and action:**
+Confirmed that the current implementation already splits the whole-ride fare equally across the owner and active Riders. Updated the Ride Owner functional fare requirement to explicitly share that policy with Rider Table T-2: divide the whole-ride fare as evenly as possible, allocate any whole-rupee remainder owner-first and then by request-acceptance order, and do not calculate route-segment fares in the current scope.

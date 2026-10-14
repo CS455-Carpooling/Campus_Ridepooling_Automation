@@ -4,7 +4,6 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   createLocation,
   createVehicleType,
-  setCampusFare,
   setExternalFareRange,
   updateLocation,
   updateVehicleType,
@@ -151,28 +150,13 @@ describe('places (OA-FR-05 to 07)', () => {
   });
 });
 
-const campusPlaces = {
-  rows: [
-    { id: 'hall-1', type: 'campus' },
-    { id: 'hall-6', type: 'campus' },
-  ],
-};
-const fareRow = {
-  from_location_id: 'hall-1',
-  to_location_id: 'hall-6',
-  vehicle_type_id: 'auto',
-  fare: 40,
-  version: 1,
-  updated_at: updatedAt,
-};
+const configuredHub = { rows: [{ id: 'kanpur-central', type: 'transport_hub' }] };
 
-function fareClient(existing: unknown[], places = campusPlaces, vehicle = [{ '?column?': 1 }]) {
+function fareClient(existing: unknown[], places = configuredHub, vehicle = [{ '?column?': 1 }]) {
   return fakeClient((sql) => {
     if (sql.includes('FROM locations')) return places;
     if (sql.includes('FROM vehicle_types')) return { rows: vehicle };
     if (sql.includes('FOR UPDATE')) return { rows: existing };
-    if (sql.includes('INSERT INTO campus_fares'))
-      return { rows: [{ ...fareRow, fare: 50, version: 2 }] };
     if (sql.includes('INSERT INTO external_fare_ranges')) {
       return {
         rows: [
@@ -189,58 +173,6 @@ function fareClient(existing: unknown[], places = campusPlaces, vehicle = [{ '?c
     }
   });
 }
-
-const campusInput = { fromId: 'hall-1', toId: 'hall-6', vehicleTypeId: 'auto', fare: 50 };
-
-describe('campus fares (OA-FR-10)', () => {
-  it('sets a fare not set before, recording the admin', async () => {
-    const { client, query } = fareClient([]);
-    const write = await setCampusFare(client, { ...campusInput, version: null }, 'admin-1');
-    expect(write).toMatchObject({ kind: 'saved', before: null, record: { fare: 50, version: 2 } });
-    expect(query.mock.calls.at(-1)?.[1]).toEqual(['hall-1', 'hall-6', 'auto', 50, 'admin-1']);
-  });
-
-  it('changes the version the admin loaded', async () => {
-    const { client } = fareClient([fareRow]);
-    await expect(
-      setCampusFare(client, { ...campusInput, version: 1 }, 'admin-1'),
-    ).resolves.toMatchObject({
-      kind: 'saved',
-      before: { fare: 40, version: 1, updatedAt: updatedAt.toISOString() },
-    });
-  });
-
-  it('is a conflict when another admin set it first, or changed it since', async () => {
-    const { client } = fareClient([fareRow]);
-    await expect(
-      setCampusFare(client, { ...campusInput, version: null }, 'a'),
-    ).resolves.toMatchObject({
-      kind: 'version_conflict',
-      current: { fare: 40 },
-    });
-    await expect(setCampusFare(client, { ...campusInput, version: 7 }, 'a')).resolves.toMatchObject(
-      {
-        kind: 'version_conflict',
-      },
-    );
-    const gone = fareClient([]);
-    await expect(setCampusFare(gone.client, { ...campusInput, version: 1 }, 'a')).resolves.toEqual({
-      kind: 'not_found',
-    });
-  });
-
-  it('names each place or vehicle type that is not usable', async () => {
-    const { client } = fareClient([], { rows: [{ id: 'hall-1', type: 'transport_hub' }] }, []);
-    await expect(setCampusFare(client, { ...campusInput, version: null }, 'a')).resolves.toEqual({
-      kind: 'invalid',
-      fields: {
-        fromId: 'Choose a campus place from the list.',
-        toId: 'Choose a campus place from the list.',
-        vehicleTypeId: 'Choose a vehicle type from the list.',
-      },
-    });
-  });
-});
 
 describe('external fare ranges (OA-FR-11, SYS-FR-12)', () => {
   const input = { hubId: 'kanpur-central', vehicleTypeId: 'auto', minFare: 250, maxFare: 400 };
