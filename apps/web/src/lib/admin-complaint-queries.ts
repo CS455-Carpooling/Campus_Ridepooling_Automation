@@ -31,7 +31,10 @@ export function parseQueueFilters(
     category: (COMPLAINT_CATEGORIES as readonly string[]).includes(category)
       ? (category as ComplaintCategory)
       : 'all',
-    source: source === 'form' || source === 'chat_report' ? source : 'all',
+    source:
+      source === 'form' || source === 'chat_report' || source === 'payment_dispute'
+        ? source
+        : 'all',
   };
 }
 

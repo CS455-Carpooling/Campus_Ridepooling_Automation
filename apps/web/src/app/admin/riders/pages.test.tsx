@@ -72,6 +72,7 @@ const rider: RiderRecord = {
       id: 'w1',
       reason: 'Late twice',
       issuedAt: '2026-10-11T03:00:00.000Z',
+      acknowledgedAt: null,
       issuedBy: 'Ops Admin',
       complaintReference: 'CMP-1A2B3C4D',
     },
@@ -168,6 +169,7 @@ describe('/admin/riders/[id] (CS455-53, OA-FR-42, SYS-NFR-07)', () => {
       }),
     ).toBeInTheDocument();
     expect(screen.getByText('Late twice')).toBeInTheDocument();
+    expect(screen.getByText('Not acknowledged')).toBeInTheDocument();
     expect(screen.getByText(/Lifted .* by Ops Admin: Appeal accepted/)).toBeInTheDocument();
     expect(screen.getAllByText('None.').length).toBeGreaterThan(0);
     expect(screen.getByRole('form', { name: 'Issue rider warning' })).toBeInTheDocument();

@@ -53,11 +53,11 @@ describe('GET /api/me/ride-requests', () => {
           {
             id: 'request-1',
             ride_id: 'ride-1',
-            pickup_point_id: 'hall-1',
+            pickup_location_id: 'hall-1',
             status: 'accepted',
-            departure_snapshot: new Date('2026-10-13T10:00:00Z'),
-            pickup_time_snapshot: new Date('2026-10-13T09:45:00Z'),
-            estimated_share_snapshot: 250,
+            snapshot_departure_start: new Date('2026-10-13T10:00:00Z'),
+            snapshot_pickup_at: new Date('2026-10-13T09:45:00Z'),
+            snapshot_estimated_share: 250,
             reason_code: null,
             submitted_at: submittedAt,
             updated_at: changedAt,
@@ -72,7 +72,6 @@ describe('GET /api/me/ride-requests', () => {
             previous_status: null,
             new_status: 'pending',
             reason_code: 'request_submitted',
-            changed_by: 'rider-1',
             changed_at: submittedAt,
           },
           {
@@ -81,7 +80,6 @@ describe('GET /api/me/ride-requests', () => {
             previous_status: 'pending',
             new_status: 'accepted',
             reason_code: null,
-            changed_by: 'owner-1',
             changed_at: changedAt,
           },
         ],
@@ -97,12 +95,23 @@ describe('GET /api/me/ride-requests', () => {
       rideId: 'ride-1',
       pickupPointId: 'hall-1',
       status: 'accepted',
+      departureSnapshot: '2026-10-13T10:00:00.000Z',
+      pickupTimeSnapshot: '2026-10-13T09:45:00.000Z',
       estimatedShare: 250,
     });
     expect(body.requests[0].history).toHaveLength(2);
-    expect(body.requests[0].history[0].newStatus).toBe('pending');
+    expect(body.requests[0].history[0]).toMatchObject({
+      previousStatus: null,
+      newStatus: 'pending',
+      reasonCode: 'request_submitted',
+      changedBy: null,
+    });
     expect(body.requests[0].history[1].newStatus).toBe('accepted');
     expect(mocks.query).toHaveBeenCalledTimes(2);
+    expect(mocks.query.mock.calls[0][0]).toContain('pickup_location_id');
+    expect(mocks.query.mock.calls[0][0]).toContain('snapshot_departure_start');
+    expect(mocks.query.mock.calls[1][0]).toContain('FROM ride_join_request_events');
+    expect(mocks.query.mock.calls[1][1]).toEqual([['request-1']]);
   });
 
   it('returns a server error when the database query fails', async () => {

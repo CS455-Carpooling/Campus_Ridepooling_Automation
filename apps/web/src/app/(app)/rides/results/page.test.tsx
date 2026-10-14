@@ -11,6 +11,7 @@ const h = vi.hoisted(() => ({
 
 vi.mock('next/navigation', () => ({ redirect: h.redirect }));
 vi.mock('@/lib/auth', () => ({ getCurrentUser: h.getCurrentUser }));
+vi.mock('@/lib/session', () => ({ requireRiderProfileSetup: vi.fn() }));
 vi.mock('@/lib/ride-search', () => ({ searchRides: h.searchRides }));
 
 import RideResultsPage from './page';

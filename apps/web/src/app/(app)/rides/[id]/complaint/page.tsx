@@ -8,6 +8,7 @@ import { getCurrentUser } from '@/lib/auth';
 import { getComplaintFormPage, type ComplaintFormPage } from '@/lib/complaint-queries';
 import { formatDeparture, formatDepartureWindow } from '@/lib/format';
 import { routes } from '@/lib/routes';
+import { requireRiderProfileSetup } from '@/lib/session';
 
 export const metadata: Metadata = { title: 'Report a problem' };
 
@@ -32,8 +33,12 @@ export default async function RideComplaintPage({
   params,
   searchParams,
 }: PageProps<'/rides/[id]/complaint'>) {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser({
+    allowIncompleteProfile: true,
+    allowUnacknowledgedWarnings: true,
+  });
   if (!user) redirect(routes.login);
+  await requireRiderProfileSetup(user.id, user.role);
 
   const { id } = await params;
   const query = await searchParams;

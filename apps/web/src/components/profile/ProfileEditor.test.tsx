@@ -70,6 +70,23 @@ describe('ProfileEditor', () => {
     );
     expect(await screen.findByRole('status')).toHaveTextContent('Profile saved.');
   });
+
+  it('requires first-sign-in profile details before continuing to the dashboard', async () => {
+    const user = userEvent.setup();
+    render(<ProfileEditor profile={{ ...profile, defaultPickupPointId: null }} setupRequired />);
+
+    expect(screen.getByText(/before using the ride-pooling features/i)).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Back to dashboard' })).not.toBeInTheDocument();
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: 'Default pickup point' }),
+      'hall-3',
+    );
+    await user.click(screen.getByRole('button', { name: 'Save profile' }));
+
+    expect(fetch).toHaveBeenCalledWith('/api/profile', expect.objectContaining({ method: 'PUT' }));
+    expect(router.replace).toHaveBeenCalledWith('/dashboard');
+    expect(router.refresh).toHaveBeenCalled();
+  });
 });
 
 describe('ProfileEditor: ratings (CS455-44)', () => {

@@ -7,7 +7,13 @@ export default async function RegisterPage({
 }: {
   searchParams: Promise<{ notice?: string }>;
 }) {
-  if (await getCurrentUser()) redirect('/dashboard');
+  if (
+    await getCurrentUser({
+      allowIncompleteProfile: true,
+      allowUnacknowledgedWarnings: true,
+    })
+  )
+    redirect('/dashboard');
   const { notice } = await searchParams;
   return <NextPage page="register" notice={notice} />;
 }

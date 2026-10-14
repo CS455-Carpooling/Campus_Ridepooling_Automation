@@ -3,7 +3,7 @@ import { getCurrentUser, json } from '@/lib/auth';
 import { getProfileData } from '@/lib/profile-data';
 
 export async function GET() {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser({ allowIncompleteProfile: true });
   if (!user) return json({ error: 'Authentication required.' }, 401);
 
   const [profile, rides] = await Promise.all([

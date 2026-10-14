@@ -13,8 +13,14 @@ CREATE TABLE IF NOT EXISTS sessions (
   token_hash TEXT PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   expires_at TIMESTAMPTZ NOT NULL,
+  last_activity_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS last_activity_at TIMESTAMPTZ;
+UPDATE sessions SET last_activity_at=created_at WHERE last_activity_at IS NULL;
+ALTER TABLE sessions ALTER COLUMN last_activity_at SET DEFAULT now();
+ALTER TABLE sessions ALTER COLUMN last_activity_at SET NOT NULL;
 
 CREATE INDEX IF NOT EXISTS sessions_user_idx ON sessions(user_id);
 
@@ -504,6 +510,7 @@ BEGIN
   END IF;
 END $$;
 
+
 -- Private ride pool chat. Chat opens at lock, persists for the pool, and stops accepting writes
 -- immediately on cancellation or 24 hours after completion. History remains readable until it is
 -- deleted 30 days after the read-only point, unless an unresolved complaint needs it for review.
@@ -579,13 +586,15 @@ BEGIN
     WHERE conname = 'notifications_type_check'
       AND pg_get_constraintdef(oid) LIKE '%ride_share_update%'
       AND pg_get_constraintdef(oid) LIKE '%no_show_recorded%'
+      AND pg_get_constraintdef(oid) LIKE '%payment_due%'
+      AND pg_get_constraintdef(oid) LIKE '%payment_update%'
   ) THEN
     ALTER TABLE notifications DROP CONSTRAINT IF EXISTS notifications_type_check;
     ALTER TABLE notifications ADD CONSTRAINT notifications_type_check CHECK (type IN (
       'pool_chat_opened', 'pool_chat_message', 'ride_update',
       'account_warning', 'account_suspended', 'account_reactivated', 'complaint_update',
       'join_request', 'join_request_update', 'ride_share_update',
-      'trip_update', 'no_show_recorded'
+      'trip_update', 'no_show_recorded', 'payment_due', 'payment_update'
     ));
   END IF;
 END $$;
@@ -686,8 +695,8 @@ CREATE TABLE IF NOT EXISTS external_fare_ranges (
 -- Categories are the rider ones of FR-RD-13.1; the admin requirements' "SOS complaint" is Safety.
 -- Chat reports (FR-RD-09.6) are complaints too: source 'chat_report', with the reported
 -- messages in complaint_chat_messages. Both people must have a seat on the ride, nobody
--- complains about themselves, and there is one complaint per complainant, trip and accused
--- (FR-RD-13.4). The app never deletes a complaint or a ride.
+-- complains about themselves, and a rider may have one conduct complaint and one Payment dispute
+-- per ride/person. The app never deletes a complaint or a ride.
 CREATE TABLE IF NOT EXISTS complaints (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   reference TEXT NOT NULL UNIQUE
@@ -700,7 +709,7 @@ CREATE TABLE IF NOT EXISTS complaints (
   category TEXT NOT NULL
     CHECK (category IN ('safety', 'harassment', 'tardiness', 'payment', 'no_show', 'other')),
   description TEXT NOT NULL,
-  source TEXT NOT NULL DEFAULT 'form' CHECK (source IN ('form', 'chat_report')),
+  source TEXT NOT NULL DEFAULT 'form' CHECK (source IN ('form', 'chat_report', 'payment_dispute')),
   status TEXT NOT NULL DEFAULT 'submitted'
     CHECK (status IN ('submitted', 'under_review', 'resolved')),
   -- Set on resolution; riders see whether action was taken, never which (FR-RD-13.5).
@@ -716,7 +725,6 @@ CREATE TABLE IF NOT EXISTS complaints (
   CONSTRAINT complaints_description_length CHECK (
     char_length(description) BETWEEN (CASE WHEN source = 'form' THEN 20 ELSE 1 END) AND 2000
   ),
-  CONSTRAINT complaints_once UNIQUE (complainant_id, ride_id, accused_id),
   CONSTRAINT complaints_not_self CHECK (complainant_id <> accused_id),
   CONSTRAINT complaints_complainant_on_ride FOREIGN KEY (ride_id, complainant_id)
     REFERENCES riders (ride_id, user_id) ON DELETE CASCADE,
@@ -734,6 +742,27 @@ CREATE INDEX IF NOT EXISTS complaints_accused_created_idx
   ON complaints (accused_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS complaints_complainant_created_idx
   ON complaints (complainant_id, created_at DESC);
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'complaints_source_check'
+      AND pg_get_constraintdef(oid) LIKE '%payment_dispute%'
+  ) THEN
+    ALTER TABLE complaints DROP CONSTRAINT IF EXISTS complaints_source_check;
+    ALTER TABLE complaints ADD CONSTRAINT complaints_source_check
+      CHECK (source IN ('form', 'chat_report', 'payment_dispute'));
+  END IF;
+END $$;
+
+-- Payment disputes are distinct review records; preserve the existing one-conduct-complaint
+-- limit while allowing one Payment dispute for the same rider/ride/owner.
+ALTER TABLE complaints DROP CONSTRAINT IF EXISTS complaints_once;
+CREATE UNIQUE INDEX IF NOT EXISTS complaints_once_idx
+  ON complaints (complainant_id, ride_id, accused_id) WHERE source <> 'payment_dispute';
+CREATE UNIQUE INDEX IF NOT EXISTS complaints_payment_dispute_once_idx
+  ON complaints (complainant_id, ride_id, accused_id) WHERE source = 'payment_dispute';
 
 -- The chat messages a complaint is about. Reporting another message from the same person on
 -- the same trip adds it to the existing complaint. A message deleted under the chat retention
@@ -759,10 +788,15 @@ CREATE TABLE IF NOT EXISTS rider_warnings (
   reason TEXT NOT NULL CHECK (char_length(btrim(reason)) BETWEEN 1 AND 1000),
   issued_by UUID NOT NULL REFERENCES users(id),
   issued_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  acknowledged_at TIMESTAMPTZ,
   CONSTRAINT rider_warnings_not_self CHECK (user_id <> issued_by)
 );
 
+ALTER TABLE rider_warnings ADD COLUMN IF NOT EXISTS acknowledged_at TIMESTAMPTZ;
 CREATE INDEX IF NOT EXISTS rider_warnings_user_idx ON rider_warnings (user_id, issued_at DESC);
+CREATE INDEX IF NOT EXISTS rider_warnings_unacknowledged_user_idx
+  ON rider_warnings (user_id, issued_at)
+  WHERE acknowledged_at IS NULL;
 
 CREATE TABLE IF NOT EXISTS rider_suspensions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -890,14 +924,29 @@ END;
 $$;
 
 -- Warnings, suspensions and AI decisions exist only by an admin's hand (SYS-FR-37): the person
--- who issues, lifts or decides must have the admin role. A suspension may change only by being
--- lifted; warnings and decisions never change.
+-- who issues, lifts or decides must have the admin role. A warning may only be acknowledged once;
+-- a suspension may only be lifted once; AI decisions never change.
 CREATE OR REPLACE FUNCTION enforcement_by_admin_only() RETURNS trigger
 LANGUAGE plpgsql AS $$
 DECLARE
   actor UUID;
 BEGIN
   IF TG_OP = 'UPDATE' THEN
+    IF TG_TABLE_NAME = 'rider_warnings' THEN
+      IF NEW.id IS NOT DISTINCT FROM OLD.id
+         AND NEW.user_id IS NOT DISTINCT FROM OLD.user_id
+         AND NEW.complaint_id IS NOT DISTINCT FROM OLD.complaint_id
+         AND NEW.reason IS NOT DISTINCT FROM OLD.reason
+         AND NEW.issued_by IS NOT DISTINCT FROM OLD.issued_by
+         AND NEW.issued_at IS NOT DISTINCT FROM OLD.issued_at
+         AND OLD.acknowledged_at IS NULL
+         AND NEW.acknowledged_at IS NOT NULL THEN
+        RETURN NEW;
+      END IF;
+      RAISE EXCEPTION 'A warning can only be acknowledged once'
+        USING ERRCODE = 'insufficient_privilege';
+    END IF;
+
     -- Checked one table at a time: a record only has its own table's fields.
     IF TG_TABLE_NAME <> 'rider_suspensions' THEN
       RAISE EXCEPTION '% records cannot be changed', TG_TABLE_NAME
@@ -991,7 +1040,8 @@ WHERE report.reporter_id <> message.sender_id
   AND EXISTS (
     SELECT 1 FROM riders seat WHERE seat.ride_id = report.ride_id AND seat.user_id = message.sender_id
   )
-ON CONFLICT ON CONSTRAINT complaints_once DO NOTHING;
+ON CONFLICT (complainant_id, ride_id, accused_id) WHERE source <> 'payment_dispute'
+DO NOTHING;
 
 INSERT INTO complaint_chat_messages (complaint_id, message_id, added_at)
 SELECT complaint.id, report.message_id, report.created_at
@@ -1028,7 +1078,8 @@ BEGIN
     NEW.reference, NEW.ride_id, NEW.reporter_id, sender, 'other', NEW.reason, 'chat_report',
     NEW.created_at, NEW.created_at
   )
-  ON CONFLICT ON CONSTRAINT complaints_once DO NOTHING;
+  ON CONFLICT (complainant_id, ride_id, accused_id) WHERE source <> 'payment_dispute'
+  DO NOTHING;
 
   SELECT id INTO target FROM complaints
   WHERE complainant_id = NEW.reporter_id AND ride_id = NEW.ride_id AND accused_id = sender;
@@ -1056,32 +1107,121 @@ END $$;
 -- intentionally not stored. Records are retained for 90 days.
 CREATE TABLE IF NOT EXISTS ride_recommendation_audits (
   request_id UUID PRIMARY KEY,
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  rider_pseudonym TEXT NOT NULL,
   model_version TEXT NOT NULL,
   prompt_version TEXT NOT NULL,
   outcome TEXT NOT NULL CHECK (outcome IN ('ai_validated', 'fallback_model_error', 'fallback_timeout', 'fallback_invalid', 'fallback_no_candidates', 'fallback_service_error')),
+  output_validation_outcome TEXT NOT NULL CHECK (output_validation_outcome IN ('passed', 'failed', 'not_run')),
+  fallback_used BOOLEAN NOT NULL,
+  tool_calls JSONB NOT NULL DEFAULT '[]'::jsonb CHECK (jsonb_typeof(tool_calls) = 'array'),
   suggested_ride_ids UUID[] NOT NULL DEFAULT '{}',
   latency_ms INTEGER NOT NULL CHECK (latency_ms >= 0),
   input_tokens INTEGER CHECK (input_tokens IS NULL OR input_tokens >= 0),
   output_tokens INTEGER CHECK (output_tokens IS NULL OR output_tokens >= 0),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+-- Migration-safe pseudonymization for existing deployments. User UUIDs are random identifiers;
+-- only their domain-separated SHA-256 digest is retained in the audit table.
+ALTER TABLE ride_recommendation_audits ADD COLUMN IF NOT EXISTS rider_pseudonym TEXT;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = current_schema()
+      AND table_name = 'ride_recommendation_audits'
+      AND column_name = 'user_id'
+  ) THEN
+    EXECUTE $migration$
+      UPDATE ride_recommendation_audits
+         SET rider_pseudonym = encode(sha256(convert_to('recommendation-rider-v1:' || user_id::text, 'UTF8')), 'hex')
+       WHERE rider_pseudonym IS NULL
+    $migration$;
+    DROP INDEX IF EXISTS ride_recommendation_audits_user_created_idx;
+    ALTER TABLE ride_recommendation_audits DROP COLUMN user_id;
+  END IF;
+END $$;
+ALTER TABLE ride_recommendation_audits ALTER COLUMN rider_pseudonym SET NOT NULL;
+ALTER TABLE ride_recommendation_audits ADD COLUMN IF NOT EXISTS output_validation_outcome TEXT;
+ALTER TABLE ride_recommendation_audits ADD COLUMN IF NOT EXISTS fallback_used BOOLEAN;
+ALTER TABLE ride_recommendation_audits ADD COLUMN IF NOT EXISTS tool_calls JSONB NOT NULL DEFAULT '[]'::jsonb;
+UPDATE ride_recommendation_audits
+   SET output_validation_outcome = CASE
+         WHEN outcome = 'ai_validated' THEN 'passed'
+         WHEN outcome = 'fallback_invalid' THEN 'failed'
+         ELSE 'not_run'
+       END
+ WHERE output_validation_outcome IS NULL;
+UPDATE ride_recommendation_audits
+   SET fallback_used = (outcome <> 'ai_validated')
+ WHERE fallback_used IS NULL;
+ALTER TABLE ride_recommendation_audits ALTER COLUMN output_validation_outcome SET NOT NULL;
+ALTER TABLE ride_recommendation_audits ALTER COLUMN fallback_used SET NOT NULL;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'ride_recommendation_audits_validation_check'
+  ) THEN
+    ALTER TABLE ride_recommendation_audits ADD CONSTRAINT ride_recommendation_audits_validation_check
+      CHECK (output_validation_outcome IN ('passed', 'failed', 'not_run'));
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'ride_recommendation_audits_tool_calls_array'
+  ) THEN
+    ALTER TABLE ride_recommendation_audits ADD CONSTRAINT ride_recommendation_audits_tool_calls_array
+      CHECK (jsonb_typeof(tool_calls) = 'array');
+  END IF;
+END $$;
 CREATE INDEX IF NOT EXISTS ride_recommendation_audits_created_idx
   ON ride_recommendation_audits(created_at);
-CREATE INDEX IF NOT EXISTS ride_recommendation_audits_user_created_idx
-  ON ride_recommendation_audits(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS ride_recommendation_audits_pseudonym_created_idx
+  ON ride_recommendation_audits(rider_pseudonym, created_at DESC);
 
 CREATE TABLE IF NOT EXISTS ride_recommendation_feedback (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   request_id UUID NOT NULL REFERENCES ride_recommendation_audits(request_id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  rider_pseudonym TEXT NOT NULL,
   ride_id UUID NOT NULL REFERENCES rides(id) ON DELETE CASCADE,
   value TEXT NOT NULL CHECK (value IN ('helpful', 'not_helpful')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  CONSTRAINT ride_recommendation_feedback_once UNIQUE (request_id, user_id, ride_id)
+  CONSTRAINT ride_recommendation_feedback_once UNIQUE (request_id, rider_pseudonym, ride_id)
 );
+ALTER TABLE ride_recommendation_feedback ADD COLUMN IF NOT EXISTS rider_pseudonym TEXT;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = current_schema()
+      AND table_name = 'ride_recommendation_feedback'
+      AND column_name = 'user_id'
+  ) THEN
+    EXECUTE $migration$
+      UPDATE ride_recommendation_feedback
+         SET rider_pseudonym = encode(sha256(convert_to('recommendation-rider-v1:' || user_id::text, 'UTF8')), 'hex')
+       WHERE rider_pseudonym IS NULL
+    $migration$;
+    ALTER TABLE ride_recommendation_feedback
+      DROP CONSTRAINT IF EXISTS ride_recommendation_feedback_once;
+    ALTER TABLE ride_recommendation_feedback DROP COLUMN user_id;
+    ALTER TABLE ride_recommendation_feedback
+      ADD CONSTRAINT ride_recommendation_feedback_once UNIQUE (request_id, rider_pseudonym, ride_id);
+  END IF;
+END $$;
+ALTER TABLE ride_recommendation_feedback ALTER COLUMN rider_pseudonym SET NOT NULL;
 CREATE INDEX IF NOT EXISTS ride_recommendation_feedback_created_idx
   ON ride_recommendation_feedback(created_at);
+
+CREATE TABLE IF NOT EXISTS ride_recommendation_reports (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  request_id UUID NOT NULL REFERENCES ride_recommendation_audits(request_id) ON DELETE CASCADE,
+  rider_pseudonym TEXT NOT NULL,
+  ride_id UUID NOT NULL,
+  reason TEXT NOT NULL CHECK (reason IN ('wrong', 'inappropriate')),
+  details TEXT CHECK (details IS NULL OR char_length(trim(details)) BETWEEN 1 AND 500),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT ride_recommendation_reports_once UNIQUE (request_id, rider_pseudonym, ride_id)
+);
+CREATE INDEX IF NOT EXISTS ride_recommendation_reports_request_created_idx
+  ON ride_recommendation_reports(request_id, created_at);
 
 -- Exact rolling-hour quota events. A unique request ID prevents retries from
 -- consuming quota twice. Expired events are pruned by cleanup.
@@ -1117,8 +1257,9 @@ ALTER TABLE riders ADD COLUMN IF NOT EXISTS arrived_at TIMESTAMPTZ;
 ALTER TABLE riders ADD COLUMN IF NOT EXISTS no_show_at TIMESTAMPTZ;
 ALTER TABLE riders ADD COLUMN IF NOT EXISTS no_show_by UUID REFERENCES users(id);
 
--- The final pool and shares, written once when the owner completes the ride (FR-RO-09.4), in the
--- order the fare split counts them. They never change afterwards; they go only with the ride.
+-- The final pool and immutable share amounts, written when the owner completes the ride
+-- (FR-RO-09.4), in fare-split order. Settlement metadata changes through the guarded lifecycle
+-- below; the amounts and participants never change.
 CREATE TABLE IF NOT EXISTS ride_final_shares (
   ride_id UUID NOT NULL REFERENCES rides(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES users(id),
@@ -1129,6 +1270,49 @@ CREATE TABLE IF NOT EXISTS ride_final_shares (
   PRIMARY KEY (ride_id, user_id),
   CONSTRAINT ride_final_shares_position_unique UNIQUE (ride_id, position)
 );
+
+-- The out-of-app settlement record for each rider's final share. Existing final shares are
+-- treated as Due for riders; an owner's own share is not payable to themselves.
+ALTER TABLE ride_final_shares ADD COLUMN IF NOT EXISTS payment_status TEXT;
+ALTER TABLE ride_final_shares ADD COLUMN IF NOT EXISTS payment_method TEXT;
+ALTER TABLE ride_final_shares ADD COLUMN IF NOT EXISTS payment_reference TEXT;
+ALTER TABLE ride_final_shares ADD COLUMN IF NOT EXISTS paid_at TIMESTAMPTZ;
+ALTER TABLE ride_final_shares ADD COLUMN IF NOT EXISTS responded_at TIMESTAMPTZ;
+ALTER TABLE ride_final_shares ADD COLUMN IF NOT EXISTS reminder_24_at TIMESTAMPTZ;
+ALTER TABLE ride_final_shares ADD COLUMN IF NOT EXISTS reminder_72_at TIMESTAMPTZ;
+UPDATE ride_final_shares
+SET payment_status = CASE WHEN role = 'owner' THEN NULL ELSE 'due' END
+WHERE payment_status IS NULL;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'ride_final_shares_payment_status_check') THEN
+    ALTER TABLE ride_final_shares ADD CONSTRAINT ride_final_shares_payment_status_check
+      CHECK (
+        (role = 'owner' AND payment_status IS NULL AND payment_method IS NULL
+          AND payment_reference IS NULL AND paid_at IS NULL AND responded_at IS NULL)
+        OR
+        (role = 'rider' AND payment_status IS NOT NULL
+          AND payment_status IN ('due', 'paid', 'confirmed', 'disputed')
+          AND ((payment_status = 'due' AND payment_method IS NULL AND payment_reference IS NULL
+                  AND paid_at IS NULL AND responded_at IS NULL)
+            OR (payment_status = 'paid' AND payment_method IS NOT NULL
+                  AND payment_method IN ('upi', 'cash')
+                  AND paid_at IS NOT NULL AND responded_at IS NULL)
+            OR (payment_status IN ('confirmed', 'disputed') AND payment_method IS NOT NULL
+                  AND payment_method IN ('upi', 'cash')
+                  AND paid_at IS NOT NULL AND responded_at IS NOT NULL)))
+      );
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'ride_final_shares_payment_method_check') THEN
+    ALTER TABLE ride_final_shares ADD CONSTRAINT ride_final_shares_payment_method_check
+      CHECK (payment_method IS NULL OR payment_method IN ('upi', 'cash'));
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'ride_final_shares_payment_reference_check') THEN
+    ALTER TABLE ride_final_shares ADD CONSTRAINT ride_final_shares_payment_reference_check
+      CHECK (payment_reference IS NULL OR char_length(payment_reference) <= 50);
+  END IF;
+END $$;
 
 -- SOS alerts raised during a trip (FR-RD-15, FR-RO-13.2). Only operations admins see them; the
 -- rest of the pool is never told (FR-RD-15.4). The context is a snapshot of the ride when the
@@ -1195,6 +1379,35 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE FUNCTION keep_final_share_immutable_fields() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+  IF (NEW.ride_id, NEW.user_id, NEW.role, NEW.position, NEW.share, NEW.created_at)
+       IS DISTINCT FROM
+     (OLD.ride_id, OLD.user_id, OLD.role, OLD.position, OLD.share, OLD.created_at)
+     OR NOT (
+       (OLD.payment_status = 'due' AND NEW.payment_status = 'paid')
+       OR (OLD.payment_status = 'paid' AND NEW.payment_status IN ('confirmed', 'disputed'))
+       OR (OLD.payment_status = NEW.payment_status)
+     )
+     OR (OLD.payment_method IS NOT NULL AND NEW.payment_method IS DISTINCT FROM OLD.payment_method)
+     OR (OLD.payment_reference IS NOT NULL AND NEW.payment_reference IS DISTINCT FROM OLD.payment_reference)
+     OR (OLD.paid_at IS NOT NULL AND NEW.paid_at IS DISTINCT FROM OLD.paid_at)
+     OR (OLD.responded_at IS NOT NULL AND NEW.responded_at IS DISTINCT FROM OLD.responded_at)
+     OR (OLD.reminder_24_at IS NOT NULL AND NEW.reminder_24_at IS DISTINCT FROM OLD.reminder_24_at)
+     OR (OLD.reminder_72_at IS NOT NULL AND NEW.reminder_72_at IS DISTINCT FROM OLD.reminder_72_at)
+     OR (NEW.reminder_24_at IS NOT NULL AND NEW.reminder_24_at < OLD.created_at)
+     OR (NEW.reminder_72_at IS NOT NULL AND NEW.reminder_72_at < OLD.created_at) THEN
+    RAISE EXCEPTION 'The original final share cannot be changed'
+      USING ERRCODE = 'check_violation';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE INDEX IF NOT EXISTS ride_final_shares_due_idx
+  ON ride_final_shares (ride_id, payment_status) WHERE payment_status = 'due';
+
 -- What was raised, by whom and when stays as it was. Location and a false alarm may each be added
 -- once; an acknowledgement is never undone; a closed incident is final.
 CREATE OR REPLACE FUNCTION sos_incidents_keep_original() RETURNS trigger
@@ -1246,11 +1459,11 @@ BEGIN
       CHECK ((no_show_at IS NULL) = (no_show_by IS NULL));
   END IF;
 
-  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'ride_final_shares_no_change') THEN
-    CREATE TRIGGER ride_final_shares_no_change
-      BEFORE UPDATE ON ride_final_shares
-      FOR EACH ROW EXECUTE FUNCTION refuse_row_change();
-  END IF;
+  DROP TRIGGER IF EXISTS ride_final_shares_no_change ON ride_final_shares;
+  DROP TRIGGER IF EXISTS ride_final_shares_payment_immutable ON ride_final_shares;
+  CREATE TRIGGER ride_final_shares_payment_immutable
+    BEFORE UPDATE ON ride_final_shares
+    FOR EACH ROW EXECUTE FUNCTION keep_final_share_immutable_fields();
 
   IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'sos_incidents_original_unchanged') THEN
     CREATE TRIGGER sos_incidents_original_unchanged

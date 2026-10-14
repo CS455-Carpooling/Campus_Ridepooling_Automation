@@ -32,6 +32,11 @@ describe('the complaint queue (CS455-53)', () => {
       category: 'no_show',
       source: 'form',
     });
+    expect(parseQueueFilters({ source: 'payment_dispute' })).toEqual({
+      status: 'open',
+      category: 'all',
+      source: 'payment_dispute',
+    });
     expect(parseQueueFilters({ status: ['resolved', 'all'], category: 'sos' })).toEqual({
       status: 'open',
       category: 'all',
@@ -327,7 +332,7 @@ describe('getRiderRecord (OA-FR-42, SYS-NFR-07)', () => {
       rides: [{ id: RIDE, asOwner: true, state: 'completed' }],
       complaintsFiled: [],
       complaintsReceived: [{ reference: 'CMP-1A2B3C4D' }],
-      warnings: [{ reason: 'Late', issuedBy: 'Ops Admin' }],
+      warnings: [{ reason: 'Late', issuedBy: 'Ops Admin', acknowledgedAt: null }],
       suspensions: [{ reason: 'Unsafe', endsAt: null, liftedAt: null }],
     });
   });

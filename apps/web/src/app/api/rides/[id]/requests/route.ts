@@ -178,6 +178,11 @@ const errorByKind: Record<string, { status: number; error: string }> = {
     status: 409,
     error: 'This ride departs within two hours of another ride you offered or joined.',
   },
+  payment_overdue: {
+    status: 409,
+    error:
+      'Settle ride shares that have been due for more than seven days before requesting another seat.',
+  },
 };
 
 export async function POST(req: Request, ctx: RequestRouteContext) {

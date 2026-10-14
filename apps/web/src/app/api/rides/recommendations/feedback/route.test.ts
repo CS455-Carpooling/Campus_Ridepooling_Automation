@@ -18,6 +18,7 @@ vi.mock('@/lib/auth', () => ({
 vi.mock('@/lib/db', () => ({ pool: { query: h.query } }));
 
 import { POST } from './route';
+import { pseudonymizeRecommendationRider } from '@/lib/ai/recommendation-audit';
 
 const valid = {
   requestId: '8f1b2c3d-4e5f-4678-9123-abcdefabcdef',
@@ -58,10 +59,13 @@ describe('POST recommendation feedback', () => {
     expect(response.status).toBe(201);
     expect(h.query).toHaveBeenCalledWith(expect.stringContaining('ON CONFLICT'), [
       valid.requestId,
-      'viewer-id',
+      pseudonymizeRecommendationRider('viewer-id'),
       valid.rideId,
       'helpful',
     ]);
+    expect(h.query.mock.calls[0][0]).toContain('a.rider_pseudonym = $2');
+    expect(h.query.mock.calls[0][0]).toContain('ANY(a.suggested_ride_ids)');
+    expect(h.query.mock.calls[0][0]).not.toContain('user_id');
   });
 
   it('returns conflict for duplicate or ineligible feedback', async () => {
@@ -70,5 +74,17 @@ describe('POST recommendation feedback', () => {
       new Request('http://localhost/api/rides/recommendations/feedback', { method: 'POST' }),
     );
     expect(response.status).toBe(409);
+  });
+
+  it('logs persistence failures and returns an explicit server error', async () => {
+    const error = new Error('database unavailable');
+    const logError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    h.query.mockRejectedValue(error);
+    const response = await POST(
+      new Request('http://localhost/api/rides/recommendations/feedback', { method: 'POST' }),
+    );
+    expect(response.status).toBe(500);
+    expect(logError).toHaveBeenCalledWith('Save recommendation feedback failed:', error);
+    logError.mockRestore();
   });
 });

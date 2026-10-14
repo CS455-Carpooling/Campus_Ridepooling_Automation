@@ -134,6 +134,26 @@ describe('expireDueJoinRequests', () => {
 });
 
 describe('submitJoinRequest', () => {
+  it('blocks a new request when a rider has a Due share older than seven days', async () => {
+    const { client, query } = makeClient((sql) => {
+      if (sql.includes('SELECT id FROM users')) return [{ id: RIDER_ID }];
+      if (sql.includes('FROM ride_join_request_keys request_key')) return [];
+      if (sql.includes('FROM rides WHERE id = $1 FOR NO KEY UPDATE')) return [ride];
+      if (sql.includes('FROM ride_final_shares share')) return [{ '?column?': 1 }];
+      return [];
+    });
+
+    await expect(
+      submitJoinRequest(client, RIDE_ID, RIDER_ID, 'hall-3', 'overdue-payment', NOW),
+    ).resolves.toEqual({ kind: 'payment_overdue' });
+    expect(
+      query.mock.calls.some(([sql]) => String(sql).includes('completed_ride.completed_at <')),
+    ).toBe(true);
+    expect(
+      query.mock.calls.some(([sql]) => String(sql).includes('INSERT INTO ride_join_requests')),
+    ).toBe(false);
+  });
+
   it('creates an idempotent pending request, event, and owner notification in the transaction', async () => {
     const { client, query } = makeClient((sql) => {
       if (sql.includes('SELECT id FROM users')) return [{ id: RIDER_ID }];

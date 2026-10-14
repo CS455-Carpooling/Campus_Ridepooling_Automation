@@ -100,7 +100,8 @@ export async function fileComplaint(
 
   const existing = await client.query<{ reference: string }>(
     `SELECT reference FROM complaints
-     WHERE complainant_id = $1 AND ride_id = $2 AND accused_id = $3`,
+    WHERE complainant_id = $1 AND ride_id = $2 AND accused_id = $3
+      AND source <> 'payment_dispute'`,
     [userId, rideId, accusedId],
   );
   if (existing.rows.length > 0) {
@@ -109,7 +110,8 @@ export async function fileComplaint(
 
   const today = await client.query<{ count: number }>(
     `SELECT count(*)::int AS count FROM complaints
-     WHERE complainant_id = $1 AND created_at > $2::timestamptz - interval '24 hours'`,
+     WHERE complainant_id = $1 AND source <> 'payment_dispute'
+       AND created_at > $2::timestamptz - interval '24 hours'`,
     [userId, now],
   );
   if ((today.rows[0]?.count ?? 0) >= COMPLAINT_RULES.maxPerDay) return { kind: 'daily_limit' };

@@ -9,6 +9,7 @@ import { getMyComplaints } from '@/lib/complaint-queries';
 import { complaintCategoryLabels } from '@/lib/complaint-rules';
 import { formatDeparture } from '@/lib/format';
 import { routes } from '@/lib/routes';
+import { requireRiderProfileSetup } from '@/lib/session';
 
 export const metadata: Metadata = { title: 'Your complaints' };
 
@@ -17,8 +18,12 @@ export const metadata: Metadata = { title: 'Your complaints' };
  * status and, once resolved, whether action was taken, never which sanction.
  */
 export default async function MyComplaintsPage() {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser({
+    allowIncompleteProfile: true,
+    allowUnacknowledgedWarnings: true,
+  });
   if (!user) redirect(routes.login);
+  await requireRiderProfileSetup(user.id, user.role);
 
   const complaints = await getMyComplaints(user.id);
   return (

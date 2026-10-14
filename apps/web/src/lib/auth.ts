@@ -116,7 +116,9 @@ export async function guard(action: string, ipLimit: number, windowSec: number) 
 }
 
 export async function cleanup() {
-  await pool.query('DELETE FROM sessions WHERE expires_at<now()');
+  await pool.query(
+    "DELETE FROM sessions WHERE expires_at<now() OR last_activity_at<=now()-interval '7 days'",
+  );
   await pool.query('DELETE FROM auth_tokens WHERE expires_at<now()');
   await pool.query('DELETE FROM rate_limits WHERE reset_at<now()');
 }
@@ -140,12 +142,47 @@ export async function createSession(userId: string, remember: boolean) {
   });
 }
 
-export async function getCurrentUser() {
+/** Incomplete rider profiles are denied by default; only setup/account flows may opt out. */
+export async function getCurrentUser(
+  options: {
+    allowIncompleteProfile?: boolean;
+    allowUnacknowledgedWarnings?: boolean;
+  } = {},
+) {
   const token = (await cookies()).get(COOKIE)?.value;
   if (!token) return null;
+  const profileSetupFilter = options.allowIncompleteProfile
+    ? ''
+    : `AND (
+         u.role='admin'
+         OR EXISTS (
+           SELECT 1 FROM user_profiles p
+           JOIN locations l ON l.id=p.default_pickup_point_id
+           WHERE p.user_id=u.id AND l.type='campus' AND l.is_active=TRUE
+         )
+       )`;
+  const warningAcknowledgementFilter = options.allowUnacknowledgedWarnings
+    ? ''
+    : `AND (
+         u.role = 'admin'
+         OR NOT EXISTS (
+           SELECT 1 FROM rider_warnings w
+           WHERE w.user_id = u.id AND w.acknowledged_at IS NULL
+         )
+       )`;
   const { rows } = await pool.query(
-    `SELECT u.id,u.email,u.full_name,u.roll_number,u.role FROM sessions s
-     JOIN users u ON u.id=s.user_id WHERE s.token_hash=$1 AND s.expires_at>now()`,
+    `WITH active_session AS (
+       UPDATE sessions
+          SET last_activity_at=now()
+        WHERE token_hash=$1
+          AND expires_at>now()
+          AND last_activity_at>now()-interval '7 days'
+        RETURNING user_id
+     )
+     SELECT u.id,u.email,u.full_name,u.roll_number,u.role
+       FROM active_session s
+       JOIN users u ON u.id=s.user_id
+      WHERE TRUE ${profileSetupFilter} ${warningAcknowledgementFilter}`,
     [sha256(token)],
   );
   return (

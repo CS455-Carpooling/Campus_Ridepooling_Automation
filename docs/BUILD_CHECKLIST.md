@@ -1,12 +1,15 @@
 # Build Checklist — Deliverables, Acceptance Criteria, Definition of Done
 
 Governing document: `docs/project-management/CS455_Software_Engineering_Project.pdf`. Everything in
-it is **mandatory baseline**. We may exceed it; we may never substitute for it. **If this file and
-the PDF disagree, the PDF wins.**
+the PDF is the mandatory course baseline. This team-authored checklist is subordinate to the
+handout and the approved D0/D1 product scope; its product-specific examples are not handout
+requirements. **If this file and either governing source disagree, the PDF and approved D0/D1 scope
+win.** Handle an approved scope change through the handout's change-control process.
 
 **How to use this file**
-- Items are tagged **[MANDATE]** (required by the handout — cannot be cut for any reason) or
-  **[PRODUCT]** (our own design choices that satisfy a mandate requirement, or go beyond it).
+- Items tagged **[MANDATE]** describe a general obligation from the handout; their specific
+  implementation examples remain product choices unless D0/D1 makes them requirements. Items
+  tagged **[PRODUCT]** are the team's proposed implementation choices.
 - Tick a box only when its acceptance criterion in §7 has a **passing automated test** (or, for
   process items, verifiable evidence in Jira/GitHub).
 - Deliverable gates in §6. Deviation policy in §8.
@@ -37,13 +40,13 @@ qualifies.
 
 | Constraint | How we satisfy it | Where |
 |---|---|---|
-| **≥2 distinct roles, different permissions, separate dashboards** | **Rider** (request/join/pay/track/rate) and **Operations Admin** (fleet onboarding, hub & fare config, incident handling, agent audit review, metrics) — genuinely separate dashboards, not one UI with hidden buttons | M1, M2 |
-| **Stateful transactional workflow: create → modify → cancel, with consequences** | A ride request is created, **modified** (window/party size, which re-triggers matching and may release a held seat), and **cancelled** (releases the seat back to the shared pool, may dissolve or re-price a group) | M3 |
-| **Shared contended resource; no unit allocated twice** | **Vehicle seats.** Vehicles have finite seats; a vehicle is allocated to a ride group for a time window. Two riders must not take the last seat; two groups must not hold the same vehicle in overlapping windows | M4, C9, C10 |
-| **Onboarding + removal of an entity class by an administrator** | Admin **onboards and removes cab partners and their vehicles**; removal must safely handle in-flight assignments | M5 |
-| **≥1 non-trivial, testable rule-driven computation** | Two: (a) **seat allocation / group matching** (hub-partitioned interval bin-packing under capacity), (b) **fare computation and split** (time-band reference fare → per-rider share) | C4, C16 |
-| **Meaningful agentic AI inside the workflow** | **Trip Coordinator Agent** with real tools, action classes, policy enforcement, and audit trail — §3 | M10–M16 |
-| **Complex enough for requirements evolution, testing, security, performance, failure experiments** | Concurrency on seats, external payment/LLM/email dependencies, role-based access, live location privacy | §4, §5 |
+| **≥2 distinct roles, different permissions, separate dashboards** | **Rider**, **Ride Owner**, and **Operations Admin** have distinct workflows and server-enforced permissions; Rider and Ride Owner capabilities may belong to the same student account, while Admin access is separately granted | M1, M2 |
+| **Stateful transactional workflow: create → modify → cancel, with consequences** | A Ride Owner creates, edits, locks, and may cancel a ride; Riders request seats, and accepted/withdrawn requests change shared seat availability. Material ride changes require affected Riders to reconfirm | M3 |
+| **Shared contended resource; no unit allocated twice** | **Ride seats.** Acceptance rechecks capacity transactionally so concurrent requests cannot overbook a ride or allocate its last seat twice | M4, C9, C10 |
+| **Onboarding + removal of an entity class by an administrator** | Admins add and deactivate configured **vehicle types**, hubs, and pickup locations; the system retains historical ride references to deactivated configuration | M5 |
+| **≥1 non-trivial, testable rule-driven computation** | Seat capacity/conflict validation and whole-ride fare division with exact whole-rupee rounding provide deterministic, testable rules | C4, C16 |
+| **Meaningful agentic AI inside the workflow** | Rider ride recommendations and Admin complaint analysis provide bounded assistance with server-side validation and human decision authority. The excluded conversational chatbot is not the project's only AI workflow | M10–M16 |
+| **Complex enough for requirements evolution, testing, security, performance, failure experiments** | Concurrent seat acceptance, itinerary changes, authorization, privacy, and external email/AI-service failures provide project-specific test and risk scenarios | §4, §5 |
 
 **Explicitly not permitted, and we are clear of each:** not a static site; not single-role CRUD (two
 roles, real contention); not a resubmission; **not an LLM chatbot with a thin app around it** — the

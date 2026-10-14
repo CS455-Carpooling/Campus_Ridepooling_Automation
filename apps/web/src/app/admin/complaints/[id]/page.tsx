@@ -49,7 +49,7 @@ export default async function AdminComplaintPage({ params }: PageProps<'/admin/c
       eyebrow={complaintCategoryLabels[complaint.category]}
       back={{ href: routes.adminComplaints, label: 'Back to complaints' }}
       actions={<ComplaintStatusLabel status={complaint.status} />}
-      description={`${complaint.source === 'chat_report' ? 'From a reported chat message' : 'From the complaint form'}, filed ${formatDeparture(complaint.createdAt)}.${complaint.legacyReference ? ` Chat report ${complaint.legacyReference}.` : ''}`}
+      description={`${complaint.source === 'chat_report' ? 'From a reported chat message' : complaint.source === 'payment_dispute' ? 'Opened from a disputed ride-share payment' : 'From the complaint form'}, filed ${formatDeparture(complaint.createdAt)}.${complaint.legacyReference ? ` Chat report ${complaint.legacyReference}.` : ''}`}
     >
       <div className="grid gap-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="flex min-w-0 flex-col gap-10">

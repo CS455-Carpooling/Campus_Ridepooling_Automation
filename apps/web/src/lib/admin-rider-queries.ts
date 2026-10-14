@@ -72,6 +72,7 @@ export type RiderWarning = {
   id: string;
   reason: string;
   issuedAt: string;
+  acknowledgedAt: string | null;
   issuedBy: string;
   complaintReference: string | null;
 };
@@ -184,10 +185,11 @@ export async function getRiderRecord(
       id: string;
       reason: string;
       issued_at: Date;
+      acknowledged_at: Date | null;
       issued_by: string;
       complaint_reference: string | null;
     }>(
-      `SELECT w.id, w.reason, w.issued_at, admin.full_name AS issued_by,
+      `SELECT w.id, w.reason, w.issued_at, w.acknowledged_at, admin.full_name AS issued_by,
               c.reference AS complaint_reference
        FROM rider_warnings w
        JOIN users admin ON admin.id = w.issued_by
@@ -245,6 +247,7 @@ export async function getRiderRecord(
       id: warning.id,
       reason: warning.reason,
       issuedAt: warning.issued_at.toISOString(),
+      acknowledgedAt: warning.acknowledged_at?.toISOString() ?? null,
       issuedBy: warning.issued_by,
       complaintReference: warning.complaint_reference,
     })),

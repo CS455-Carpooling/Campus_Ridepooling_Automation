@@ -261,6 +261,11 @@ describe('ride-chat domain helpers', () => {
       ok: true,
       message: { senderName: 'You', body: 'See you at Hall 6' },
     });
+    const recipientQuery = query.mock.calls.find(([sql]) =>
+      String(sql).includes('SELECT user_id FROM ('),
+    );
+    expect(recipientQuery?.[0]).toContain('\n       UNION\n');
+    expect(recipientQuery?.[0]).not.toContain('UNION ALL');
 
     await expect(createChatMessage(rideId, senderId, 'x'.repeat(501), now)).resolves.toMatchObject({
       ok: false,

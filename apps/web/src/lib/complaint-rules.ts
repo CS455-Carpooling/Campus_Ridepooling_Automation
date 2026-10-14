@@ -41,7 +41,7 @@ export const complaintStatusLabels: Record<ComplaintStatus, string> = {
 };
 
 /** Where a complaint came from: the complaint form, or a reported chat message (FR-RD-09.6). */
-export type ComplaintSource = 'form' | 'chat_report';
+export type ComplaintSource = 'form' | 'chat_report' | 'payment_dispute';
 
 /** P-17. */
 export const COMPLAINT_RULES = {

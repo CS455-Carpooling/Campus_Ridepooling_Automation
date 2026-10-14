@@ -321,7 +321,7 @@ export async function createChatMessage(
   const recipients = await pool.query<{ user_id: string }>(
     `SELECT user_id FROM (
        SELECT owner_id AS user_id FROM rides WHERE id = $1
-       UNION ALL
+       UNION
        SELECT user_id FROM riders WHERE ride_id = $1 AND left_at IS NULL
      ) members
      WHERE user_id <> $2`,
