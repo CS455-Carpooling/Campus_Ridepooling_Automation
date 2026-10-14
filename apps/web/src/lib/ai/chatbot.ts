@@ -404,30 +404,71 @@ function checkPreferenceChangeRequest(text: string): ProposedPreferenceChanges |
   return changes;
 }
 
+export const ASIA_KOLKATA_OFFSET_MS = (5 * 60 + 30) * 60 * 1000; // +05:30 (India Standard Time)
+
+/**
+ * Returns date components in Asia/Kolkata (IST, UTC+05:30) timezone.
+ * Uses strict UTC arithmetic with the fixed 330-minute offset, guaranteeing
+ * identical results regardless of the host system's process.env.TZ.
+ */
+export function getIstComponents(date: Date) {
+  const istTime = new Date(date.getTime() + ASIA_KOLKATA_OFFSET_MS);
+  return {
+    year: istTime.getUTCFullYear(),
+    month: istTime.getUTCMonth() + 1, // 1-12
+    day: istTime.getUTCDate(),
+    dayOfWeek: istTime.getUTCDay(), // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    hour: istTime.getUTCHours(),
+    minute: istTime.getUTCMinutes(),
+  };
+}
+
+/** Formats date components into an ISO 8601 string with explicit +05:30 offset. */
+export function formatIstIsoString(
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  minute: number = 0,
+  second: number = 0,
+): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${year}-${pad(month)}-${pad(day)}T${pad(hour)}:${pad(minute)}:${pad(second)}+05:30`;
+}
+
 /**
  * Natural-language date and time extractor.
- * Converts references like "Saturday after 6 pm", "tomorrow 8am", etc. to an ISO window.
+ * Converts references like "Saturday after 6 pm", "tomorrow 8am", etc. to an ISO window
+ * constructed strictly in Asia/Kolkata (+05:30).
  */
-function extractDepartureWindow(text: string, now: Date): { start: Date; end: Date } {
+export function extractDepartureWindow(
+  text: string,
+  now: Date,
+): { departureStart: string; departureEnd: string } {
   const lower = text.toLowerCase();
-  const date = new Date(now.getTime());
+  const istNow = getIstComponents(now);
 
   // Check days of week
   const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
   const dayIndex = days.findIndex((d) => lower.includes(d));
 
+  let daysAhead = 0;
   if (dayIndex !== -1) {
-    const currentDay = date.getDay();
-    let daysAhead = (dayIndex - currentDay + 7) % 7;
-    if (daysAhead === 0 && (lower.includes('next') || date.getHours() >= 20)) {
+    daysAhead = (dayIndex - istNow.dayOfWeek + 7) % 7;
+    if (daysAhead === 0 && (lower.includes('next') || istNow.hour >= 20)) {
       daysAhead = 7;
     }
-    date.setDate(date.getDate() + daysAhead);
   } else if (lower.includes('tomorrow')) {
-    date.setDate(date.getDate() + 1);
+    daysAhead = 1;
   }
 
-  // Time extraction
+  // Calculate target date via UTC Date to avoid any host timezone shifts
+  const targetUtc = new Date(Date.UTC(istNow.year, istNow.month - 1, istNow.day + daysAhead));
+  const targetYear = targetUtc.getUTCFullYear();
+  const targetMonth = targetUtc.getUTCMonth() + 1;
+  const targetDay = targetUtc.getUTCDate();
+
+  // Time extraction in IST
   let startHour = 8;
   let endHour = 12;
 
@@ -457,30 +498,10 @@ function extractDepartureWindow(text: string, now: Date): { start: Date; end: Da
     }
   }
 
-  const startDate = new Date(date);
-  startDate.setHours(startHour, 0, 0, 0);
-
-  const endDate = new Date(date);
-  endDate.setHours(endHour, 0, 0, 0);
-
-  return { start: startDate, end: endDate };
-}
-
-/** Formats date to ISO string with Indian Standard Time (+05:30) offset. */
-function toIsoWithOffset(date: Date): string {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  // Represent explicitly in IST
-  const offsetMinutes = 330; // +05:30
-  const utc = date.getTime() + date.getTimezoneOffset() * 60_000;
-  const ist = new Date(utc + offsetMinutes * 60_000);
-
-  const Y = ist.getFullYear();
-  const M = pad(ist.getMonth() + 1);
-  const D = pad(ist.getDate());
-  const h = pad(ist.getHours());
-  const m = pad(ist.getMinutes());
-  const s = pad(ist.getSeconds());
-  return `${Y}-${M}-${D}T${h}:${m}:${s}+05:30`;
+  return {
+    departureStart: formatIstIsoString(targetYear, targetMonth, targetDay, startHour, 0, 0),
+    departureEnd: formatIstIsoString(targetYear, targetMonth, targetDay, endHour, 0, 0),
+  };
 }
 
 /**
@@ -668,10 +689,8 @@ export async function processChatbotMessage(
     if (f > 0 && f <= 50_000) maxFareShare = f;
   }
 
-  // Resolve departure window
-  const { start, end } = extractDepartureWindow(lower, now);
-  const departureStart = toIsoWithOffset(start);
-  const departureEnd = toIsoWithOffset(end);
+  // Resolve departure window (explicitly constructed in Asia/Kolkata)
+  const { departureStart, departureEnd } = extractDepartureWindow(lower, now);
 
   const interpretedFilters: InterpretedFilters = {
     direction,

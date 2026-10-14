@@ -12,7 +12,12 @@ const queryMock = vi.hoisted(() => vi.fn());
 const connectMock = vi.hoisted(() => vi.fn());
 vi.mock('../db', () => ({ pool: { query: queryMock, connect: connectMock } }));
 
-import { processChatbotMessage, MAX_MESSAGE_LENGTH, type ChatbotResponse } from './chatbot';
+import {
+  processChatbotMessage,
+  extractDepartureWindow,
+  MAX_MESSAGE_LENGTH,
+  type ChatbotResponse,
+} from './chatbot';
 import { routes } from '../routes';
 
 const VIEWER_ID = '11111111-1111-4000-8000-111111111111';
@@ -343,6 +348,27 @@ describe('Natural-Language Ride Search (FR-RD-05.1, US-RD-12-AC1)', () => {
     expect(response.missingField).toBe('hub');
     expect(response.message).toContain('Where are you heading?');
     expect(searchRidesMock).not.toHaveBeenCalled();
+  });
+
+  it('constructs departure window strictly in Asia/Kolkata (+05:30) independent of host timezone', () => {
+    // Reference instant: Wednesday, 2026-10-14 12:00:00 UTC (17:30 IST)
+    const referenceUtc = new Date('2026-10-14T12:00:00.000Z');
+
+    // "tomorrow after 6 pm" must resolve to Thursday 18:00:00+05:30 to 23:00:00+05:30
+    // regardless of server's process.env.TZ (never 23:30+05:30)
+    const tomorrowEvening = extractDepartureWindow('cab tomorrow after 6 pm', referenceUtc);
+    expect(tomorrowEvening.departureStart).toBe('2026-10-15T18:00:00+05:30');
+    expect(tomorrowEvening.departureEnd).toBe('2026-10-15T23:00:00+05:30');
+
+    // "Saturday after 6 pm"
+    const saturdayEvening = extractDepartureWindow('ride Saturday after 6 pm', referenceUtc);
+    expect(saturdayEvening.departureStart).toBe('2026-10-17T18:00:00+05:30');
+    expect(saturdayEvening.departureEnd).toBe('2026-10-17T23:00:00+05:30');
+
+    // "tomorrow 8am"
+    const morningWindow = extractDepartureWindow('auto to station tomorrow 8am', referenceUtc);
+    expect(morningWindow.departureStart).toBe('2026-10-15T08:00:00+05:30');
+    expect(morningWindow.departureEnd).toBe('2026-10-15T11:00:00+05:30');
   });
 });
 
