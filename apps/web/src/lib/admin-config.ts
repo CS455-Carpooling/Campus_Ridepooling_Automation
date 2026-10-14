@@ -2,7 +2,6 @@ import 'server-only';
 import type { PoolClient } from 'pg';
 import {
   idFromName,
-  type CampusFareInput,
   type ExternalFareRangeInput,
   type LocationCreate,
   type LocationType,
@@ -10,19 +9,14 @@ import {
   type VehicleTypeCreate,
   type VehicleTypeUpdate,
 } from './admin-config-rules';
-import type {
-  CampusFareRecord,
-  ExternalFareRangeRecord,
-  LocationRecord,
-  VehicleTypeRecord,
-} from './admin-types';
+import type { ExternalFareRangeRecord, LocationRecord, VehicleTypeRecord } from './admin-types';
 
 /**
- * The configuration writes of the admin APIs (OA-FR-01 to 11, CS455-50). Each runs on the
- * transaction of withAdminAction(), which audits it. An edit names the version the admin
+ * The configuration writes of the admin APIs (OA-FR-01 to 09, OA-FR-11, CS455-50). Each runs
+ * on the transaction of withAdminAction(), which audits it. An edit names the version the admin
  * loaded and is refused when someone has changed the item since (SYS-NFR-04, 05). IDs never
- * change, and nothing is deleted: a vehicle type or place is deactivated instead, so the
- * rides that use it keep it (OA-FR-06).
+ * change, and nothing is deleted: a vehicle type or place is deactivated instead, so the rides
+ * that use it keep it (OA-FR-06).
  */
 
 /** What a write did: saved (with the item before, for the audit), or why not. */
@@ -51,15 +45,6 @@ type LocationRow = {
   version: number;
 };
 
-type CampusFareRow = {
-  from_location_id: string;
-  to_location_id: string;
-  vehicle_type_id: string;
-  fare: number;
-  version: number;
-  updated_at: Date;
-};
-
 type ExternalFareRangeRow = {
   hub_id: string;
   vehicle_type_id: string;
@@ -71,8 +56,6 @@ type ExternalFareRangeRow = {
 
 export const VEHICLE_TYPE_COLUMNS = 'id, name, capacity, is_active, sort_order, version';
 export const LOCATION_COLUMNS = 'id, type, name, detail, is_active, sort_order, version';
-export const CAMPUS_FARE_COLUMNS =
-  'from_location_id, to_location_id, vehicle_type_id, fare, version, updated_at';
 export const EXTERNAL_FARE_COLUMNS =
   'hub_id, vehicle_type_id, min_fare, max_fare, version, updated_at';
 
@@ -93,15 +76,6 @@ export const locationRecord = (row: LocationRow): LocationRecord => ({
   isActive: row.is_active,
   sortOrder: row.sort_order,
   version: row.version,
-});
-
-export const campusFareRecord = (row: CampusFareRow): CampusFareRecord => ({
-  fromId: row.from_location_id,
-  toId: row.to_location_id,
-  vehicleTypeId: row.vehicle_type_id,
-  fare: row.fare,
-  version: row.version,
-  updatedAt: row.updated_at.toISOString(),
 });
 
 export const externalFareRangeRecord = (row: ExternalFareRangeRow): ExternalFareRangeRecord => ({
@@ -232,48 +206,6 @@ async function checkFareIds(
   const vehicle = await client.query('SELECT 1 FROM vehicle_types WHERE id = $1', [vehicleTypeId]);
   if (vehicle.rows.length === 0) fields.vehicleTypeId = 'Choose a vehicle type from the list.';
   return fields;
-}
-
-/**
- * Sets the fixed fare between two campus places for a vehicle type (OA-FR-10). `version` is
- * null for a fare that is not set yet; if another admin set it meanwhile, that is a conflict.
- */
-export async function setCampusFare(
-  client: PoolClient,
-  input: CampusFareInput,
-  adminId: string,
-): Promise<ConfigWrite<CampusFareRecord>> {
-  const fields = await checkFareIds(
-    client,
-    [
-      { field: 'fromId', id: input.fromId, type: 'campus' },
-      { field: 'toId', id: input.toId, type: 'campus' },
-    ],
-    input.vehicleTypeId,
-  );
-  if (Object.keys(fields).length > 0) return { kind: 'invalid', fields };
-
-  const key = [input.fromId, input.toId, input.vehicleTypeId];
-  const { rows } = await client.query<CampusFareRow>(
-    `SELECT ${CAMPUS_FARE_COLUMNS} FROM campus_fares
-     WHERE from_location_id = $1 AND to_location_id = $2 AND vehicle_type_id = $3
-     FOR UPDATE`,
-    key,
-  );
-  const before = rows[0] ? campusFareRecord(rows[0]) : null;
-  if (before ? before.version !== input.version : input.version !== null) {
-    return before ? { kind: 'version_conflict', current: before } : { kind: 'not_found' };
-  }
-  const { rows: saved } = await client.query<CampusFareRow>(
-    `INSERT INTO campus_fares (from_location_id, to_location_id, vehicle_type_id, fare, updated_by)
-     VALUES ($1, $2, $3, $4, $5)
-     ON CONFLICT (from_location_id, to_location_id, vehicle_type_id) DO UPDATE
-       SET fare = EXCLUDED.fare, updated_by = EXCLUDED.updated_by,
-           version = campus_fares.version + 1, updated_at = now()
-     RETURNING ${CAMPUS_FARE_COLUMNS}`,
-    [...key, input.fare, adminId],
-  );
-  return { kind: 'saved', record: campusFareRecord(saved[0]), before };
 }
 
 /**

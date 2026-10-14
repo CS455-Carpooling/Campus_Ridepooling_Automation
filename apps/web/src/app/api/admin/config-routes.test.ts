@@ -9,7 +9,6 @@ const h = vi.hoisted(() => ({
   updateVehicleType: vi.fn(),
   createLocation: vi.fn(),
   updateLocation: vi.fn(),
-  setCampusFare: vi.fn(),
   setExternalFareRange: vi.fn(),
 }));
 
@@ -27,11 +26,9 @@ vi.mock('@/lib/admin-config', () => ({
   updateVehicleType: h.updateVehicleType,
   createLocation: h.createLocation,
   updateLocation: h.updateLocation,
-  setCampusFare: h.setCampusFare,
   setExternalFareRange: h.setExternalFareRange,
 }));
 
-import { PUT as putCampusFare } from './campus-fares/route';
 import { PUT as putExternalFare } from './external-fares/route';
 import { PATCH as patchLocation } from './locations/[id]/route';
 import { POST as postLocation } from './locations/route';
@@ -141,27 +138,6 @@ describe('admin configuration routes (CS455-50)', () => {
       detail: null,
       version: 2,
     });
-  });
-
-  it('set a campus fare, in place order, by the signed-in admin', async () => {
-    h.readJson.mockResolvedValue({
-      fromId: 'hall-6',
-      toId: 'hall-1',
-      vehicleTypeId: 'auto',
-      fare: 50,
-      version: null,
-    });
-    h.setCampusFare.mockResolvedValue(
-      saved({ fromId: 'hall-1', toId: 'hall-6', vehicleTypeId: 'auto', fare: 50 }),
-    );
-    const res = await putCampusFare(request());
-    expect(res.status).toBe(200);
-    expect(h.setCampusFare).toHaveBeenCalledWith(
-      CLIENT,
-      { fromId: 'hall-1', toId: 'hall-6', vehicleTypeId: 'auto', fare: 50, version: null },
-      admin.userId,
-    );
-    expect(h.withAdminAction.mock.calls[0][1]).toMatchObject({ entityId: 'hall-1:hall-6:auto' });
   });
 
   it('set an external range, and pass on field refusals from the database checks', async () => {

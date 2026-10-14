@@ -4,11 +4,10 @@
  * Imported once by src/index.css, which styles the rest of the site. The token
  * values live on the .ds class, so the design-system classes (bg-paper,
  * text-ink, rounded-control, ...) take effect only inside pages wrapped in
- * <DesignSystem> (src/components/ui/DesignSystem.tsx): the create-ride UI,
- * terms, privacy, home, 404 and error pages. Everything outside .ds keeps
- * index.css's look unchanged. Dark values follow the .dark class that the
- * theme toggle puts on <html> (ThemeSync applies the saved choice on the
- * pages that have no toggle). Every text and border pairing is checked
+ * <DesignSystem> (src/components/ui/DesignSystem.tsx). Everything outside
+ * .ds keeps index.css's look unchanged. Dark values follow the .dark class
+ * that the theme toggle puts on <html> (ThemeSync applies the saved choice on
+ * pages without their own toggle). Every text and border pairing is checked
  * against WCAG 2.1 AA, in both schemes, by test/contrast.test.ts (NFR-RD-15).
  */
 @theme inline {
@@ -92,6 +91,9 @@
 
   color: var(--ds-ink);
   font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  min-height: 100svh;
+  min-width: 0;
+  background: var(--ds-paper);
 }
 
 /* Dark scheme, switched by the theme toggle (.dark on <html>). */
@@ -132,6 +134,24 @@
 }
 
 @layer base {
+  .ds :where(main, section, article, form, fieldset, table, dl) {
+    min-width: 0;
+  }
+
+  .ds :where(p, dd, td, th, label, button, a) {
+    overflow-wrap: anywhere;
+  }
+
+  .ds :where(input:not([type='checkbox']):not([type='radio']), select, textarea) {
+    max-width: 100%;
+    background-color: var(--ds-surface);
+  }
+
+  .ds :where(input:not([type='checkbox']):not([type='radio']), select, textarea):focus-visible {
+    border-color: var(--ds-primary);
+    outline-color: var(--ds-primary);
+  }
+
   .ds :where(h1, h2, h3) {
     text-wrap: balance;
   }
@@ -164,6 +184,76 @@
 
   .ds [data-surface='light'] :focus-visible {
     outline-color: var(--ds-ink);
+  }
+}
+
+@layer components {
+  .ds .ds-page-heading {
+    border: 1px solid var(--ds-line);
+    border-radius: var(--ds-radius-panel);
+    background: var(--ds-surface);
+    padding: clamp(1.25rem, 4vw, 2rem);
+  }
+
+  .ds .ds-page-heading h1 {
+    font-size: clamp(1.875rem, 5vw, 3rem);
+    line-height: 1.08;
+    letter-spacing: -0.045em;
+  }
+
+  .ds .ds-card {
+    border: 1px solid var(--ds-line);
+    border-radius: var(--ds-radius-panel);
+    background: var(--ds-surface);
+    padding: clamp(1rem, 3vw, 1.5rem);
+  }
+
+  .ds .ds-list {
+    overflow: hidden;
+    border: 1px solid var(--ds-line);
+    border-radius: var(--ds-radius-panel);
+    background: var(--ds-surface);
+  }
+
+  .ds .ds-list > li {
+    padding-inline: clamp(1rem, 3vw, 1.5rem);
+  }
+
+  .ds .ds-content > section {
+    border: 1px solid var(--ds-line);
+    border-radius: var(--ds-radius-panel);
+    background: var(--ds-surface);
+    padding: clamp(1rem, 3vw, 1.5rem);
+  }
+
+  .ds nav[aria-label='Operations admin'] {
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+  }
+
+  .ds nav[aria-label='Operations admin'] ul {
+    width: max-content;
+    flex-wrap: nowrap;
+  }
+
+  .ds nav[aria-label='Operations admin'] a {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 639px) {
+  .ds .ds-page-heading {
+    align-items: stretch;
+  }
+
+  .ds .ds-page-heading > :last-child:is(div, nav) {
+    max-width: 100%;
+  }
+
+  .ds .ds-content {
+    margin-top: 1.25rem;
   }
 }
 

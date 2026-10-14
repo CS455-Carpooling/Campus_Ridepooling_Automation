@@ -38,7 +38,7 @@ export default async function RideResultsPage({ searchParams }: Props) {
 
   return (
     <DesignSystem className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-      <header className="mt-6">
+      <header className="ds-page-heading mt-6">
         <p className="text-sm font-semibold uppercase tracking-wide text-accent-text">
           Find a ride
         </p>

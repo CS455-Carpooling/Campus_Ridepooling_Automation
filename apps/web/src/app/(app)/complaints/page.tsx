@@ -34,11 +34,16 @@ export default async function MyComplaintsPage() {
       >
         Back to your rides
       </Link>
-      <h1 className="mt-6 text-3xl font-extrabold tracking-tight sm:text-4xl">Your complaints</h1>
-      <p className="mt-3 text-ink-muted">
-        An operations admin reviews each complaint. You see its status here; the person it is about
-        is never told who complained.
-      </p>
+      <header className="ds-page-heading mt-6">
+        <p className="text-sm font-semibold uppercase tracking-wide text-accent-text">
+          Your account
+        </p>
+        <h1 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Your complaints</h1>
+        <p className="mt-3 text-ink-muted">
+          An operations admin reviews each complaint. You see its status here; the person it is
+          about is never told who complained.
+        </p>
+      </header>
       {complaints.length === 0 ? (
         <div className="mt-8">
           <p className="text-ink-muted">
@@ -50,7 +55,10 @@ export default async function MyComplaintsPage() {
           </ButtonLink>
         </div>
       ) : (
-        <ul aria-label="Your complaints" className="mt-8 divide-y divide-line border-y border-line">
+        <ul
+          aria-label="Your complaints"
+          className="ds-list mt-8 divide-y divide-line border-y border-line"
+        >
           {complaints.map((complaint) => (
             <li
               key={complaint.reference}

@@ -42,20 +42,6 @@ describe('getConfiguration (CS455-51)', () => {
           ],
         };
       }
-      if (sql.includes('FROM campus_fares')) {
-        return {
-          rows: [
-            {
-              from_location_id: 'hall-1',
-              to_location_id: 'hall-6',
-              vehicle_type_id: 'auto',
-              fare: 40,
-              version: 1,
-              updated_at: updatedAt,
-            },
-          ],
-        };
-      }
       return {
         rows: [
           {
@@ -86,16 +72,13 @@ describe('getConfiguration (CS455-51)', () => {
         version: 1,
       },
     ]);
-    expect(data.campusFares[0]).toMatchObject({
-      fromId: 'hall-1',
-      fare: 40,
-      updatedAt: updatedAt.toISOString(),
-    });
     expect(data.externalFareRanges[0]).toMatchObject({
       hubId: 'kanpur-central',
       minFare: 250,
       maxFare: 400,
     });
     expect(String(query.mock.calls[0][0])).not.toContain('WHERE');
+    expect(query).toHaveBeenCalledTimes(3);
+    expect(query.mock.calls.map(([sql]) => String(sql)).join('\n')).not.toContain('campus_fares');
   });
 });

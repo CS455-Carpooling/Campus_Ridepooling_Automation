@@ -42,7 +42,7 @@ This document refines the Ride Owner user requirements in `01_requirements_speci
 |---|---|---|
 | FR-RO-07.1 | The system shall display the expected total fare and the current calculated share for each confirmed occupant. | UR-RO-07 |
 | FR-RO-07.2 | The system shall recalculate and display fare shares whenever a Rider is accepted, leaves before lock time, or is marked as a no-show. | UR-RO-07 |
-| FR-RO-07.3 | The system shall ensure that the displayed occupant shares total the expected total fare, subject to the system rounding rule. | UR-RO-07 |
+| FR-RO-07.3 | The system shall divide the whole-ride expected total fare as evenly as possible among the owner and all active Riders; shares shall sum exactly to that fare, with any whole-rupee remainder assigned in the owner-first, request-acceptance order defined by Rider Table T-2. | UR-RO-07 |
 | FR-RO-09.1 | The system shall allow the Ride Owner to transition a locked ride from `Scheduled` to `Pickup in Progress`. | UR-RO-09 |
 | FR-RO-09.2 | The system shall notify confirmed Riders when pickup starts. | UR-RO-09 |
 | FR-RO-09.3 | During `Pickup in Progress`, the system shall display the arrival status of each confirmed Rider and allow the Ride Owner to mark a Rider as `Arrived`. | UR-RO-09 |

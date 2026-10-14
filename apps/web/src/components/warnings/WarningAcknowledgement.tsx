@@ -33,7 +33,10 @@ export function WarningAcknowledgement({ warnings }: { warnings: PendingRiderWar
 
   return (
     <DesignSystem className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-      <section aria-labelledby="warning-heading" className="rounded-panel border border-line p-6">
+      <section
+        aria-labelledby="warning-heading"
+        className="ds-card rounded-panel border border-line p-6"
+      >
         <h1 id="warning-heading" className="text-2xl font-bold">
           Please review your account warning{warnings.length === 1 ? '' : 's'}
         </h1>

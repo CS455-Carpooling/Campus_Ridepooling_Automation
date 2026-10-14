@@ -47,6 +47,7 @@ describe('SiteHeader', () => {
     const nav = screen.getByRole('navigation', { name: 'Main' });
     expect(within(nav).getByRole('link', { name: 'Riders' })).toBeInTheDocument();
     expect(within(nav).queryByRole('link', { name: 'Offer a ride' })).not.toBeInTheDocument();
+    expect(within(nav).queryByRole('link', { name: 'Profile' })).not.toBeInTheDocument();
     expect(screen.getByText(/\(Operations admin\)/)).toBeInTheDocument();
   });
 

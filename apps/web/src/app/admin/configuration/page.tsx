@@ -43,11 +43,8 @@ export default async function ConfigurationPage() {
     {
       href: routes.adminFares,
       title: 'Fares',
-      text: 'Typical fare ranges from each hub, shown to riders as estimates, and fixed campus fares.',
-      facts: [
-        `${data.externalFareRanges.length} of ${activeHubs * activeTypes} hub ranges set`,
-        count(data.campusFares.length, 'campus fare', 'campus fares'),
-      ],
+      text: 'Typical fare ranges from each hub, shown to riders as estimates. Ride fares are split equally among occupants.',
+      facts: [`${data.externalFareRanges.length} of ${activeHubs * activeTypes} hub ranges set`],
     },
   ];
 

@@ -22,7 +22,6 @@ describe('navigationFor', () => {
       'AI recommendations',
       'Riders',
       'Configuration',
-      'Profile',
     ]);
   });
 

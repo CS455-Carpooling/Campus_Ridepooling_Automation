@@ -261,3 +261,13 @@ recorded as cancelled. The existing account model has no production
 administrator-role provisioning, so the review queue follows the current
 development-admin role mechanism. The author should review these
 limitations and complete the end-to-end evaluation.
+
+---
+
+## Fare-sharing scope clarification — 2026-10-14
+
+The current fare policy is a whole-ride equal split across all occupants,
+including the owner, with whole-rupee remainder allocation following
+Table T-2. Separate common-route or rider-specific fare segments are out of
+scope for now. Earlier discussion of segment-based fares remains historical
+context rather than the active fare rule.

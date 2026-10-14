@@ -140,7 +140,7 @@ export function ProfileEditor({
 
   return (
     <DesignSystem className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="ds-page-heading flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-accent-text">
             {setupRequired ? 'First sign-in' : 'Account settings'}

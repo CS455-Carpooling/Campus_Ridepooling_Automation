@@ -56,7 +56,6 @@ const navigation: Record<Role, NavItem[]> = {
     { href: routes.adminAiRecommendations, label: 'AI recommendations' },
     { href: routes.adminRiders, label: 'Riders' },
     { href: routes.adminConfiguration, label: 'Configuration' },
-    { href: routes.profile, label: 'Profile' },
   ],
 };
 
