@@ -71,14 +71,17 @@ export async function GET() {
       [requestIds],
     );
 
-    const historyByRequest = new Map<string, Array<{
-      id: string;
-      previousStatus: string | null;
-      newStatus: string;
-      reasonCode: string | null;
-      changedBy: null;
-      changedAt: Date;
-    }>>();
+    const historyByRequest = new Map<
+      string,
+      Array<{
+        id: string;
+        previousStatus: string | null;
+        newStatus: string;
+        reasonCode: string | null;
+        changedBy: null;
+        changedAt: Date;
+      }>
+    >();
 
     for (const event of historyResult.rows) {
       const events = historyByRequest.get(event.request_id) ?? [];
@@ -95,21 +98,19 @@ export async function GET() {
 
     return json(
       {
-        requests: requests.map(
-          (request) => ({
-            id: request.id,
-            rideId: request.ride_id,
-            pickupPointId: request.pickup_location_id,
-            status: request.status,
-            departureSnapshot: request.snapshot_departure_start,
-            pickupTimeSnapshot: request.snapshot_pickup_at,
-            estimatedShare: request.snapshot_estimated_share,
-            reasonCode: request.reason_code,
-            submittedAt: request.submitted_at,
-            updatedAt: request.updated_at,
-            history: historyByRequest.get(request.id) ?? [],
-          }),
-        ),
+        requests: requests.map((request) => ({
+          id: request.id,
+          rideId: request.ride_id,
+          pickupPointId: request.pickup_location_id,
+          status: request.status,
+          departureSnapshot: request.snapshot_departure_start,
+          pickupTimeSnapshot: request.snapshot_pickup_at,
+          estimatedShare: request.snapshot_estimated_share,
+          reasonCode: request.reason_code,
+          submittedAt: request.submitted_at,
+          updatedAt: request.updated_at,
+          history: historyByRequest.get(request.id) ?? [],
+        })),
       },
       200,
     );
