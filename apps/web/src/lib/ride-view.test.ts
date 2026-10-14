@@ -51,6 +51,7 @@ const third = {
 function respond(ride: object | null, occupants: object[] = [owner]) {
   query.mockResolvedValueOnce({ rows: ride ? [ride] : [] });
   query.mockResolvedValueOnce({ rows: occupants });
+  query.mockResolvedValue({ rows: [] });
 }
 
 beforeEach(() => query.mockReset());

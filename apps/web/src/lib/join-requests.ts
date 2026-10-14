@@ -62,6 +62,7 @@ type FailureKind =
   | 'already_requested'
   | 'active_request_limit'
   | 'departure_conflict'
+  | 'payment_overdue'
   | 'request_not_active'
   | 'request_not_pending'
   | 'request_not_reconfirming'
@@ -519,6 +520,15 @@ export async function submitJoinRequest(
 
   const ride = await lockRide(client, rideId);
   if (!ride) return requestFailure('not_found');
+  const overduePayment = await client.query(
+    `SELECT 1 FROM ride_final_shares share
+     JOIN rides completed_ride ON completed_ride.id = share.ride_id
+     WHERE share.user_id = $1 AND share.role = 'rider' AND share.payment_status = 'due'
+       AND completed_ride.completed_at < $2 - interval '7 days'
+     LIMIT 1`,
+    [riderId, now],
+  );
+  if (overduePayment.rows.length > 0) return requestFailure('payment_overdue');
   if (ride.owner_id === riderId)
     return requestFailure('already_requested', 'You already own this ride.');
   if (ride.state !== 'scheduled') return requestFailure('ride_closed');

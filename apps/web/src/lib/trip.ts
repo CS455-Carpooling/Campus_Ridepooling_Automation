@@ -307,8 +307,9 @@ export async function changeTripState(
       .map((seat, index) => ({ seat, share: shares[index] }))
       .filter((entry): entry is { seat: SeatRow; share: number } => entry.share !== null);
     await client.query(
-      `INSERT INTO ride_final_shares (ride_id, user_id, role, position, share)
-       SELECT $1, final.user_id, final.role, final.position, final.share
+      `INSERT INTO ride_final_shares (ride_id, user_id, role, position, share, payment_status)
+       SELECT $1, final.user_id, final.role, final.position, final.share,
+              CASE WHEN final.role = 'rider' THEN 'due' ELSE NULL END
        FROM unnest($2::uuid[], $3::text[], $4::int[], $5::int[])
          AS final (user_id, role, position, share)`,
       [

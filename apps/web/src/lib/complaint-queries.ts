@@ -90,7 +90,8 @@ const PEOPLE_SQL = `
          COALESCE(profile.display_name, u.full_name) AS name,
          (m.user_id = r.owner_id) AS is_owner, place.name AS campus_place,
          (SELECT c.reference FROM complaints c
-          WHERE c.ride_id = m.ride_id AND c.complainant_id = $2 AND c.accused_id = m.user_id)
+         WHERE c.ride_id = m.ride_id AND c.complainant_id = $2 AND c.accused_id = m.user_id
+           AND c.source <> 'payment_dispute')
            AS filed_reference
   FROM riders m
   JOIN rides r ON r.id = m.ride_id

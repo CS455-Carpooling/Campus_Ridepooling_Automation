@@ -32,9 +32,10 @@ export function ComplaintQueueFilters({ filters }: { filters: QueueFilters }) {
         ))}
       </SelectField>
       <SelectField label="Came from" name="source" defaultValue={filters.source}>
-        <option value="all">Form and chat reports</option>
+        <option value="all">All sources</option>
         <option value="form">Complaint form</option>
         <option value="chat_report">Chat reports</option>
+        <option value="payment_dispute">Payment disputes</option>
       </SelectField>
       <Button type="submit" variant="secondary">
         Show

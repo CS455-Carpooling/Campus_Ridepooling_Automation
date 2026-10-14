@@ -13,6 +13,8 @@ export const notificationTypes = [
   // A trip under way (CS455-60).
   'trip_update',
   'no_show_recorded',
+  'payment_due',
+  'payment_update',
 ] as const;
 
 export type NotificationType = (typeof notificationTypes)[number];

@@ -58,6 +58,9 @@ export default async function AdminComplaintsPage({
                     {complaint.source === 'chat_report' && (
                       <span className="text-sm text-ink-muted">Chat report</span>
                     )}
+                    {complaint.source === 'payment_dispute' && (
+                      <span className="text-sm text-ink-muted">Payment dispute</span>
+                    )}
                     <span
                       className={
                         complaint.aiReview === 'manual'
