@@ -6,35 +6,37 @@ A carpool app for IIT Kanpur. Next.js (App Router) + PostgreSQL, with IITK-only 
 
 | Feature | Details |
 |---|---|
-| Register | `@iitk.ac.in` only (checked in the browser, the API and a database constraint). Needs email verification. |
-| Login / logout | Verified `@iitk.ac.in` accounts only. Sessions expire after 1 day, or 30 days with "Keep me signed in", and always end after 7 days without activity. |
-| Forgot / reset password | Single-use link valid for 30 minutes. Resetting signs the user out everywhere. |
-| Security | scrypt password hashing, httpOnly session cookies (only a token hash is stored), CSRF origin check, database-backed rate limiting, no account enumeration, security headers and CSP. |
-| Email | Sent through a small Google Apps Script web app (free, no domain needed). |
+| Authentication | `@iitk.ac.in` registration with email verification, sign-in/out, forgot/reset password and server-managed sessions. |
+| Rides | Students can offer rides and search for rides using the same account; owners review and decide seat requests. |
+| Ride coordination | Ride chat, notifications, pickup/trip progress, no-show handling and SOS workflows. |
+| Fare and settlement | Equal whole-ride fare shares are calculated by the server. The app records external settlement; it does not transfer money. |
+| AI assistance | Gemini-backed ride recommendations, natural-language chatbot and advisory complaint analysis; validated deterministic fallback/manual review paths remain available. |
+| Administration | Audited configuration changes, complaint review, rider warnings/suspensions and SOS incident management. |
+| Security | scrypt password hashing, httpOnly session cookies (only a token hash is stored), CSRF origin checks, database-backed rate limiting, no account enumeration, security headers and CSP. |
+| Email | Optional verification and reset email delivery through a Google Apps Script web app. |
 
 ## Project layout
 
 ```
 Campus_Ridepooling_Automation/
-├── render.yaml                  # Render blueprint (web service + Postgres)
-└── apps/web/                    # the Next.js app, and the project root for all commands below
+├── docker-compose.yml           # local PostgreSQL and production web app
+├── Deliverables/                # course deliverables and D2 records
+└── apps/web/                    # Next.js workspace; app commands can also run from the repo root
     ├── package.json
-    ├── next.config.ts           # security headers + CSP
-    ├── .env.local               # YOUR secrets (never commit)
+    ├── server.mjs                # Next.js and Socket.IO HTTP server
+    ├── next.config.ts           # security headers and CSP
+    ├── .env.local               # local secrets (never commit)
     ├── db/schema.sql            # database tables (idempotent)
-    ├── scripts/migrate.mjs      # applies schema.sql
+    ├── scripts/                 # schema migration and admin-role tools
     └── src/
-        ├── app/
-        │   ├── login | register | forgot-password | reset-password | dashboard
-        │   └── api/auth/        # register, login, logout, verify, forgot, reset
-        ├── components/          # NextPage.tsx, PageShells.tsx (UI)
-        ├── lib/                 # auth.ts (all auth logic), db.ts (Postgres pool)
-        └── index.css
+        ├── app/                 # public, authenticated, admin and API routes
+        ├── components/          # shared UI and feature components
+        └── lib/                 # authentication, domain rules, database and AI integrations
 ```
 
 ## 1. Prerequisites
 
-- **Node.js 20 or newer** (`node -v`)
+- **Node.js 24** (`node -v`; this matches `.nvmrc` and the production Docker image)
 - **Docker Desktop** (for a local Postgres), or any Postgres 13+ you already have
 - A **Gmail account** for sending emails through Apps Script (optional locally; see step 5)
 
@@ -83,14 +85,22 @@ APP_URL=http://localhost:3000
 MAIL_SCRIPT_URL=
 MAIL_SCRIPT_SECRET=
 
-# Optional: server-side Gemini key for admin complaint analysis. Without it,
-# complaints remain available for manual admin review.
+# Optional: server-side Gemini key for recommendations, the chatbot, and admin complaint analysis.
 GEMINI_API_KEY=
-# Shared Gemini model (the chatbot defaults to gemini-3.1-flash-lite; see [Google's model guide](https://ai.google.dev/gemini-api/docs/models)).
+# Shared Gemini model; the chatbot may be overridden with GEMINI_CHATBOT_MODEL.
 GEMINI_MODEL=gemini-3.1-flash-lite
+GEMINI_CHATBOT_MODEL=
+
+# Required only when scheduling the post-ride payment reminder endpoint.
+PAYMENT_REMINDER_CRON_SECRET=
 ```
 
-For Docker Compose, put the Gemini variables in the repository-root `.env` beside `docker-compose.yml` (copy the root `.env.example` first). Docker Compose does not read `apps/web/.env` or `apps/web/.env.local`.
+For Docker Compose, put `GEMINI_API_KEY` and `GEMINI_MODEL` in the repository-root `.env` beside
+`docker-compose.yml` (copy the root `.env.example` first). Compose forwards those two settings to
+the web service; it does not read `apps/web/.env` or `apps/web/.env.local`. If using the optional
+`GEMINI_CHATBOT_MODEL` override or `PAYMENT_REMINDER_CRON_SECRET` with Compose, configure that
+variable explicitly in the web service environment because the current Compose file does not
+forward it.
 
 | Variable | Purpose |
 |---|---|
@@ -98,8 +108,10 @@ For Docker Compose, put the Gemini variables in the repository-root `.env` besid
 | `APP_URL` | Public base URL, used in email links and redirects (no trailing slash). |
 | `MAIL_SCRIPT_URL` | Your deployed Apps Script web app URL (step 5). |
 | `MAIL_SCRIPT_SECRET` | Shared secret that must match the script's `MAIL_SECRET` property. |
-| `GEMINI_API_KEY` | Optional server-only Gemini key used to summarize and classify complaints. Never expose it with a `NEXT_PUBLIC_` variable. |
-| `GEMINI_MODEL` | Shared Gemini model ID. The default example uses `gemini-3.1-flash-lite`; `GEMINI_CHATBOT_MODEL` can override it for chatbot requests. |
+| `GEMINI_API_KEY` | Optional server-only Gemini key for recommendations, the chatbot and complaint analysis. Never expose it with a `NEXT_PUBLIC_` variable. |
+| `GEMINI_MODEL` | Shared Gemini model ID. The example uses `gemini-3.1-flash-lite`. |
+| `GEMINI_CHATBOT_MODEL` | Optional chatbot-only model override; defaults to `GEMINI_MODEL`. |
+| `PAYMENT_REMINDER_CRON_SECRET` | Secret for the scheduled `POST /api/cron/payment-reminders` endpoint. Keep it in the deployment secret manager and configure the scheduler to send it in the `Authorization` header. |
 
 Make sure `.env*` is listed in `.gitignore` and never commit real values.
 Complaint analysis is advisory; a missing key, timeout, invalid output, or confidence below 65% routes the complaint to manual admin review without affecting the complaint itself.
@@ -158,7 +170,8 @@ Notes:
 
 ## 6. Create the database tables
 
-The migration script reads `DATABASE_URL` from the shell, not from `.env.local`. Set it first.
+The migration script first uses `DATABASE_URL` from the shell. If it is unset, the script also
+checks `.env.local` and `.env` in `apps/web` and the repository root.
 
 PowerShell:
 ```powershell
@@ -202,47 +215,31 @@ Keep the `npm run dev` terminal visible. In dev mode without mail variables, ema
 
 ## 9. Deploy to Render
 
-1. Push the repository to GitHub.
-2. In Render, create a **Blueprint** from the repo. It reads `render.yaml` at the repo root. For this monorepo, use these commands in the web service (run from the repo root, without `rootDir`):
+There is no `render.yaml` in this repository, so create the PostgreSQL database and web service
+through the Render dashboard rather than creating a Blueprint.
 
-   ```yaml
-   databases:
-     - name: crp-db
-       databaseName: crp
-       plan: free
+1. Push the repository to GitHub and create a PostgreSQL database in Render.
+2. Create a web service for the repository, using the repository root as its root directory and
+   Node.js 24. Configure:
 
-   services:
-     - type: web
-       name: campus-ride-pooling
-       runtime: node
-       plan: free
-       buildCommand: npm ci && npm run build -w @ridepool/web
-       startCommand: npm run db:migrate -w @ridepool/web && npm start -w @ridepool/web
-       healthCheckPath: /
-       envVars:
-         - key: NODE_VERSION
-           value: 20
-         - key: DATABASE_URL
-           fromDatabase:
-             name: crp-db
-             property: connectionString
-         - key: APP_URL
-           sync: false
-         - key: MAIL_SCRIPT_URL
-           sync: false
-         - key: MAIL_SCRIPT_SECRET
-           sync: false
+   ```text
+   Build command: npm ci && npm run build --workspace @ridepool/web
+   Start command: npm run db:migrate --workspace @ridepool/web && npm run start --workspace @ridepool/web
+   Health check path: /api/health
    ```
 
-   `@ridepool/web` is the workspace name in `apps/web/package.json`; change it if yours differs.
-3. After the first deploy, set `APP_URL` (for example `https://campus-ride-pooling.onrender.com`), `MAIL_SCRIPT_URL` and `MAIL_SCRIPT_SECRET` in the service's **Environment** tab, then redeploy.
-4. The schema is applied automatically at every start (`db:migrate`).
-5. `DATABASE_URL` is the Render **internal** URL, which needs no extra setup. To connect from your own machine, use the **External** URL; the code enables TLS for it automatically.
+3. Set `DATABASE_URL` to the database's internal connection string. Set `APP_URL` to the public
+   HTTPS origin of the web service. Configure `MAIL_SCRIPT_URL`, `MAIL_SCRIPT_SECRET`, and
+   `GEMINI_API_KEY` when those integrations are enabled.
+4. If post-ride payment reminders are used, also set a private `PAYMENT_REMINDER_CRON_SECRET` and
+   configure an external scheduler to call `POST /api/cron/payment-reminders`; see the environment
+   variable notes above.
+5. The start command applies `db/schema.sql` before starting the app. For local database access,
+   use the provider's external connection string; PostgreSQL connections to Render are configured
+   for TLS by the database helper.
 
-Notes:
-- Render's **free Postgres expires after about 30 days**. Use a paid plan for real data.
-- Free web services sleep when idle, so the first request after a pause is slow.
-- Before opening the app to real users, remove your test data (see below).
+Review the hosting provider's current service and database limits before using the deployment with
+real users. Remove test data before opening it to users.
 
 ## 10. Database cheat sheet
 
