@@ -1,5 +1,7 @@
 # AI_LOG
 
+> Mainak Sarkar's D2 entries are in [AI_LOG_Mainak.md](AI_LOG_Mainak.md).
+
 This file records AI-assisted work performed on the repository, as required by the CS455 project workflow. Entries describe only work actually performed or decisions explicitly made in the conversation.
 
 ## 2026-10-04 — Create Ride database design review
