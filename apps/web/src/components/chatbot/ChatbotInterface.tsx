@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '../ui/Button';
+import { DesignSystem } from '../ui/DesignSystem';
 import { routes } from '../../lib/routes';
 import { formatRupees } from '../../lib/format';
 import { directionLabels } from '../../lib/ride-status';
@@ -20,14 +21,6 @@ export type ChatMessage = {
   text: string;
   responsePayload?: ChatbotResponse;
 };
-
-const SUGGESTIONS = [
-  'Rides to Kanpur Central tomorrow morning',
-  'Find cabs to Lucknow airport under ₹300',
-  'Who is Alex?',
-  'Change my default pickup location to Hall 7',
-  'Can you book me a seat in ride #1?',
-];
 
 import {
   resolveChatbotInitialMessages,
@@ -48,6 +41,19 @@ export function ChatbotInterface({
   userId: string;
   options: RideFormOptions;
 }) {
+  const exampleHub = options.hubs[0];
+  const exampleCampusPlace = options.campusPlaces[0];
+  const exampleVehicle = options.vehicleTypes[0];
+  const suggestions = [
+    exampleHub && `Find rides to ${exampleHub.name} tomorrow morning`,
+    exampleHub &&
+      exampleCampusPlace &&
+      `Find rides from ${exampleCampusPlace.name} to ${exampleHub.name} tomorrow`,
+    exampleCampusPlace && `Propose my default pickup location as ${exampleCampusPlace.name}`,
+    exampleVehicle && `Propose ${exampleVehicle.name} as my preferred vehicle`,
+    'What can you help me with?',
+  ].filter((suggestion): suggestion is string => Boolean(suggestion));
+
   const storageKey = `${CHATBOT_STORAGE_PREFIX}${userId}`;
   const [messages, setMessages] = useState<ChatMessage[]>(() =>
     resolveChatbotInitialMessages(storageKey, INITIAL_GREETING),
@@ -57,6 +63,7 @@ export function ChatbotInterface({
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const messageSequence = useRef(0);
+  const conversationRef = useRef<HTMLDivElement>(null);
   const nextMessageId = (prefix: string) => `${prefix}-${++messageSequence.current}`;
 
   // Sync to tab-local sessionStorage (FR-RD-05.6)
@@ -65,6 +72,11 @@ export function ChatbotInterface({
       window.sessionStorage.setItem(storageKey, JSON.stringify(messages));
     } catch {}
   }, [messages, storageKey]);
+
+  useEffect(() => {
+    const conversation = conversationRef.current;
+    if (conversation) conversation.scrollTop = conversation.scrollHeight;
+  }, [messages, loading]);
 
   const clearConversation = () => {
     try {
@@ -166,165 +178,272 @@ export function ChatbotInterface({
   };
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-6 p-4 sm:p-6">
-      {/* Header bar with Session Privacy notice and Clear button (FR-RD-05.6) */}
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-line pb-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
-            Ride-Pooling Assistant
-          </h1>
-          <p className="mt-1 text-sm text-ink-muted">
-            Search with natural language, view public profiles, or adjust preferences.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <span
-            className="hidden text-xs text-ink-muted sm:inline-block"
-            title="Conversation is stored only in this tab's memory and is discarded on tab closure or sign-out (FR-RD-05.6)."
-          >
-            Tab-local session
-          </span>
-          <Button
-            variant="secondary"
-            onClick={clearConversation}
-            className="text-sm"
-            aria-label="Clear conversation history"
-          >
-            Clear Conversation
-          </Button>
-        </div>
-      </header>
-
-      {/* Suggestion Chips */}
-      <div className="flex flex-wrap gap-2">
-        {SUGGESTIONS.map((suggestion) => (
-          <button
-            key={suggestion}
-            type="button"
-            onClick={() => sendMessage(suggestion)}
-            className="rounded-full border border-line-strong bg-panel px-3 py-1 text-xs font-medium text-ink hover:border-primary hover:text-primary"
-          >
-            {suggestion}
-          </button>
-        ))}
-      </div>
-
-      {/* Message List */}
-      <div
-        className="flex min-h-[400px] flex-col gap-4 rounded-panel border border-line bg-surface p-4 sm:p-6"
-        role="log"
-        aria-live="polite"
-      >
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
-          >
-            <div
-              className={`max-w-2xl rounded-panel p-4 text-sm ${
-                msg.sender === 'user'
-                  ? 'bg-primary text-on-primary'
-                  : 'border border-line bg-panel text-ink'
-              }`}
-            >
-              <p className="whitespace-pre-wrap">{msg.text}</p>
+    <DesignSystem className="min-w-0">
+      <main className="mx-auto flex w-full max-w-6xl min-w-0 flex-col gap-5 px-3 py-5 sm:gap-6 sm:px-6 sm:py-8">
+        <header className="flex flex-col gap-5 rounded-panel bg-brand p-5 text-on-brand sm:flex-row sm:items-center sm:justify-between sm:p-8 lg:p-10">
+          <div className="min-w-0">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-on-brand/20 bg-on-brand/10 px-3 py-1 text-xs font-semibold text-on-brand-muted">
+              <span className="h-2 w-2 rounded-full bg-accent" aria-hidden="true" />
+              YOUR CAMPUS, CONNECTED
             </div>
+            <h1 className="max-w-2xl text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
+              Ride-Pooling Assistant
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-on-brand-muted sm:text-base">
+              Find a ride, learn about public profiles, or update your preferences with a simple
+              message.
+            </p>
+          </div>
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:min-w-48 sm:items-end">
+            <span
+              className="inline-flex min-h-10 items-center justify-center gap-2 self-start rounded-control border border-on-brand/20 px-3 text-xs font-semibold text-on-brand-muted sm:self-auto"
+              title="Conversation content is cleared when you reload or sign out."
+            >
+              <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-4 w-4">
+                <path
+                  d="M6 8V6a4 4 0 1 1 8 0v2m-9 0h10a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Private tab session
+            </span>
+            <Button
+              variant="accent"
+              onClick={clearConversation}
+              className="w-full sm:w-auto"
+              aria-label="Clear conversation history"
+            >
+              Clear Conversation
+            </Button>
+          </div>
+        </header>
 
-            {/* Structured Response Payload rendering */}
-            {msg.responsePayload && (
-              <div className="mt-3 w-full max-w-2xl">
-                {msg.responsePayload.kind === 'search_results' && (
-                  <SearchResultsView
-                    filters={msg.responsePayload.interpretedFilters}
-                    rides={msg.responsePayload.rides}
-                    options={options}
-                    onReSearch={(newFilters) => {
-                      const directionText = newFilters.direction === 'to_hub' ? 'to' : 'from';
-                      const vehicle = options.vehicleTypes.find(
-                        (v) => v.id === newFilters.vehicleTypeId,
-                      );
-                      const vehiclePart = vehicle ? ` by ${vehicle.name}` : '';
-                      const farePart = newFilters.maxFareShare
-                        ? ` under ₹${newFilters.maxFareShare}`
-                        : '';
-                      sendMessage(
-                        `Rides ${directionText} ${newFilters.hubName}${vehiclePart}${farePart}`,
-                      );
-                    }}
-                  />
-                )}
+        <section aria-labelledby="suggestions-heading" className="min-w-0">
+          <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-accent-text">
+                Get started
+              </p>
+              <h2 id="suggestions-heading" className="mt-1 text-lg font-bold tracking-tight">
+                Try asking
+              </h2>
+            </div>
+            <p className="text-xs text-ink-muted">Tap a prompt to send it</p>
+          </div>
+          <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+            {suggestions.map((suggestion) => (
+              <button
+                key={suggestion}
+                type="button"
+                onClick={() => sendMessage(suggestion)}
+                disabled={loading}
+                className="group flex min-h-12 min-w-0 items-center justify-between gap-3 rounded-control border border-line bg-surface px-4 py-3 text-left text-sm font-semibold text-ink hover:border-accent hover:bg-panel disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <span className="min-w-0 break-words">{suggestion}</span>
+                <span aria-hidden="true" className="shrink-0 text-accent-text">
+                  <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5">
+                    <path
+                      d="M4 10h12m-5-5 5 5-5 5"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
 
-                {msg.responsePayload.kind === 'public_profile' && (
-                  <PublicProfileView profile={msg.responsePayload.profile} />
-                )}
+        <section
+          aria-labelledby="conversation-heading"
+          className="min-w-0 overflow-hidden rounded-panel border border-line bg-surface"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3 sm:px-6">
+            <div>
+              <h2 id="conversation-heading" className="font-bold tracking-tight">
+                Conversation
+              </h2>
+              <p className="mt-0.5 text-xs text-ink-muted">
+                Ask naturally; you can review and edit ride-search filters.
+              </p>
+            </div>
+            <span className="rounded-full bg-panel px-3 py-1 text-xs font-semibold text-ink-muted">
+              {messages.length} {messages.length === 1 ? 'message' : 'messages'}
+            </span>
+          </div>
 
-                {msg.responsePayload.kind === 'preference_proposal' && (
-                  <PreferenceProposalCard proposal={msg.responsePayload.proposal} />
+          <div
+            ref={conversationRef}
+            className="flex h-[min(62svh,720px)] min-h-[360px] min-w-0 flex-col gap-5 overflow-y-auto overscroll-contain px-3 py-4 sm:px-6 sm:py-6"
+            role="log"
+            aria-label="Chat conversation"
+            aria-live="polite"
+            aria-relevant="additions text"
+            tabIndex={0}
+          >
+            {messages.map((msg) => (
+              <div
+                key={msg.id}
+                className={`flex min-w-0 flex-col ${
+                  msg.sender === 'user' ? 'items-end' : 'items-start'
+                }`}
+              >
+                <span className="mb-1.5 px-1 text-xs font-semibold text-ink-muted">
+                  {msg.sender === 'user' ? 'You' : 'Ride-Pooling Assistant'}
+                </span>
+                {msg.sender === 'assistant' && msg.responsePayload?.aiGenerated && (
+                  <span
+                    className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-panel px-2.5 py-1 text-[11px] font-semibold text-accent-text"
+                    title="Gemini interpreted this request; trusted server tools provide ride and profile data."
+                  >
+                    <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-accent-text" />
+                    {msg.responsePayload.kind === 'assistant_reply'
+                      ? 'Gemini answer'
+                      : 'Gemini interpreted'}
+                  </span>
                 )}
+                {msg.sender === 'assistant' && msg.responsePayload?.aiFallback && (
+                  <span
+                    className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-panel px-2.5 py-1 text-[11px] font-semibold text-ink-muted"
+                    title="Gemini did not return a usable response, so deterministic handling was used."
+                  >
+                    <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-ink-muted" />
+                    Basic fallback
+                  </span>
+                )}
+                <div
+                  className={`w-fit max-w-[92%] rounded-panel px-4 py-3 text-sm leading-6 sm:max-w-2xl sm:px-5 ${
+                    msg.sender === 'user'
+                      ? 'rounded-control bg-primary text-on-primary'
+                      : 'border border-line bg-panel text-ink'
+                  }`}
+                >
+                  <p className="whitespace-pre-wrap break-words">{msg.text}</p>
+                </div>
 
-                {msg.responsePayload.kind === 'prohibited_action' && (
-                  <ProhibitedActionCard
-                    actionType={msg.responsePayload.actionType}
-                    message={msg.responsePayload.message}
-                    targetLink={msg.responsePayload.targetLink}
-                  />
-                )}
+                {msg.responsePayload && (
+                  <div className="mt-3 w-full max-w-3xl min-w-0">
+                    {msg.responsePayload.kind === 'search_results' && (
+                      <SearchResultsView
+                        filters={msg.responsePayload.interpretedFilters}
+                        rides={msg.responsePayload.rides}
+                        options={options}
+                        compact
+                        onReSearch={(newFilters) => {
+                          const directionText = newFilters.direction === 'to_hub' ? 'to' : 'from';
+                          const vehicle = options.vehicleTypes.find(
+                            (v) => v.id === newFilters.vehicleTypeId,
+                          );
+                          const vehiclePart = vehicle ? ` by ${vehicle.name}` : '';
+                          const farePart = newFilters.maxFareShare
+                            ? ` under ₹${newFilters.maxFareShare}`
+                            : '';
+                          sendMessage(
+                            `Rides ${directionText} ${newFilters.hubName}${vehiclePart}${farePart}`,
+                          );
+                        }}
+                      />
+                    )}
 
-                {msg.responsePayload.kind === 'service_unavailable' && (
-                  <ServiceUnavailableCard
-                    message={msg.responsePayload.message}
-                    fallbackLink={msg.responsePayload.fallbackLink}
-                  />
+                    {msg.responsePayload.kind === 'public_profile' && (
+                      <PublicProfileView profile={msg.responsePayload.profile} />
+                    )}
+
+                    {msg.responsePayload.kind === 'preference_proposal' && (
+                      <PreferenceProposalCard proposal={msg.responsePayload.proposal} />
+                    )}
+
+                    {msg.responsePayload.kind === 'prohibited_action' && (
+                      <ProhibitedActionCard
+                        actionType={msg.responsePayload.actionType}
+                        message={msg.responsePayload.message}
+                        targetLink={msg.responsePayload.targetLink}
+                      />
+                    )}
+
+                    {msg.responsePayload.kind === 'service_unavailable' && (
+                      <ServiceUnavailableCard
+                        message={msg.responsePayload.message}
+                        fallbackLink={msg.responsePayload.fallbackLink}
+                      />
+                    )}
+                  </div>
                 )}
+              </div>
+            ))}
+
+            {loading && (
+              <div className="flex items-center gap-3 self-start rounded-control border border-line bg-panel px-4 py-3 text-sm text-ink-muted">
+                <span
+                  aria-hidden="true"
+                  className="h-2.5 w-2.5 shrink-0 rounded-full bg-accent-text animate-skeleton"
+                />
+                <span role="status">
+                  <span className="block font-semibold text-ink">
+                    Understanding your request...
+                  </span>
+                  <span className="block text-xs">
+                    Gemini is interpreting; actions are validated before they run.
+                  </span>
+                </span>
               </div>
             )}
           </div>
-        ))}
+        </section>
 
-        {loading && (
-          <div className="flex items-center gap-2 text-sm text-ink-muted">
-            <span>Thinking...</span>
+        <form
+          onSubmit={handleSubmit}
+          className="min-w-0 rounded-panel border border-line bg-surface p-3 sm:p-4"
+        >
+          <label htmlFor="chatbot-message" className="mb-2 block text-sm font-bold text-ink">
+            Your message
+          </label>
+          {errorMessage && (
+            <p className="mb-2 text-sm font-semibold text-danger" role="alert">
+              {errorMessage}
+            </p>
+          )}
+          <div className="flex min-w-0 flex-col gap-2 sm:flex-row">
+            <input
+              id="chatbot-message"
+              type="text"
+              value={input}
+              onChange={(e) => {
+                setInput(e.target.value);
+                if (errorMessage) setErrorMessage(null);
+              }}
+              placeholder="Ask about rides, check rider profiles, or propose preference changes..."
+              maxLength={500}
+              className="min-h-12 min-w-0 flex-1 rounded-control border border-line-strong bg-surface px-4 py-3 text-base text-ink placeholder:text-ink-muted focus:border-primary focus:outline-none"
+              aria-label="Message to ride-pooling assistant"
+              disabled={loading}
+            />
+            <Button
+              type="submit"
+              variant="primary"
+              className="w-full sm:w-auto"
+              disabled={loading || !input.trim() || input.length > 500}
+            >
+              Send message
+            </Button>
           </div>
-        )}
-      </div>
-
-      {/* Input Form with 500-Character Counter (AI-RD-09, FR-RD-05.4) */}
-      <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-        {errorMessage && (
-          <p className="text-sm font-semibold text-danger" role="alert">
-            {errorMessage}
-          </p>
-        )}
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => {
-              setInput(e.target.value);
-              if (errorMessage) setErrorMessage(null);
-            }}
-            placeholder="Ask about rides, check rider profiles, or propose preference changes..."
-            maxLength={500}
-            className="flex-1 rounded-control border border-line-strong bg-surface px-4 py-3 text-base text-ink placeholder:text-ink-muted focus:border-primary focus:outline-none"
-            aria-label="Message to ride-pooling assistant"
-            disabled={loading}
-          />
-          <Button
-            type="submit"
-            variant="primary"
-            disabled={loading || !input.trim() || input.length > 500}
-          >
-            Send
-          </Button>
-        </div>
-        <div className="flex justify-between px-1 text-xs text-ink-muted">
-          <span>Supported: ride search, public profile queries, preference proposals</span>
-          <span className={input.length > 450 ? 'font-semibold text-danger' : ''}>
-            {input.length} / 500
-          </span>
-        </div>
-      </form>
-    </div>
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-1 text-xs text-ink-muted">
+            <span>Search rides, view public profiles, or propose preference changes.</span>
+            <span
+              aria-live="polite"
+              className={input.length > 450 ? 'font-semibold text-danger' : ''}
+            >
+              {input.length} / 500
+            </span>
+          </div>
+        </form>
+      </main>
+    </DesignSystem>
   );
 }
 
@@ -335,18 +454,24 @@ function SearchResultsView({
   filters,
   rides,
   options,
+  compact = false,
   onReSearch,
 }: {
   filters: InterpretedFilters;
   rides: SearchRideResult[];
   options: RideFormOptions;
+  compact?: boolean;
   onReSearch: (updated: InterpretedFilters) => void;
 }) {
   const [editable, setEditable] = useState<InterpretedFilters>(filters);
   const [showEditor, setShowEditor] = useState(false);
 
   return (
-    <div className="flex flex-col gap-4 rounded-panel border border-line-strong bg-surface p-4 sm:p-5">
+    <div
+      className={`flex flex-col rounded-panel border border-line-strong bg-surface ${
+        compact ? 'gap-3 p-3 sm:p-4' : 'gap-4 p-4 sm:p-5'
+      }`}
+    >
       {/* Interpreted Filter Header & Toggle */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line pb-3">
         <div>
@@ -477,7 +602,12 @@ function SearchResultsView({
             Found {rides.length} matching {rides.length === 1 ? 'ride' : 'rides'}:
           </p>
           {rides.map((ride) => (
-            <RideCard key={ride.id} ride={ride} pickupPointId={filters.campusLocationId} />
+            <RideCard
+              key={ride.id}
+              ride={ride}
+              pickupPointId={filters.campusLocationId}
+              compact={compact}
+            />
           ))}
         </div>
       )}
@@ -503,7 +633,7 @@ function PublicProfileView({ profile }: { profile: PublicProfileResult }) {
           <span className="font-semibold text-ink-muted">Rating: </span>
           <span className="font-semibold text-ink">
             {profile.aggregateRating
-              ? `★ ${profile.aggregateRating.average} (${profile.aggregateRating.count} reviews)`
+              ? `${profile.aggregateRating.average} average (${profile.aggregateRating.count} reviews)`
               : 'No released ratings yet (minimum 3 required for release)'}
           </span>
         </div>
@@ -576,54 +706,56 @@ function PreferenceProposalCard({ proposal }: { proposal: PreferenceProposal }) 
       </header>
 
       {/* Before / After Table */}
-      <table className="mt-3 w-full text-left text-xs">
-        <thead>
-          <tr className="border-b border-line text-ink-muted">
-            <th className="py-1">Preference</th>
-            <th className="py-1">Current (Before)</th>
-            <th className="py-1">Proposed (After)</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-line">
-          {proposal.changes.defaultPickupPointId !== undefined && (
-            <tr>
-              <td className="py-1 font-semibold">Pickup Point</td>
-              <td className="py-1 text-ink-muted">
-                {proposal.before.defaultPickupPoint?.name ?? 'None'}
-              </td>
-              <td className="py-1 font-semibold text-primary">
-                {proposal.after.defaultPickupPoint?.name ?? 'None'}
-              </td>
+      <div className="-mx-1 mt-3 overflow-x-auto px-1">
+        <table className="w-full min-w-[30rem] text-left text-xs">
+          <thead>
+            <tr className="border-b border-line text-ink-muted">
+              <th className="py-1">Preference</th>
+              <th className="py-1">Current (Before)</th>
+              <th className="py-1">Proposed (After)</th>
             </tr>
-          )}
-          {proposal.changes.preferredVehicleTypeId !== undefined && (
-            <tr>
-              <td className="py-1 font-semibold">Vehicle Type</td>
-              <td className="py-1 text-ink-muted">
-                {proposal.before.preferredVehicleType?.name ?? 'Any'}
-              </td>
-              <td className="py-1 font-semibold text-primary">
-                {proposal.after.preferredVehicleType?.name ?? 'Any'}
-              </td>
-            </tr>
-          )}
-          {proposal.changes.maxAcceptableFareShare !== undefined && (
-            <tr>
-              <td className="py-1 font-semibold">Max Fare Share</td>
-              <td className="py-1 text-ink-muted">
-                {proposal.before.maxAcceptableFareShare
-                  ? formatRupees(proposal.before.maxAcceptableFareShare)
-                  : 'No limit'}
-              </td>
-              <td className="py-1 font-semibold text-primary">
-                {proposal.after.maxAcceptableFareShare
-                  ? formatRupees(proposal.after.maxAcceptableFareShare)
-                  : 'No limit'}
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-line">
+            {proposal.changes.defaultPickupPointId !== undefined && (
+              <tr>
+                <td className="py-1 font-semibold">Pickup Point</td>
+                <td className="py-1 text-ink-muted">
+                  {proposal.before.defaultPickupPoint?.name ?? 'None'}
+                </td>
+                <td className="py-1 font-semibold text-primary">
+                  {proposal.after.defaultPickupPoint?.name ?? 'None'}
+                </td>
+              </tr>
+            )}
+            {proposal.changes.preferredVehicleTypeId !== undefined && (
+              <tr>
+                <td className="py-1 font-semibold">Vehicle Type</td>
+                <td className="py-1 text-ink-muted">
+                  {proposal.before.preferredVehicleType?.name ?? 'Any'}
+                </td>
+                <td className="py-1 font-semibold text-primary">
+                  {proposal.after.preferredVehicleType?.name ?? 'Any'}
+                </td>
+              </tr>
+            )}
+            {proposal.changes.maxAcceptableFareShare !== undefined && (
+              <tr>
+                <td className="py-1 font-semibold">Max Fare Share</td>
+                <td className="py-1 text-ink-muted">
+                  {proposal.before.maxAcceptableFareShare
+                    ? formatRupees(proposal.before.maxAcceptableFareShare)
+                    : 'No limit'}
+                </td>
+                <td className="py-1 font-semibold text-primary">
+                  {proposal.after.maxAcceptableFareShare
+                    ? formatRupees(proposal.after.maxAcceptableFareShare)
+                    : 'No limit'}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {feedback && (
         <p

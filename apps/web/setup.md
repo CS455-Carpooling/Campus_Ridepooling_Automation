@@ -86,8 +86,8 @@ MAIL_SCRIPT_SECRET=
 # Optional: server-side Gemini key for admin complaint analysis. Without it,
 # complaints remain available for manual admin review.
 GEMINI_API_KEY=
-# Optional model override; defaults to gemini-2.5-flash (see [Google's model guide](https://ai.google.dev/gemini-api/docs/models)).
-GEMINI_MODEL=
+# Shared Gemini model (the chatbot defaults to gemini-3.1-flash-lite; see [Google's model guide](https://ai.google.dev/gemini-api/docs/models)).
+GEMINI_MODEL=gemini-3.1-flash-lite
 ```
 
 For Docker Compose, put the Gemini variables in the repository-root `.env` beside `docker-compose.yml` (copy the root `.env.example` first). Docker Compose does not read `apps/web/.env` or `apps/web/.env.local`.
@@ -99,7 +99,7 @@ For Docker Compose, put the Gemini variables in the repository-root `.env` besid
 | `MAIL_SCRIPT_URL` | Your deployed Apps Script web app URL (step 5). |
 | `MAIL_SCRIPT_SECRET` | Shared secret that must match the script's `MAIL_SECRET` property. |
 | `GEMINI_API_KEY` | Optional server-only Gemini key used to summarize and classify complaints. Never expose it with a `NEXT_PUBLIC_` variable. |
-| `GEMINI_MODEL` | Optional Gemini model ID override. The default is `gemini-2.5-flash`, currently documented by Google for low-latency, high-volume tasks. |
+| `GEMINI_MODEL` | Shared Gemini model ID. The default example uses `gemini-3.1-flash-lite`; `GEMINI_CHATBOT_MODEL` can override it for chatbot requests. |
 
 Make sure `.env*` is listed in `.gitignore` and never commit real values.
 Complaint analysis is advisory; a missing key, timeout, invalid output, or confidence below 65% routes the complaint to manual admin review without affecting the complaint itself.

@@ -47,6 +47,13 @@ describe('RideCard', () => {
     expect(screen.getByRole('button', { name: 'Request to Join' })).toBeInTheDocument();
   });
 
+  it('uses compact styling when embedded in chatbot results', () => {
+    render(<RideCard ride={mockRide} pickupPointId="hall-6" compact />);
+
+    expect(screen.getByRole('article').className).toContain('gap-3 p-4');
+    expect(screen.getByRole('link', { name: 'View ride' })).toHaveClass('min-h-10');
+  });
+
   it('shows Full badge and disables joining when no seats are left', () => {
     render(<RideCard ride={{ ...mockRide, seatsLeft: 0 }} pickupPointId="hall-6" />);
 
