@@ -19,3 +19,5 @@ transactional workflow is in
 [CORE_WORKFLOW_DEMONSTRATION.md](./D2/CORE_WORKFLOW_DEMONSTRATION.md).
 Both documents were regenerated after a complete source-only audit of the
 implementation and executable configuration files.
+The consolidated D2 landing README is
+[D2/README.md](./D2/README.md).
