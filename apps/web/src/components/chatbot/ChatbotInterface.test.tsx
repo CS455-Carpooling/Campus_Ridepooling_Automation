@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ChatbotInterface } from './ChatbotInterface';
 import { clearChatbotStorage } from '../ui/LogoutButton';
@@ -293,7 +293,9 @@ describe('ChatbotInterface (FR-RD-05, UI & Session Isolation)', () => {
     render(<ChatbotInterface userId={USER_ID} options={mockOptions} />);
 
     const input = screen.getByPlaceholderText(/Ask about rides, check rider profiles/i);
-    await user.type(input, 'Need a ride to Kanpur Central tomorrow 8am');
+    fireEvent.change(input, {
+      target: { value: 'Need a ride to Kanpur Central tomorrow 8am' },
+    });
     await user.click(screen.getByRole('button', { name: /send/i }));
 
     await waitFor(() => {

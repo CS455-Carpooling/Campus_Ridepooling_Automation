@@ -379,27 +379,10 @@ export function ChatbotInterface({
 
             {loading && (
               <div className="flex items-center gap-3 self-start rounded-control border border-line bg-panel px-4 py-3 text-sm text-ink-muted">
-                <svg
+                <span
                   aria-hidden="true"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  className="h-5 w-5 shrink-0 animate-spin text-accent-text motion-reduce:animate-none"
-                >
-                  <circle
-                    cx="10"
-                    cy="10"
-                    r="7"
-                    stroke="currentColor"
-                    strokeOpacity="0.2"
-                    strokeWidth="2.5"
-                  />
-                  <path
-                    d="M17 10a7 7 0 0 0-7-7"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                  />
-                </svg>
+                  className="h-2.5 w-2.5 shrink-0 rounded-full bg-accent-text animate-skeleton"
+                />
                 <span role="status">
                   <span className="block font-semibold text-ink">
                     Understanding your request...
