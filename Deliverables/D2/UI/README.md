@@ -3,7 +3,7 @@
 Screenshots of every page of the web app (`apps/web`) on `master`, taken on 3 October 2026 from the development server.
 Each page is shown at desktop width (1440 px) in the light and dark colour schemes, and at phone width (360 px).
 
-Signed-in views use the development session (`DEV_SESSION_ROLE=student` or `admin`), since sign-in is not yet connected to a backend. The round "N" button in a bottom corner is the Next.js development badge and does not appear in production.
+Signed-in views use the development session (`DEV_SESSION_ROLE=student` or `admin`) because these screenshots were captured before the current authentication backend was integrated. The round "N" button in a bottom corner is the Next.js development badge and does not appear in production.
 
 | # | Page | Route | Desktop, light | Desktop, dark | Phone |
 |---|---|---|---|---|---|

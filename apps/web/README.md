@@ -1,11 +1,17 @@
 # Web app (`@ridepool/web`)
 
-The browser client of the Campus Ride-Pooling and Split-Fare System: one Next.js app with separate
-areas for riders, ride owners and operations admins. It talks to the API server over HTTPS and
-Socket.IO. Every check that protects data is also made on the server.
+The web application for the Campus Ride-Pooling and Split-Fare System: one Next.js app with
+student-facing and operations-admin areas. A student account can both find rides and offer rides;
+operations-admin accounts have separately authorized pages and APIs. The app uses PostgreSQL and
+Socket.IO for real-time updates. Every check that protects data is also made on the server.
 
-Stack: Next.js 16 (App Router), React 19, TypeScript (strict), Tailwind CSS 4, Vitest with React
-Testing Library.
+The implementation is intentionally transaction-oriented: shared domain rules validate inputs and
+state transitions before database writes, PostgreSQL constraints protect durable invariants, and
+AI output is treated as untrusted advisory data. The application never collects or transfers ride
+payments; it records settlement status for external cash or UPI payments.
+
+Stack: Next.js 16 (App Router), React 19, TypeScript (strict), Tailwind CSS 4, PostgreSQL,
+Socket.IO, Gemini REST integration, and Vitest with React Testing Library.
 
 ## Commands
 
@@ -40,29 +46,33 @@ test/                test setup, the design-rule checker and the contrast test
 
 ## Routes
 
-Every route the app links to is defined once, in `src/lib/routes.ts`. A link to a page that does not
-exist yet shows the 404 page until the page is built.
+Every route the app links to is defined in `src/lib/routes.ts`. `/home` is a legacy alias that
+redirects to the role-aware `/dashboard`; the table below lists the other user-facing routes.
 
 | Route                                                                                | Page                                                                                                                                                                       | Status                   |
 | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
 | `/`                                                                                  | Landing page (public); signed-in users get a link to their rides                                                                                                           | Built                    |
-| `/home`                                                                              | Home: one screen for students, another for admins                                                                                                                          | Built (CS455-15)         |
+| `/dashboard`                                                                         | Role-aware home screen for students and operations admins                                                                                                                  | Built (CS455-15)         |
+| `/home`                                                                              | Legacy redirect to `/dashboard`                                                                                                                                           | Built                    |
 | `/login`                                                                             | Sign in with an iitk.ac.in email and password                                                                                                                              | Built (CS455-19)         |
 | `/register`                                                                          | Registration with email verification, iitk.ac.in addresses only                                                                                                            | Built (CS455-19)         |
 | `/forgot-password`, `/reset-password`                                                | Password reset by email                                                                                                                                                    | Built (CS455-19)         |
-| `/dashboard`                                                                         | Where sign-in lands: links to offering a ride and to the home page                                                                                                         | Built (CS455-19, 26)     |
 | `/terms`                                                                             | Terms of service (community guidelines)                                                                                                                                    | Built                    |
 | `/privacy`                                                                           | Privacy policy                                                                                                                                                             | Built                    |
+| `/profile`                                                                           | Rider profile, preferences and account settings                                                                                                                             | Built                    |
+| `/warnings`                                                                          | Review and acknowledge rider warnings                                                                                                                                     | Built                    |
 | `/rides/new`                                                                         | Offer a ride: route, vehicle, departure window, fare                                                                                                                       | Built (CS455-22 to 25)   |
 | `/rides/[id]`                                                                        | Ride details, join requests and history, owner decisions, fare shares, ride edit/cancel/lock; from the lock, the trip: pickup order, arrivals, no-shows, SOS, live updates | Built (CS455-28, 29, 63) |
 | `/rides/[id]/review`                                                                 | Rate the people on a completed ride, for 72 hours after it is completed                                                                                                    | Built (CS455-40 to 43)   |
 | `/rides`, `/rides/results`                                                           | Find a ride: search and results, with AI recommendations                                                                                                                   | Built                    |
-| `/notifications`                                                                     | Notifications                                                                                                                                                              | Not started              |
-| `/admin`                                                                             | Sends an admin to their home; tells a student the admin pages are not for them                                                                                             | Built (CS455-49)         |
+| `/chatbot`                                                                           | Gemini-first natural-language ride assistant with validated tools and confirmed preference proposals                                                                       | Built (FR-RD-05)         |
+| `/notifications`                                                                     | Ride and account notifications                                                                                                                                             | Built                    |
+| `/complaints`, `/rides/[id]/complaint`                                                | Review personal complaints and file a complaint about a ride participant                                                                                                  | Built (CS455-53)         |
+| `/admin`                                                                             | Routes an admin to `/dashboard`; tells a student the admin pages are not for them                                                                                           | Built (CS455-49)         |
 | `/admin/complaints`                                                                  | One complaint queue, from the form and from chat reports, Safety first                                                                                                     | Built (CS455-45, 53)     |
 | `/admin/ai-recommendations`                                                          | Recommendation request audit trail and rider reports; pseudonymous rider IDs only                                                                                        | Built (AI-RD-12, 15)     |
+| `/admin/ai-decisions`                                                                | AI enforcement decision history for complaints                                                                                                                             | Built                    |
 | `/admin/complaints/[id]`, `/admin/riders`, `/admin/riders/[id]`, `/admin/rides/[id]` | Complaint detail, rider search and record, a read-only ride                                                                                                                | Built (CS455-53)         |
-| `/rides/[id]/complaint`, `/complaints`                                               | File a complaint about someone on a ride; your complaints                                                                                                                  | Built (CS455-53)         |
 | `/admin/configuration/...`                                                           | Vehicle types, hubs and pickup points, fares                                                                                                                               | Built (CS455-51)         |
 | `/admin/incidents`, `/admin/incidents/[id]`                                          | SOS alerts, open first; one alert with the trip as it was, the mobile number and location, Acknowledge and Close                                                           | Built (CS455-65)         |
 
