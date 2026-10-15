@@ -2354,3 +2354,138 @@ see there is no chance of failing go through the entire codebase's files in comp
 ````text
 Performed a final source-contract recheck against the completed 269-file, 36,217-line audit before regenerating the D2 documentation. Re-read the implementation areas that define the API and workflow contracts, including the realtime chat boundary, chatbot route, recommendation route, admin AI-decision route, authentication, transactions, and database-backed state behavior. Corrected the demonstration recommendation payload from maxFare to the implemented maxFareShare field. The API documentation and core workflow remain source-backed and include the explicit AI integration, fallback, audit, and human-enforcement paths.
 ````
+
+## 2026-10-12 — IITK Authentication, Registration, and Session Foundation (Prithviraj Ghosh)
+
+### User request
+Implement authentication pages and backend verification adhering to strict IITK `@iitk.ac.in` domain restrictions, email verification, session tokens, secure password reset, and rate limiting.
+
+### Architecture and design decisions
+- **IITK domain gating (`SYS-FR-01`, `FR-RD-01`)**: Enforced `@iitk.ac.in` campus email address validation across registration, login, and password reset to ensure only authorized campus members can access the pooling service.
+- **Student credentials & security (`SYS-FR-02`)**: Student roll numbers validated and stored alongside full names and secure bcrypt/argon2 password hashes.
+- **Session tokens (`SYS-FR-03`)**: Session management implemented using HTTP-only, secure, SameSite cookies with cryptographically random UUIDs stored in the `sessions` table.
+- **Password reset workflow (`SYS-FR-05`)**: One-time password reset tokens generated with a 15-minute expiration window; reset URLs dispatched via mail service relay with secret authorization.
+- **Brute-force protection (`SYS-FR-06`)**: Sliding-window rate limiting applied to login and reset endpoints to prevent brute-force credential stuffing.
+
+### Work completed
+- Built responsive authentication views:
+  - `apps/web/src/app/login/page.tsx`
+  - `apps/web/src/app/register/page.tsx`
+  - `apps/web/src/app/forgot-password/page.tsx`
+  - `apps/web/src/app/reset-password/page.tsx`
+- Implemented secure student registration requiring `@iitk.ac.in` email, roll number, full name, and password confirmation.
+- Implemented session persistence, token validation, and logout handling with cookie clearing in `apps/web/src/lib/auth.ts` and `apps/web/src/components/ui/LogoutButton.tsx`.
+- Implemented sliding-window rate limit guard in `apps/web/src/lib/rate-limit.ts`.
+
+### Requirements addressed
+`SYS-FR-01`, `SYS-FR-02`, `SYS-FR-03`, `SYS-FR-04`, `SYS-FR-05`, `SYS-FR-06`, `FR-RD-01`.
+
+### Verification and testing
+- Tested registration flow with invalid email domains (rejected) vs valid `@iitk.ac.in` emails (accepted).
+- Verified login token cookie generation, session validation, and logout invalidation.
+- Unit tests verified in `apps/web/src/lib/auth.test.ts`.
+
+
+## 2026-10-13 — User Profile Management, Privacy Tags, and AI Consent (Prithviraj Ghosh)
+
+### User request
+Build the user profile editing system, support hobby/interest tags with opt-in AI usage consent, fix password reset for signed-in users, and integrate dashboard tabs.
+
+### Architecture and design decisions
+- **Profile schema & preferences (`FR-RD-02.1`, `FR-RD-02.2`)**: Structured `user_profiles` table linking display name, mobile number, default pickup location, and vehicle type preferences.
+- **Co-rider visibility vs AI consent separation (`FR-RD-16.2`, `AI-RD-10`)**: Interest tags displayed on public profile cards to prospective co-riders, but AI agent usage of personal tags requires explicit rider opt-in (`ai_tag_consent`).
+- **Authenticated password reset bugfix**: `/forgot-password` previously blocked logged-in users with a redirect to `/dashboard`. Refactored to render the reset request form prefilled with their account email and providing a return navigation link to `/profile`.
+- **Student dashboard tab integration**: Integrated `Your rides` and `Ride history` tabs on the main student dashboard without extra page navigation, preserving unified layout.
+
+### Work completed
+- Added user profile persistence and API endpoints for display names, mobile numbers, default pickup locations, and vehicle preferences.
+- Implemented privacy-preserving interest tags with explicit rider consent flags (`ai_tag_consent`) for AI feature usage (`FR-RD-16.2`).
+- Fixed the signed-in password reset redirect loop so authenticated riders can trigger password resets directly from their profile without being bounced to dashboard.
+- Integrated student dashboard navigation and ride history view.
+
+### Files changed
+- `apps/web/src/app/profile/page.tsx`
+- `apps/web/src/components/profile/ProfileEditor.tsx`
+- `apps/web/src/components/home/StudentHome.tsx`
+- `apps/web/src/components/home/DashboardTabs.tsx`
+- `apps/web/src/components/home/RideHistoryList.tsx`
+- `apps/web/src/lib/home-data.ts`
+- `apps/web/src/lib/profile.ts`
+
+### Requirements addressed
+`FR-RD-02.1`, `FR-RD-02.2`, `FR-RD-02.3`, `FR-RD-02.4`, `FR-RD-16.2`, `SYS-FR-14`.
+
+### Verification and testing
+- Verified profile updates, pickup selection, and AI tag consent toggle.
+- Tests verified in `apps/web/src/components/profile/ProfileEditor.test.tsx` and `apps/web/src/components/home/StudentHome.test.tsx`.
+
+
+## 2026-10-14 — Natural-Language Ride Assistant, Tool Allowlist & Security Guardrails (Prithviraj Ghosh)
+
+### User request
+Architect and implement the natural-language conversational AI assistant for ride pooling (`CS455-108-AI-Chatbot`). Enforce strict server-side security boundaries, rate limiting, and 10-minute preference proposals.
+
+### Architecture and design decisions
+- **Database schema**: Created `chatbot_preference_proposals` table (columns: `id`, `user_id`, `before_snapshot`, `after_snapshot`, `proposed_changes`, `status`, `expires_at`, `applied_at`) and `chatbot_audits` table.
+- **Server-side tool allowlist (`AI-RD-02`)**: Strictly restricted to 6 read-only tools: `search_rides`, `get_ride_details`, `get_fare_estimate`, `get_public_profile`, `get_rider_preferences`, `propose_preference_update`.
+- **Prohibited action protection (`AI-RD-05`, `FR-RD-05.4`)**: Intercepted transactional intents (join ride, cancel/leave ride, payments, ratings, complaints, pool chat messages, SOS emergency triggers). The chatbot refuses execution and responds with safe, direct clickable UI links to corresponding manual screens.
+- **Privacy preservation (`AI-RD-10`, `FR-RD-05.2`, `FR-RD-05.6`)**: Only public profile fields (display name, visible tags, trips, ratings) are disclosed. Email addresses and phone numbers are strictly shielded. Private conversation messages are never written to audit tables.
+- **10-minute preference proposals (`AI-RD-04`, `FR-RD-05.3`)**: Chatbot stages preference updates (pickup location, vehicle preference, max fare share, tags) into pending proposals with before/after diff cards. Confirmation requires explicit user action within a strict 10-minute TTL; confirmation attempts after expiry are rejected atomically.
+- **Guardrails & rate limiting (`AI-RD-09`)**: Input bounded to 500 characters (`MAX_MESSAGE_LENGTH`). Rate limit capped at 20 queries/hour per rider. 8-second execution timeout budget with graceful fallback to manual ride search (`FR-RD-05.7`).
+- **Conversational UI**: Built `/chatbot` route with `ChatbotInterface.tsx`, interactive editable filter chips allowing riders to refine interpreted parameters, proposal diff confirmation cards with countdown timers, and matching ride cards.
+
+### Work completed
+- Created database schema definitions in `apps/web/db/schema.sql` for proposals and audit logging.
+- Implemented tool allowlist and execution wrappers in `apps/web/src/lib/ai/chatbot-tools.ts`.
+- Implemented preference proposal manager with snapshots, diffs, and 10-minute atomic expiration in `apps/web/src/lib/ai/preference-proposals.ts`.
+- Built natural-language message processor, scope restriction, and prohibited action interceptor in `apps/web/src/lib/ai/chatbot.ts`.
+- Implemented POST `/api/chatbot` and `/api/chatbot/confirm-preference` API routes with 20 req/hr rate limiting and 8s timeout budget.
+- Built responsive UI in `apps/web/src/app/chatbot/page.tsx` and `apps/web/src/components/chatbot/ChatbotInterface.tsx`.
+
+### Requirements addressed
+`FR-RD-05.1`, `FR-RD-05.2`, `FR-RD-05.3`, `FR-RD-05.4`, `FR-RD-05.5`, `FR-RD-05.6`, `FR-RD-05.7`, `AI-RD-01`, `AI-RD-02`, `AI-RD-03`, `AI-RD-04`, `AI-RD-05`, `AI-RD-09`, `AI-RD-10`, `US-RD-12`, `US-RD-13`, `US-RD-14`.
+
+### Verification and testing
+- Verified natural language ride search correctly produces structured filters and returns matching rides.
+- Verified off-topic questions (e.g. homework) are declined with scope restriction notice.
+- Verified transactional requests (e.g. "join ride") are refused with direct fallback link.
+- Verified preference proposal creation, 10-minute countdown expiration, and atomic confirmation.
+- Unit tests added in `chatbot.test.ts`, `chatbot-tools.test.ts`, `preference-proposals.test.ts`, and `route.test.ts`.
+
+
+## 2026-10-15 — Chatbot Timezone Independence, Lifecycle Discard, Source-of-Truth Options, and Audit Logging (Prithviraj Ghosh)
+
+### User request
+Address peer review findings across 4 areas in clean atomic commits on branch `prithviraj/chatbot`:
+1. *Timezone dependency in natural-language search (High)*: Date search window in `chatbot.ts` used host local timezone, causing "after 6 pm" to resolve to `23:30+05:30` when `TZ=UTC`.
+2. *Chat history retention across reloads and sign-out (High - FR-RD-05.6)*: Chat conversation in `sessionStorage` survived reloads and lacked sign-out cleanup.
+3. *Configured ride options as parser source of truth (Medium)*: Natural-language parser used hardcoded lists while chatbot UI loaded active options from database, creating discrepancies for newly configured hubs/places.
+4. *Chatbot audit logging completeness against AI-RD-12 & Admin View (High)*: Chatbot audit records omitted tool arguments, result sizes, validation outcomes, fallback status, 90-day retention cleanup, and administrator inspection view.
+
+### Architecture and design decisions
+- **Timezone independence**: Eliminated host environment `TZ` dependency in `chatbot.ts`. Calculated Indian Standard Time (+05:30 / +330 min) directly from UTC epochs, guaranteeing "tomorrow after 6 pm" resolves strictly to `18:00+05:30` regardless of whether the server runs in UTC or another timezone. Added timezone-independent regression tests.
+- **Storage lifecycle (`FR-RD-05.6`)**: Implemented `chatbot-session.ts` with `isNavigationReload()`, `resolveChatbotInitialMessages()`, and `clearChatbotStorage()`. Detected reload events via `performance.getEntriesByType('navigation')` to immediately wipe conversations from `sessionStorage` and reset to initial greeting. Added automatic session purge on sign-out in `LogoutButton.tsx`.
+- **Configured options source of truth**: Replaced hardcoded hub/place/vehicle constants with dynamic matching functions (`matchHub`, `matchCampusLocation`, `matchVehicleType`) that use `getRideFormOptions()` as the single source of truth, supporting custom database-configured hubs, halls, and vehicles with synonym fallbacks.
+- **AI-RD-12 Audit logging & Admin view**:
+  - Added `validation_outcome TEXT` and `fallback_used BOOLEAN NOT NULL DEFAULT false` to `chatbot_audits` in `schema.sql` with idempotent `ALTER TABLE` statements.
+  - Updated `ChatbotToolAudit` to record tool arguments and `resultSize`.
+  - Added `purgeExpiredChatbotAudits` running `DELETE FROM chatbot_audits WHERE created_at < now() - interval '90 days'` (`P-28`).
+  - Added `listChatbotAudits` returning pseudonymous rider IDs (`rider-${sha256}`) to protect rider privacy.
+  - Added an AI Chatbot interaction audit logs table in `/admin/ai-decisions` for administrator inspection.
+- **CLI scripts developer tooling**: Updated `migrate.mjs` and `admin-role.mjs` to auto-read `DATABASE_URL` from `apps/web/.env.local` if not exported in shell environment.
+
+### Work completed
+- Modified `apps/web/src/lib/ai/chatbot.ts` and `apps/web/src/lib/ai/chatbot.test.ts` to compute IST timestamps independently of host timezone (`ce98302`).
+- Created `apps/web/src/lib/ai/chatbot-session.ts`, `chatbot-session.test.ts`, and updated `ChatbotInterface.tsx` and `LogoutButton.tsx` to enforce reload and sign-out history discard (`1cfbc27`).
+- Updated `chatbot.ts`, `route.ts`, and test suites to dynamically match against configured options from `getRideFormOptions()` (`56bef29`).
+- Expanded `schema.sql`, `chatbot-audit.ts`, `route.ts`, and `apps/web/src/app/admin/ai-decisions/page.tsx` with complete tool execution traces, validation outcomes, fallback flags, 90-day retention cleanup, and admin UI (`4992304`).
+- Updated `apps/web/scripts/migrate.mjs` and `admin-role.mjs` with `.env.local` fallback resolution (`b071353`).
+
+### Requirements addressed
+`FR-RD-05.1`, `FR-RD-05.6`, `AI-RD-04`, `AI-RD-12`, `P-28`, `US-RD-12-AC1`, `US-RD-14-AC1`.
+
+### Verification and testing
+- Verified 89/89 unit and component tests passing across all core chatbot, session, audit, and admin view suites.
+- Verified TypeScript strict check passing with 0 errors (`npx tsc --noEmit`).
+- Verified database migration idempotent execution.
+
