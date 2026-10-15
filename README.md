@@ -221,6 +221,8 @@ pull requests and pushes to `master`.
 | [`Deliverables/README.md`](Deliverables/README.md) | Deliverable folders and submission checklist |
 | [`Deliverables/D2/AI_LOG.md`](Deliverables/D2/AI_LOG.md) | AI usage and development-session record |
 | [`Deliverables/D2/UI/README.md`](Deliverables/D2/UI/README.md) | Captured UI screenshots and their routes |
+| [`Deliverables/D2/API_DOCUMENTATION.md`](Deliverables/D2/API_DOCUMENTATION.md) | Implemented HTTP API reference |
+| [`Deliverables/D2/CORE_WORKFLOW_DEMONSTRATION.md`](Deliverables/D2/CORE_WORKFLOW_DEMONSTRATION.md) | Reproducible ride-to-settlement workflow demonstration |
 | [`docs/BUILD_CHECKLIST.md`](docs/BUILD_CHECKLIST.md) | Course handout requirements by deliverable |
 | [`Phases.md`](Phases.md) | Delivery dates, sprint plan and project workstreams |
 | [`docs/project-management/CS455_Software_Engineering_Project.pdf`](docs/project-management/CS455_Software_Engineering_Project.pdf) | Governing course project handout; it takes precedence if project notes conflict |
