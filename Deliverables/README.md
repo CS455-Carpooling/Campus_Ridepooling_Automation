@@ -13,3 +13,9 @@ the course handout.
 See `docs/BUILD_CHECKLIST.md` for the full contents required in each.
 The D2 source-only implementation-to-requirement trace is in
 [REQUIREMENTS_TRACEABILITY.md](./D2/REQUIREMENTS_TRACEABILITY.md).
+The complete HTTP API reference is in
+[API_DOCUMENTATION.md](./D2/API_DOCUMENTATION.md), and the reproducible core
+transactional workflow is in
+[CORE_WORKFLOW_DEMONSTRATION.md](./D2/CORE_WORKFLOW_DEMONSTRATION.md).
+Both documents were regenerated after a complete source-only audit of the
+implementation and executable configuration files.
