@@ -12,8 +12,22 @@ const queryMock = vi.hoisted(() => vi.fn());
 const connectMock = vi.hoisted(() => vi.fn());
 vi.mock('../db', () => ({ pool: { query: queryMock, connect: connectMock } }));
 
-import { processChatbotMessage, extractDepartureWindow } from './chatbot';
+const interpretChatbotRequestMock = vi.hoisted(() => vi.fn());
+vi.mock('./chatbot-gemini', () => ({
+  CHATBOT_GEMINI_MODEL_VERSION: 'gemini-test',
+  CHATBOT_GEMINI_PROMPT_VERSION: 'chatbot-test-v1',
+  ChatbotGeminiRequestError: class ChatbotGeminiRequestError extends Error {
+    constructor(readonly status: number) {
+      super(`Gemini chatbot request failed (HTTP ${status}).`);
+    }
+  },
+  InvalidChatbotModelOutputError: class InvalidChatbotModelOutputError extends Error {},
+  interpretChatbotRequest: interpretChatbotRequestMock,
+}));
+
+import { processChatbotMessage, extractDepartureWindow, matchCampusLocation } from './chatbot';
 import { routes } from '../routes';
+import { ChatbotGeminiRequestError } from './chatbot-gemini';
 
 const VIEWER_ID = '11111111-1111-4000-8000-111111111111';
 const NOW = new Date('2026-10-14T10:00:00.000Z'); // A Wednesday in October 2026
@@ -234,6 +248,14 @@ describe('Privacy Probes & Public Profiles (FR-RD-05.2, US-RD-13-AC1, AI-RD-10)'
 });
 
 describe('Preference Proposals (FR-RD-05.3, US-RD-14-AC1, AI-RD-04)', () => {
+  it('does not match Hall 10 to a configured Hall 1', () => {
+    expect(
+      matchCampusLocation('set my default pickup location to hall 10', [
+        { id: 'hall-1', name: 'Hall 1' },
+      ]),
+    ).toBeNull();
+  });
+
   it('US-RD-14-AC1: presents proposed change and requires explicit rider confirmation', async () => {
     // 1. Validation queries in createPreferenceProposal
     queryMock.mockResolvedValueOnce({ rows: [{ id: 'auto' }] }); // vehicle check
@@ -271,6 +293,47 @@ describe('Preference Proposals (FR-RD-05.3, US-RD-14-AC1, AI-RD-04)', () => {
     expect(response.proposal.before.preferredVehicleType?.id).toBe('car');
     expect(response.proposal.after.preferredVehicleType?.id).toBe('auto');
     expect(response.proposal.status).toBe('pending');
+  });
+
+  it('uses Gemini for preference requests and clarifies when the requested hall is unavailable', async () => {
+    interpretChatbotRequestMock.mockResolvedValueOnce({
+      intent: {
+        intent: 'preference_update',
+        hubId: '',
+        campusLocationId: 'hall-1',
+        vehicleTypeId: '',
+        direction: 'unknown',
+        departureStart: '',
+        departureEnd: '',
+        maxFareShare: -1,
+        profileName: '',
+        reply: '',
+      },
+      inputTokens: 90,
+      outputTokens: 30,
+    });
+    const onAiMetadata = vi.fn();
+    const message = 'i said could you set my default pickup location to hall 10';
+
+    const response = await processChatbotMessage(VIEWER_ID, message, {
+      now: NOW,
+      rideOptions: {
+        hubs: [],
+        campusPlaces: [{ id: 'hall-1', name: 'Hall 1' }],
+        vehicleTypes: [],
+      },
+      useGemini: true,
+      onAiMetadata,
+    });
+
+    expect(response.kind).toBe('clarification');
+    expect(response.message).toContain('Hall 10 is not an active pickup point');
+    expect(response.message).toContain('Hall 1');
+    expect(interpretChatbotRequestMock).toHaveBeenCalledOnce();
+    expect(queryMock).not.toHaveBeenCalled();
+    expect(onAiMetadata).toHaveBeenLastCalledWith(
+      expect.objectContaining({ validationOutcome: 'valid', fallbackUsed: false }),
+    );
   });
 });
 
@@ -420,5 +483,281 @@ describe('Graceful Service Failure (FR-RD-05.7, US-RD-12-AC4)', () => {
     expect(response.fallbackLink.href).toBe(routes.findRide);
     expect(response.fallbackLink.label).toBe('Manual Ride Search');
     expect(searchRidesMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('Gemini Chatbot Integration (AI-RD-02, AI-RD-03, AI-RD-05)', () => {
+  const rideOptions = {
+    hubs: [{ id: 'kanpur-central', name: 'Kanpur Central' }],
+    campusPlaces: [{ id: 'hall-1', name: 'Hall 1' }],
+    vehicleTypes: [{ id: 'car', name: 'Car', capacity: 4 }],
+  };
+
+  beforeEach(() => {
+    interpretChatbotRequestMock.mockReset();
+  });
+
+  it('uses Gemini intent to build a validated search through the allowed tool executor', async () => {
+    interpretChatbotRequestMock.mockResolvedValueOnce({
+      intent: {
+        intent: 'search_rides',
+        hubId: 'kanpur-central',
+        campusLocationId: 'hall-1',
+        vehicleTypeId: 'car',
+        direction: 'to_hub',
+        departureStart: '2026-10-15T18:00:00+05:30',
+        departureEnd: '2026-10-15T23:00:00+05:30',
+        maxFareShare: 300,
+        profileName: '',
+        reply: '',
+      },
+      inputTokens: 100,
+      outputTokens: 40,
+    });
+    searchRidesMock.mockResolvedValueOnce([]);
+    const onAiMetadata = vi.fn();
+
+    const response = await processChatbotMessage(
+      VIEWER_ID,
+      'Could you find me an affordable car ride to Kanpur Central tomorrow evening?',
+      { now: new Date('2026-10-14T12:00:00Z'), rideOptions, useGemini: true, onAiMetadata },
+    );
+
+    expect(response.kind).toBe('search_results');
+    expect(response.aiGenerated).toBe(true);
+    if (response.kind !== 'search_results') return;
+    expect(response.interpretedFilters).toMatchObject({
+      hubId: 'kanpur-central',
+      campusLocationId: 'hall-1',
+      vehicleTypeId: 'car',
+      maxFareShare: 300,
+      departureStart: '2026-10-15T18:00:00+05:30',
+    });
+    expect(searchRidesMock).toHaveBeenCalledWith(
+      VIEWER_ID,
+      expect.objectContaining({ maxFareShare: 300 }),
+    );
+    expect(onAiMetadata).toHaveBeenCalledWith(
+      expect.objectContaining({
+        modelAttempted: true,
+        modelVersion: 'gemini-test',
+        validationOutcome: 'valid',
+        fallbackUsed: false,
+        inputTokens: 100,
+        outputTokens: 40,
+        toolCalls: [expect.objectContaining({ tool: 'search_rides', success: true })],
+      }),
+    );
+  });
+
+  it('retries transient Gemini provider errors before falling back', async () => {
+    const validPlan = {
+      intent: 'search_rides' as const,
+      hubId: 'kanpur-central',
+      campusLocationId: 'hall-1',
+      vehicleTypeId: 'car',
+      direction: 'to_hub' as const,
+      departureStart: '2026-10-15T18:00:00+05:30',
+      departureEnd: '2026-10-15T23:00:00+05:30',
+      maxFareShare: -1,
+      profileName: '',
+      reply: '',
+    };
+    interpretChatbotRequestMock
+      .mockRejectedValueOnce(new ChatbotGeminiRequestError(503))
+      .mockResolvedValueOnce({
+        intent: validPlan,
+        inputTokens: 90,
+        outputTokens: 30,
+      });
+    searchRidesMock.mockResolvedValueOnce([]);
+    const onAiMetadata = vi.fn();
+
+    const response = await processChatbotMessage(
+      VIEWER_ID,
+      'Find a ride to Kanpur Central tomorrow evening',
+      { now: new Date('2026-10-14T12:00:00Z'), rideOptions, useGemini: true, onAiMetadata },
+    );
+
+    expect(response.kind).toBe('search_results');
+    expect(response.aiGenerated).toBe(true);
+    expect(interpretChatbotRequestMock).toHaveBeenCalledTimes(2);
+    expect(onAiMetadata).toHaveBeenLastCalledWith(
+      expect.objectContaining({ validationOutcome: 'retried_valid', fallbackUsed: false }),
+    );
+  });
+
+  it('uses Gemini to answer supported platform questions as generated text', async () => {
+    interpretChatbotRequestMock.mockResolvedValueOnce({
+      intent: {
+        intent: 'platform_help',
+        hubId: '',
+        campusLocationId: '',
+        vehicleTypeId: '',
+        direction: 'unknown',
+        departureStart: '',
+        departureEnd: '',
+        maxFareShare: -1,
+        profileName: '',
+        reply: 'I can search rides and prepare preference changes for your confirmation.',
+      },
+      inputTokens: 80,
+      outputTokens: 24,
+    });
+
+    const response = await processChatbotMessage(
+      VIEWER_ID,
+      'What can you help me do with campus rides?',
+      { now: NOW, rideOptions, useGemini: true },
+    );
+
+    expect(response).toMatchObject({
+      kind: 'assistant_reply',
+      aiGenerated: true,
+      message: 'I can search rides and prepare preference changes for your confirmation.',
+    });
+    expect(searchRidesMock).not.toHaveBeenCalled();
+  });
+
+  it('uses Gemini to classify ordinary out-of-scope messages', async () => {
+    interpretChatbotRequestMock.mockResolvedValueOnce({
+      intent: {
+        intent: 'out_of_scope',
+        hubId: '',
+        campusLocationId: '',
+        vehicleTypeId: '',
+        direction: 'unknown',
+        departureStart: '',
+        departureEnd: '',
+        maxFareShare: -1,
+        profileName: '',
+        reply: '',
+      },
+      inputTokens: 80,
+      outputTokens: 20,
+    });
+    const onAiMetadata = vi.fn();
+
+    const response = await processChatbotMessage(VIEWER_ID, 'What is the capital of France?', {
+      now: NOW,
+      rideOptions,
+      useGemini: true,
+      onAiMetadata,
+    });
+
+    expect(interpretChatbotRequestMock).toHaveBeenCalledOnce();
+    expect(response).toMatchObject({
+      kind: 'out_of_scope',
+      aiGenerated: true,
+      aiFallback: false,
+    });
+    expect(onAiMetadata).toHaveBeenLastCalledWith(
+      expect.objectContaining({ validationOutcome: 'valid', fallbackUsed: false }),
+    );
+  });
+
+  it('never sends prohibited transactions to Gemini', async () => {
+    const response = await processChatbotMessage(VIEWER_ID, 'Please join ride 42 for me', {
+      now: NOW,
+      rideOptions,
+      useGemini: true,
+    });
+
+    expect(response.kind).toBe('prohibited_action');
+    expect(interpretChatbotRequestMock).not.toHaveBeenCalled();
+  });
+
+  it('retries once when Gemini returns a filter outside the configured options', async () => {
+    const validPlan = {
+      intent: 'search_rides',
+      hubId: 'kanpur-central',
+      campusLocationId: 'hall-1',
+      vehicleTypeId: '',
+      direction: 'to_hub',
+      departureStart: '2026-10-15T18:00:00+05:30',
+      departureEnd: '2026-10-15T23:00:00+05:30',
+      maxFareShare: -1,
+      profileName: '',
+      reply: '',
+    };
+    interpretChatbotRequestMock
+      .mockResolvedValueOnce({
+        intent: { ...validPlan, hubId: 'not-configured' },
+        inputTokens: null,
+        outputTokens: null,
+      })
+      .mockResolvedValueOnce({
+        intent: validPlan,
+        inputTokens: 90,
+        outputTokens: 30,
+      });
+    searchRidesMock.mockResolvedValueOnce([]);
+    const onAiMetadata = vi.fn();
+
+    const response = await processChatbotMessage(
+      VIEWER_ID,
+      'Find a ride to Kanpur Central tomorrow evening',
+      { now: new Date('2026-10-14T12:00:00Z'), rideOptions, useGemini: true, onAiMetadata },
+    );
+
+    expect(response.kind).toBe('search_results');
+    expect(response.aiGenerated).toBe(true);
+    expect(interpretChatbotRequestMock).toHaveBeenCalledTimes(2);
+    expect(onAiMetadata).toHaveBeenLastCalledWith(
+      expect.objectContaining({ validationOutcome: 'retried_valid', fallbackUsed: false }),
+    );
+  });
+
+  it('falls back to the deterministic parser when Gemini returns invalid configured IDs', async () => {
+    interpretChatbotRequestMock
+      .mockResolvedValueOnce({
+        intent: {
+          intent: 'search_rides',
+          hubId: 'unconfigured-hub',
+          campusLocationId: 'hall-1',
+          vehicleTypeId: '',
+          direction: 'to_hub',
+          departureStart: '2026-10-15T18:00:00+05:30',
+          departureEnd: '2026-10-15T23:00:00+05:30',
+          maxFareShare: -1,
+          profileName: '',
+          reply: '',
+        },
+        inputTokens: null,
+        outputTokens: null,
+      })
+      .mockResolvedValueOnce({
+        intent: {
+          intent: 'search_rides',
+          hubId: 'unconfigured-hub',
+          campusLocationId: 'hall-1',
+          vehicleTypeId: '',
+          direction: 'to_hub',
+          departureStart: '2026-10-15T18:00:00+05:30',
+          departureEnd: '2026-10-15T23:00:00+05:30',
+          maxFareShare: -1,
+          profileName: '',
+          reply: '',
+        },
+        inputTokens: null,
+        outputTokens: null,
+      });
+    searchRidesMock.mockResolvedValueOnce([]);
+    const onAiMetadata = vi.fn();
+
+    const response = await processChatbotMessage(
+      VIEWER_ID,
+      'Find a ride to Kanpur Central tomorrow evening',
+      { now: new Date('2026-10-14T12:00:00Z'), rideOptions, useGemini: true, onAiMetadata },
+    );
+
+    expect(response.kind).toBe('search_results');
+    expect(response.aiFallback).toBe(true);
+    expect(onAiMetadata).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        validationOutcome: 'invalid_model_output',
+        fallbackUsed: true,
+      }),
+    );
   });
 });

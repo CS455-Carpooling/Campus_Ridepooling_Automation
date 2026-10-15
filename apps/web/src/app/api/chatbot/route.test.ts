@@ -231,6 +231,67 @@ describe('POST /api/chatbot (Backend API Route & Guardrails)', () => {
     );
   });
 
+  it('logs Gemini model, token, tool, validation, and fallback metadata', async () => {
+    h.readJson.mockResolvedValue({ message: 'Find a ride to Kanpur Central tomorrow evening' });
+    h.processChatbotMessage.mockImplementationOnce(
+      async (
+        _userId: string,
+        _message: string,
+        options: { onAiMetadata: (metadata: unknown) => void },
+      ) => {
+        options.onAiMetadata({
+          modelAttempted: true,
+          modelVersion: 'gemini-chat-test',
+          promptVersion: 'campus-chatbot-v1',
+          toolCalls: [
+            {
+              tool: 'search_rides',
+              arguments: { hubId: 'kanpur-central' },
+              resultSize: 2,
+              success: true,
+            },
+          ],
+          validationOutcome: 'valid',
+          fallbackUsed: false,
+          inputTokens: 120,
+          outputTokens: 35,
+        });
+        return {
+          kind: 'assistant_reply',
+          message: 'I found matching rides.',
+          aiGenerated: true,
+          aiFallback: false,
+        };
+      },
+    );
+
+    const req = new Request('http://localhost/api/chatbot', {
+      method: 'POST',
+      body: JSON.stringify({ message: 'Find a ride to Kanpur Central tomorrow evening' }),
+    });
+    const res = await POST(req);
+    const data = await res.json();
+
+    expect(data.aiGenerated).toBe(true);
+    expect(data.aiFallback).toBe(false);
+    expect(h.processChatbotMessage).toHaveBeenCalledWith(
+      USER.id,
+      'Find a ride to Kanpur Central tomorrow evening',
+      expect.objectContaining({ useGemini: true }),
+    );
+    expect(h.logChatbotAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        modelVersion: 'gemini-chat-test',
+        promptVersion: 'campus-chatbot-v1',
+        toolCalls: [expect.objectContaining({ tool: 'search_rides', resultSize: 2 })],
+        validationOutcome: 'valid',
+        fallbackUsed: false,
+        inputTokens: 120,
+        outputTokens: 35,
+      }),
+    );
+  });
+
   it('returns graceful fallback and logs error if AI service encounters an unexpected error (FR-RD-05.7)', async () => {
     h.readJson.mockResolvedValue({ message: 'Show rides' });
     h.processChatbotMessage.mockRejectedValue(new Error('Downstream model failure'));

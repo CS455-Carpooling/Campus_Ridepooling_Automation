@@ -9,25 +9,30 @@ import { RequestToJoinButton } from './RequestToJoinButton';
 type RideCardProps = {
   ride: SearchRideResult;
   pickupPointId: string;
+  compact?: boolean;
 };
 
 /**
  * One search result card. Purely presentational: all numbers are worked out
  * by the server in ride-search.ts. Links to the full ride detail page.
  */
-export function RideCard({ ride, pickupPointId }: RideCardProps) {
+export function RideCard({ ride, pickupPointId, compact = false }: RideCardProps) {
   const placeLabel = campusPlaceLabel(ride.direction);
   const full = ride.seatsLeft === 0;
 
   return (
-    <article className="flex flex-col gap-4 rounded-panel border border-line-strong bg-surface p-5 sm:p-6">
+    <article
+      className={`flex flex-col rounded-panel border border-line-strong bg-surface ${
+        compact ? 'gap-3 p-4' : 'gap-4 p-5 sm:p-6'
+      }`}
+    >
       {/* Header row: direction badge + hub name */}
       <header className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-accent-text">
             {directionLabels[ride.direction]}
           </p>
-          <h2 className="mt-0.5 text-xl font-bold tracking-tight">
+          <h2 className={`mt-0.5 font-bold tracking-tight ${compact ? 'text-lg' : 'text-xl'}`}>
             {ride.direction === 'to_hub' ? 'To' : 'From'} {ride.hub.name}
           </h2>
           {ride.hub.detail && <p className="mt-0.5 text-sm text-ink-muted">{ride.hub.detail}</p>}
@@ -57,9 +62,9 @@ export function RideCard({ ride, pickupPointId }: RideCardProps) {
       )}
 
       {/* Details grid */}
-      <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
+      <dl className={`grid gap-x-6 ${compact ? 'gap-y-2' : 'gap-y-3'} sm:grid-cols-2`}>
         <Fact term="Departure">
-          <span className="font-mono tabular-nums text-sm">
+          <span className={`font-mono tabular-nums ${compact ? 'text-xs' : 'text-sm'}`}>
             {formatDepartureWindow(ride.departureStart, ride.departureEnd)}
           </span>
         </Fact>
@@ -77,7 +82,7 @@ export function RideCard({ ride, pickupPointId }: RideCardProps) {
         </Fact>
 
         <Fact term="Your estimated share">
-          <span className="font-mono tabular-nums text-base font-bold">
+          <span className={`font-mono tabular-nums font-bold ${compact ? 'text-sm' : 'text-base'}`}>
             {formatRupees(ride.estimatedShare)}
           </span>
           <p className="text-xs text-ink-muted">if accepted</p>
@@ -101,7 +106,9 @@ export function RideCard({ ride, pickupPointId }: RideCardProps) {
       {/* View button */}
       <Link
         href={routes.ride(ride.id)}
-        className="mt-1 inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-line-strong bg-transparent px-5 text-base font-semibold text-ink hover:bg-panel active:translate-y-px"
+        className={`mt-1 inline-flex items-center justify-center gap-2 rounded-control border border-line-strong bg-transparent font-semibold text-ink hover:bg-panel active:translate-y-px ${
+          compact ? 'min-h-10 px-4 text-sm' : 'min-h-11 px-5 text-base'
+        }`}
       >
         View ride
       </Link>

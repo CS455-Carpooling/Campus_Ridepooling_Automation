@@ -261,3 +261,15 @@ Deliverable: a tested feature branch ready for review.
 
 - Follow-up completed: Gemini's `usageMetadata.promptTokenCount` and `usageMetadata.candidatesTokenCount` are now read when present, kept out of the ranking payload, and persisted as audit input/output token counts. If the provider omits usage metadata, the corresponding database value remains NULL.
 - Updated the recommendation API test harness to mock the PostgreSQL transaction used by the per-rider rolling quota.
+
+## Gemini chatbot integration
+
+- Connected the authenticated chatbot route to a server-only Gemini intent interpreter using the existing `GEMINI_API_KEY` and model configuration. `GEMINI_CHATBOT_MODEL` can optionally override the model used for chat without changing ride-recommendation model selection.
+- The model classifies ride searches, public-profile requests, preference-change requests, platform-help questions and out-of-scope messages. Search inputs are constrained to active configured option IDs and validated IST departure windows before use.
+- Model-generated tool plans execute only through the existing server-side chatbot tool allowlist and use the authenticated rider's authorization scope. Ride search results and profiles shown in cards remain sourced from trusted server tools; transactional actions and preference changes remain protected by deterministic checks and explicit rider confirmation.
+- The prompt contains only the rider's bounded message, current IST time and configured public ride options. Profile data and private rider data are not sent to Gemini. Output is schema-checked; invalid, unavailable or timed-out model output falls back to the deterministic parser and is marked in the UI and audit trace.
+- Chatbot audit records now receive the selected chatbot model and prompt versions, model token counts when available, tool calls, validation outcome and fallback status.
+- Local reproduction confirmed `gemini-2.5-flash` returned HTTP 404 for this API account, while the configured API key was present. Switched the chatbot default to `gemini-3.1-flash-lite` (verified with the chatbot JSON schema), increased the provider timeout to accommodate observed response latency, and made API HTTP status visible in server diagnostics and the audit validation outcome without logging credentials or message content.
+- Follow-up: preference-change requests now go through Gemini before the server prepares any proposal. Campus pickup matching requires complete name/ID boundaries, preventing a request for Hall 10 from being interpreted as Hall 1. If a requested hall is not active, the assistant clarifies and does not create a proposal.
+- Ordinary out-of-scope messages and public-profile inquiries also use Gemini first; deterministic interpretations are retained as fallback after a model failure. Prohibited-action and privacy checks remain deterministic and run before the model.
+- Replaced misleading chatbot starter examples (a fabricated profile, an unavailable booking action, and potentially inactive locations) with supported ride-search, preference-proposal and platform-help prompts built from currently configured campus options.

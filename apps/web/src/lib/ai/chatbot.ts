@@ -6,11 +6,20 @@ import {
   executeGetRiderPreferences,
   executeSearchRides,
   executeProposePreferenceUpdate,
+  executeChatbotTool,
   type PublicProfileResult,
 } from './chatbot-tools';
 import type { PreferenceProposal, ProposedPreferenceChanges } from './preference-proposals';
 import type { SearchRideResult } from '../ride-search';
 import { type RideFormOptions, type Place, type VehicleType } from '../ride-options';
+import {
+  CHATBOT_GEMINI_MODEL_VERSION,
+  CHATBOT_GEMINI_PROMPT_VERSION,
+  ChatbotGeminiRequestError,
+  InvalidChatbotModelOutputError,
+  interpretChatbotRequest,
+} from './chatbot-gemini';
+import type { ChatbotToolAudit } from './chatbot-audit';
 
 export const MAX_MESSAGE_LENGTH = 500; // AI-RD-09, US-RD-12-AC3
 
@@ -27,7 +36,7 @@ export type InterpretedFilters = {
   maxFareShare?: number;
 };
 
-export type ChatbotResponse =
+export type ChatbotResponse = (
   | {
       kind: 'search_results';
       message: string;
@@ -69,12 +78,30 @@ export type ChatbotResponse =
         href: string;
         label: string;
       };
-    };
+    }
+  | {
+      kind: 'assistant_reply';
+      message: string;
+    }
+) & { aiGenerated?: boolean; aiFallback?: boolean };
+
+export type ChatbotAgentMetadata = {
+  modelAttempted: boolean;
+  modelVersion: string;
+  promptVersion: string;
+  toolCalls: ChatbotToolAudit[];
+  validationOutcome: string;
+  fallbackUsed: boolean;
+  inputTokens: number | null;
+  outputTokens: number | null;
+};
 
 export type ChatbotOptions = {
   now?: Date;
   forceServiceFailure?: boolean;
   rideOptions?: RideFormOptions;
+  useGemini?: boolean;
+  onAiMetadata?: (metadata: ChatbotAgentMetadata) => void;
 };
 
 export const DEFAULT_HUBS: Place[] = [
@@ -232,18 +259,26 @@ export function matchHub(text: string, hubs: Place[]): Place | null {
 export function matchCampusLocation(text: string, campusPlaces: Place[]): Place | null {
   const lower = text.toLowerCase();
   if (!Array.isArray(campusPlaces)) return null;
+  const containsWholePhrase = (phrase: string) => {
+    const escaped = phrase
+      .trim()
+      .replace(/\s+/g, ' ')
+      .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      .replace(/ /g, '\\s+');
+    return new RegExp(`(?<![\\p{L}\\p{N}])${escaped}(?![\\p{L}\\p{N}])`, 'iu').test(lower);
+  };
 
-  // 1. Direct match on name, id, or normalized id
+  // Match complete names/IDs so "Hall 10" cannot accidentally match "Hall 1".
   for (const loc of campusPlaces) {
     if (!loc) continue;
     const nameLower = (loc.name ?? '').toLowerCase();
     const idNorm = (loc.id ?? '').toLowerCase().replace(/[-_]/g, ' ');
-    if ((nameLower && lower.includes(nameLower)) || (idNorm && lower.includes(idNorm))) {
+    if ((nameLower && containsWholePhrase(nameLower)) || (idNorm && containsWholePhrase(idNorm))) {
       return loc;
     }
   }
 
-  // 2. Hall shorthand regex (e.g. "hall 7", "hall7", "h7", "hall-7")
+  // Hall shorthand (e.g. "hall 7", "hall7", "h7", "hall-7")
   const hallMatch = lower.match(/\b(?:hall\s*|h)(\d{1,2})\b/);
   if (hallMatch && hallMatch[1]) {
     const hallNum = hallMatch[1];
@@ -693,6 +728,291 @@ export function extractDepartureWindow(
   };
 }
 
+function isValidModelDepartureWindow(start: string, end: string, now: Date): boolean {
+  const isoIst = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+05:30$/;
+  if (!isoIst.test(start) || !isoIst.test(end)) return false;
+  const startTime = Date.parse(start);
+  const endTime = Date.parse(end);
+  const isCanonicalIst = (value: string, timestamp: number) => {
+    const ist = new Date(timestamp + ASIA_KOLKATA_OFFSET_MS);
+    return (
+      formatIstIsoString(
+        ist.getUTCFullYear(),
+        ist.getUTCMonth() + 1,
+        ist.getUTCDate(),
+        ist.getUTCHours(),
+        ist.getUTCMinutes(),
+        ist.getUTCSeconds(),
+      ) === value
+    );
+  };
+  return (
+    Number.isFinite(startTime) &&
+    Number.isFinite(endTime) &&
+    isCanonicalIst(start, startTime) &&
+    isCanonicalIst(end, endTime) &&
+    startTime >= now.getTime() - 30 * 60_000 &&
+    startTime <= now.getTime() + 90 * 24 * 60 * 60_000 &&
+    endTime > startTime &&
+    endTime - startTime <= 24 * 60 * 60_000
+  );
+}
+
+function isUsableGeminiIntent(
+  intent: Awaited<ReturnType<typeof interpretChatbotRequest>>['intent'],
+  now: Date,
+  hubs: Place[],
+  campusPlaces: Place[],
+  vehicleTypes: VehicleType[],
+): boolean {
+  if (intent.intent === 'search_rides') {
+    return (
+      hubs.some((hub) => hub.id === intent.hubId) &&
+      (!intent.campusLocationId ||
+        campusPlaces.some((place) => place.id === intent.campusLocationId)) &&
+      (!intent.vehicleTypeId ||
+        vehicleTypes.some((vehicle) => vehicle.id === intent.vehicleTypeId)) &&
+      (intent.direction === 'to_hub' || intent.direction === 'from_hub') &&
+      (intent.maxFareShare === -1 || (intent.maxFareShare >= 1 && intent.maxFareShare <= 50_000)) &&
+      isValidModelDepartureWindow(intent.departureStart, intent.departureEnd, now)
+    );
+  }
+  if (intent.intent === 'public_profile') {
+    return /^[\p{L}\p{M}][\p{L}\p{M} .'-]{0,79}$/u.test(intent.profileName.trim());
+  }
+  return true;
+}
+
+async function interpretWithOneRetry(
+  message: string,
+  rideOptions: RideFormOptions,
+  now: Date,
+): Promise<{
+  result: Awaited<ReturnType<typeof interpretChatbotRequest>>;
+  retried: boolean;
+}> {
+  let retried = false;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const result = await interpretChatbotRequest(message, rideOptions, now);
+      if (
+        isUsableGeminiIntent(
+          result.intent,
+          now,
+          rideOptions.hubs,
+          rideOptions.campusPlaces,
+          rideOptions.vehicleTypes,
+        )
+      ) {
+        return { result, retried };
+      }
+    } catch (error) {
+      const retryableProviderError =
+        error instanceof ChatbotGeminiRequestError &&
+        (error.status === 408 || error.status === 429 || error.status >= 500);
+      const retryableOutputError = error instanceof InvalidChatbotModelOutputError;
+      if ((!retryableProviderError && !retryableOutputError) || attempt === 1) throw error;
+      if (retryableProviderError) {
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      }
+    }
+    retried = true;
+  }
+  throw new InvalidChatbotModelOutputError('Gemini did not return a usable chatbot intent.');
+}
+
+async function runGeminiIntent(
+  viewerId: string,
+  message: string,
+  intent: Awaited<ReturnType<typeof interpretChatbotRequest>>['intent'],
+  now: Date,
+  hubs: Place[],
+  campusPlaces: Place[],
+  vehicleTypes: VehicleType[],
+  metadata: ChatbotAgentMetadata,
+): Promise<ChatbotResponse | null> {
+  if (intent.intent === 'out_of_scope') {
+    return {
+      kind: 'out_of_scope',
+      message:
+        'I can only assist with finding, comparing, and understanding campus rides and managing your ride preferences.',
+    };
+  }
+
+  if (intent.intent === 'clarification') {
+    return {
+      kind: 'clarification',
+      message:
+        intent.reply.trim() ||
+        'Could you share a destination hub, such as Kanpur Central or Lucknow airport?',
+    };
+  }
+
+  if (intent.intent === 'platform_help') {
+    return {
+      kind: 'assistant_reply',
+      message:
+        intent.reply.trim() ||
+        'I can help search rides, show public profile details, or prepare a preference change for your confirmation.',
+    };
+  }
+
+  if (intent.intent === 'preference_update') {
+    const proposedChanges = checkPreferenceChangeRequest(message, vehicleTypes, campusPlaces);
+    if (proposedChanges) {
+      const proposal = await executeProposePreferenceUpdate(viewerId, proposedChanges, now);
+      metadata.toolCalls.push({
+        tool: 'propose_preference_update',
+        arguments: { changes: proposedChanges },
+        resultSize: Object.keys(proposedChanges).length,
+        success: true,
+      });
+      return {
+        kind: 'preference_proposal',
+        message:
+          'I have prepared your proposed preference update. This change requires your explicit confirmation and will lapse after 10 minutes if not confirmed.',
+        proposal,
+      };
+    }
+
+    const requestedHall = message.match(/\b(?:hall\s*|h)(\d{1,2})\b/i);
+    if (requestedHall?.[1]) {
+      const activeHalls = campusPlaces
+        .filter((place) => /\bhall[\s_-]*\d+\b/i.test(`${place.name} ${place.id}`))
+        .map((place) => place.name);
+      const optionsText = activeHalls.length
+        ? ` Active pickup points include ${activeHalls.join(', ')}.`
+        : '';
+      return {
+        kind: 'clarification',
+        message: `Hall ${requestedHall[1]} is not an active pickup point, so I have not prepared a change.${optionsText}`,
+      };
+    }
+
+    return {
+      kind: 'clarification',
+      message:
+        'Tell me which preference you want to change, for example your default pickup point, preferred vehicle, or maximum fare share.',
+    };
+  }
+
+  if (intent.intent === 'public_profile') {
+    const displayName = intent.profileName.trim();
+    if (!/^[\p{L}\p{M}][\p{L}\p{M} .'-]{0,79}$/u.test(displayName)) return null;
+
+    const result = await executeChatbotTool(
+      viewerId,
+      'get_public_profile',
+      { displayName },
+      { now },
+    );
+    metadata.toolCalls.push({
+      tool: 'get_public_profile',
+      arguments: { displayName },
+      resultSize: result.success && result.tool === 'get_public_profile' && result.data ? 1 : 0,
+      success: result.success,
+    });
+    if (!result.success || result.tool !== 'get_public_profile' || !result.data) {
+      return {
+        kind: 'clarification',
+        message: `I could not find a public profile for "${displayName}". Please check the spelling.`,
+      };
+    }
+
+    const rating = result.data.aggregateRating
+      ? `with an average rating of ${result.data.aggregateRating.average} (${result.data.aggregateRating.count} ratings)`
+      : 'with no released ratings yet';
+    const tags = result.data.visibleTags.length
+      ? `Visible interests: ${result.data.visibleTags.join(', ')}.`
+      : 'No public interest tags.';
+    return {
+      kind: 'public_profile',
+      message: `${result.data.displayName} has completed ${result.data.completedTrips} trips ${rating}. ${tags}`,
+      profile: result.data,
+    };
+  }
+
+  if (intent.intent !== 'search_rides') return null;
+
+  const hub = hubs.find((item) => item.id === intent.hubId);
+  const campus = campusPlaces.find((item) => item.id === intent.campusLocationId);
+  const vehicle = intent.vehicleTypeId
+    ? vehicleTypes.find((item) => item.id === intent.vehicleTypeId)
+    : undefined;
+  if (!hub || (intent.campusLocationId && !campus) || (intent.vehicleTypeId && !vehicle)) {
+    return null;
+  }
+  if (intent.direction !== 'to_hub' && intent.direction !== 'from_hub') return null;
+  if (intent.maxFareShare !== -1 && (intent.maxFareShare < 1 || intent.maxFareShare > 50_000)) {
+    return null;
+  }
+  if (!isValidModelDepartureWindow(intent.departureStart, intent.departureEnd, now)) return null;
+
+  let campusPlace = campus;
+  if (!campusPlace) {
+    const preferences = await executeChatbotTool(viewerId, 'get_rider_preferences', {});
+    metadata.toolCalls.push({
+      tool: 'get_rider_preferences',
+      arguments: {},
+      resultSize: preferences.success && preferences.tool === 'get_rider_preferences' ? 1 : 0,
+      success: preferences.success,
+    });
+    if (!preferences.success || preferences.tool !== 'get_rider_preferences' || !preferences.data)
+      return null;
+    campusPlace = campusPlaces.find(
+      (place) => place.id === preferences.data.defaultPickupPoint?.id,
+    );
+  }
+  if (!campusPlace) campusPlace = campusPlaces[0];
+  if (!campusPlace) return null;
+
+  const maxFareShare = intent.maxFareShare === -1 ? undefined : intent.maxFareShare;
+  const searchArgs = {
+    direction: intent.direction,
+    hubId: hub.id,
+    campusLocationId: campusPlace.id,
+    departureStart: intent.departureStart,
+    departureEnd: intent.departureEnd,
+    ...(vehicle ? { vehicleTypeId: vehicle.id } : {}),
+    ...(maxFareShare ? { maxFareShare: String(maxFareShare) } : {}),
+  };
+  const result = await executeChatbotTool(viewerId, 'search_rides', searchArgs, { now });
+  metadata.toolCalls.push({
+    tool: 'search_rides',
+    arguments: searchArgs,
+    resultSize:
+      result.success && result.tool === 'search_rides' && Array.isArray(result.data)
+        ? result.data.length
+        : 0,
+    success: result.success,
+  });
+  if (!result.success || result.tool !== 'search_rides' || !Array.isArray(result.data)) return null;
+
+  const filters: InterpretedFilters = {
+    direction: intent.direction,
+    hubId: hub.id,
+    hubName: hub.name,
+    campusLocationId: campusPlace.id,
+    campusLocationName: campusPlace.name,
+    departureStart: intent.departureStart,
+    departureEnd: intent.departureEnd,
+    ...(vehicle ? { vehicleTypeId: vehicle.id, vehicleTypeName: vehicle.name } : {}),
+    ...(maxFareShare ? { maxFareShare } : {}),
+  };
+  const vehicleText = vehicle ? ` in a ${vehicle.name}` : '';
+  const fareText = maxFareShare ? ` with share under ₹${maxFareShare}` : '';
+  const ridesText =
+    result.data.length === 0
+      ? 'No open rides currently match these criteria.'
+      : `Found ${result.data.length} matching ${result.data.length === 1 ? 'ride' : 'rides'}.`;
+  return {
+    kind: 'search_results',
+    message: `Showing rides for ${hub.name} from ${campusPlace.name}${vehicleText}${fareText}. ${ridesText}`,
+    interpretedFilters: filters,
+    rides: result.data,
+  };
+}
+
 /**
  * Main Chatbot entry point (Deliverable 1, UR-RD-05 / FR-RD-05).
  * Interprets messages, enforces security boundaries and permissions, and returns
@@ -746,8 +1066,8 @@ export async function processChatbotMessage(
   const prohibited = checkProhibitedAction(trimmed);
   if (prohibited) return prohibited;
 
-  // 3. Check for Out-of-Scope Requests (FR-RD-05.5, US-RD-12-AC2)
-  if (isOutOfScope(trimmed)) {
+  // Keep the deterministic out-of-scope response when Gemini is disabled.
+  if (!options?.useGemini && isOutOfScope(trimmed)) {
     return {
       kind: 'out_of_scope',
       message:
@@ -764,7 +1084,7 @@ export async function processChatbotMessage(
     trimmed.toLowerCase().startsWith('tell me about') ||
     trimmed.toLowerCase().startsWith('who is');
 
-  if (isProbe || targetName || isProfileQuery) {
+  if (isProbe || (!options?.useGemini && (targetName || isProfileQuery))) {
     const profile = targetName
       ? await executeGetPublicProfile({ displayName: targetName }, now)
       : null;
@@ -819,7 +1139,7 @@ export async function processChatbotMessage(
     configuredVehicles,
     configuredCampus,
   );
-  if (proposedChanges) {
+  if (proposedChanges && !options?.useGemini) {
     try {
       const proposal = await executeProposePreferenceUpdate(viewerId, proposedChanges, now);
       return {
@@ -836,6 +1156,175 @@ export async function processChatbotMessage(
     }
   }
 
+  let aiFallback = false;
+  if (options?.useGemini) {
+    const metadata: ChatbotAgentMetadata = {
+      modelAttempted: true,
+      modelVersion: CHATBOT_GEMINI_MODEL_VERSION,
+      promptVersion: CHATBOT_GEMINI_PROMPT_VERSION,
+      toolCalls: [],
+      validationOutcome: 'not_run',
+      fallbackUsed: false,
+      inputTokens: null,
+      outputTokens: null,
+    };
+    options.onAiMetadata?.(metadata);
+
+    try {
+      const { result: modelResult, retried } = await interpretWithOneRetry(
+        trimmed,
+        {
+          hubs: configuredHubs,
+          campusPlaces: configuredCampus,
+          vehicleTypes: configuredVehicles,
+        },
+        now,
+      );
+      metadata.inputTokens = modelResult.inputTokens;
+      metadata.outputTokens = modelResult.outputTokens;
+
+      const response = await runGeminiIntent(
+        viewerId,
+        trimmed,
+        modelResult.intent,
+        now,
+        configuredHubs,
+        configuredCampus,
+        configuredVehicles,
+        metadata,
+      );
+      if (response) {
+        metadata.validationOutcome = retried ? 'retried_valid' : 'valid';
+        options.onAiMetadata?.(metadata);
+        return { ...response, aiGenerated: true, aiFallback: false };
+      }
+
+      metadata.validationOutcome = 'invalid_model_intent';
+      metadata.fallbackUsed = true;
+    } catch (error) {
+      if (error instanceof ChatbotGeminiRequestError) {
+        metadata.validationOutcome = `gemini_http_${error.status}`;
+        console.warn('Chatbot Gemini API request failed.', { status: error.status });
+      } else if (error instanceof InvalidChatbotModelOutputError) {
+        metadata.validationOutcome = 'invalid_model_output';
+        console.warn('Chatbot Gemini returned unusable output.', { reason: error.message });
+      } else if (error instanceof Error && error.name === 'TimeoutError') {
+        metadata.validationOutcome = 'gemini_timeout';
+        console.warn('Chatbot Gemini request timed out.');
+      } else {
+        metadata.validationOutcome = 'model_or_tool_error';
+        console.warn('Chatbot Gemini processing failed.', {
+          errorName: error instanceof Error ? error.name : 'UnknownError',
+        });
+      }
+      metadata.fallbackUsed = true;
+    }
+
+    aiFallback = true;
+    metadata.fallbackUsed = true;
+    options.onAiMetadata?.(metadata);
+  }
+
+  // Deterministic interpretation is used only when Gemini is disabled or failed.
+  if (options?.useGemini && aiFallback && isOutOfScope(trimmed)) {
+    return {
+      kind: 'out_of_scope',
+      message:
+        'I can only assist with finding, comparing, and understanding campus rides and managing your ride preferences. Please use Find a Ride or Offer a Ride for platform features.',
+      aiFallback: true,
+    };
+  }
+
+  if (options?.useGemini && aiFallback && (targetName || isProfileQuery)) {
+    if (targetName) {
+      const profile = await executeGetPublicProfile({ displayName: targetName }, now);
+      if (profile) {
+        const ratingText = profile.aggregateRating
+          ? `with an average rating of ${profile.aggregateRating.average} (${profile.aggregateRating.count} ratings)`
+          : 'with no released ratings yet';
+        const tagsText = profile.visibleTags.length
+          ? `Visible interests: ${profile.visibleTags.join(', ')}.`
+          : 'No public interest tags.';
+        return {
+          kind: 'public_profile',
+          message: `${profile.displayName} has completed ${profile.completedTrips} trips ${ratingText}. ${tagsText}`,
+          profile,
+          aiFallback: true,
+        };
+      }
+      return {
+        kind: 'clarification',
+        message: `I could not find a public profile for "${targetName}". Please check the spelling or ask about someone on your ride.`,
+        aiFallback: true,
+      };
+    }
+  }
+
+  if (proposedChanges && (aiFallback || !options?.useGemini)) {
+    try {
+      const proposal = await executeProposePreferenceUpdate(viewerId, proposedChanges, now);
+      return {
+        kind: 'preference_proposal',
+        message:
+          'I have prepared your proposed preference update. This change requires your explicit confirmation and will lapse after 10 minutes if not confirmed.',
+        proposal,
+        ...(aiFallback ? { aiFallback: true } : {}),
+      };
+    } catch (err) {
+      return {
+        kind: 'clarification',
+        message: err instanceof Error ? err.message : 'Unable to propose preference update.',
+        ...(aiFallback ? { aiFallback: true } : {}),
+      };
+    }
+  }
+
+  if (options?.useGemini && aiFallback && (targetName || isProfileQuery)) {
+    return {
+      kind: 'clarification',
+      message: 'Please share the person’s display name so I can look up their public profile.',
+      aiFallback: true,
+    };
+  }
+
+  if (
+    options?.useGemini &&
+    aiFallback &&
+    checkPreferenceChangeRequest(trimmed, configuredVehicles, configuredCampus) === null
+  ) {
+    const requestedHall = trimmed.match(/\b(?:hall\s*|h)(\d{1,2})\b/i);
+    const isPreferenceRequest = [
+      'prefer',
+      'set my',
+      'change my',
+      'update my',
+      'default pickup',
+      'max fare',
+      'from now on',
+    ].some((phrase) => trimmed.toLowerCase().includes(phrase));
+    if (isPreferenceRequest && requestedHall?.[1]) {
+      const activeHalls = configuredCampus
+        .filter((place) => /\bhall[\s_-]*\d+\b/i.test(`${place.name} ${place.id}`))
+        .map((place) => place.name);
+      const optionsText = activeHalls.length
+        ? ` Active pickup points include ${activeHalls.join(', ')}.`
+        : '';
+      return {
+        kind: 'clarification',
+        message: `Hall ${requestedHall[1]} is not an active pickup point, so I have not prepared a change.${optionsText}`,
+        aiFallback: true,
+      };
+    }
+    if (isPreferenceRequest) {
+      return {
+        kind: 'clarification',
+        message:
+          'I could not identify a valid preference change. Please specify an active pickup point, vehicle type, or maximum fare share.',
+        aiFallback: true,
+      };
+    }
+  }
+
   // 6. Natural Language Ride Search (FR-RD-05.1, US-RD-12-AC1)
   const lower = trimmed.toLowerCase();
 
@@ -848,6 +1337,7 @@ export async function processChatbotMessage(
       missingField: 'hub',
       message:
         'Where are you heading? Please specify a destination hub (such as Kanpur Central, Lucknow airport, Kanpur airport, Metro station, or Bus stand).',
+      ...(aiFallback ? { aiFallback: true } : {}),
     };
   }
 
@@ -930,5 +1420,6 @@ export async function processChatbotMessage(
     message: msg,
     interpretedFilters,
     rides,
+    ...(aiFallback ? { aiFallback: true } : {}),
   };
 }
