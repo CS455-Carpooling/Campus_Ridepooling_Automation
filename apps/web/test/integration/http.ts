@@ -72,9 +72,10 @@ export async function callRoute<P extends Record<string, string> = Record<string
 
   const request = new Request(url, { method, headers, body });
   const ctx = { params: Promise.resolve((call.params ?? {}) as P) };
-  const response = await requestScope.run({ headers, cookies }, () =>
-    (handler as RouteHandler<P>)(request, ctx),
-  );
+  const scope = { headers, cookies, afterTasks: [] as Array<() => unknown> };
+  const response = await requestScope.run(scope, () => (handler as RouteHandler<P>)(request, ctx));
+  // Next.js runs after() work once the response is sent; the test sees its effects too.
+  for (const task of scope.afterTasks) await requestScope.run(scope, task);
   const text = await response.clone().text();
   let parsed: unknown = text;
   try {

@@ -1,6 +1,9 @@
+import { POST as markArrival } from '@/app/api/rides/[id]/arrivals/route';
+import { POST as checkInRoute } from '@/app/api/rides/[id]/check-in/route';
 import { PATCH as changeRequest } from '@/app/api/rides/[id]/requests/[requestId]/route';
 import { POST as submitRequest } from '@/app/api/rides/[id]/requests/route';
 import { POST as createRide } from '@/app/api/rides/route';
+import { POST as tripRoute } from '@/app/api/rides/[id]/trip/route';
 import { pool } from '@/lib/db';
 import { createAccount, createSessionToken, type TestAccount } from '../seed/accounts';
 import { callRoute, type Caller } from './http';
@@ -56,17 +59,46 @@ export async function offerRide(owner: Caller, overrides: Record<string, unknown
 
 /**
  * Moves a ride's departure so that it starts `minutesFromNow` from now (negative: already
- * started), keeping the window's length. The same move apps/web/setup.md uses to try a trip
- * without waiting: 30 puts the ride in its lock window, -20 is past the no-show grace period.
+ * started), as if the clock had moved on: the window keeps its length, and the departure and
+ * pickup times riders agreed to move with it. The same move apps/web/setup.md uses to try a
+ * trip without waiting: 30 puts the ride in its lock window, -20 is past the no-show grace
+ * period.
  */
 export async function moveDeparture(rideId: string, minutesFromNow: number): Promise<void> {
-  await pool.query(
-    `UPDATE rides
-     SET departure_end = now() + make_interval(mins => $2) + (departure_end - departure_start),
-         departure_start = now() + make_interval(mins => $2)
-     WHERE id = $1`,
-    [rideId, minutesFromNow],
-  );
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const { rows } = await client.query(
+      `SELECT now() + make_interval(mins => $2) - departure_start AS shift
+       FROM rides WHERE id = $1`,
+      [rideId, minutesFromNow],
+    );
+    const shift = rows[0]?.shift;
+    await client.query(
+      `UPDATE rides
+       SET departure_start = departure_start + $2::interval,
+           departure_end = departure_end + $2::interval
+       WHERE id = $1`,
+      [rideId, shift],
+    );
+    await client.query(
+      `UPDATE ride_join_requests
+       SET snapshot_departure_start = snapshot_departure_start + $2::interval,
+           snapshot_pickup_at = snapshot_pickup_at + $2::interval,
+           accepted_departure_start = accepted_departure_start + $2::interval,
+           accepted_pickup_at = accepted_pickup_at + $2::interval,
+           current_departure_start = current_departure_start + $2::interval,
+           current_pickup_at = current_pickup_at + $2::interval
+       WHERE ride_id = $1`,
+      [rideId, shift],
+    );
+    await client.query('COMMIT');
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 /** Asks for a seat through POST /api/rides/[id]/requests; returns the response to check. */
@@ -126,7 +158,8 @@ export async function joinRide(
 /** The ride's seats, owner first then in the order people joined, including those who left. */
 export async function seatsOf(rideId: string) {
   const { rows } = await pool.query(
-    `SELECT s.user_id, s.campus_location_id, s.left_at, s.locked_share
+    `SELECT s.id, s.user_id, s.campus_location_id, s.left_at, s.locked_share,
+            s.checked_in_at, s.arrived_at, s.no_show_at
      FROM riders s JOIN rides r ON r.id = s.ride_id
      WHERE s.ride_id = $1
      ORDER BY (s.user_id = r.owner_id) DESC, s.joined_at, s.id`,
@@ -148,4 +181,47 @@ export async function notificationsFor(userId: string) {
     [userId],
   );
   return rows as Array<{ type: string; title: string; related_ride_id: string | null }>;
+}
+
+/** The owner moves the trip on: pickup_in_progress, in_transit or completed. */
+export async function tripStep(owner: Caller, rideId: string, to: string) {
+  return callRoute(tripRoute, { method: 'POST', params: { id: rideId }, as: owner, body: { to } });
+}
+
+/** The owner marks a seat arrived, not arrived or a no-show during pickup. */
+export async function markSeat(owner: Caller, rideId: string, occupantId: string, status: string) {
+  return callRoute(markArrival, {
+    method: 'POST',
+    params: { id: rideId },
+    as: owner,
+    body: { occupantId, status },
+  });
+}
+
+/** A rider says they are at their pickup point. */
+export async function checkIn(rider: Caller, rideId: string) {
+  return callRoute(checkInRoute, { method: 'POST', params: { id: rideId }, as: rider });
+}
+
+/**
+ * A ride with `riders` people on it besides the owner, departing `startsIn` minutes from now
+ * (30: locked, so pickup can start; -20: the no-show grace period is over).
+ */
+export async function pooledRide(
+  options: { riders?: number; startsIn?: number; fare?: number; vehicleTypeId?: string } = {},
+) {
+  const owner = await signedInStudent();
+  const ride = await offerRide(owner, {
+    expectedTotalFare: options.fare ?? 600,
+    vehicleTypeId: options.vehicleTypeId ?? 'car',
+  });
+  const riders: SignedIn[] = [];
+  const requestIds: string[] = [];
+  for (let i = 0; i < (options.riders ?? 1); i += 1) {
+    const rider = await signedInStudent({ campusPlace: `hall-${i + 2}` });
+    requestIds.push(await joinRide(owner, ride.id, rider, `hall-${i + 2}`));
+    riders.push(rider);
+  }
+  if (options.startsIn !== undefined) await moveDeparture(ride.id, options.startsIn);
+  return { owner, ride, riders, requestIds };
 }
