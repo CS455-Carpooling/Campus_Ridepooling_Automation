@@ -1,6 +1,6 @@
 import path from 'node:path';
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
@@ -19,6 +19,8 @@ export default defineConfig({
     maxWorkers: 2,
     setupFiles: ['./test/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}', 'test/**/*.test.ts'],
+    // The database tests run on their own: npm run test:integration (vitest.integration.config.mts).
+    exclude: [...configDefaults.exclude, 'test/integration/**'],
     coverage: {
       provider: 'v8',
       include: ['src/**/*.{ts,tsx}'],

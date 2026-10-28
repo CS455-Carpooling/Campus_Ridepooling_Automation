@@ -10,6 +10,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run --coverage",
     "test:watch": "vitest",
+    "test:integration": "vitest run --config vitest.integration.config.mts",
     "db:migrate": "node scripts/migrate.mjs",
     "admin:grant": "node scripts/admin-role.mjs grant",
     "admin:revoke": "node scripts/admin-role.mjs revoke"

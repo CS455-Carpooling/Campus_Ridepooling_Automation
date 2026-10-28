@@ -213,6 +213,28 @@ Keep the `npm run dev` terminal visible. In dev mode without mail variables, ema
 | Reuse a verify or reset link | "Invalid or expired" |
 | 11 wrong passwords in 15 minutes | "Too many attempts" |
 
+### Integration tests
+
+`npm run test:integration` (from `apps/web`) calls the real API route handlers against a real
+PostgreSQL database: sessions, origin checks, rate limits, SQL constraints and triggers all run
+as in the app. Only `cookies()` and `headers()` from `next/headers` are replaced, by
+`test/integration/next-headers.ts`, because Next.js answers them only inside its own requests.
+
+1. Start the Compose database: `docker compose up -d db` (from the repository root).
+2. Add one line to `apps/web/.env.local`, with the `POSTGRES_PASSWORD` from the root `.env`:
+
+   ```env
+   TEST_DATABASE_URL=postgres://crp:<password>@127.0.0.1:5433/crp_test
+   ```
+
+3. Run `npm run test:integration`.
+
+Every run drops `crp_test`, creates it again and applies `db/schema.sql`; every test then starts
+from that freshly migrated state. **The database name must end in `_test`**: the tests refuse
+any other, so they can never empty your `crp` data. Test accounts and sessions are inserted with
+SQL (`test/seed/accounts.ts`), so no email is sent; Gemini and mail are switched off. CI runs
+the same tests in the "Integration tests (PostgreSQL)" job.
+
 ## 9. Deploy to Render
 
 There is no `render.yaml` in this repository, so create the PostgreSQL database and web service

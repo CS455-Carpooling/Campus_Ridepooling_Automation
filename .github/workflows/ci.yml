@@ -46,3 +46,42 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  # D3 (CS455-110): the route handlers against a real PostgreSQL database, rebuilt from
+  # db/schema.sql on every run and emptied before every test.
+  integration:
+    name: Integration tests (PostgreSQL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      TEST_DATABASE_URL: postgres://crp:ciOnlyPassword123@localhost:5432/crp_test
+
+    services:
+      db:
+        image: postgres:16
+        env:
+          POSTGRES_DB: crp
+          POSTGRES_USER: crp
+          POSTGRES_PASSWORD: ciOnlyPassword123
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U crp -d crp"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Integration tests
+        run: npm run test:integration -w @ridepool/web
