@@ -1,0 +1,58 @@
+% Shared look for the D3 reports: the same navy sans-serif headings as Deliverable 0,
+% in a single column for long tables. Each report sets \ReportTitle, then \makereporttitle.
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{d3report}[2026/10/28 CS455 D3 report style]
+
+\RequirePackage[a4paper,margin=2cm]{geometry}
+\RequirePackage[T1]{fontenc}
+\RequirePackage[utf8]{inputenc}
+\RequirePackage{lmodern}
+\RequirePackage{microtype}
+\RequirePackage{enumitem}
+\setlist{topsep=2pt,itemsep=1pt,parsep=0pt,partopsep=0pt,leftmargin=*}
+\RequirePackage{xcolor}
+\definecolor{hdrblue}{RGB}{20,55,95}
+\definecolor{soft}{RGB}{238,242,247}
+\RequirePackage{titlesec}
+\titleformat{\section}{\normalfont\sffamily\bfseries\color{hdrblue}\Large}{\thesection.}{0.5em}{}
+\titlespacing*{\section}{0pt}{12pt}{4pt}
+\titleformat{\subsection}{\normalfont\sffamily\bfseries\color{hdrblue}}{\thesubsection}{0.5em}{}
+\titlespacing*{\subsection}{0pt}{8pt}{2pt}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\RequirePackage{array}
+\RequirePackage{booktabs}
+\RequirePackage{longtable}
+\RequirePackage{tabularx}
+\RequirePackage[font=small,labelfont={bf,sf},labelsep=period]{caption}
+\RequirePackage{url}
+% File paths in tables: typewriter, and allowed to break after / and -.
+\def\UrlBreaks{\do\/\do-\do\_}
+\newcommand{\file}[1]{\nolinkurl{#1}}
+\RequirePackage[colorlinks=true,linkcolor=hdrblue,urlcolor=hdrblue,citecolor=hdrblue]{hyperref}
+\RequirePackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyfoot[L]{\small\sffamily\color{gray}CS455 Campus Ride-Pooling \quad D3}
+\fancyfoot[R]{\small\sffamily\color{gray}\thepage}
+
+\newcommand{\Team}{Prithviraj Ghosh (230794) \quad Mainak Sarkar (230619) \quad
+  Khushi Ranawat (230562) \quad Mahir Jain (230618) \quad Chaitanya Nitawe (230315)}
+
+% \makereporttitle{Title}{Subtitle}{Author line}
+\newcommand{\makereporttitle}[3]{%
+  \begingroup\centering
+  {\sffamily\bfseries\LARGE\color{hdrblue}#1\par}\vspace{4pt}
+  {\sffamily\large #2\par}\vspace{6pt}
+  {\small #3\par}\vspace{2pt}
+  {\footnotesize\color{gray}\Team\par}
+  \endgroup
+  \vspace{4pt}{\color{hdrblue}\hrule height 0.8pt}\vspace{8pt}}
+
+% Generated table rows inside a tabular or longtable. LaTeX's \input is not expandable there and
+% breaks the \midrule or \bottomrule after it; TeX's own \input is.
+\newcommand{\tabinput}[1]{\@@input #1 }
+
+% A shaded box for commands and key facts.
+\newcommand{\keybox}[1]{\par\noindent\colorbox{soft}{\parbox{\dimexpr\linewidth-2\fboxsep}{#1}}\par}

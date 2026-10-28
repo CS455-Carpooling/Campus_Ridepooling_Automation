@@ -1,0 +1,150 @@
+\documentclass[10pt]{article}
+\usepackage{../common/d3report}
+\hypersetup{pdftitle={CS455 D3 Adversarial Test Report},pdfauthor={Mainak Sarkar}}
+\input{../test-run/generated/summary.tex}
+
+\begin{document}
+
+\makereporttitle{Adversarial Test Report}
+  {Deliverable 3, Campus Ride-Pooling and Split-Fare System}
+  {Prepared by Mainak Sarkar \quad Jira CS455-113, CS455-114 \quad Run of \RunDate}
+
+\keybox{\textbf{Result.} \AdvTotal{} adversarial cases in \AdvFiles{} files try to break the app
+through its real API routes against a real PostgreSQL database. After the fix below, all
+\AdvPassed{} pass. The suite found one real weakness (an idempotency key replaying the wrong
+request), fixed in PR \#87 with regression tests. It also confirmed that every race it staged is
+serialized by the database, and it records one observation for the security report.}
+
+\section{Purpose and method}
+Ordinary tests show that the app does what it should when used as intended. Adversarial tests
+use it as it should \emph{not} be used: at the wrong moment, with the wrong input, twice, out of
+order, or several times at once. They run on the integration harness (see the integration test
+report): the real route handlers, the real SQL, a real database emptied before every case.
+
+\textbf{Pass criterion.} Every case must end in one of two ways: a clean refusal (a 4xx with a
+reason code, nothing stored), or a consistent state (the rows obey the rules, for example never
+a seat without an accepted request). A 500, a partial write or a misleading success fails the
+case.
+
+\textbf{Boundaries with the other D3 reports.} Access control (one user acting on another's
+records), cross-site requests and secrets are the security report's subject; the 50-request
+last-seat experiment (NFR-RD-05) is the concurrency report's. This suite keeps a small version of
+each race as a regression test, run on every pull request.
+
+\section{Attack categories}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.2\linewidth}X@{}}
+\toprule
+\textbf{Category} & \textbf{What is attacked, and why} \\
+\midrule
+Time boundaries & Every rule that depends on the clock, a moment either side of its boundary:
+the lock an hour before departure (P-06), the five-minute no-show grace period (P-19), the
+seven-day complaint window (FR-RD-13.1), the 72-hour rating window (P-16), the end of the
+departure window. Off-by-one errors (\texttt{<} against \texttt{<=}) live here. \\
+Input & Bodies that are not JSON objects, wrong types that a lenient parser might coerce
+(\texttt{"600"}, 600.5, a timestamp number, month 13), oversized strings up to 1\,MB, malformed,
+injection-looking and path-like identifiers, SQL and markup as text. \\
+Replays & The same request sent again: a double-clicked accept, and an idempotency key sent
+again with \emph{different} details. \\
+Order & Actions that are valid in one state sent in another: requests and edits on a cancelled
+ride, leaving or checking in after pickup started, pickup actions and SOS after completion,
+acting again after leaving. \\
+Races & Two to five requests at the same moment, each on its own database connection so they
+really overlap: two accepts for the last seat, accept against withdraw, a five-fold
+double-click, triple lock, five SOS taps, completion twice, the same offer twice; and the
+per-address rate limit. \\
+\bottomrule
+\end{tabularx}
+
+\section{Results}
+\begin{center}\small
+\captionof{table}{Adversarial test files, from the recorded run (\texttt{test-run/integration-results.json}).}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+File (under \texttt{apps/web/test/integration/}) & Cases & Passed & Time (s) \\
+\midrule
+\tabinput{../test-run/generated/adversarial-files.tex}
+\midrule
+\textbf{Total} & \textbf{\AdvTotal} & \textbf{\AdvPassed} & \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Every case is listed in the appendix. The race file was also run five times in a row on its own,
+passing each time, to check that its results do not depend on timing.
+
+\section{Defect found: an idempotency key replayed the wrong request}\label{sec:bug}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.17\linewidth}X@{}}
+\toprule
+Case & \file{replays-and-state}: ``does not answer a request for one ride with a request on
+another'', and ``refuses a different pickup sent with an idempotency key already used''. \\
+Steps & A rider requests a seat on ride A with key \textit{K} (201). They then request a seat on
+ride B, or on ride A with another pickup point, with the same key \textit{K}. \\
+Expected & A refusal: \textit{K} belongs to a different request (FR-RD-06.9 makes a key replay
+\emph{the same} request). \\
+Actual & 200 \texttt{\{kind: "existing", requestId: <ride A's request>\}}. The page says ``This
+request was already submitted''; no request exists on ride B, or the new pickup point is
+silently dropped. The UI keeps its key across failed tries and can stay mounted across
+client-side navigation, so a real rider could hit this. \\
+Cause & \texttt{submitJoinRequest()} looked the key up and returned its request without
+comparing what that request was for. \\
+Fix & PR \#87: a key replays only the request it was first sent with (same ride and pickup
+point); anything else gets 409 \texttt{idempotency\_key\_reused} and nothing is created. The
+request form drops its key on that answer. \\
+Regression & \file{bugs/idempotency-key-reuse} (3 tests; the two mismatch cases fail without the
+fix) and 2 unit cases in \file{join-requests.test.ts}. Jira Bug, labels \texttt{d3-defect},
+\texttt{found-by-adversarial}. \\
+\bottomrule
+\end{tabularx}
+
+\section{What held, and why}
+The other cases passed on the first run. For the races the reason is worth recording, since it is
+what the concurrency report measures at scale:
+\begin{itemize}
+  \item \textbf{Last seat, accept against withdraw, double accept.} Each decision locks the
+    rider's \texttt{users} row and the ride row (\texttt{FOR UPDATE} / \texttt{FOR NO KEY
+    UPDATE}) and re-reads the seats inside that lock, so the second decision sees the first one's
+    result: \texttt{ride\_full} or \texttt{request\_not\_active}, never an extra seat.
+  \item \textbf{Double-clicked submit.} The rider's row lock serializes the five requests; the
+    first stores the key, the other four find it and replay the same request.
+  \item \textbf{SOS taps.} A partial unique index allows one active alert per person per ride,
+    and the insert uses \texttt{ON CONFLICT DO NOTHING}, so taps cannot create a second alert even
+    without a lock.
+  \item \textbf{Completion twice, triple lock.} Trip steps lock the ride row and treat ``already
+    there'' as done; the final shares are written once and still add up to the fare.
+  \item \textbf{Input.} Route IDs are checked as UUIDs before any query; bodies go through one
+    tolerant reader (\texttt{readJson}) and typed parsers that refuse rather than coerce; SQL is
+    always parameterized, so hostile text is stored as text.
+\end{itemize}
+
+\section{Observation for the security report}
+The per-address rate limit keys on the first value of the \texttt{X-Forwarded-For} header
+(\texttt{clientIp()} in \file{src/lib/auth.ts}). The suite relies on this to give each call its own
+address, and the rate-limit case shows that a new address starts a new count. Unless the server
+sits behind a proxy that replaces that header, a client can choose its own address and avoid the
+limit. Whether the deployment's proxy overwrites the header should be checked in the security
+report; it is not counted as a defect here.
+
+\section{Limitations}
+\begin{itemize}
+  \item The races use two to five requests; heavier contention is the concurrency report's
+    experiment.
+  \item Time boundaries are tested between six seconds and a minute either side, by moving data
+    rather than the
+    clock (see the integration report); exact-millisecond behaviour is covered by the unit tests
+    of the rule functions.
+  \item Access control and cross-user abuse are deliberately left to the security report.
+\end{itemize}
+
+\appendix
+\section{Every adversarial case}
+\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.17\linewidth}>{\raggedright\arraybackslash}p{0.7\linewidth}l@{}}
+\toprule
+\textbf{File} & \textbf{Case (describe block: test)} & \textbf{Result} \\
+\midrule
+\endhead
+\tabinput{../test-run/generated/adversarial-cases.tex}
+\bottomrule
+\end{longtable}
+
+\end{document}
