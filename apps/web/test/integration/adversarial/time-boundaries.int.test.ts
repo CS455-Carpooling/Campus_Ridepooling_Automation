@@ -87,9 +87,9 @@ describe('the no-show grace period, five minutes after the agreed pickup (P-19)'
 
 describe('the complaint window, seven days after completion (FR-RD-13.1)', () => {
   it.each([
-    [7 * DAY - 1, 201, undefined],
-    [7 * DAY + 1, 409, 'window_closed'],
-  ])('%s minutes after completion: a complaint answers %s', async (minutes, status, code) => {
+    ['7 days less a minute', 7 * DAY - 1, 201, undefined],
+    ['7 days and a minute', 7 * DAY + 1, 409, 'window_closed'],
+  ])('%s after completion: a complaint answers %s', async (_label, minutes, status, code) => {
     const { ride, riders, ownerSeat } = await completedMinutesAgo(minutes);
     const answer = await callRoute(fileComplaint, {
       method: 'POST',
@@ -107,9 +107,9 @@ describe('the complaint window, seven days after completion (FR-RD-13.1)', () =>
 
 describe('the rating window, 72 hours after completion (P-16)', () => {
   it.each([
-    [72 * 60 - 1, 201, undefined],
-    [72 * 60 + 1, 409, 'closed'],
-  ])('%s minutes after completion: rating answers %s', async (minutes, status, code) => {
+    ['72 hours less a minute', 72 * 60 - 1, 201, undefined],
+    ['72 hours and a minute', 72 * 60 + 1, 409, 'closed'],
+  ])('%s after completion: rating answers %s', async (_label, minutes, status, code) => {
     const { ride, riders, ownerSeat } = await completedMinutesAgo(minutes);
     const answer = await callRoute(rate, {
       method: 'POST',
@@ -123,14 +123,14 @@ describe('the rating window, 72 hours after completion (P-16)', () => {
 
 describe('the end of the departure window', () => {
   it.each([
-    [-59, 200, undefined],
-    [-61, 409, 'window_over'],
+    [59, 200, undefined],
+    [61, 409, 'window_over'],
   ])(
-    'a one-hour window that opened %s minutes ago: cancelling answers %s',
-    async (startsIn, status, code) => {
+    '%s minutes into a one-hour window: cancelling answers %s',
+    async (minutesIn, status, code) => {
       const owner = await signedInStudent();
       const ride = await offerRide(owner);
-      await moveDeparture(ride.id, startsIn);
+      await moveDeparture(ride.id, -minutesIn);
 
       const answer = await callRoute(manageRide, {
         method: 'PATCH',
