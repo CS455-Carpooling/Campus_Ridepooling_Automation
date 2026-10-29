@@ -524,7 +524,7 @@ export async function submitJoinRequest(
     `SELECT 1 FROM ride_final_shares share
      JOIN rides completed_ride ON completed_ride.id = share.ride_id
      WHERE share.user_id = $1 AND share.role = 'rider' AND share.payment_status = 'due'
-       AND completed_ride.completed_at < $2 - interval '7 days'
+       AND completed_ride.completed_at < $2::timestamptz - interval '7 days'
      LIMIT 1`,
     [riderId, now],
   );
