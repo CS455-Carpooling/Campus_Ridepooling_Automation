@@ -25,8 +25,9 @@ export default defineConfig({
     alias: {
       '@': local('src'),
       'server-only': local('test/server-only-mock.ts'),
-      // Next.js only answers cookies() and headers() inside its own request handling.
+      // Next.js only answers cookies(), headers() and after() inside its own request handling.
       'next/headers': local('test/integration/next-headers.ts'),
+      'next/server': local('test/integration/next-server.ts'),
     },
   },
   test: {
