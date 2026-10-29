@@ -130,6 +130,7 @@ CREATE TABLE IF NOT EXISTS rides (
   expected_total_fare INTEGER NOT NULL CHECK (expected_total_fare > 0),
   state TEXT NOT NULL DEFAULT 'scheduled'
     CHECK (state IN ('scheduled', 'pickup_in_progress', 'in_transit', 'completed', 'cancelled')),
+  locked_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   CONSTRAINT rides_departure_window_valid CHECK (departure_start < departure_end)
 );
