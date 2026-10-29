@@ -1,0 +1,224 @@
+\documentclass[10pt]{article}
+\usepackage{../common/d3report}
+\hypersetup{pdftitle={CS455 D3 Integration Test Report},pdfauthor={Mainak Sarkar}}
+\input{../test-run/generated/summary.tex}
+
+\begin{document}
+
+\makereporttitle{Integration Test Report}
+  {Deliverable 3, Campus Ride-Pooling and Split-Fare System}
+  {Prepared by Mainak Sarkar \quad Jira CS455-110, CS455-111, CS455-112, CS455-114 \quad Run of \RunDate}
+
+\keybox{\textbf{Result.} \IntPassed{} of \IntTotal{} integration tests passed in \IntFiles{} files
+(\BugTotal{} of them regression tests for defects this suite found), against a real PostgreSQL 16
+database, locally and in GitHub Actions. Together with the \AdvTotal{} adversarial cases (separate
+report) the run had \RunPassed{}/\RunTotal{} passing in \RunSeconds{}\,s of test time. Two defects were
+found and fixed with regression tests (Section~\ref{sec:defects}).}
+
+\section{Purpose and scope}
+The unit suite (about 1,500 tests, reported separately) checks each module in isolation, with the
+database and the session mocked. It cannot see a query that PostgreSQL rejects, a constraint or
+trigger that refuses a write, or two modules disagreeing about the rows they share. This suite
+closes that gap: every test calls the \emph{real} API route handlers, which run their real SQL
+against a real database, and checks both the HTTP answer and the rows written.
+
+In scope: the core transactional workflow of the D2 demonstration (offer, search, request,
+decide, lock, pickup, trip, completion, rating, complaint) and the safety and operations flows
+around it (SOS and incident handling, warnings, suspensions, payment reminders). Out of scope,
+and covered elsewhere: rendered pages and the browser (system tests), the 50-way last-seat
+experiment (concurrency report), access control and IDOR (security report), latency
+(performance report).
+
+\section{Test harness}
+\subsection{What runs for real, and what is replaced}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.3\linewidth}X@{}}
+\toprule
+\textbf{Real} & Route handlers, session lookup (\texttt{getCurrentUser}), the same-origin check
+and database rate limit (\texttt{guard}), the admin role check, every SQL query, constraint,
+trigger and transaction, the Gemini fallback path. \\
+\textbf{Replaced} & \texttt{next/headers} (\texttt{cookies()}, \texttt{headers()}) and
+\texttt{next/server} (\texttt{after()}): Next.js answers them only inside its own request
+handling. Small shims read the current test request from \texttt{AsyncLocalStorage}; work passed
+to \texttt{after()} runs right after the handler answers, as Next.js runs it after the response. \\
+\textbf{Switched off} & Outgoing email and Gemini (empty keys), so no test calls an external
+service; the app's documented fallbacks run instead. \\
+\bottomrule
+\end{tabularx}
+
+Routes are called in-process with \texttt{callRoute(handler, \{method, body, params, as,
+origin, ip\})}, which builds the \texttt{Request}, sets the session cookie of the caller, a
+same-origin or cross-site \texttt{Origin}, and a fresh client address per call (so per-address
+rate limits are only exercised on purpose). In-process calls need no production build, run the
+whole suite in under a minute, and give full stack traces; the deployed stack end to end is the
+system tests' job.
+
+\subsection{Test data and time}
+\begin{itemize}
+  \item \textbf{Accounts and sessions} are written with SQL (\texttt{test/seed/accounts.ts}),
+    because registering through the app sends a real verification email. Only a token's SHA-256
+    is stored, exactly as the app stores it. The same seed is shared with the Playwright system
+    tests.
+  \item \textbf{Everything else goes through the API}: rides are offered, seats requested and
+    accepted through the real routes, so the rows are those the app itself writes.
+  \item \textbf{Time} is the one thing simulated: \texttt{moveDeparture(ride, minutes)} moves a
+    ride's departure, and the departure and pickup times its riders agreed to, by the same
+    amount, as if the clock had moved on (the move \texttt{setup.md} documents for trying a trip).
+\end{itemize}
+
+\subsection{Isolation and safety}
+Each run drops and recreates the test database and applies \texttt{db/schema.sql}, the file
+production migrations apply, so the schema is also checked on an empty database every run. Before
+every test all tables are truncated and the rows the schema itself inserts (campus places, hubs,
+vehicle types, tags) are put back, so every test starts from a freshly migrated database.
+
+Because that is destructive, the harness fails closed (\file{test/integration/test-database.ts}):
+it touches a database only if (1) its name ends in \texttt{\_test}, so the application database
+is never a candidate; (2) it is on this machine (\texttt{localhost}, \texttt{127.0.0.1} or
+\texttt{::1}), never a hosted server; (3) \texttt{ALLOW\_TEST\_DATABASE\_RESET} names exactly that
+database, an explicit opt-in; and (4) the harness created it. Global setup writes a marker comment
+on the database it creates and refuses to drop an existing one without it; each test file checks
+the marker again before its first reset. These checks were added after review (PR \#83); unit
+tests cover each refusal.
+
+\section{Environment and how to rerun}
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule
+Runtime & Node.js 24, Next.js 16.3, Vitest 5.0.3, node-postgres 8 \\
+Database & PostgreSQL 16: Docker Compose locally (\texttt{127.0.0.1:5433}), a service container in CI \\
+CI & Job \textit{Integration tests (PostgreSQL)} in \texttt{.github/workflows/ci.yml}, on every PR
+and push to master; latest run on the stacked PRs:
+\href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/actions/runs/40850333045/job/123367913858}{run 40850333045} (pass) \\
+\bottomrule
+\end{tabularx}
+
+\keybox{\small
+\texttt{docker compose up -d db}\hfill (from the repository root)\\
+\texttt{TEST\_DATABASE\_URL=postgres://crp:<password>@127.0.0.1:5433/crp\_test}\hfill (in \texttt{apps/web/.env.local})\\
+\texttt{ALLOW\_TEST\_DATABASE\_RESET=crp\_test}\hfill (same file)\\
+\texttt{npm run test:integration}\hfill (from \texttt{apps/web})\\[2pt]
+The tables in this report: \texttt{Deliverables/D3/test-run/README.md}.}
+
+\section{Results}
+\begin{center}\small
+\captionof{table}{Integration test files, from the recorded run (\texttt{test-run/integration-results.json}).}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+File (under \texttt{apps/web/test/integration/}) & Tests & Passed & Time (s) \\
+\midrule
+\tabinput{../test-run/generated/integration-files.tex}
+\midrule
+\textbf{Total} & \textbf{\IntTotal} & \textbf{\IntPassed} & \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{center}\small
+\captionof{table}{Code coverage of the integration run alone (\%), from
+\texttt{test-run/integration-coverage-summary.json}. Pages and components are not reachable
+through API routes, so the whole-\texttt{src} figure is low by design; the unit suite carries the
+80\% gate (NFR-RD-17).}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Area & Statements & Branches & Functions & Lines \\
+\midrule
+\tabinput{../test-run/generated/coverage.tex}
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Requirements covered}
+Each row names the file that exercises the requirement; every case is listed in the appendix.
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.33\linewidth}>{\raggedright\arraybackslash}p{0.27\linewidth}>{\raggedright\arraybackslash}p{0.33\linewidth}@{}}
+\toprule
+\textbf{Requirement} & \textbf{File} & \textbf{Checked} \\
+\midrule
+\endhead
+FR-RO-01 to 03, P-08: offer a ride & \file{rides/offer-and-search} & stored ride and owner seat; field errors; overlap and two-hour conflict \\
+FR-RD-03, FR-RD-08.1: search & \file{rides/offer-and-search} & seats left, estimated share, hidden own, joined, locked, full and filtered rides \\
+FR-RD-06, FR-RD-06.9: request a seat, idempotency & \file{rides/join-requests}, \file{bugs/idempotency-key-reuse} & snapshot, history, key; one request per retried key, also when first uses race; limit of three \\
+FR-RO-05: owner decides & \file{rides/join-requests} & accept, reject, share notices; only the owner decides \\
+FR-RD-06.10, FR-RD-07: withdraw and leave & \file{rides/join-requests}, \file{rides/seats-and-lock} & seat freed before lock; late leave keeps the locked share \\
+FR-RO-07, P-06: lock & \file{rides/seats-and-lock} & shares fixed owner first (334/333/333), waiting requests expired, lock at time \\
+FR-RO-04: edit and cancel & \file{rides/manage-ride} & confirmation for accepted riders, reconfirmation after a moved departure, cancel until the window ends \\
+FR-RO-09, FR-RD-10: trip states & \file{trip/trip-flow} & lock before pickup, no skipping, check-in, arrivals, start trip, completion \\
+FR-RO-10, P-19: no-show & \file{trip/trip-flow} & refused inside the grace period, recorded after; share spread over the rest \\
+FR-RO-09.4: final shares & \file{trip/trip-flow} & written once, sum equals the fare \\
+FR-RD-15, FR-RO-13.2: SOS & \file{trip/sos} & one alert per person; no trace for the pool; snapshot, location, false alarm \\
+CS455-65, SYS-NFR-08: incident handling & \file{trip/sos} & acknowledge, close with a note, every attempt audited; students refused \\
+FR-RD-13, SYS-FR-46: complaints & \file{admin/complaints-and-enforcement} & window from completion or own no-show; one per person; Gemini fallback recorded; admin review with version check \\
+FR-RD-12, P-16: ratings & \file{admin/complaints-and-enforcement} & once per rater; never self or a no-show \\
+OA-FR-21 to 28: warnings and suspensions & \file{admin/complaints-and-enforcement} & warning blocks until acknowledged; suspension blocks offering and joining until lifted; database trigger \\
+FR-RD-11: overdue payment, reminders & \file{bugs/timestamp-parameters} & request blocked after 7 days due; 24 h then 72 h reminder, once each \\
+\bottomrule
+\end{longtable}
+
+\section{Defects found}\label{sec:defects}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.03\linewidth}>{\raggedright\arraybackslash}p{0.54\linewidth}>{\raggedright\arraybackslash}p{0.13\linewidth}>{\raggedright\arraybackslash}p{0.21\linewidth}@{}}
+\toprule
+\# & \textbf{Defect} & \textbf{Found by} & \textbf{Fix and test} \\
+\midrule
+1 & \textbf{Every seat request answered 500 on a real database}, and so did the payment reminder
+scheduler. \texttt{completed\_at < \$2 - interval '7 days'} with a JavaScript \texttt{Date}:
+node-postgres sends it untyped, PostgreSQL reads \texttt{\$2 - interval} as interval minus
+interval, and no operator compares a timestamp with an interval. Introduced on 14 Oct with the
+settlement feature; invisible to the mocked unit tests. Fixed by casting the parameter. &
+This harness, first run & PR \#84; \file{bugs/timestamp-parameters} (4 tests, all fail without the fix) \\
+2 & \textbf{An idempotency key sent again for another ride or pickup point replayed the first
+request}: the rider was told ``already submitted'' and nothing was created for the ride asked
+for, or a changed pickup was dropped. Now refused with 409 \texttt{idempotency\_key\_reused}. &
+Adversarial suite & PR \#87; \file{bugs/idempotency-key-reuse} (5 tests; the 2 mismatch cases fail without the fix) \\
+\bottomrule
+\end{longtable}
+Both are tracked as Jira Bug issues with the \texttt{d3-defect} label and listed in the team's
+bug history.
+
+\section{Test reliability}\label{sec:reliability}
+\textbf{A flaky reminder test, explained and fixed.} The payment reminder test failed about once
+in a dozen full runs (1 in 18 in a dedicated loop), with ``The original final share cannot be
+changed''. The test seeded the final shares with \texttt{created\_at = now()} on the
+\emph{database's} clock, and the reminder then stamped \texttt{reminder\_24\_at} with the
+\emph{test's} clock a millisecond or two later. The PostgreSQL container's clock runs about 1\,ms
+ahead of the laptop's (measured: median 0.98\,ms, at most 1.7\,ms), and a JavaScript
+\texttt{Date} drops microseconds, so the reminder could look older than its share, which the
+share trigger refuses. It is not an application defect: the app writes final shares at
+completion, and reminders come at least 24 hours later. The seed now dates the shares from the
+ride's completion, as \file{src/lib/trip.ts} does. With the laptop's clock simulated 1\,s behind
+the database, the old seed failed 3 runs of 3 and the new one passes 3 of 3; after the fix, 29
+consecutive full runs all passed.
+
+\textbf{Simultaneous first uses of one idempotency key} (a review question on PR \#87). Claiming
+a key is atomic: \texttt{submitJoinRequest()} runs in one transaction that first locks the rider's
+\texttt{users} row (\texttt{FOR UPDATE}), so one rider's submissions run one after another and a
+later one sees the earlier key, and the key table's primary key refuses a second claim regardless.
+A regression test sends four first uses of one key at once, two for each of two rides, in five
+rounds: one request is created, the same ride's other send replays it, the other ride's sends get
+409. With the row lock removed that test fails: the race reaches the primary key and answers 500.
+
+\section{Limitations}
+\begin{itemize}
+  \item \textbf{No browser and no Socket.IO.} Pages, the live chat socket and the in-process
+    timers in \texttt{server.mjs} and \texttt{instrumentation.ts} are not exercised here; the
+    Playwright system tests cover them on the Docker stack.
+  \item \textbf{Gemini's success path is not called}, only its fallback: tests must not depend on
+    an external service or spend its quota. The AI paths are covered by unit tests with recorded
+    responses.
+  \item \textbf{Time is simulated by moving data}, not the clock. The moved fields are the ones
+    the app reads for each rule; a rule that read another time field would not see the move.
+  \item \textbf{Two clocks.} Rows seeded with SQL take the database's time, while the app stamps
+    the test's. Seeds therefore date rows as the app would (Section~\ref{sec:reliability}), and
+    time-window cases keep margins of seconds, far above the measured millisecond offset.
+\end{itemize}
+
+\appendix
+\section{Every integration case}
+\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.21\linewidth}>{\raggedright\arraybackslash}p{0.66\linewidth}l@{}}
+\toprule
+\textbf{File} & \textbf{Case (describe block: test)} & \textbf{Result} \\
+\midrule
+\endhead
+\tabinput{../test-run/generated/integration-cases.tex}
+\bottomrule
+\end{longtable}
+
+\end{document}
