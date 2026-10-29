@@ -23,13 +23,18 @@ async function unpaidShare(riderId: string, daysAgo: number) {
              now() - make_interval(days => $2) - interval '2 hours',
              now() - make_interval(days => $2) - interval '1 hour',
              400, 'completed', now() - make_interval(days => $2))
-     RETURNING id`,
+     RETURNING id, completed_at`,
     [owner.id, daysAgo],
   );
+  // The app writes final shares when the ride completes (trip.ts), so these date from then too.
+  // Left at now(), a share could look newer than a reminder stamped moments later by the test's
+  // clock (the database's clock runs about a millisecond ahead), and the share trigger, which
+  // refuses a reminder older than its share, failed the reminder test about 1 run in 12.
   await pool.query(
-    `INSERT INTO ride_final_shares (ride_id, user_id, role, position, share, payment_status)
-     VALUES ($1, $2, 'owner', 1, 200, NULL), ($1, $3, 'rider', 2, 200, 'due')`,
-    [rows[0].id, owner.id, riderId],
+    `INSERT INTO ride_final_shares
+       (ride_id, user_id, role, position, share, payment_status, created_at)
+     VALUES ($1, $2, 'owner', 1, 200, NULL, $4), ($1, $3, 'rider', 2, 200, 'due', $4)`,
+    [rows[0].id, owner.id, riderId, rows[0].completed_at],
   );
   return rows[0].id as string;
 }
