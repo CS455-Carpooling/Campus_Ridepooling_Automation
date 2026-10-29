@@ -14,8 +14,8 @@ from the files here, which come from the commands below.
 
 ## Rerun
 
-Needs the Compose database and `TEST_DATABASE_URL` in `apps/web/.env.local` (see `apps/web/setup.md`,
-"Integration tests").
+Needs the Compose database, and `TEST_DATABASE_URL` plus `ALLOW_TEST_DATABASE_RESET` in
+`apps/web/.env.local` (see `apps/web/setup.md`, "Integration tests").
 
 ```bash
 cd apps/web

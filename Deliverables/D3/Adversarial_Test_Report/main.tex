@@ -90,9 +90,12 @@ comparing what that request was for. \\
 Fix & PR \#87: a key replays only the request it was first sent with (same ride and pickup
 point); anything else gets 409 \texttt{idempotency\_key\_reused} and nothing is created. The
 request form drops its key on that answer. \\
-Regression & \file{bugs/idempotency-key-reuse} (3 tests; the two mismatch cases fail without the
+Regression & \file{bugs/idempotency-key-reuse} (5 tests; the two mismatch cases fail without the
 fix) and 2 unit cases in \file{join-requests.test.ts}. Jira Bug, labels \texttt{d3-defect},
 \texttt{found-by-adversarial}. \\
+Review & Asked on PR \#87 whether two first uses of a new key could both pass the lookup. They
+cannot (next section); two tests added after review pin it: four simultaneous first uses for two
+rides, in five rounds, and a direct second insert refused by the key table's primary key. \\
 \bottomrule
 \end{tabularx}
 
@@ -105,7 +108,10 @@ what the concurrency report measures at scale:
     UPDATE}) and re-reads the seats inside that lock, so the second decision sees the first one's
     result: \texttt{ride\_full} or \texttt{request\_not\_active}, never an extra seat.
   \item \textbf{Double-clicked submit.} The rider's row lock serializes the five requests; the
-    first stores the key, the other four find it and replay the same request.
+    first stores the key, the other four find it and replay the same request. When the first
+    uses of a new key are for \emph{different} rides, the same lock lets one create its request;
+    the rest replay it or get 409. With the lock removed, that test fails: the race reaches the
+    key table's primary key, which still refuses a second claim but answers 500.
   \item \textbf{SOS taps.} A partial unique index allows one active alert per person per ride,
     and the insert uses \texttt{ON CONFLICT DO NOTHING}, so taps cannot create a second alert even
     without a lock.

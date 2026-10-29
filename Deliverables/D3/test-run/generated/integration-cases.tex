@@ -15,6 +15,8 @@
 \file{complaints-and-enforcement} & warnings and suspensions (OA-FR-21 to OA-FR-28): allows enforcement by admins only, in the API and in the database & Pass \\
 \file{idempotency-key-reuse} & an idempotency key sent again with other details: is refused for another ride, and creates nothing there & Pass \\
 \file{idempotency-key-reuse} & an idempotency key sent again with other details: is refused for another pickup point, keeping the first request as it was & Pass \\
+\file{idempotency-key-reuse} & an idempotency key sent again with other details: is claimed once when its first uses for different rides arrive at the same moment & Pass \\
+\file{idempotency-key-reuse} & an idempotency key sent again with other details: cannot be claimed twice even past the application, by the key table itself & Pass \\
 \file{idempotency-key-reuse} & an idempotency key sent again with other details: still replays the same request sent again unchanged & Pass \\
 \file{timestamp-parameters} & timestamp parameters compared with an interval: lets a rider with no unpaid shares request a seat & Pass \\
 \file{timestamp-parameters} & timestamp parameters compared with an interval: still refuses a rider whose share has been due for more than seven days & Pass \\

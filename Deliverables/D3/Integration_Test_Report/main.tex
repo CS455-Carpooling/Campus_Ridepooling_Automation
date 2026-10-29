@@ -69,9 +69,16 @@ system tests' job.
 Each run drops and recreates the test database and applies \texttt{db/schema.sql}, the file
 production migrations apply, so the schema is also checked on an empty database every run. Before
 every test all tables are truncated and the rows the schema itself inserts (campus places, hubs,
-vehicle types, tags) are put back, so every test starts from a freshly migrated database. The
-harness refuses any database whose name does not end in \texttt{\_test}, before connecting and
-again in each worker, so it can never empty the application database.
+vehicle types, tags) are put back, so every test starts from a freshly migrated database.
+
+Because that is destructive, the harness fails closed (\file{test/integration/test-database.ts}):
+it touches a database only if (1) its name ends in \texttt{\_test}, so the application database
+is never a candidate; (2) it is on this machine (\texttt{localhost}, \texttt{127.0.0.1} or
+\texttt{::1}), never a hosted server; (3) \texttt{ALLOW\_TEST\_DATABASE\_RESET} names exactly that
+database, an explicit opt-in; and (4) the harness created it. Global setup writes a marker comment
+on the database it creates and refuses to drop an existing one without it; each test file checks
+the marker again before its first reset. These checks were added after review (PR \#83); unit
+tests cover each refusal.
 
 \section{Environment and how to rerun}
 \begin{tabularx}{\linewidth}{@{}lX@{}}
@@ -80,13 +87,14 @@ Runtime & Node.js 24, Next.js 16.3, Vitest 5.0.3, node-postgres 8 \\
 Database & PostgreSQL 16: Docker Compose locally (\texttt{127.0.0.1:5433}), a service container in CI \\
 CI & Job \textit{Integration tests (PostgreSQL)} in \texttt{.github/workflows/ci.yml}, on every PR
 and push to master; latest run on the stacked PRs:
-\href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/actions/runs/40734814513/job/122980386587}{run 40734814513} (pass) \\
+\href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/actions/runs/40850333045/job/123367913858}{run 40850333045} (pass) \\
 \bottomrule
 \end{tabularx}
 
 \keybox{\small
 \texttt{docker compose up -d db}\hfill (from the repository root)\\
 \texttt{TEST\_DATABASE\_URL=postgres://crp:<password>@127.0.0.1:5433/crp\_test}\hfill (in \texttt{apps/web/.env.local})\\
+\texttt{ALLOW\_TEST\_DATABASE\_RESET=crp\_test}\hfill (same file)\\
 \texttt{npm run test:integration}\hfill (from \texttt{apps/web})\\[2pt]
 The tables in this report: \texttt{Deliverables/D3/test-run/README.md}.}
 
@@ -127,7 +135,7 @@ Each row names the file that exercises the requirement; every case is listed in 
 \endhead
 FR-RO-01 to 03, P-08: offer a ride & \file{rides/offer-and-search} & stored ride and owner seat; field errors; overlap and two-hour conflict \\
 FR-RD-03, FR-RD-08.1: search & \file{rides/offer-and-search} & seats left, estimated share, hidden own, joined, locked, full and filtered rides \\
-FR-RD-06, FR-RD-06.9: request a seat, idempotency & \file{rides/join-requests}, \file{bugs/idempotency-key-reuse} & snapshot, history, key; one request per retried key; limit of three \\
+FR-RD-06, FR-RD-06.9: request a seat, idempotency & \file{rides/join-requests}, \file{bugs/idempotency-key-reuse} & snapshot, history, key; one request per retried key, also when first uses race; limit of three \\
 FR-RO-05: owner decides & \file{rides/join-requests} & accept, reject, share notices; only the owner decides \\
 FR-RD-06.10, FR-RD-07: withdraw and leave & \file{rides/join-requests}, \file{rides/seats-and-lock} & seat freed before lock; late leave keeps the locked share \\
 FR-RO-07, P-06: lock & \file{rides/seats-and-lock} & shares fixed owner first (334/333/333), waiting requests expired, lock at time \\
@@ -158,11 +166,33 @@ This harness, first run & PR \#84; \file{bugs/timestamp-parameters} (4 tests, al
 2 & \textbf{An idempotency key sent again for another ride or pickup point replayed the first
 request}: the rider was told ``already submitted'' and nothing was created for the ride asked
 for, or a changed pickup was dropped. Now refused with 409 \texttt{idempotency\_key\_reused}. &
-Adversarial suite & PR \#87; \file{bugs/idempotency-key-reuse} (2 of 3 fail without the fix) \\
+Adversarial suite & PR \#87; \file{bugs/idempotency-key-reuse} (5 tests; the 2 mismatch cases fail without the fix) \\
 \bottomrule
 \end{longtable}
 Both are tracked as Jira Bug issues with the \texttt{d3-defect} label and listed in the team's
 bug history.
+
+\section{Test reliability}\label{sec:reliability}
+\textbf{A flaky reminder test, explained and fixed.} The payment reminder test failed about once
+in a dozen full runs (1 in 18 in a dedicated loop), with ``The original final share cannot be
+changed''. The test seeded the final shares with \texttt{created\_at = now()} on the
+\emph{database's} clock, and the reminder then stamped \texttt{reminder\_24\_at} with the
+\emph{test's} clock a millisecond or two later. The PostgreSQL container's clock runs about 1\,ms
+ahead of the laptop's (measured: median 0.98\,ms, at most 1.7\,ms), and a JavaScript
+\texttt{Date} drops microseconds, so the reminder could look older than its share, which the
+share trigger refuses. It is not an application defect: the app writes final shares at
+completion, and reminders come at least 24 hours later. The seed now dates the shares from the
+ride's completion, as \file{src/lib/trip.ts} does. With the laptop's clock simulated 1\,s behind
+the database, the old seed failed 3 runs of 3 and the new one passes 3 of 3; after the fix, 29
+consecutive full runs all passed.
+
+\textbf{Simultaneous first uses of one idempotency key} (a review question on PR \#87). Claiming
+a key is atomic: \texttt{submitJoinRequest()} runs in one transaction that first locks the rider's
+\texttt{users} row (\texttt{FOR UPDATE}), so one rider's submissions run one after another and a
+later one sees the earlier key, and the key table's primary key refuses a second claim regardless.
+A regression test sends four first uses of one key at once, two for each of two rides, in five
+rounds: one request is created, the same ride's other send replays it, the other ride's sends get
+409. With the row lock removed that test fails: the race reaches the primary key and answers 500.
 
 \section{Limitations}
 \begin{itemize}
@@ -174,9 +204,9 @@ bug history.
     responses.
   \item \textbf{Time is simulated by moving data}, not the clock. The moved fields are the ones
     the app reads for each rule; a rule that read another time field would not see the move.
-  \item \textbf{One unexplained failure.} In one of nine consecutive full runs the payment
-    reminder test failed once; it passed in the eight runs after it and in six isolated runs, and
-    in every CI run. It is being watched rather than hidden.
+  \item \textbf{Two clocks.} Rows seeded with SQL take the database's time, while the app stamps
+    the test's. Seeds therefore date rows as the app would (Section~\ref{sec:reliability}), and
+    time-window cases keep margins of seconds, far above the measured millisecond offset.
 \end{itemize}
 
 \appendix
