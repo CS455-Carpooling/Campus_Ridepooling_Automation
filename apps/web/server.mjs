@@ -24,12 +24,16 @@ const MAX_MESSAGES_PER_MEMBER_PER_MINUTE = 20;
 const normalized =
   typeof process.env.DATABASE_URL === 'string' ? process.env.DATABASE_URL.trim() : '';
 const databaseUrl = /^postgres(?:ql)?:\/\//i.test(normalized) ? normalized : undefined;
+if (!dev && !process.env.APP_URL?.trim()) {
+  throw new Error('APP_URL must be configured in production for Socket.IO origin validation.');
+}
 
 const pool = new Pool({
   connectionString: databaseUrl,
-  ssl: databaseUrl?.includes('.render.com') ? { rejectUnauthorized: false } : undefined,
+  ssl: databaseUrl?.includes('.render.com') ? { rejectUnauthorized: true } : undefined,
   max: 10,
 });
+const socketOrigin = process.env.APP_URL?.replace(/\/$/, '') || (dev ? `http://localhost:${port}` : '');
 
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
@@ -42,29 +46,65 @@ function parseCookies(cookieHeader = '') {
       .filter(Boolean)
       .map((item) => {
         const idx = item.indexOf('=');
-        return idx === -1
-          ? [item, '']
-          : [item.slice(0, idx), decodeURIComponent(item.slice(idx + 1))];
+        if (idx === -1) return [item, ''];
+        try {
+          return [item.slice(0, idx), decodeURIComponent(item.slice(idx + 1))];
+        } catch {
+          return [item.slice(0, idx), ''];
+        }
       }),
   );
 }
 
 async function getSessionUser(cookieHeader = '') {
   const cookie = parseCookies(cookieHeader);
-  const token = cookie['crp_session'] || cookie['__Host-crp_session'];
+  const sessionCookie = dev ? 'crp_session' : '__Host-crp_session';
+  const token = cookie[sessionCookie];
   if (!token) return null;
 
   const hash = crypto.createHash('sha256').update(token).digest('hex');
   const { rows } = await pool.query(
-    `SELECT u.id, COALESCE(NULLIF(profile.display_name, ''), u.full_name) AS display_name
+    `SELECT u.id, u.role,
+            COALESCE(NULLIF(profile.display_name, ''), u.full_name) AS display_name
      FROM sessions s
      JOIN users u ON u.id = s.user_id
      LEFT JOIN user_profiles profile ON profile.user_id = u.id
-     WHERE s.token_hash = $1 AND s.expires_at > now()`,
+     WHERE s.token_hash = $1
+       AND s.expires_at > now()
+       AND s.last_activity_at > now() - interval '7 days'
+       AND (
+         u.role = 'admin'
+         OR EXISTS (
+           SELECT 1
+           FROM user_profiles eligible_profile
+           JOIN locations eligible_location
+             ON eligible_location.id = eligible_profile.default_pickup_point_id
+           WHERE eligible_profile.user_id = u.id
+             AND eligible_location.type = 'campus'
+             AND eligible_location.is_active = TRUE
+         )
+       )
+       AND (
+         u.role = 'admin'
+         OR NOT EXISTS (
+           SELECT 1 FROM rider_warnings warning
+           WHERE warning.user_id = u.id AND warning.acknowledged_at IS NULL
+         )
+       )`,
     [hash],
   );
 
-  return rows[0] ?? null;
+  const user = rows[0] ?? null;
+  if (user) {
+    await pool.query(
+      `UPDATE sessions
+       SET last_activity_at = now()
+       WHERE token_hash = $1
+         AND last_activity_at <= now() - interval '5 minutes'`,
+      [hash],
+    );
+  }
+  return user;
 }
 
 async function isRideMember(rideId, userId) {
@@ -260,7 +300,7 @@ app.prepare().then(() => {
 
   const io = new Server(httpServer, {
     cors: {
-      origin: true,
+      origin: socketOrigin ? [socketOrigin] : [],
       credentials: true,
     },
     transports: ['websocket', 'polling'],
@@ -483,7 +523,7 @@ app.prepare().then(() => {
     while (true) {
       const listener = new Client({
         connectionString: databaseUrl,
-        ssl: databaseUrl?.includes('.render.com') ? { rejectUnauthorized: false } : undefined,
+        ssl: databaseUrl?.includes('.render.com') ? { rejectUnauthorized: true } : undefined,
       });
 
       const ended = new Promise((resolve) => {

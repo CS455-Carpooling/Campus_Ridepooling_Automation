@@ -39,7 +39,7 @@ if (!/^postgres(?:ql)?:\/\//i.test(url)) {
 
 const client = new pg.Client({
   connectionString: url,
-  ssl: url.includes('.render.com') ? { rejectUnauthorized: false } : undefined,
+  ssl: url.includes('.render.com') ? { rejectUnauthorized: true } : undefined,
 });
 await client.connect();
 

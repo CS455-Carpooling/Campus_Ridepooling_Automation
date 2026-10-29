@@ -38,7 +38,7 @@ describe('db pool', () => {
   it('enables TLS for a Render URL', async () => {
     vi.stubEnv('DATABASE_URL', 'postgres://u:p@db.oregon-postgres.render.com/crp');
     await load();
-    expect(pg.constructed[0].ssl).toEqual({ rejectUnauthorized: false });
+    expect(pg.constructed[0].ssl).toEqual({ rejectUnauthorized: true });
   });
 
   it('copes with a missing DATABASE_URL', async () => {
