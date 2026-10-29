@@ -175,43 +175,44 @@ async function notify(
 /** Sends each reminder once. Caller owns the transaction; row locks make concurrent runs safe. */
 export async function sendDuePaymentReminders(client: PoolClient, now: Date): Promise<number> {
   const { rows } = await client.query<{
-    ride_id: string;
     user_id: string;
-    completed_at: Date;
-    reminder: 24 | 72;
   }>(
-    `SELECT ride.id AS ride_id, share.user_id, ride.completed_at,
-            CASE WHEN share.reminder_24_at IS NULL THEN 24 ELSE 72 END AS reminder
-     FROM ride_final_shares share
-     JOIN rides ride ON ride.id = share.ride_id
-     WHERE share.role = 'rider' AND share.payment_status = 'due'
-       AND ((share.reminder_24_at IS NULL AND ride.completed_at <= $1 - interval '24 hours')
-         OR (share.reminder_24_at IS NOT NULL AND share.reminder_72_at IS NULL
-             AND ride.completed_at <= $1 - interval '72 hours'))
-     ORDER BY ride.completed_at
-     LIMIT 500
-     FOR UPDATE OF share SKIP LOCKED`,
+    `WITH candidates AS (
+       SELECT share.ride_id, share.user_id,
+              CASE WHEN share.reminder_24_at IS NULL THEN 24 ELSE 72 END AS reminder
+       FROM ride_final_shares share
+       JOIN rides ride ON ride.id = share.ride_id
+       WHERE share.role = 'rider' AND share.payment_status = 'due'
+         AND ((share.reminder_24_at IS NULL AND ride.completed_at <= $1 - interval '24 hours')
+           OR (share.reminder_24_at IS NOT NULL AND share.reminder_72_at IS NULL
+               AND ride.completed_at <= $1 - interval '72 hours'))
+       ORDER BY ride.completed_at
+       LIMIT 500
+       FOR UPDATE OF share SKIP LOCKED
+     ),
+     updated AS (
+       UPDATE ride_final_shares share
+       SET reminder_24_at = CASE WHEN candidates.reminder = 24 THEN $1 ELSE share.reminder_24_at END,
+           reminder_72_at = CASE WHEN candidates.reminder = 72 THEN $1 ELSE share.reminder_72_at END
+       FROM candidates
+       WHERE share.ride_id = candidates.ride_id
+         AND share.user_id = candidates.user_id
+         AND share.payment_status = 'due'
+         AND (
+           (candidates.reminder = 24 AND share.reminder_24_at IS NULL)
+           OR (candidates.reminder = 72 AND share.reminder_72_at IS NULL)
+         )
+       RETURNING share.user_id, share.ride_id, candidates.reminder
+     )
+     INSERT INTO notifications
+       (user_id, type, title, body, related_ride_id, created_at)
+     SELECT user_id, 'payment_due',
+            'Ride share payment reminder (' || reminder || 'h)',
+            'Your ride share is still due. Settle with the ride owner outside the app and mark it paid.',
+            ride_id, $1
+     FROM updated
+     RETURNING user_id`,
     [now],
   );
-  for (const row of rows) {
-    const is24 = row.reminder === 24;
-    const updated = await client.query<{ user_id: string }>(
-      `UPDATE ride_final_shares SET ${is24 ? 'reminder_24_at' : 'reminder_72_at'} = $3
-       WHERE ride_id = $1 AND user_id = $2 AND payment_status = 'due'
-         AND ${is24 ? 'reminder_24_at' : 'reminder_72_at'} IS NULL
-       RETURNING user_id`,
-      [row.ride_id, row.user_id, now],
-    );
-    if (!updated.rows.length) continue;
-    await notify(
-      client,
-      row.user_id,
-      row.ride_id,
-      'payment_due',
-      `Ride share payment reminder (${row.reminder}h)`,
-      'Your ride share is still due. Settle with the ride owner outside the app and mark it paid.',
-      now,
-    );
-  }
   return rows.length;
 }
