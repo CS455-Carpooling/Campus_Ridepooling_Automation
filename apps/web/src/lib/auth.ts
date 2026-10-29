@@ -172,12 +172,17 @@ export async function getCurrentUser(
        )`;
   const { rows } = await pool.query(
     `WITH active_session AS (
+       SELECT user_id, last_activity_at
+       FROM sessions
+       WHERE token_hash=$1
+         AND expires_at>now()
+         AND last_activity_at>now()-interval '7 days'
+     ),
+     refreshed AS (
        UPDATE sessions
           SET last_activity_at=now()
         WHERE token_hash=$1
-          AND expires_at>now()
-          AND last_activity_at>now()-interval '7 days'
-        RETURNING user_id
+          AND last_activity_at<=now()-interval '5 minutes'
      )
      SELECT u.id,u.email,u.full_name,u.roll_number,u.role
        FROM active_session s
