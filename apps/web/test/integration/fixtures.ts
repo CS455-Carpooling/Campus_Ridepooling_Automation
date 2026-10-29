@@ -59,7 +59,7 @@ export async function offerRide(owner: Caller, overrides: Record<string, unknown
 
 /**
  * Moves a ride's departure so that it starts `minutesFromNow` from now (negative: already
- * started), as if the clock had moved on: the window keeps its length, and the departure and
+ * started; fractions for boundaries, such as 60.5), as if the clock had moved on: the window keeps its length, and the departure and
  * pickup times riders agreed to move with it. The same move apps/web/setup.md uses to try a
  * trip without waiting: 30 puts the ride in its lock window, -20 is past the no-show grace
  * period.
@@ -69,7 +69,7 @@ export async function moveDeparture(rideId: string, minutesFromNow: number): Pro
   try {
     await client.query('BEGIN');
     const { rows } = await client.query(
-      `SELECT now() + make_interval(mins => $2) - departure_start AS shift
+      `SELECT now() + make_interval(secs => $2::float8 * 60) - departure_start AS shift
        FROM rides WHERE id = $1`,
       [rideId, minutesFromNow],
     );
