@@ -33,7 +33,8 @@ const pool = new Pool({
   ssl: databaseUrl?.includes('.render.com') ? { rejectUnauthorized: true } : undefined,
   max: 10,
 });
-const socketOrigin = process.env.APP_URL?.replace(/\/$/, '') || (dev ? `http://localhost:${port}` : '');
+const socketOrigin =
+  process.env.APP_URL?.replace(/\/$/, '') || (dev ? `http://localhost:${port}` : '');
 
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();

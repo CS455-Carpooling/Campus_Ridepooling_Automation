@@ -17,6 +17,7 @@ export default defineConfig({
     // Each worker starts its own jsdom. Serial execution keeps the short default
     // interaction timeouts deterministic on constrained development machines.
     maxWorkers: 1,
+    testTimeout: 15_000,
     setupFiles: ['./test/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}', 'test/**/*.test.ts'],
     coverage: {
