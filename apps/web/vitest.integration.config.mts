@@ -3,19 +3,21 @@ import path from 'node:path';
 import { defineConfig } from 'vitest/config';
 
 // Integration tests (D3, CS455-110): the real route handlers against a real PostgreSQL database.
-// `npm run test:integration`. The database is TEST_DATABASE_URL, from the environment or from
-// apps/web/.env.local (see setup.md); global-setup.ts refuses any name not ending in _test.
+// `npm run test:integration`. The database is TEST_DATABASE_URL, and resetting it needs
+// ALLOW_TEST_DATABASE_RESET set to its name, both from the environment or from
+// apps/web/.env.local (see setup.md); test/integration/test-database.ts has every check.
 const local = (file: string) => path.join(import.meta.dirname, file);
 
-function fromEnvLocal(): string | undefined {
+function fromEnvLocal(name: string): string | undefined {
   try {
     const content = fs.readFileSync(local('.env.local'), 'utf8');
-    return content.match(/^TEST_DATABASE_URL\s*=\s*(.+)$/m)?.[1]?.trim();
+    return content.match(new RegExp(`^${name}\\s*=\\s*(.+)$`, 'm'))?.[1]?.trim();
   } catch {
     return undefined;
   }
 }
-process.env.TEST_DATABASE_URL ??= fromEnvLocal();
+process.env.TEST_DATABASE_URL ??= fromEnvLocal('TEST_DATABASE_URL');
+process.env.ALLOW_TEST_DATABASE_RESET ??= fromEnvLocal('ALLOW_TEST_DATABASE_RESET');
 
 export default defineConfig({
   resolve: {
@@ -38,6 +40,7 @@ export default defineConfig({
     hookTimeout: 60_000,
     env: {
       DATABASE_URL: process.env.TEST_DATABASE_URL ?? '',
+      ALLOW_TEST_DATABASE_RESET: process.env.ALLOW_TEST_DATABASE_RESET ?? '',
       // No email or Gemini calls from tests; both have offline fallbacks.
       MAIL_SCRIPT_URL: '',
       MAIL_SCRIPT_SECRET: '',
