@@ -5,8 +5,8 @@
 The review covered the Next.js application and custom Node server in
 `apps/web`, including PostgreSQL access, session authentication, API route
 authorization, Socket.IO ride chat and notifications, the schema bootstrap
-script, and administrative scripts. The fixes below address twelve meaningful
-defects. Findings 1, 2, 3, 7, 8, 9, 10, 11, and 12 were treated as advanced
+script, and administrative scripts. The fixes below address eighteen meaningful
+defects. Findings 1, 2, 3, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, and 18 were treated as advanced
 security, failure-oriented, concurrency/integrity, or deployment-integrity
 defects.
 
@@ -51,7 +51,7 @@ and send messages as that victim. Membership checks did not prevent this
 cross-origin session abuse because the attacker was using the victim's valid
 identity.
 
-### Simulated discovery method
+### Discovery method
 
 An adversarial test served an HTML page from an untrusted origin and attempted
 to construct a Socket.IO client with credentials enabled. The test then
@@ -95,7 +95,7 @@ account had been inactive long enough to be rejected by HTTP. This created an
 inconsistent authentication boundary and prolonged the useful lifetime of
 stolen credentials.
 
-### Simulated discovery method
+### Discovery method
 
 The failure-oriented test inserted a session whose `expires_at` was in the
 future but whose `last_activity_at` was more than seven days old. It then
@@ -148,7 +148,7 @@ users, sessions, rides, complaints, and payment records. Fixing only the
 application pool would have left migrations and administrative role changes
 exposed, so all four PostgreSQL clients were corrected consistently.
 
-### Simulated discovery method
+### Discovery method
 
 A security test configured a PostgreSQL endpoint using a certificate signed by
 an unknown certificate authority and attempted a connection through the
@@ -197,7 +197,7 @@ with an undefined-column error before the later compatibility `ALTER TABLE`
 could execute. Migration stopped part-way through, preventing deployment
 startup and leaving the database at an indeterminate schema version.
 
-### Simulated discovery method
+### Discovery method
 
 The migration test created a legacy `rides` table without `locked_at`, ran the
 schema bootstrap, and captured the first failing statement. A second run
@@ -227,8 +227,6 @@ export async function clientIp() {
 ```ts
 export async function clientIp() {
   const h = await headers();
-  const realIp = h.get('x-real-ip')?.trim();
-  if (realIp) return realIp.slice(0, 100);
   const forwarded = h
     .get('x-forwarded-for')
     ?.split(',')
@@ -248,7 +246,11 @@ proxy preserved the supplied header, generating a fresh rate-limit key for
 each attempt. This weakened throttling for registration, authentication,
 chatbot, and ride mutation endpoints.
 
-### Simulated discovery method
+The separate `X-Real-IP` trust path was also removed because clients can send
+that header directly unless the deployment proxy is explicitly configured to
+overwrite it.
+
+### Discovery method
 
 The adversarial load test sent repeated requests with the same account but a
 different first forwarding-header value on every request. The old
@@ -292,7 +294,7 @@ authentication, causing a failed connection and noisy error path instead of
 being treated as an unauthenticated request. Repeated malformed handshakes
 could increase availability pressure on the realtime service.
 
-### Simulated discovery method
+### Discovery method
 
 The failure-oriented test attempted a Socket.IO handshake with a cookie such
 as `crp_session=%E0%A4%A`. The old parser threw a URI error. The corrected
@@ -325,8 +327,8 @@ machine resources. The Vitest configuration was changed to one worker so the
 standard command is deterministic. Final full-suite validation completed with:
 
 ```text
-Test Files  199 passed (199)
-Tests       1513 passed (1513)
+Test Files  200 passed (200)
+Tests       1530 passed (1530)
 ```
 
 ## Additional defects found during the literal file-by-file audit
@@ -520,6 +522,90 @@ const token = cookie[sessionCookie];
 
 The realtime server now matches the application session-cookie policy exactly,
 including the production-only `__Host-` cookie boundary.
+
+### Defect 13: HTTP authentication revived idle-expired sessions
+
+**File:** `apps/web/src/lib/auth.ts`
+
+The refresh CTE previously updated a session even when the `active_session`
+CTE rejected it for seven-day inactivity. A stale remember-me cookie could
+therefore be rejected once, revived by that request, and accepted on the next
+request.
+
+```sql
+UPDATE sessions
+SET last_activity_at=now()
+WHERE token_hash=$1
+  AND expires_at>now()
+  AND last_activity_at>now()-interval '7 days'
+  AND last_activity_at<=now()-interval '5 minutes'
+```
+
+The refresh now requires the same expiration and inactivity predicates as the
+authentication lookup, so only an already-valid session can be refreshed.
+
+### Defect 14: `X-Real-IP` allowed rate-limit key spoofing
+
+**File:** `apps/web/src/lib/auth.ts`
+
+Clients could submit a different `X-Real-IP` value on every request and obtain
+a fresh rate-limit bucket. The separate `X-Real-IP` trust path was removed;
+`clientIp` now uses only the configured final `X-Forwarded-For` hop and falls
+back to `unknown` when no address is available.
+
+### Defect 15: Existing indexes were not upgraded by `IF NOT EXISTS`
+
+**File:** `apps/web/db/schema.sql`
+
+`IF NOT EXISTS` leaves an old same-named index untouched on an existing
+database. The bootstrap now drops and recreates both cursor indexes:
+
+```sql
+DROP INDEX IF EXISTS notifications_user_created_idx;
+CREATE INDEX notifications_user_created_idx
+  ON notifications(user_id, created_at DESC, id DESC);
+
+DROP INDEX IF EXISTS complaint_ai_analyses_complaint_idx;
+CREATE INDEX complaint_ai_analyses_complaint_idx
+  ON complaint_ai_analyses (complaint_id, created_at DESC, id DESC);
+```
+
+This ensures deployed databases receive the tie-breaker columns required by
+cursor ordering.
+
+### Defect 16: Password hashing held the reset transaction open
+
+**File:** `apps/web/src/app/api/auth/reset/route.ts`
+
+Scrypt hashing now runs before acquiring a database connection and beginning
+the reset transaction. Token consumption, password update, and session
+revocation remain atomic, while expensive CPU work no longer extends database
+transaction and row-lock duration.
+
+### Defect 17: Timestamp parameters caused real-database 500 responses
+
+**Files:** `apps/web/src/app/api/rides/[id]/requests/route.ts`,
+`apps/web/src/lib/payment-settlement.ts`
+
+Integration testing with PostgreSQL exposed untyped JavaScript `Date`
+parameters being used directly in timestamp/interval expressions. PostgreSQL
+could resolve the expression incorrectly and return 500 responses for seat
+requests and payment reminders. The affected parameters now use explicit
+`timestamptz` casts, and the regression is covered by
+`test/integration/bugs/timestamp-parameters.int.test.ts`.
+
+### Defect 18: Reusing an idempotency key replayed the wrong request
+
+**Files:** `apps/web/src/lib/join-requests.ts`,
+`apps/web/src/app/api/rides/[id]/requests/route.ts`
+
+Adversarial testing reused a key from one ride or pickup point on another
+request and received the first request as if it were a valid replay. The
+request now compares the original ride and payload identity, returns
+`idempotency_key_reused` for mismatches, and keeps the key-table uniqueness
+constraint as the database backstop. Regression coverage is in
+`test/integration/bugs/idempotency-key-reuse.int.test.ts`, including concurrent
+claims.
 
 ### Remaining architectural observation
 

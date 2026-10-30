@@ -14,6 +14,7 @@ export async function POST(req: Request) {
 
   let client: PoolClient | null = null;
   try {
+    const hash = await hashPassword(password);
     client = await pool.connect();
     await client.query('BEGIN');
     const userId = token ? await consumeToken(token, 'reset', client) : null;
@@ -22,7 +23,6 @@ export async function POST(req: Request) {
       return json({ error: 'This reset link is invalid or has expired.' }, 400);
     }
 
-    const hash = await hashPassword(password);
     const updated = await client.query(
       'UPDATE users SET password_hash=$1, email_verified_at=COALESCE(email_verified_at,now()) WHERE id=$2',
       [hash, userId],

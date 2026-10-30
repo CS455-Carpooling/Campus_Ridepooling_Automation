@@ -132,8 +132,8 @@ describe('rate limiting and request guards', () => {
   it('clientIp uses the trusted final forwarded address, else "unknown"', async () => {
     setHeaders({ 'x-forwarded-for': '1.2.3.4, 5.6.7.8' });
     expect(await auth.clientIp()).toBe('5.6.7.8');
-    setHeaders({ 'x-real-ip': '9.9.9.9', 'x-forwarded-for': '1.2.3.4' });
-    expect(await auth.clientIp()).toBe('9.9.9.9');
+    setHeaders({ 'x-real-ip': '9.9.9.9', 'x-forwarded-for': '1.2.3.4, 5.6.7.8' });
+    expect(await auth.clientIp()).toBe('5.6.7.8');
     setHeaders({});
     expect(await auth.clientIp()).toBe('unknown');
   });
@@ -224,6 +224,8 @@ describe('sessions', () => {
     expect(h.query.mock.calls[0][1]).toEqual([auth.sha256('tok')]);
     expect(h.query.mock.calls[0][0]).toMatch(/last_activity_at>now\(\)-interval '7 days'/);
     expect(h.query.mock.calls[0][0]).toMatch(/SET last_activity_at=now\(\)/);
+    expect(h.query.mock.calls[0][0]).toMatch(/expires_at>now\(\)/);
+    expect(h.query.mock.calls[0][0]).toMatch(/last_activity_at<=now\(\)-interval '5 minutes'/);
     expect(h.query.mock.calls[0][0]).toMatch(/l\.type='campus' AND l\.is_active=TRUE/);
     expect(h.query.mock.calls[0][0]).toContain('w.acknowledged_at IS NULL');
   });

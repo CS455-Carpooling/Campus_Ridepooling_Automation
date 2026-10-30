@@ -93,8 +93,6 @@ export async function rateLimit(key: string, limit: number, windowSec: number) {
 
 export async function clientIp() {
   const h = await headers();
-  const realIp = h.get('x-real-ip')?.trim();
-  if (realIp) return realIp.slice(0, 100);
   const forwarded = h
     .get('x-forwarded-for')
     ?.split(',')
@@ -193,6 +191,8 @@ export async function getCurrentUser(
        UPDATE sessions
           SET last_activity_at=now()
         WHERE token_hash=$1
+          AND expires_at>now()
+          AND last_activity_at>now()-interval '7 days'
           AND last_activity_at<=now()-interval '5 minutes'
      )
      SELECT u.id,u.email,u.full_name,u.roll_number,u.role

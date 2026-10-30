@@ -620,7 +620,8 @@ BEGIN
   END IF;
 END $$;
 
-CREATE INDEX IF NOT EXISTS notifications_user_created_idx
+DROP INDEX IF EXISTS notifications_user_created_idx;
+CREATE INDEX notifications_user_created_idx
   ON notifications(user_id, created_at DESC, id DESC);
 
 -- One person's rating of another after a ride (US-RD-28). Both must have a seat on that ride
@@ -879,7 +880,8 @@ CREATE TABLE IF NOT EXISTS complaint_ai_analyses (
   )
 );
 
-CREATE INDEX IF NOT EXISTS complaint_ai_analyses_complaint_idx
+DROP INDEX IF EXISTS complaint_ai_analyses_complaint_idx;
+CREATE INDEX complaint_ai_analyses_complaint_idx
   ON complaint_ai_analyses (complaint_id, created_at DESC, id DESC);
 
 -- An admin's decision on an AI recommendation (OA-FR-34, 36; SYS-FR-35, 38). One decision per

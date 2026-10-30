@@ -86,12 +86,12 @@ describe('POST /api/auth/reset', () => {
     ]);
   });
 
-  it('rolls back when password hashing fails after token consumption', async () => {
+  it('fails before opening a transaction when password hashing fails', async () => {
     m.consumeToken.mockResolvedValue('u1');
-    m.clientQuery.mockResolvedValueOnce({ rows: [{ user_id: 'u1' }] });
     m.hashPassword.mockRejectedValue(new Error('hash failed'));
     const res = await post({ token: 'tok', password: 'password123' });
     expect(res.status).toBe(500);
-    expect(m.clientQuery.mock.calls.map(([sql]) => sql)).toContain('ROLLBACK');
+    expect(m.connect).not.toHaveBeenCalled();
+    expect(m.consumeToken).not.toHaveBeenCalled();
   });
 });
