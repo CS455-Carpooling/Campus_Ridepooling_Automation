@@ -130,6 +130,7 @@ CREATE TABLE IF NOT EXISTS rides (
   expected_total_fare INTEGER NOT NULL CHECK (expected_total_fare > 0),
   state TEXT NOT NULL DEFAULT 'scheduled'
     CHECK (state IN ('scheduled', 'pickup_in_progress', 'in_transit', 'completed', 'cancelled')),
+  locked_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   CONSTRAINT rides_departure_window_valid CHECK (departure_start < departure_end)
 );
@@ -142,6 +143,10 @@ CREATE INDEX IF NOT EXISTS rides_hub_departure_idx
 
 CREATE INDEX IF NOT EXISTS rides_state_departure_idx
   ON rides(state, departure_start);
+ALTER TABLE rides ADD COLUMN IF NOT EXISTS locked_at TIMESTAMPTZ;
+CREATE INDEX IF NOT EXISTS rides_open_search_idx
+  ON rides(direction, hub_id, departure_start, departure_end)
+  WHERE state = 'scheduled' AND locked_at IS NULL;
 
 CREATE TABLE IF NOT EXISTS riders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -163,6 +168,12 @@ ALTER TABLE riders ADD COLUMN IF NOT EXISTS locked_share INTEGER;
 
 -- "My rides" looks rides up by person; the unique (ride_id, user_id) index cannot serve that.
 CREATE INDEX IF NOT EXISTS riders_user_idx ON riders(user_id);
+CREATE INDEX IF NOT EXISTS riders_active_ride_idx
+  ON riders(ride_id)
+  WHERE left_at IS NULL;
+CREATE INDEX IF NOT EXISTS riders_active_user_ride_idx
+  ON riders(user_id, ride_id)
+  WHERE left_at IS NULL;
 
 -- A rider's seat request is separate from their confirmed seat. Request history is retained
 -- after withdrawal, rejection, expiry, cancellation, or leaving (FR-RD-06.10).
@@ -485,7 +496,6 @@ UPDATE vehicle_types SET sort_order = CASE id
 -- column existed take the end of their departure window.
 ALTER TABLE rides ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ;
 ALTER TABLE rides ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMPTZ;
-ALTER TABLE rides ADD COLUMN IF NOT EXISTS locked_at TIMESTAMPTZ;
 
 UPDATE rides SET completed_at = departure_end
 WHERE state = 'completed' AND completed_at IS NULL;
@@ -599,8 +609,9 @@ BEGIN
   END IF;
 END $$;
 
-CREATE INDEX IF NOT EXISTS notifications_user_created_idx
-  ON notifications(user_id, created_at DESC);
+DROP INDEX IF EXISTS notifications_user_created_idx;
+CREATE INDEX notifications_user_created_idx
+  ON notifications(user_id, created_at DESC, id DESC);
 
 -- One person's rating of another after a ride (US-RD-28). Both must have a seat on that ride
 -- (a riders row: the owner has one too), nobody rates themselves, and each person rates each
@@ -858,8 +869,9 @@ CREATE TABLE IF NOT EXISTS complaint_ai_analyses (
   )
 );
 
-CREATE INDEX IF NOT EXISTS complaint_ai_analyses_complaint_idx
-  ON complaint_ai_analyses (complaint_id, created_at DESC);
+DROP INDEX IF EXISTS complaint_ai_analyses_complaint_idx;
+CREATE INDEX complaint_ai_analyses_complaint_idx
+  ON complaint_ai_analyses (complaint_id, created_at DESC, id DESC);
 
 -- An admin's decision on an AI recommendation (OA-FR-34, 36; SYS-FR-35, 38). One decision per
 -- recommendation; rejecting or overriding needs a reason; a rejection never acts; the final
@@ -1528,4 +1540,3 @@ CREATE INDEX IF NOT EXISTS chatbot_audits_created_idx ON chatbot_audits(created_
 CREATE INDEX IF NOT EXISTS chatbot_audits_user_created_idx ON chatbot_audits(user_id, created_at DESC);
 ALTER TABLE chatbot_audits ADD COLUMN IF NOT EXISTS validation_outcome TEXT;
 ALTER TABLE chatbot_audits ADD COLUMN IF NOT EXISTS fallback_used BOOLEAN NOT NULL DEFAULT false;
-

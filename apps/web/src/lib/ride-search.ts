@@ -72,10 +72,9 @@ const SEARCH_SQL = `
     vt.name             AS vehicle_name,
     r.capacity_snapshot,
     r.expected_total_fare,
-    (SELECT COUNT(*)::int FROM riders o WHERE o.ride_id = r.id AND o.left_at IS NULL) AS occupant_count,
+    occupant_counts.occupant_count,
     GREATEST(
-      r.capacity_snapshot
-        - (SELECT COUNT(*)::int FROM riders o WHERE o.ride_id = r.id AND o.left_at IS NULL),
+      r.capacity_snapshot - occupant_counts.occupant_count,
       0
     ) AS seats_left,
     viewer_request.status AS request_state,
@@ -90,6 +89,11 @@ const SEARCH_SQL = `
                                AND owner_rider.user_id = r.owner_id
                                AND owner_rider.left_at IS NULL
   JOIN locations    campus      ON campus.id = owner_rider.campus_location_id
+  LEFT JOIN LATERAL (
+    SELECT COUNT(*)::int AS occupant_count
+    FROM riders active_rider
+    WHERE active_rider.ride_id = r.id AND active_rider.left_at IS NULL
+  ) occupant_counts ON true
   LEFT JOIN LATERAL (
     SELECT request.status
     FROM ride_join_requests request
@@ -119,8 +123,7 @@ const SEARCH_SQL = `
     )
     -- A ride with an active request remains visible even when the last seat is requested.
     AND (
-      r.capacity_snapshot
-        - (SELECT COUNT(*)::int FROM riders o WHERE o.ride_id = r.id AND o.left_at IS NULL) > 0
+      r.capacity_snapshot - occupant_counts.occupant_count > 0
       OR viewer_request.status IS NOT NULL
     )
     -- Optional vehicle type filter.
@@ -130,9 +133,7 @@ const SEARCH_SQL = `
       $7::int IS NULL
       OR CEIL(
            r.expected_total_fare::numeric
-           / (
-               (SELECT COUNT(*)::int FROM riders o WHERE o.ride_id = r.id AND o.left_at IS NULL) + 1
-             )
+           / (occupant_counts.occupant_count + 1)
          ) <= $7::int
     )
   ORDER BY r.departure_start, r.id
