@@ -63,6 +63,7 @@ type FailureKind =
   | 'active_request_limit'
   | 'departure_conflict'
   | 'payment_overdue'
+  | 'idempotency_key_reused'
   | 'request_not_active'
   | 'request_not_pending'
   | 'request_not_reconfirming'
@@ -507,8 +508,13 @@ export async function submitJoinRequest(
     [riderId, now],
   );
   const key = (
-    await client.query<{ id: string; status: JoinRequestState }>(
-      `SELECT request.id, request.status
+    await client.query<{
+      id: string;
+      status: JoinRequestState;
+      ride_id: string;
+      pickup_location_id: string;
+    }>(
+      `SELECT request.id, request.status, request.ride_id, request.pickup_location_id
        FROM ride_join_request_keys request_key
        JOIN ride_join_requests request ON request.id = request_key.request_id
        WHERE request_key.rider_id = $1 AND request_key.idempotency_key = $2
@@ -516,6 +522,12 @@ export async function submitJoinRequest(
       [riderId, idempotencyKey, now],
     )
   ).rows[0];
+  // A key replays only the request it was first sent with (FR-RD-06.9). Sent again for another
+  // ride or pickup point, answering with the first request would tell the rider something they
+  // did not ask for was done.
+  if (key && (key.ride_id !== rideId || key.pickup_location_id !== pickupLocationId)) {
+    return requestFailure('idempotency_key_reused');
+  }
   if (key) return { kind: 'existing', requestId: key.id, state: key.status, idempotent: true };
 
   const ride = await lockRide(client, rideId);
@@ -524,7 +536,7 @@ export async function submitJoinRequest(
     `SELECT 1 FROM ride_final_shares share
      JOIN rides completed_ride ON completed_ride.id = share.ride_id
      WHERE share.user_id = $1 AND share.role = 'rider' AND share.payment_status = 'due'
-       AND completed_ride.completed_at < $2 - interval '7 days'
+       AND completed_ride.completed_at < $2::timestamptz - interval '7 days'
      LIMIT 1`,
     [riderId, now],
   );

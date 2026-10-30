@@ -1,0 +1,68 @@
+\file{harness} & integration harness: offers a ride through the real API and reads it back from the database & Pass \\
+\file{harness} & integration harness: runs the real sign-in and origin checks & Pass \\
+\file{harness} & integration harness: reads the role from the database for admin routes & Pass \\
+\file{harness} & integration harness: moves a ride into its lock window for trip tests & Pass \\
+\file{harness} & a clean database for every test: writes a ride & Pass \\
+\file{harness} & a clean database for every test: no longer sees it, and still has the schema reference data & Pass \\
+\file{complaints-and-enforcement} & complaints (FR-RD-13): opens on completion, files once per person, and falls back to manual review without Gemini & Pass \\
+\file{complaints-and-enforcement} & complaints (FR-RD-13): refuses before the trip, outsiders, oneself and a too-short description & Pass \\
+\file{complaints-and-enforcement} & complaints (FR-RD-13): lets a rider marked as a no-show dispute it before the ride is completed & Pass \\
+\file{complaints-and-enforcement} & complaints (FR-RD-13): is reviewed by an admin with a version check, and every step is audited & Pass \\
+\file{complaints-and-enforcement} & ratings (FR-RD-12, FR-RO-12): opens on completion, once per rater, never for oneself & Pass \\
+\file{complaints-and-enforcement} & ratings (FR-RD-12, FR-RO-12): is closed before completion and never covers a no-show & Pass \\
+\file{complaints-and-enforcement} & warnings and suspensions (OA-FR-21 to OA-FR-28): blocks a warned rider until they acknowledge the warning & Pass \\
+\file{complaints-and-enforcement} & warnings and suspensions (OA-FR-21 to OA-FR-28): stops a suspended rider offering or joining rides until an admin lifts it & Pass \\
+\file{complaints-and-enforcement} & warnings and suspensions (OA-FR-21 to OA-FR-28): allows enforcement by admins only, in the API and in the database & Pass \\
+\file{idempotency-key-reuse} & an idempotency key sent again with other details: is refused for another ride, and creates nothing there & Pass \\
+\file{idempotency-key-reuse} & an idempotency key sent again with other details: is refused for another pickup point, keeping the first request as it was & Pass \\
+\file{idempotency-key-reuse} & an idempotency key sent again with other details: is claimed once when its first uses for different rides arrive at the same moment & Pass \\
+\file{idempotency-key-reuse} & an idempotency key sent again with other details: cannot be claimed twice even past the application, by the key table itself & Pass \\
+\file{idempotency-key-reuse} & an idempotency key sent again with other details: still replays the same request sent again unchanged & Pass \\
+\file{timestamp-parameters} & timestamp parameters compared with an interval: lets a rider with no unpaid shares request a seat & Pass \\
+\file{timestamp-parameters} & timestamp parameters compared with an interval: still refuses a rider whose share has been due for more than seven days & Pass \\
+\file{timestamp-parameters} & timestamp parameters compared with an interval: allows a share that has been due for less than seven days & Pass \\
+\file{timestamp-parameters} & timestamp parameters compared with an interval: sends each payment reminder once, 24 hours and then 72 hours after completion & Pass \\
+\file{join-requests} & requesting a seat (FR-RD-06): records a pending request with its snapshot, history and idempotency key, and tells the owner & Pass \\
+\file{join-requests} & requesting a seat (FR-RD-06): answers a retried request with the same idempotency key once, without a second request (FR-RD-06.9) & Pass \\
+\file{join-requests} & requesting a seat (FR-RD-06): refuses the owner, an unknown pickup point and a fourth waiting request & Pass \\
+\file{join-requests} & requesting a seat (FR-RD-06): shows the owner the waiting requests and the rider their own history & Pass \\
+\file{join-requests} & the owner deciding (FR-RO-05): accepting gives the rider a seat, updates everyone's share and records why & Pass \\
+\file{join-requests} & the owner deciding (FR-RO-05): rejecting leaves the seat free and tells the rider & Pass \\
+\file{join-requests} & the owner deciding (FR-RO-05): lets only the owner decide, and only the rider withdraw & Pass \\
+\file{join-requests} & the rider changing their mind (FR-RD-06.10, FR-RD-07): withdraws a waiting request once, and the owner is told & Pass \\
+\file{join-requests} & the rider changing their mind (FR-RD-06.10, FR-RD-07): leaves before lock with nothing owed, freeing the seat for others & Pass \\
+\file{manage-ride} & cancelling a ride (FR-RO-04.2): cancels every request and seat claim and tells each rider they owe nothing & Pass \\
+\file{manage-ride} & cancelling a ride (FR-RO-04.2): refuses anyone but the owner, and a ride whose window is over & Pass \\
+\file{manage-ride} & editing a ride (FR-RO-04.1): asks the owner to confirm a change that affects accepted riders, then tells them & Pass \\
+\file{manage-ride} & editing a ride (FR-RO-04.1): sends a waiting request back to the rider when the departure moves more than 10 minutes & Pass \\
+\file{manage-ride} & editing a ride (FR-RO-04.1): refuses edits that break the ride's rules & Pass \\
+\file{offer-and-search} & offering a ride (FR-RO-01 to FR-RO-03): stores the ride with the vehicle capacity and gives the owner the first seat & Pass \\
+\file{offer-and-search} & offering a ride (FR-RO-01 to FR-RO-03): refuses an invalid offer field by field and stores nothing & Pass \\
+\file{offer-and-search} & offering a ride (FR-RO-01 to FR-RO-03): refuses a ride that overlaps or departs within two hours of the owner's other ride & Pass \\
+\file{offer-and-search} & searching for a ride (FR-RD-03, FR-RD-08.1): shows an open ride with its seats and the share a new rider would pay & Pass \\
+\file{offer-and-search} & searching for a ride (FR-RD-03, FR-RD-08.1): never shows the owner their own ride, nor a rider a ride they are on & Pass \\
+\file{offer-and-search} & searching for a ride (FR-RD-03, FR-RD-08.1): hides rides that are locked, full, or outside the filters & Pass \\
+\file{offer-and-search} & searching for a ride (FR-RD-03, FR-RD-08.1): keeps a ride the viewer has asked to join visible with its request state & Pass \\
+\file{seats-and-lock} & the last seat (FR-RO-05.3, NFR-RD-05): refuses a request when the ride is full, and an accept that would overfill it & Pass \\
+\file{seats-and-lock} & the last seat (FR-RO-05.3, NFR-RD-05): withdraws a rider's other request within two hours once they get a seat (P-08) & Pass \\
+\file{seats-and-lock} & locking the ride (FR-RO-07, P-06): fixes every share when the owner locks early, owner first, and closes waiting requests & Pass \\
+\file{seats-and-lock} & locking the ride (FR-RO-07, P-06): lets only the owner lock & Pass \\
+\file{seats-and-lock} & locking the ride (FR-RO-07, P-06): locks by itself an hour before departure, on the next request & Pass \\
+\file{seats-and-lock} & leaving after lock (FR-RD-07.2, P-10): asks the rider to confirm, then keeps their locked share payable & Pass \\
+\file{seats-and-lock} & leaving after lock (FR-RD-07.2, P-10): refuses a malformed confirmation flag & Pass \\
+\file{sos} & raising an SOS: creates one alert per person, however often they tap, and tells nobody in the pool & Pass \\
+\file{sos} & raising an SOS: keeps the mobile number and a snapshot of the trip for the admins & Pass \\
+\file{sos} & raising an SOS: is only for people on the ride while the trip is under way & Pass \\
+\file{sos} & raising an SOS: lets only the person who raised it add a location or call it a false alarm & Pass \\
+\file{sos} & admins handling an SOS (CS455-65): shows the alert until acknowledged, then closes it with a note, auditing each step & Pass \\
+\file{sos} & admins handling an SOS (CS455-65): keeps students out of the incident routes & Pass \\
+\file{sos} & admins handling an SOS (CS455-65): keeps the original alert unchangeable in the database & Pass \\
+\file{trip-flow} & starting pickup: waits for the lock, and only the owner can start it & Pass \\
+\file{trip-flow} & starting pickup: cannot skip pickup, and cannot start once the departure window is over & Pass \\
+\file{trip-flow} & starting pickup: rejects an unknown step & Pass \\
+\file{trip-flow} & during pickup: lets a rider check in and the owner mark them arrived or undo it & Pass \\
+\file{trip-flow} & during pickup: refuses a no-show until five minutes after the rider's pickup time (P-19) & Pass \\
+\file{trip-flow} & during pickup: records a no-show after the grace period: off the ride, owes nothing, told how to dispute & Pass \\
+\file{trip-flow} & the trip and completion (FR-RO-09.4): stores the final pool and shares: the no-show's share is spread over the others & Pass \\
+\file{trip-flow} & the trip and completion (FR-RO-09.4): counts unmarked riders as on board when the trip starts & Pass \\
+\file{trip-flow} & the trip and completion (FR-RO-09.4): answers the live trip stamp to people on the ride only & Pass \\

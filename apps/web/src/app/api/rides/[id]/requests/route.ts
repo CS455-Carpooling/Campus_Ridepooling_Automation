@@ -178,6 +178,10 @@ const errorByKind: Record<string, { status: number; error: string }> = {
     status: 409,
     error: 'This ride departs within two hours of another ride you offered or joined.',
   },
+  idempotency_key_reused: {
+    status: 409,
+    error: 'This request does not match the one first sent. Please try again.',
+  },
   payment_overdue: {
     status: 409,
     error:
