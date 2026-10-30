@@ -14,9 +14,10 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
-    // Each worker starts its own jsdom; the default (one per CPU core) can exhaust
-    // memory on a laptop, and two workers are plenty for this suite.
-    maxWorkers: 2,
+    // Each worker starts its own jsdom. Serial execution keeps the short default
+    // interaction timeouts deterministic on constrained development machines.
+    maxWorkers: 1,
+    testTimeout: 15_000,
     setupFiles: ['./test/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}', 'test/**/*.test.ts'],
     // The database tests run on their own: npm run test:integration (vitest.integration.config.mts).

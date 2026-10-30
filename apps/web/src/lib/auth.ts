@@ -69,8 +69,9 @@ export async function issueToken(userId: string, purpose: 'verify' | 'reset', tt
 export async function consumeToken(
   raw: string,
   purpose: 'verify' | 'reset',
+  executor: Pick<typeof pool, 'query'> = pool,
 ): Promise<string | null> {
-  const { rows } = await pool.query(
+  const { rows } = await executor.query(
     'DELETE FROM auth_tokens WHERE token_hash=$1 AND purpose=$2 AND expires_at>now() RETURNING user_id',
     [sha256(raw), purpose],
   );
@@ -91,7 +92,15 @@ export async function rateLimit(key: string, limit: number, windowSec: number) {
 }
 
 export async function clientIp() {
-  return (await headers()).get('x-forwarded-for')?.split(',')[0].trim() || 'unknown';
+  const h = await headers();
+  const forwarded = h
+    .get('x-forwarded-for')
+    ?.split(',')
+    .map((value) => value.trim())
+    .filter(Boolean);
+  // Reverse proxies append the verified client address. Taking the final hop prevents a
+  // caller-supplied prefix from becoming the rate-limit key.
+  return forwarded?.at(-1)?.slice(0, 100) || 'unknown';
 }
 
 export async function sameOrigin() {

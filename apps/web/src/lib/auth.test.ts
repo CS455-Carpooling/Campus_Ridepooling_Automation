@@ -129,9 +129,11 @@ describe('rate limiting and request guards', () => {
     expect(h.query.mock.calls[1][1][0]).toHaveLength(300);
   });
 
-  it('clientIp uses the first forwarded address, else "unknown"', async () => {
+  it('clientIp uses the trusted final forwarded address, else "unknown"', async () => {
     setHeaders({ 'x-forwarded-for': '1.2.3.4, 5.6.7.8' });
-    expect(await auth.clientIp()).toBe('1.2.3.4');
+    expect(await auth.clientIp()).toBe('5.6.7.8');
+    setHeaders({ 'x-real-ip': '9.9.9.9', 'x-forwarded-for': '1.2.3.4, 5.6.7.8' });
+    expect(await auth.clientIp()).toBe('5.6.7.8');
     setHeaders({});
     expect(await auth.clientIp()).toBe('unknown');
   });

@@ -135,6 +135,9 @@ CREATE TABLE IF NOT EXISTS rides (
   CONSTRAINT rides_departure_window_valid CHECK (departure_start < departure_end)
 );
 
+-- Existing databases must have this column before indexes and predicates reference it.
+ALTER TABLE rides ADD COLUMN IF NOT EXISTS locked_at TIMESTAMPTZ;
+
 CREATE INDEX IF NOT EXISTS rides_owner_departure_idx
   ON rides(owner_id, departure_start);
 
@@ -143,7 +146,6 @@ CREATE INDEX IF NOT EXISTS rides_hub_departure_idx
 
 CREATE INDEX IF NOT EXISTS rides_state_departure_idx
   ON rides(state, departure_start);
-ALTER TABLE rides ADD COLUMN IF NOT EXISTS locked_at TIMESTAMPTZ;
 CREATE INDEX IF NOT EXISTS rides_open_search_idx
   ON rides(direction, hub_id, departure_start, departure_end)
   WHERE state = 'scheduled' AND locked_at IS NULL;
@@ -223,7 +225,16 @@ ALTER TABLE ride_join_requests
   ADD COLUMN IF NOT EXISTS no_liability_until_trip BOOLEAN NOT NULL DEFAULT FALSE,
   ADD COLUMN IF NOT EXISTS late_cancellation BOOLEAN NOT NULL DEFAULT FALSE,
   ADD COLUMN IF NOT EXISTS locked_share INTEGER,
-  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now();
+  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+UPDATE ride_join_requests
+SET updated_at = COALESCE(updated_at, created_at, submitted_at, now())
+WHERE updated_at IS NULL;
+
+ALTER TABLE ride_join_requests
+  ALTER COLUMN updated_at SET DEFAULT now(),
+  ALTER COLUMN updated_at SET NOT NULL;
 
 DO $$
 BEGIN

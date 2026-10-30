@@ -23,7 +23,7 @@ if (!/^postgres(?:ql)?:\/\//i.test(url)) {
 }
 const client = new pg.Client({
   connectionString: url,
-  ssl: url.includes('.render.com') ? { rejectUnauthorized: false } : undefined,
+  ssl: url.includes('.render.com') ? { rejectUnauthorized: true } : undefined,
 });
 await client.connect();
 await client.query(fs.readFileSync(new URL('../db/schema.sql', import.meta.url), 'utf8'));

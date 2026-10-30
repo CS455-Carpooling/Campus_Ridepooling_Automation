@@ -9,8 +9,8 @@ export const pool =
   g.__pgPool ??
   new Pool({
     connectionString: url,
-    // Render's external URL needs TLS; the internal URL does not.
-    ssl: url?.includes('.render.com') ? { rejectUnauthorized: false } : undefined,
+    // Render's external URL needs TLS. Keep certificate verification enabled.
+    ssl: url?.includes('.render.com') ? { rejectUnauthorized: true } : undefined,
     max: 10,
   });
 g.__pgPool = pool;

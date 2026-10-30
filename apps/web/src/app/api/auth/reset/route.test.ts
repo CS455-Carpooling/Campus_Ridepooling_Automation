@@ -3,12 +3,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const m = vi.hoisted(() => ({
   query: vi.fn(),
+  clientQuery: vi.fn(),
+  release: vi.fn(),
+  connect: vi.fn(),
   guard: vi.fn(),
   consumeToken: vi.fn(),
   hashPassword: vi.fn(),
 }));
 
-vi.mock('@/lib/db', () => ({ pool: { query: m.query } }));
+vi.mock('@/lib/db', () => ({
+  pool: { query: m.query, connect: m.connect },
+}));
 vi.mock('@/lib/auth', () => ({
   readJson: async (req: Request) => req.json(),
   json: (body: object, status = 200) => Response.json(body, { status }),
@@ -28,6 +33,8 @@ beforeEach(() => {
   Object.values(m).forEach((f) => f.mockReset());
   m.guard.mockResolvedValue(null);
   m.hashPassword.mockResolvedValue('newhash');
+  m.connect.mockResolvedValue({ query: m.clientQuery, release: m.release });
+  m.clientQuery.mockResolvedValue({ rows: [], rowCount: 1 });
 });
 
 describe('POST /api/auth/reset', () => {
@@ -54,17 +61,37 @@ describe('POST /api/auth/reset', () => {
   it('rejects an invalid or expired token', async () => {
     m.consumeToken.mockResolvedValue(null);
     expect((await post({ token: 't', password: 'password123' })).status).toBe(400);
-    expect(m.query).not.toHaveBeenCalled();
+    expect(m.clientQuery).toHaveBeenLastCalledWith('ROLLBACK');
   });
 
   it('updates the password and signs the user out everywhere', async () => {
-    m.consumeToken.mockResolvedValue('u1');
-    m.query.mockResolvedValue({ rows: [] });
+    m.consumeToken.mockImplementation(async (_token, _purpose, executor) => {
+      await executor.query(
+        'DELETE FROM auth_tokens WHERE token_hash=$1 AND purpose=$2 AND expires_at>now() RETURNING user_id',
+      );
+      return 'u1';
+    });
+    m.clientQuery
+      .mockResolvedValueOnce({ rows: [{ user_id: 'u1' }] })
+      .mockResolvedValue({ rows: [], rowCount: 1 });
     const res = await post({ token: 'tok', password: 'password123' });
     expect(await res.json()).toEqual({ ok: true });
-    expect(m.consumeToken).toHaveBeenCalledWith('tok', 'reset');
-    expect(m.query.mock.calls[0][1]).toEqual(['newhash', 'u1']);
-    expect(m.query.mock.calls[1][0]).toMatch(/DELETE FROM sessions/);
-    expect(m.query.mock.calls[1][1]).toEqual(['u1']);
+    expect(m.consumeToken).toHaveBeenCalledWith('tok', 'reset', expect.any(Object));
+    expect(m.clientQuery.mock.calls.map(([sql]) => sql)).toEqual([
+      'BEGIN',
+      expect.stringMatching(/DELETE FROM auth_tokens/),
+      expect.stringMatching(/UPDATE users/),
+      expect.stringMatching(/DELETE FROM sessions/),
+      'COMMIT',
+    ]);
+  });
+
+  it('fails before opening a transaction when password hashing fails', async () => {
+    m.consumeToken.mockResolvedValue('u1');
+    m.hashPassword.mockRejectedValue(new Error('hash failed'));
+    const res = await post({ token: 'tok', password: 'password123' });
+    expect(res.status).toBe(500);
+    expect(m.connect).not.toHaveBeenCalled();
+    expect(m.consumeToken).not.toHaveBeenCalled();
   });
 });
