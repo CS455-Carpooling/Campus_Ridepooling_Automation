@@ -83,9 +83,12 @@ export function searchRide() {
   const cookie = sessionCookie();
   if (cookie) headers.headers = { Cookie: cookie };
 
-  const response = http.get(`${baseUrl}/rides/results?${query.toString()}`, headers);
+  const response = http.get(`${baseUrl}/rides/results?${query.toString()}`, {
+    ...headers,
+    redirects: 0,
+  });
   check(response, {
-    'ride search returns HTML': (res) => res.status === 200,
+    'ride search returns results page': (res) => res.status === 200 && !res.url.includes('/login'),
   });
   sleep(mode === 'stress' ? 0.1 : 1);
 }

@@ -182,6 +182,8 @@ export async function getCurrentUser(
        UPDATE sessions
           SET last_activity_at=now()
         WHERE token_hash=$1
+          AND expires_at>now()
+          AND last_activity_at>now()-interval '7 days'
           AND last_activity_at<=now()-interval '5 minutes'
      )
      SELECT u.id,u.email,u.full_name,u.roll_number,u.role

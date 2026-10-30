@@ -143,6 +143,7 @@ CREATE INDEX IF NOT EXISTS rides_hub_departure_idx
 
 CREATE INDEX IF NOT EXISTS rides_state_departure_idx
   ON rides(state, departure_start);
+ALTER TABLE rides ADD COLUMN IF NOT EXISTS locked_at TIMESTAMPTZ;
 CREATE INDEX IF NOT EXISTS rides_open_search_idx
   ON rides(direction, hub_id, departure_start, departure_end)
   WHERE state = 'scheduled' AND locked_at IS NULL;
@@ -495,7 +496,6 @@ UPDATE vehicle_types SET sort_order = CASE id
 -- column existed take the end of their departure window.
 ALTER TABLE rides ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ;
 ALTER TABLE rides ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMPTZ;
-ALTER TABLE rides ADD COLUMN IF NOT EXISTS locked_at TIMESTAMPTZ;
 
 UPDATE rides SET completed_at = departure_end
 WHERE state = 'completed' AND completed_at IS NULL;
@@ -609,7 +609,8 @@ BEGIN
   END IF;
 END $$;
 
-CREATE INDEX IF NOT EXISTS notifications_user_created_idx
+DROP INDEX IF EXISTS notifications_user_created_idx;
+CREATE INDEX notifications_user_created_idx
   ON notifications(user_id, created_at DESC, id DESC);
 
 -- One person's rating of another after a ride (US-RD-28). Both must have a seat on that ride
@@ -868,7 +869,8 @@ CREATE TABLE IF NOT EXISTS complaint_ai_analyses (
   )
 );
 
-CREATE INDEX IF NOT EXISTS complaint_ai_analyses_complaint_idx
+DROP INDEX IF EXISTS complaint_ai_analyses_complaint_idx;
+CREATE INDEX complaint_ai_analyses_complaint_idx
   ON complaint_ai_analyses (complaint_id, created_at DESC, id DESC);
 
 -- An admin's decision on an AI recommendation (OA-FR-34, 36; SYS-FR-35, 38). One decision per

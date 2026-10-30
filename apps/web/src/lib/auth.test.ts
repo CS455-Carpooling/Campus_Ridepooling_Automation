@@ -222,6 +222,8 @@ describe('sessions', () => {
     expect(h.query.mock.calls[0][1]).toEqual([auth.sha256('tok')]);
     expect(h.query.mock.calls[0][0]).toMatch(/last_activity_at>now\(\)-interval '7 days'/);
     expect(h.query.mock.calls[0][0]).toMatch(/SET last_activity_at=now\(\)/);
+    expect(h.query.mock.calls[0][0]).toMatch(/expires_at>now\(\)/);
+    expect(h.query.mock.calls[0][0]).toMatch(/last_activity_at<=now\(\)-interval '5 minutes'/);
     expect(h.query.mock.calls[0][0]).toMatch(/l\.type='campus' AND l\.is_active=TRUE/);
     expect(h.query.mock.calls[0][0]).toContain('w.acknowledged_at IS NULL');
   });

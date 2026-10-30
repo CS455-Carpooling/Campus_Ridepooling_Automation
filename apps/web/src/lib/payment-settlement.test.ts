@@ -117,7 +117,7 @@ describe('post-ride payment settlement', () => {
   it('uses one-time Due-only reminder timestamps and notifications', async () => {
     const query = vi.fn(async (sql: string, values?: unknown[]) => {
       void values;
-      return sql.includes('SELECT ride.id AS ride_id')
+      return sql.includes('WITH candidates AS')
         ? {
             rows: [
               {
@@ -141,7 +141,7 @@ describe('post-ride payment settlement', () => {
   it('sends the later reminder only after its 72-hour threshold', async () => {
     const query = vi.fn(async (sql: string, values?: unknown[]) => {
       void values;
-      return sql.includes('SELECT ride.id AS ride_id')
+      return sql.includes('WITH candidates AS')
         ? {
             rows: [
               {
