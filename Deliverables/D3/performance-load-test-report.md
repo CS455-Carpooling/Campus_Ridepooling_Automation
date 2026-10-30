@@ -4,7 +4,7 @@ System under test: Campus Ride-Pooling and Split-Fare System
 Experiment script: [`performance/k6/ride-search.js`](../../performance/k6/ride-search.js)  
 Core implementation: [`apps/web/src/lib/ride-search.ts`](../../apps/web/src/lib/ride-search.ts)  
 Test date: **2026-10-29**  
-Environment/commit: **[INSERT FINAL COMMIT HERE]**
+Environment/commit: `8120a92` (optimized branch snapshot)
 
 The application is a Next.js App Router service backed by PostgreSQL. Authenticated
 ride-search requests render `/rides/results`; the server validates the session and URL
@@ -71,9 +71,10 @@ docker run --rm --add-host=host.docker.internal:host-gateway `
 Measured baseline run on the local Docker stack:
 
 - 300/300 completed transactions; 100% checks passed; 0% HTTP failures.
-- Throughput: **106.72 transactions/second**.
+- Throughput: **not retained in the raw k6 summary**; the earlier 106.72 value
+  was an `http_reqs`-style rate and is not used as transaction throughput.
 - p50: **303.23 ms**; p95: **2.27 s**; p99: **2.57 s**.
-- Baseline revision: **[INSERT BASELINE COMMIT HERE]**.
+- Baseline revision: `69aead7`.
 
 ### Optimized run
 
@@ -93,10 +94,11 @@ docker run --rm --add-host=host.docker.internal:host-gateway `
 Measured optimized run on the same local Docker stack:
 
 - 300/300 completed transactions; 100% checks passed; 0% HTTP failures.
-- Throughput: **137.53 transactions/second**.
+- Throughput: **not retained in the raw k6 summary**; the earlier 137.53 value
+  was an `http_reqs`-style rate and is not used as transaction throughput.
 - p50: **289.84 ms**; p95: **1.76 s**; p99: **2.00 s**.
 - The p95 and p99 thresholds were not met, but both improved substantially.
-- Optimized revision: **[INSERT OPTIMIZED COMMIT HERE]**.
+- Optimized revision: `8120a92`.
 
 The same database shape, session set, machine, k6 version, and query parameters were used
 for both runs.
@@ -159,20 +161,25 @@ A run is reproducible with:
 
 ## 3. Measure response latency and throughput
 
-Copy the values from the k6 summaries into this table.
+The retained raw counters are 300 iterations, 300 HTTP requests, 300 successful
+checks, and 0 failed HTTP requests for each rubric run. Total duration and
+`iteration_duration` were not retained, so valid transaction throughput cannot
+be reconstructed without rerunning k6.
 
 | Result | Baseline | Optimized | Change |
 |---|---:|---:|---:|
 | Transactions completed | 300 | 300 | 0% change |
-| Throughput (transactions/s) | 106.72 | 137.53 | **28.9% increase** |
+| Throughput (transactions/s) | Not retained | Not retained | Not recomputable |
 | p50 latency | 303.23 ms | 289.84 ms | **4.4% decrease** |
 | p95 latency | 2.27 s | 1.76 s | **22.5% decrease** |
 | p99 latency | 2.57 s | 2.00 s | **22.2% decrease** |
 | HTTP failure rate | 0% | 0% | no regression |
 
-Throughput is calculated as successful completed search transactions divided by total
-elapsed test time. Latency is the k6 `http_req_duration` value, not a client-side
-timestamp estimated from logs.
+Throughput must be calculated as completed iterations divided by total elapsed
+test time. Latency is the k6 `http_req_duration` value, not a client-side
+timestamp estimated from logs. Because the script sleeps for one second per
+iteration, 300 rubric iterations cannot complete in less than approximately
+three seconds; the old rates were invalid as transaction throughput.
 
 ## 4. Identify at least one performance bottleneck
 
@@ -262,22 +269,24 @@ workload. Fill in the measured comparison below:
 |---|---|
 | p95 latency improvement | **22.5%** |
 | p99 latency improvement | **22.2%** |
-| Throughput improvement | **28.9%** |
-| Target status | **Optimized p50, throughput, reliability, and correctness passed; p95 and p99 did not meet target** |
-| Bottleneck evidence (`EXPLAIN (ANALYZE, BUFFERS)`) | **[INSERT PLAN/TIMING EVIDENCE HERE]** |
+| Throughput improvement | Not recomputable from retained output |
+| Target status | **Reliability and correctness passed; p95 and p99 did not meet target, and throughput requires a rerun with retained duration data** |
+| Bottleneck evidence (`EXPLAIN (ANALYZE, BUFFERS)`) | No plan output was retained; rerun the documented query with `EXPLAIN (ANALYZE, BUFFERS)` before claiming plan-level timing evidence. |
 
 Interpretation: a lower p95/p99 and higher transactions-per-second indicate that the
 database search path is doing less repeated work. If the results do not improve, record
 that outcome rather than changing the numbers; inspect the PostgreSQL execution plan,
-connection-pool saturation, and dataset size before drawing a conclusion. The experiment
-should be repeated at least twice per phase and the median run reported:
+connection-pool saturation, and dataset size before drawing a conclusion. The retained
+evidence contains one run per phase, not the two runs required for a median. Repeat
+each phase before claiming a median:
 
-- Baseline run 1: **[INSERT VALUES HERE]**
-- Baseline run 2: **[INSERT VALUES HERE]**
-- Optimized run 1: **[INSERT VALUES HERE]**
-- Optimized run 2: **[INSERT VALUES HERE]**
+- Baseline run 1: retained latency values above; duration not retained.
+- Baseline run 2: not run.
+- Optimized run 1: retained latency values above; duration not retained.
+- Optimized run 2: not run.
 
-The completed run therefore demonstrates a measurable optimization even though the
-initial p95/p99 targets were ambitious for a server-rendered page returning up to 50
-ride cards. The next safe optimization would be cursor/pagination or a deliberately
-smaller result-page contract, validated against UI requirements before changing it.
+The completed run demonstrates lower recorded p50/p95/p99 latency, but it does not
+satisfy the p95/p99 targets and does not provide valid retained throughput or a
+two-run median. Rerun the rubric twice per phase with raw k6 summaries and capture
+the requested `EXPLAIN (ANALYZE, BUFFERS)` output before making a stronger performance
+conclusion.

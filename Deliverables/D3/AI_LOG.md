@@ -191,3 +191,29 @@ credentials or session tokens were retained in the repository.
 ### Decision
 
 *To be completed by the author.*
+
+## Additional prompt and response log
+
+### Prompt 10
+
+> Review the comments on the CS455-115 performance-testing branch, verify the findings, fix the required issues, then commit and push.
+
+### Response 10
+
+> Verified and fixed the real-database timestamp and session-refresh regressions, migration ordering, index upgrades, reminder-test mocks, k6 redirect handling, and unsupported performance-report placeholders. The branch was validated and pushed as commit `952c9b8`.
+
+### Prompt 11
+
+> Review the new conflicts on CS455-121, fix and update them, and update the AI log to contain my new prompts as well.
+
+### Response 11
+
+> Refreshed `master` and PR #91, merged the latest base without textual conflicts, preserved the security and performance fixes, removed a duplicate `locked_at` migration statement, and updated this AI log with the new prompt and response entries.
+
+### Prompt 12
+
+> Fix the new conflicts on CS455-121, update the branch, and update the AI log to contain my new prompts as well.
+
+### Response 12
+
+> The latest `master` changes were merged into CS455-121, the duplicate migration statement was removed, the existing hardening and performance fixes were preserved, and the new prompt/response entries were added to the D3 AI log.
