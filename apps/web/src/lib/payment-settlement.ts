@@ -183,9 +183,10 @@ export async function sendDuePaymentReminders(client: PoolClient, now: Date): Pr
        FROM ride_final_shares share
        JOIN rides ride ON ride.id = share.ride_id
        WHERE share.role = 'rider' AND share.payment_status = 'due'
-         AND ((share.reminder_24_at IS NULL AND ride.completed_at <= $1 - interval '24 hours')
+         AND ((share.reminder_24_at IS NULL
+               AND ride.completed_at <= $1::timestamptz - interval '24 hours')
            OR (share.reminder_24_at IS NOT NULL AND share.reminder_72_at IS NULL
-               AND ride.completed_at <= $1 - interval '72 hours'))
+               AND ride.completed_at <= $1::timestamptz - interval '72 hours'))
        ORDER BY ride.completed_at
        LIMIT 500
        FOR UPDATE OF share SKIP LOCKED

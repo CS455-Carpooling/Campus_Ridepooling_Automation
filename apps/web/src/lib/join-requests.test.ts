@@ -196,7 +196,14 @@ describe('submitJoinRequest', () => {
     const { client, query } = makeClient((sql) => {
       if (sql.includes('SELECT id FROM users')) return [{ id: RIDER_ID }];
       if (sql.includes('FROM ride_join_request_keys request_key')) {
-        return [{ id: REQUEST_ID, status: 'needs_reconfirmation' }];
+        return [
+          {
+            id: REQUEST_ID,
+            status: 'needs_reconfirmation',
+            ride_id: RIDE_ID,
+            pickup_location_id: 'hall-3',
+          },
+        ];
       }
       return [];
     });
@@ -213,6 +220,27 @@ describe('submitJoinRequest', () => {
       query.mock.calls.some(([sql]) => String(sql).includes('INSERT INTO notifications')),
     ).toBe(false);
   });
+
+  it.each([
+    ['another ride', '0b9a7c1e-1111-4000-8000-0000000000ff', 'hall-3'],
+    ['another pickup point', RIDE_ID, 'hall-9'],
+  ])(
+    'refuses a key first sent for %s instead of replaying that request',
+    async (_case, ride, pickup) => {
+      const { client, query } = makeClient((sql) => {
+        if (sql.includes('SELECT id FROM users')) return [{ id: RIDER_ID }];
+        if (sql.includes('FROM ride_join_request_keys request_key')) {
+          return [{ id: REQUEST_ID, status: 'pending', ride_id: ride, pickup_location_id: pickup }];
+        }
+        return [];
+      });
+
+      await expect(
+        submitJoinRequest(client, RIDE_ID, RIDER_ID, 'hall-3', 'attempt-1', NOW),
+      ).resolves.toEqual({ kind: 'idempotency_key_reused' });
+      expect(query.mock.calls.some(([sql]) => String(sql).includes('INSERT INTO'))).toBe(false);
+    },
+  );
 
   it('refuses a full ride without creating a request', async () => {
     const { client, query } = makeClient((sql) => {

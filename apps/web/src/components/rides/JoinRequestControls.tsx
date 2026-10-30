@@ -124,9 +124,12 @@ export function JoinRequestControls({
       });
       const result = (await response.json()) as {
         error?: string;
+        code?: string;
         request?: { idempotent: boolean };
       };
       if (!response.ok) {
+        // The key was first sent with other details: the next try needs a key of its own.
+        if (result.code === 'idempotency_key_reused') idempotencyKey.current = null;
         setError(result.error ?? 'Unable to submit your request.');
         return;
       }

@@ -1,0 +1,41 @@
+\file{input} & malformed bodies: offering a ride with broken JSON is a 400, not a crash & Pass \\
+\file{input} & malformed bodies: offering a ride with a JSON array is a 400, not a crash & Pass \\
+\file{input} & malformed bodies: offering a ride with a JSON string is a 400, not a crash & Pass \\
+\file{input} & malformed bodies: offering a ride with null is a 400, not a crash & Pass \\
+\file{input} & malformed bodies: offering a ride with an empty body is a 400, not a crash & Pass \\
+\file{input} & malformed bodies: refuses wrong types instead of coercing them & Pass \\
+\file{input} & malformed bodies: refuses an edit with a string capacity or a non-boolean confirmation & Pass \\
+\file{input} & oversized input: refuses an idempotency key or pickup ID beyond its limit & Pass \\
+\file{input} & oversized input: refuses a complaint description over 2000 characters, and a megabyte of it & Pass \\
+\file{input} & identifiers: treats the ride ID \textquotedbl{}not-a-uuid\textquotedbl{} as not found without querying for it & Pass \\
+\file{input} & identifiers: treats the ride ID \textquotedbl{}' OR '1'='1\textquotedbl{} as not found without querying for it & Pass \\
+\file{input} & identifiers: treats the ride ID \textquotedbl{}00000000-0000-0000-0000-000000000000; DROP TABLE rides;-{}-\textquotedbl{} as not found without querying for it & Pass \\
+\file{input} & identifiers: treats the ride ID \textquotedbl{}../../etc/passwd\textquotedbl{} as not found without querying for it & Pass \\
+\file{input} & identifiers: answers a well-formed but unknown ride ID with the same 404 & Pass \\
+\file{input} & hostile text: stores SQL and markup in a complaint as plain text & Pass \\
+\file{races} & requests at the same moment: gives the last seat to exactly one of two accepted riders & Pass \\
+\file{races} & requests at the same moment: never leaves a seat without an accepted request when accept and withdraw race & Pass \\
+\file{races} & requests at the same moment: creates one request for a double-clicked submit with one key & Pass \\
+\file{races} & requests at the same moment: locks once when the owner double-clicks Lock & Pass \\
+\file{races} & requests at the same moment: raises one SOS for five quick taps & Pass \\
+\file{races} & requests at the same moment: writes the final shares once when completion is sent twice at once & Pass \\
+\file{races} & requests at the same moment: offers one ride when the same offer is sent twice at once & Pass \\
+\file{races} & the per-address rate limit: turns away the 21st ride offer from one address in 15 minutes & Pass \\
+\file{replays-and-state} & replayed requests: refuses a different pickup sent with an idempotency key already used (bug 2, \#87) & Pass \\
+\file{replays-and-state} & replayed requests: does not answer a request for one ride with a request on another (bug 2, \#87) & Pass \\
+\file{replays-and-state} & replayed requests: accepts a request once, however often the owner clicks & Pass \\
+\file{replays-and-state} & actions out of order: refuses requests, decisions and edits on a cancelled ride & Pass \\
+\file{replays-and-state} & actions out of order: refuses leaving, checking in and new requests once pickup has started & Pass \\
+\file{replays-and-state} & actions out of order: refuses pickup actions and SOS after completion & Pass \\
+\file{replays-and-state} & actions out of order: refuses a rider who left acting on the ride again & Pass \\
+\file{time-boundaries} & the lock, an hour before departure (P-06): departing in 60.5 minutes: a seat request answers 201 & Pass \\
+\file{time-boundaries} & the lock, an hour before departure (P-06): departing in 59.5 minutes: a seat request answers 409 & Pass \\
+\file{time-boundaries} & the lock, an hour before departure (P-06): drops a ride from search results at the same minute & Pass \\
+\file{time-boundaries} & the no-show grace period, five minutes after the agreed pickup (P-19): 4.9 minutes after pickup: marking a no-show answers 409 & Pass \\
+\file{time-boundaries} & the no-show grace period, five minutes after the agreed pickup (P-19): 5.1 minutes after pickup: marking a no-show answers 200 & Pass \\
+\file{time-boundaries} & the complaint window, seven days after completion (FR-RD-13.1): 7 days less a minute after completion: a complaint answers 10079 & Pass \\
+\file{time-boundaries} & the complaint window, seven days after completion (FR-RD-13.1): 7 days and a minute after completion: a complaint answers 10081 & Pass \\
+\file{time-boundaries} & the rating window, 72 hours after completion (P-16): 72 hours less a minute after completion: rating answers 4319 & Pass \\
+\file{time-boundaries} & the rating window, 72 hours after completion (P-16): 72 hours and a minute after completion: rating answers 4321 & Pass \\
+\file{time-boundaries} & the end of the departure window: 59 minutes into a one-hour window: cancelling answers 200 & Pass \\
+\file{time-boundaries} & the end of the departure window: 61 minutes into a one-hour window: cancelling answers 409 & Pass \\

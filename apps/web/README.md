@@ -25,8 +25,10 @@ Run these from the repository root (they cover every workspace) or from `apps/we
 | `npm run test`      | Unit, design-rule and contrast tests with coverage; fails below 80 % |
 | `npm run build`     | Production build                                                     |
 
-Inside `apps/web`, `npm run test:watch` reruns the tests on every change. Formatting is run from
-the root: `npm run format`.
+Inside `apps/web`, `npm run test:watch` reruns the tests on every change, and
+`npm run test:integration` runs the route handlers against a real PostgreSQL database
+(`test/integration/`; see "Integration tests" in setup.md). Formatting is run from the root:
+`npm run format`.
 
 ## Layout
 
@@ -42,6 +44,8 @@ src/
   components/rides/  create-ride inputs (route, vehicle, departure window, fare) and the ride details
   lib/               session, roles, route map, fares, formatting, page data and small helpers
 test/                test setup, the design-rule checker and the contrast test
+test/integration/    database tests: real route handlers against PostgreSQL (CS455-110)
+test/seed/           test accounts and sessions written with SQL, shared with the system tests
 ```
 
 ## Routes
