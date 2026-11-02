@@ -6,10 +6,10 @@
 **Branch tested:** `master`  
 **Commit tested:** `8f15a9a9b5689b6aab0113f28e5719b047b1dc77`  
 **CI run:** [GitHub Actions run #229](https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/actions/runs/41085419528)  
-**Run date:** 30 October 2026  
+**Run date:** 2 November 2026 (local run; terminal output supplied)  
 **Coverage provider:** Vitest with V8
 
-> **Evidence note:** This report records the latest successful master CI run inspected for this report. The CI job ran the equivalent workspace test command (`vitest run --coverage`), not a fresh interactive execution in this session. GitHub Actions did not retain an artifact for this run (`total_count: 0`), so the HTML report is not attached here. Re-run `npm test -- --coverage` on the final master and preserve the generated HTML report before final submission.
+> **Evidence note:** The test and coverage figures below now come from the local execution of `npm test -- --coverage` on 2 November 2026; the terminal output was supplied for this update. The output shows the checkout path but does not include `git rev-parse HEAD`, so the exact local HEAD SHA was not captured. At the time of this update, `origin/master` points to `8f15a9a9b5689b6aab0113f28e5719b047b1dc77`, the same commit previously recorded for the CI run. Confirm the local checkout SHA with `git rev-parse HEAD` if a precise run-to-commit audit trail is required. The local output contains the text coverage table, but no HTML report or machine-readable summary file was supplied; preserve those separately before final submission.
 
 ## 1. Execution summary
 
@@ -17,15 +17,15 @@
 |---|---:|
 | Test files | 200 passed / 200 |
 | Individual tests | 1,530 passed / 1,530 |
-| Test duration | 77.28 seconds (reported by Vitest) |
+| Test duration | 141.71 seconds (reported by Vitest) |
 | Statements | 87.44% |
 | Branches | 80.70% |
 | Functions | 88.63% |
 | Lines | 89.80% |
 
-All 200 test files and all 1,530 tests passed in the inspected CI run. The aggregate statement, branch, function, and line coverage values are each at or above the 80% threshold. Branch coverage is the closest to the threshold, at 80.70%.
+All 200 test files and all 1,530 tests passed in the supplied local run. The aggregate statement, branch, function, and line coverage values are each at or above the 80% threshold. Branch coverage is the closest to the threshold, at 80.70%.
 
-The repository CI run also completed its formatting, lint, type-check, build, and PostgreSQL integration-test jobs successfully. Those checks provide useful context but are not counted as unit-test coverage.
+The supplied local output also reports that jsdom was created 200 times, taking 57.82 seconds (50% of tracked time). Vitest suggests considering a shared environment per worker (`pool: 'vmThreads'`) or `isolate: false` if the team wants to optimize test runtime; this is a performance observation, not a test failure. The output also includes an npm warning that the forwarded `--coverage` CLI config is unknown at the root script level, while the workspace correctly invokes `vitest run --coverage`.
 
 ## 2. Coverage summary by area
 
@@ -59,7 +59,7 @@ The following are concrete examples from the CI coverage table, ordered roughly 
 
 | B1 requirement | Status | Evidence / remaining work |
 |---|---|---|
-| Run unit tests with coverage on master | **Passed in inspected CI** | 200 test files and 1,530 tests passed on master commit `8f15a9a`. |
+| Run unit tests with coverage on master | **Passed in supplied local run** | `npm test -- --coverage` completed successfully: 200 test files and 1,530 tests passed. The exact local HEAD SHA was not included in the captured output; current `origin/master` is `8f15a9a`. |
 | Overall 80% coverage gate | **Passed in inspected CI** | Statements 87.44%, branches 80.70%, functions 88.63%, lines 89.80%. Confirm the exact metric used by NFR-RD-17 with the project rubric/configuration. |
 | Summary by area (library, API routes, components) | **Partially complete** | Qualitative area summary and representative weak files are listed. Separate weighted area totals need a fresh machine-readable coverage summary. |
 | List weakest-covered files and explain why / add tests | **Partially complete** | Weak files and likely follow-up actions are identified. File-by-file intent must be checked before treating 0% as a missing-test defect. |
@@ -89,6 +89,6 @@ After the command completes:
 
 ## 6. Conclusion
 
-The inspected master CI run is green: 200 test files and 1,530 tests passed. Aggregate coverage exceeds 80% for statements, branches, functions, and lines, although branch coverage has only a 0.70 percentage-point margin. Coverage is not uniform: several files show 0%, and a few API/UI files have materially lower branch or function coverage.
+The supplied local master test run is green: 200 test files and 1,530 tests passed. Aggregate coverage exceeds 80% for statements, branches, functions, and lines, although branch coverage has only a 0.70 percentage-point margin. Coverage is not uniform: several files show 0%, and a few API/UI files have materially lower branch or function coverage.
 
-B1 is therefore **not fully complete yet**. The remaining work is to validate the weak-file scope, obtain a retained HTML and machine-readable coverage report, calculate genuine area-level summaries, and refresh all results on the final master on 5 November.
+B1 is therefore **not fully complete yet**. The remaining work is to validate the weak-file scope, preserve the generated HTML and machine-readable coverage report, calculate genuine area-level summaries, capture the exact tested HEAD SHA, and refresh all results on the final master on 5 November.
