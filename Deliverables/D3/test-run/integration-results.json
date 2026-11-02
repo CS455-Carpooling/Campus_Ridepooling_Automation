@@ -24,7 +24,7 @@
     "updated": 0,
     "didUpdate": false
   },
-  "startTime": 1793267422075,
+  "startTime": 1793637870120,
   "success": true,
   "testResults": [
     {
@@ -36,7 +36,7 @@
           "fullName": "integration harness offers a ride through the real API and reads it back from the database",
           "status": "passed",
           "title": "offers a ride through the real API and reads it back from the database",
-          "duration": 242.02250000000004,
+          "duration": 266.00030000000004,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -49,7 +49,7 @@
           "fullName": "integration harness runs the real sign-in and origin checks",
           "status": "passed",
           "title": "runs the real sign-in and origin checks",
-          "duration": 205.32180000000005,
+          "duration": 220.61470000000008,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -62,7 +62,7 @@
           "fullName": "integration harness reads the role from the database for admin routes",
           "status": "passed",
           "title": "reads the role from the database for admin routes",
-          "duration": 191.15279999999996,
+          "duration": 202.20600000000002,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -75,7 +75,7 @@
           "fullName": "integration harness moves a ride into its lock window for trip tests",
           "status": "passed",
           "title": "moves a ride into its lock window for trip tests",
-          "duration": 306.7747999999999,
+          "duration": 257.60440000000006,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -89,7 +89,7 @@
           "fullName": "integration harness a clean database for every test writes a ride",
           "status": "passed",
           "title": "writes a ride",
-          "duration": 232.82860000000005,
+          "duration": 261.8204999999998,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -103,15 +103,15 @@
           "fullName": "integration harness a clean database for every test no longer sees it, and still has the schema reference data",
           "status": "passed",
           "title": "no longer sees it, and still has the schema reference data",
-          "duration": 168.72000000000003,
+          "duration": 184.7351000000001,
           "failureMessages": [],
           "meta": {},
           "tags": [],
           "benchmarks": []
         }
       ],
-      "startTime": 1793267474106,
-      "endTime": 1793267475453.72,
+      "startTime": 1793637905122,
+      "endTime": 1793637906514.735,
       "status": "passed",
       "message": "",
       "name": "apps/web/test/integration/harness.int.test.ts"
@@ -122,10 +122,10 @@
           "ancestorTitles": [
             "complaints (FR-RD-13)"
           ],
-          "fullName": "complaints (FR-RD-13) opens on completion, files once per person, and falls back to manual review without Gemini",
+          "fullName": "complaints (FR-RD-13) opens on completion, files once per person, and falls back to manual review without Gemini (FR-RD-13.1, FR-RD-13.2, FR-RD-13.4, SYS-NFR-09)",
           "status": "passed",
-          "title": "opens on completion, files once per person, and falls back to manual review without Gemini",
-          "duration": 580.0327999999998,
+          "title": "opens on completion, files once per person, and falls back to manual review without Gemini (FR-RD-13.1, FR-RD-13.2, FR-RD-13.4, SYS-NFR-09)",
+          "duration": 504.0073,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -135,10 +135,10 @@
           "ancestorTitles": [
             "complaints (FR-RD-13)"
           ],
-          "fullName": "complaints (FR-RD-13) refuses before the trip, outsiders, oneself and a too-short description",
+          "fullName": "complaints (FR-RD-13) refuses before the trip, outsiders, oneself and a too-short description (FR-RD-13.1)",
           "status": "passed",
-          "title": "refuses before the trip, outsiders, oneself and a too-short description",
-          "duration": 684.2849999999999,
+          "title": "refuses before the trip, outsiders, oneself and a too-short description (FR-RD-13.1)",
+          "duration": 476.2366999999999,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -148,10 +148,10 @@
           "ancestorTitles": [
             "complaints (FR-RD-13)"
           ],
-          "fullName": "complaints (FR-RD-13) lets a rider marked as a no-show dispute it before the ride is completed",
+          "fullName": "complaints (FR-RD-13) lets a rider marked as a no-show dispute it before the ride is completed (FR-RD-10.3, FR-RD-13.1)",
           "status": "passed",
-          "title": "lets a rider marked as a no-show dispute it before the ride is completed",
-          "duration": 406.44039999999995,
+          "title": "lets a rider marked as a no-show dispute it before the ride is completed (FR-RD-10.3, FR-RD-13.1)",
+          "duration": 310.1851999999999,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -161,10 +161,10 @@
           "ancestorTitles": [
             "complaints (FR-RD-13)"
           ],
-          "fullName": "complaints (FR-RD-13) is reviewed by an admin with a version check, and every step is audited",
+          "fullName": "complaints (FR-RD-13) is reviewed by an admin with a version check, and every step is audited (OA-FR-18, SYS-NFR-08)",
           "status": "passed",
-          "title": "is reviewed by an admin with a version check, and every step is audited",
-          "duration": 808.2182000000003,
+          "title": "is reviewed by an admin with a version check, and every step is audited (OA-FR-18, SYS-NFR-08)",
+          "duration": 429.0741999999998,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -174,10 +174,10 @@
           "ancestorTitles": [
             "ratings (FR-RD-12, FR-RO-12)"
           ],
-          "fullName": "ratings (FR-RD-12, FR-RO-12) opens on completion, once per rater, never for oneself",
+          "fullName": "ratings (FR-RD-12, FR-RO-12) opens on completion, once per rater, never for oneself (FR-RD-12.1, FR-RD-12.2, FR-RO-12.1)",
           "status": "passed",
-          "title": "opens on completion, once per rater, never for oneself",
-          "duration": 685.0985999999998,
+          "title": "opens on completion, once per rater, never for oneself (FR-RD-12.1, FR-RD-12.2, FR-RO-12.1)",
+          "duration": 416.2769000000003,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -187,10 +187,10 @@
           "ancestorTitles": [
             "ratings (FR-RD-12, FR-RO-12)"
           ],
-          "fullName": "ratings (FR-RD-12, FR-RO-12) is closed before completion and never covers a no-show",
+          "fullName": "ratings (FR-RD-12, FR-RO-12) is closed before completion and never covers a no-show (FR-RD-12.2, FR-RO-12.2)",
           "status": "passed",
-          "title": "is closed before completion and never covers a no-show",
-          "duration": 798.1421999999998,
+          "title": "is closed before completion and never covers a no-show (FR-RD-12.2, FR-RO-12.2)",
+          "duration": 388.4659999999999,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -200,10 +200,10 @@
           "ancestorTitles": [
             "warnings and suspensions (OA-FR-21 to OA-FR-28)"
           ],
-          "fullName": "warnings and suspensions (OA-FR-21 to OA-FR-28) blocks a warned rider until they acknowledge the warning",
+          "fullName": "warnings and suspensions (OA-FR-21 to OA-FR-28) blocks a warned rider until they acknowledge the warning (OA-FR-21, FR-RD-01.6)",
           "status": "passed",
-          "title": "blocks a warned rider until they acknowledge the warning",
-          "duration": 367.3684000000003,
+          "title": "blocks a warned rider until they acknowledge the warning (OA-FR-21, FR-RD-01.6)",
+          "duration": 239.26519999999982,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -213,10 +213,10 @@
           "ancestorTitles": [
             "warnings and suspensions (OA-FR-21 to OA-FR-28)"
           ],
-          "fullName": "warnings and suspensions (OA-FR-21 to OA-FR-28) stops a suspended rider offering or joining rides until an admin lifts it",
+          "fullName": "warnings and suspensions (OA-FR-21 to OA-FR-28) stops a suspended rider offering or joining rides until an admin lifts it (OA-FR-23, OA-FR-28, SYS-FR-24, FR-RD-01.5)",
           "status": "passed",
-          "title": "stops a suspended rider offering or joining rides until an admin lifts it",
-          "duration": 469.6894999999995,
+          "title": "stops a suspended rider offering or joining rides until an admin lifts it (OA-FR-23, OA-FR-28, SYS-FR-24, FR-RD-01.5)",
+          "duration": 301.0394000000001,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -226,18 +226,18 @@
           "ancestorTitles": [
             "warnings and suspensions (OA-FR-21 to OA-FR-28)"
           ],
-          "fullName": "warnings and suspensions (OA-FR-21 to OA-FR-28) allows enforcement by admins only, in the API and in the database",
+          "fullName": "warnings and suspensions (OA-FR-21 to OA-FR-28) allows enforcement by admins only, in the API and in the database (SYS-NFR-03)",
           "status": "passed",
-          "title": "allows enforcement by admins only, in the API and in the database",
-          "duration": 225.4904000000006,
+          "title": "allows enforcement by admins only, in the API and in the database (SYS-NFR-03)",
+          "duration": 211.81039999999985,
           "failureMessages": [],
           "meta": {},
           "tags": [],
           "benchmarks": []
         }
       ],
-      "startTime": 1793267439367,
-      "endTime": 1793267444393.4905,
+      "startTime": 1793637875076,
+      "endTime": 1793637878353.8103,
       "status": "passed",
       "message": "",
       "name": "apps/web/test/integration/admin/complaints-and-enforcement.int.test.ts"
@@ -246,12 +246,12 @@
       "assertionResults": [
         {
           "ancestorTitles": [
-            "malformed bodies"
+            "malformed bodies (NFR-RD-10)"
           ],
-          "fullName": "malformed bodies offering a ride with broken JSON is a 400, not a crash",
+          "fullName": "malformed bodies (NFR-RD-10) offering a ride with broken JSON is a 400, not a crash",
           "status": "passed",
           "title": "offering a ride with broken JSON is a 400, not a crash",
-          "duration": 300.29989999999987,
+          "duration": 244.51300000000003,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -259,12 +259,12 @@
         },
         {
           "ancestorTitles": [
-            "malformed bodies"
+            "malformed bodies (NFR-RD-10)"
           ],
-          "fullName": "malformed bodies offering a ride with a JSON array is a 400, not a crash",
+          "fullName": "malformed bodies (NFR-RD-10) offering a ride with a JSON array is a 400, not a crash",
           "status": "passed",
           "title": "offering a ride with a JSON array is a 400, not a crash",
-          "duration": 187.90880000000016,
+          "duration": 211.7491,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -272,12 +272,12 @@
         },
         {
           "ancestorTitles": [
-            "malformed bodies"
+            "malformed bodies (NFR-RD-10)"
           ],
-          "fullName": "malformed bodies offering a ride with a JSON string is a 400, not a crash",
+          "fullName": "malformed bodies (NFR-RD-10) offering a ride with a JSON string is a 400, not a crash",
           "status": "passed",
           "title": "offering a ride with a JSON string is a 400, not a crash",
-          "duration": 296.30499999999984,
+          "duration": 205.90390000000002,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -285,12 +285,12 @@
         },
         {
           "ancestorTitles": [
-            "malformed bodies"
+            "malformed bodies (NFR-RD-10)"
           ],
-          "fullName": "malformed bodies offering a ride with null is a 400, not a crash",
+          "fullName": "malformed bodies (NFR-RD-10) offering a ride with null is a 400, not a crash",
           "status": "passed",
           "title": "offering a ride with null is a 400, not a crash",
-          "duration": 200.4529,
+          "duration": 222.44249999999988,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -298,12 +298,12 @@
         },
         {
           "ancestorTitles": [
-            "malformed bodies"
+            "malformed bodies (NFR-RD-10)"
           ],
-          "fullName": "malformed bodies offering a ride with an empty body is a 400, not a crash",
+          "fullName": "malformed bodies (NFR-RD-10) offering a ride with an empty body is a 400, not a crash",
           "status": "passed",
           "title": "offering a ride with an empty body is a 400, not a crash",
-          "duration": 197.25319999999988,
+          "duration": 203.0498,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -311,12 +311,12 @@
         },
         {
           "ancestorTitles": [
-            "malformed bodies"
+            "malformed bodies (NFR-RD-10)"
           ],
-          "fullName": "malformed bodies refuses wrong types instead of coercing them",
+          "fullName": "malformed bodies (NFR-RD-10) refuses wrong types instead of coercing them",
           "status": "passed",
           "title": "refuses wrong types instead of coercing them",
-          "duration": 263.19039999999995,
+          "duration": 274.40049999999997,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -324,12 +324,12 @@
         },
         {
           "ancestorTitles": [
-            "malformed bodies"
+            "malformed bodies (NFR-RD-10)"
           ],
-          "fullName": "malformed bodies refuses an edit with a string capacity or a non-boolean confirmation",
+          "fullName": "malformed bodies (NFR-RD-10) refuses an edit with a string capacity or a non-boolean confirmation",
           "status": "passed",
           "title": "refuses an edit with a string capacity or a non-boolean confirmation",
-          "duration": 238.24170000000004,
+          "duration": 216.7462999999998,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -337,12 +337,12 @@
         },
         {
           "ancestorTitles": [
-            "oversized input"
+            "oversized input (NFR-RD-10)"
           ],
-          "fullName": "oversized input refuses an idempotency key or pickup ID beyond its limit",
+          "fullName": "oversized input (NFR-RD-10) refuses an idempotency key or pickup ID beyond its limit",
           "status": "passed",
           "title": "refuses an idempotency key or pickup ID beyond its limit",
-          "duration": 243.5385000000001,
+          "duration": 235.42560000000003,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -350,12 +350,12 @@
         },
         {
           "ancestorTitles": [
-            "oversized input"
+            "oversized input (NFR-RD-10)"
           ],
-          "fullName": "oversized input refuses a complaint description over 2000 characters, and a megabyte of it",
+          "fullName": "oversized input (NFR-RD-10) refuses a complaint description over 2000 characters, and a megabyte of it",
           "status": "passed",
           "title": "refuses a complaint description over 2000 characters, and a megabyte of it",
-          "duration": 443.33259999999973,
+          "duration": 328.58140000000003,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -363,12 +363,12 @@
         },
         {
           "ancestorTitles": [
-            "identifiers"
+            "identifiers (NFR-RD-10)"
           ],
-          "fullName": "identifiers treats the ride ID \"not-a-uuid\" as not found without querying for it",
+          "fullName": "identifiers (NFR-RD-10) treats the ride ID \"not-a-uuid\" as not found without querying for it",
           "status": "passed",
           "title": "treats the ride ID \"not-a-uuid\" as not found without querying for it",
-          "duration": 196.69700000000012,
+          "duration": 200.16879999999992,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -376,12 +376,12 @@
         },
         {
           "ancestorTitles": [
-            "identifiers"
+            "identifiers (NFR-RD-10)"
           ],
-          "fullName": "identifiers treats the ride ID \"' OR '1'='1\" as not found without querying for it",
+          "fullName": "identifiers (NFR-RD-10) treats the ride ID \"' OR '1'='1\" as not found without querying for it",
           "status": "passed",
           "title": "treats the ride ID \"' OR '1'='1\" as not found without querying for it",
-          "duration": 189.45280000000002,
+          "duration": 201.88390000000027,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -389,12 +389,12 @@
         },
         {
           "ancestorTitles": [
-            "identifiers"
+            "identifiers (NFR-RD-10)"
           ],
-          "fullName": "identifiers treats the ride ID \"00000000-0000-0000-0000-000000000000; DROP TABLE rides;--\" as not found without querying for it",
+          "fullName": "identifiers (NFR-RD-10) treats the ride ID \"00000000-0000-0000-0000-000000000000; DROP TABLE rides;--\" as not found without querying for it",
           "status": "passed",
           "title": "treats the ride ID \"00000000-0000-0000-0000-000000000000; DROP TABLE rides;--\" as not found without querying for it",
-          "duration": 184.04050000000007,
+          "duration": 209.50780000000032,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -402,12 +402,12 @@
         },
         {
           "ancestorTitles": [
-            "identifiers"
+            "identifiers (NFR-RD-10)"
           ],
-          "fullName": "identifiers treats the ride ID \"../../etc/passwd\" as not found without querying for it",
+          "fullName": "identifiers (NFR-RD-10) treats the ride ID \"../../etc/passwd\" as not found without querying for it",
           "status": "passed",
           "title": "treats the ride ID \"../../etc/passwd\" as not found without querying for it",
-          "duration": 195.73009999999977,
+          "duration": 186.64879999999994,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -415,12 +415,12 @@
         },
         {
           "ancestorTitles": [
-            "identifiers"
+            "identifiers (NFR-RD-10)"
           ],
-          "fullName": "identifiers answers a well-formed but unknown ride ID with the same 404",
+          "fullName": "identifiers (NFR-RD-10) answers a well-formed but unknown ride ID with the same 404",
           "status": "passed",
           "title": "answers a well-formed but unknown ride ID with the same 404",
-          "duration": 212.04260000000022,
+          "duration": 228.67360000000008,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -428,20 +428,20 @@
         },
         {
           "ancestorTitles": [
-            "hostile text"
+            "hostile text (NFR-RD-10)"
           ],
-          "fullName": "hostile text stores SQL and markup in a complaint as plain text",
+          "fullName": "hostile text (NFR-RD-10) stores SQL and markup in a complaint as plain text",
           "status": "passed",
           "title": "stores SQL and markup in a complaint as plain text",
-          "duration": 427.0727999999999,
+          "duration": 327.37509999999975,
           "failureMessages": [],
           "meta": {},
           "tags": [],
           "benchmarks": []
         }
       ],
-      "startTime": 1793267426260,
-      "endTime": 1793267430038.0728,
+      "startTime": 1793637871108,
+      "endTime": 1793637874605.375,
       "status": "passed",
       "message": "",
       "name": "apps/web/test/integration/adversarial/input.int.test.ts"
@@ -450,12 +450,12 @@
       "assertionResults": [
         {
           "ancestorTitles": [
-            "requests at the same moment"
+            "requests at the same moment (NFR-RO-DEP-02)"
           ],
-          "fullName": "requests at the same moment gives the last seat to exactly one of two accepted riders",
+          "fullName": "requests at the same moment (NFR-RO-DEP-02) gives the last seat to exactly one of two accepted riders (FR-RD-06.3)",
           "status": "passed",
-          "title": "gives the last seat to exactly one of two accepted riders",
-          "duration": 546.5266,
+          "title": "gives the last seat to exactly one of two accepted riders (FR-RD-06.3)",
+          "duration": 399.38519999999994,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -463,12 +463,12 @@
         },
         {
           "ancestorTitles": [
-            "requests at the same moment"
+            "requests at the same moment (NFR-RO-DEP-02)"
           ],
-          "fullName": "requests at the same moment never leaves a seat without an accepted request when accept and withdraw race",
+          "fullName": "requests at the same moment (NFR-RO-DEP-02) never leaves a seat without an accepted request when accept and withdraw race",
           "status": "passed",
           "title": "never leaves a seat without an accepted request when accept and withdraw race",
-          "duration": 368.64789999999994,
+          "duration": 283.2280999999999,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -476,12 +476,12 @@
         },
         {
           "ancestorTitles": [
-            "requests at the same moment"
+            "requests at the same moment (NFR-RO-DEP-02)"
           ],
-          "fullName": "requests at the same moment creates one request for a double-clicked submit with one key",
+          "fullName": "requests at the same moment (NFR-RO-DEP-02) creates one request for a double-clicked submit with one key",
           "status": "passed",
           "title": "creates one request for a double-clicked submit with one key",
-          "duration": 328.3176000000001,
+          "duration": 273.30100000000004,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -489,12 +489,12 @@
         },
         {
           "ancestorTitles": [
-            "requests at the same moment"
+            "requests at the same moment (NFR-RO-DEP-02)"
           ],
-          "fullName": "requests at the same moment locks once when the owner double-clicks Lock",
+          "fullName": "requests at the same moment (NFR-RO-DEP-02) locks once when the owner double-clicks Lock",
           "status": "passed",
           "title": "locks once when the owner double-clicks Lock",
-          "duration": 389.6192000000001,
+          "duration": 291.9293,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -502,12 +502,12 @@
         },
         {
           "ancestorTitles": [
-            "requests at the same moment"
+            "requests at the same moment (NFR-RO-DEP-02)"
           ],
-          "fullName": "requests at the same moment raises one SOS for five quick taps",
+          "fullName": "requests at the same moment (NFR-RO-DEP-02) raises one SOS for five quick taps (FR-RD-15.2)",
           "status": "passed",
-          "title": "raises one SOS for five quick taps",
-          "duration": 467.7324000000001,
+          "title": "raises one SOS for five quick taps (FR-RD-15.2)",
+          "duration": 295.49969999999985,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -515,12 +515,12 @@
         },
         {
           "ancestorTitles": [
-            "requests at the same moment"
+            "requests at the same moment (NFR-RO-DEP-02)"
           ],
-          "fullName": "requests at the same moment writes the final shares once when completion is sent twice at once",
+          "fullName": "requests at the same moment (NFR-RO-DEP-02) writes the final shares once when completion is sent twice at once",
           "status": "passed",
           "title": "writes the final shares once when completion is sent twice at once",
-          "duration": 455.7781,
+          "duration": 366.48860000000013,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -528,12 +528,12 @@
         },
         {
           "ancestorTitles": [
-            "requests at the same moment"
+            "requests at the same moment (NFR-RO-DEP-02)"
           ],
-          "fullName": "requests at the same moment offers one ride when the same offer is sent twice at once",
+          "fullName": "requests at the same moment (NFR-RO-DEP-02) offers one ride when the same offer is sent twice at once",
           "status": "passed",
           "title": "offers one ride when the same offer is sent twice at once",
-          "duration": 231.69270000000006,
+          "duration": 216.02520000000004,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -546,15 +546,15 @@
           "fullName": "the per-address rate limit turns away the 21st ride offer from one address in 15 minutes",
           "status": "passed",
           "title": "turns away the 21st ride offer from one address in 15 minutes",
-          "duration": 494.2447000000002,
+          "duration": 335.0898000000002,
           "failureMessages": [],
           "meta": {},
           "tags": [],
           "benchmarks": []
         }
       ],
-      "startTime": 1793267444725,
-      "endTime": 1793267448009.2446,
+      "startTime": 1793637891205,
+      "endTime": 1793637893667.0898,
       "status": "passed",
       "message": "",
       "name": "apps/web/test/integration/adversarial/races.int.test.ts"
@@ -565,10 +565,10 @@
           "ancestorTitles": [
             "replayed requests"
           ],
-          "fullName": "replayed requests refuses a different pickup sent with an idempotency key already used (bug 2, #87)",
+          "fullName": "replayed requests refuses a different pickup sent with an idempotency key already used (FR-RD-06.9, bug 2, #87)",
           "status": "passed",
-          "title": "refuses a different pickup sent with an idempotency key already used (bug 2, #87)",
-          "duration": 286.9312,
+          "title": "refuses a different pickup sent with an idempotency key already used (FR-RD-06.9, bug 2, #87)",
+          "duration": 290.07180000000005,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -578,10 +578,10 @@
           "ancestorTitles": [
             "replayed requests"
           ],
-          "fullName": "replayed requests does not answer a request for one ride with a request on another (bug 2, #87)",
+          "fullName": "replayed requests does not answer a request for one ride with a request on another (FR-RD-06.9, bug 2, #87)",
           "status": "passed",
-          "title": "does not answer a request for one ride with a request on another (bug 2, #87)",
-          "duration": 348.6237,
+          "title": "does not answer a request for one ride with a request on another (FR-RD-06.9, bug 2, #87)",
+          "duration": 279.1394,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -594,7 +594,7 @@
           "fullName": "replayed requests accepts a request once, however often the owner clicks",
           "status": "passed",
           "title": "accepts a request once, however often the owner clicks",
-          "duration": 362.06100000000004,
+          "duration": 287.5036,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -607,7 +607,7 @@
           "fullName": "actions out of order refuses requests, decisions and edits on a cancelled ride",
           "status": "passed",
           "title": "refuses requests, decisions and edits on a cancelled ride",
-          "duration": 351.90920000000006,
+          "duration": 294.1572000000001,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -617,10 +617,10 @@
           "ancestorTitles": [
             "actions out of order"
           ],
-          "fullName": "actions out of order refuses leaving, checking in and new requests once pickup has started",
+          "fullName": "actions out of order refuses leaving, checking in and new requests once pickup has started (FR-RD-07.5)",
           "status": "passed",
-          "title": "refuses leaving, checking in and new requests once pickup has started",
-          "duration": 436.3131000000001,
+          "title": "refuses leaving, checking in and new requests once pickup has started (FR-RD-07.5)",
+          "duration": 363.24660000000017,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -633,7 +633,7 @@
           "fullName": "actions out of order refuses pickup actions and SOS after completion",
           "status": "passed",
           "title": "refuses pickup actions and SOS after completion",
-          "duration": 360.6906999999999,
+          "duration": 369.92560000000026,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -646,15 +646,15 @@
           "fullName": "actions out of order refuses a rider who left acting on the ride again",
           "status": "passed",
           "title": "refuses a rider who left acting on the ride again",
-          "duration": 339.7337000000002,
+          "duration": 305.02019999999993,
           "failureMessages": [],
           "meta": {},
           "tags": [],
           "benchmarks": []
         }
       ],
-      "startTime": 1793267452311,
-      "endTime": 1793267454797.7336,
+      "startTime": 1793637896540,
+      "endTime": 1793637898730.0203,
       "status": "passed",
       "message": "",
       "name": "apps/web/test/integration/adversarial/replays-and-state.int.test.ts"
@@ -663,12 +663,12 @@
       "assertionResults": [
         {
           "ancestorTitles": [
-            "the lock, an hour before departure (P-06)"
+            "the lock, an hour before departure (FR-RO-06.4, P-06)"
           ],
-          "fullName": "the lock, an hour before departure (P-06) departing in 60.5 minutes: a seat request answers 201",
+          "fullName": "the lock, an hour before departure (FR-RO-06.4, P-06) departing in 60.5 minutes: a seat request answers 201",
           "status": "passed",
           "title": "departing in 60.5 minutes: a seat request answers 201",
-          "duration": 354.3635,
+          "duration": 273.70029999999997,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -676,12 +676,12 @@
         },
         {
           "ancestorTitles": [
-            "the lock, an hour before departure (P-06)"
+            "the lock, an hour before departure (FR-RO-06.4, P-06)"
           ],
-          "fullName": "the lock, an hour before departure (P-06) departing in 59.5 minutes: a seat request answers 409",
+          "fullName": "the lock, an hour before departure (FR-RO-06.4, P-06) departing in 59.5 minutes: a seat request answers 409",
           "status": "passed",
           "title": "departing in 59.5 minutes: a seat request answers 409",
-          "duration": 238.27869999999996,
+          "duration": 240.55089999999996,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -689,12 +689,12 @@
         },
         {
           "ancestorTitles": [
-            "the lock, an hour before departure (P-06)"
+            "the lock, an hour before departure (FR-RO-06.4, P-06)"
           ],
-          "fullName": "the lock, an hour before departure (P-06) drops a ride from search results at the same minute",
+          "fullName": "the lock, an hour before departure (FR-RO-06.4, P-06) drops a ride from search results at the same minute",
           "status": "passed",
           "title": "drops a ride from search results at the same minute",
-          "duration": 266.1341,
+          "duration": 262.0427000000001,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -702,12 +702,12 @@
         },
         {
           "ancestorTitles": [
-            "the no-show grace period, five minutes after the agreed pickup (P-19)"
+            "the no-show grace period, five minutes after the agreed pickup (FR-RO-10.1, P-19)"
           ],
-          "fullName": "the no-show grace period, five minutes after the agreed pickup (P-19) 4.9 minutes after pickup: marking a no-show answers 409",
+          "fullName": "the no-show grace period, five minutes after the agreed pickup (FR-RO-10.1, P-19) 4.9 minutes after pickup: marking a no-show answers 409",
           "status": "passed",
           "title": "4.9 minutes after pickup: marking a no-show answers 409",
-          "duration": 317.80770000000007,
+          "duration": 297.41150000000016,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -715,12 +715,12 @@
         },
         {
           "ancestorTitles": [
-            "the no-show grace period, five minutes after the agreed pickup (P-19)"
+            "the no-show grace period, five minutes after the agreed pickup (FR-RO-10.1, P-19)"
           ],
-          "fullName": "the no-show grace period, five minutes after the agreed pickup (P-19) 5.1 minutes after pickup: marking a no-show answers 200",
+          "fullName": "the no-show grace period, five minutes after the agreed pickup (FR-RO-10.1, P-19) 5.1 minutes after pickup: marking a no-show answers 200",
           "status": "passed",
           "title": "5.1 minutes after pickup: marking a no-show answers 200",
-          "duration": 436.2459000000001,
+          "duration": 310.7892999999999,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -733,7 +733,7 @@
           "fullName": "the complaint window, seven days after completion (FR-RD-13.1) 7 days less a minute after completion: a complaint answers 10079",
           "status": "passed",
           "title": "7 days less a minute after completion: a complaint answers 10079",
-          "duration": 360.17509999999993,
+          "duration": 338.7608,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -746,7 +746,7 @@
           "fullName": "the complaint window, seven days after completion (FR-RD-13.1) 7 days and a minute after completion: a complaint answers 10081",
           "status": "passed",
           "title": "7 days and a minute after completion: a complaint answers 10081",
-          "duration": 358.75149999999985,
+          "duration": 330.4967999999999,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -754,12 +754,12 @@
         },
         {
           "ancestorTitles": [
-            "the rating window, 72 hours after completion (P-16)"
+            "the rating window, 72 hours after completion (FR-RD-12.1, P-16)"
           ],
-          "fullName": "the rating window, 72 hours after completion (P-16) 72 hours less a minute after completion: rating answers 4319",
+          "fullName": "the rating window, 72 hours after completion (FR-RD-12.1, P-16) 72 hours less a minute after completion: rating answers 4319",
           "status": "passed",
           "title": "72 hours less a minute after completion: rating answers 4319",
-          "duration": 336.9859999999999,
+          "duration": 317.96600000000035,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -767,12 +767,12 @@
         },
         {
           "ancestorTitles": [
-            "the rating window, 72 hours after completion (P-16)"
+            "the rating window, 72 hours after completion (FR-RD-12.1, P-16)"
           ],
-          "fullName": "the rating window, 72 hours after completion (P-16) 72 hours and a minute after completion: rating answers 4321",
+          "fullName": "the rating window, 72 hours after completion (FR-RD-12.1, P-16) 72 hours and a minute after completion: rating answers 4321",
           "status": "passed",
           "title": "72 hours and a minute after completion: rating answers 4321",
-          "duration": 489.4155999999998,
+          "duration": 307.8290000000002,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -780,12 +780,12 @@
         },
         {
           "ancestorTitles": [
-            "the end of the departure window"
+            "the end of the departure window (FR-RO-04.5)"
           ],
-          "fullName": "the end of the departure window 59 minutes into a one-hour window: cancelling answers 200",
+          "fullName": "the end of the departure window (FR-RO-04.5) 59 minutes into a one-hour window: cancelling answers 200",
           "status": "passed",
           "title": "59 minutes into a one-hour window: cancelling answers 200",
-          "duration": 265.31110000000035,
+          "duration": 241.13799999999992,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -793,20 +793,20 @@
         },
         {
           "ancestorTitles": [
-            "the end of the departure window"
+            "the end of the departure window (FR-RO-04.5)"
           ],
-          "fullName": "the end of the departure window 61 minutes into a one-hour window: cancelling answers 409",
+          "fullName": "the end of the departure window (FR-RO-04.5) 61 minutes into a one-hour window: cancelling answers 409",
           "status": "passed",
           "title": "61 minutes into a one-hour window: cancelling answers 409",
-          "duration": 280.43600000000015,
+          "duration": 215.33249999999998,
           "failureMessages": [],
           "meta": {},
           "tags": [],
           "benchmarks": []
         }
       ],
-      "startTime": 1793267448335,
-      "endTime": 1793267452040.436,
+      "startTime": 1793637878634,
+      "endTime": 1793637881771.3325,
       "status": "passed",
       "message": "",
       "name": "apps/web/test/integration/adversarial/time-boundaries.int.test.ts"
@@ -815,12 +815,12 @@
       "assertionResults": [
         {
           "ancestorTitles": [
-            "an idempotency key sent again with other details"
+            "an idempotency key sent again with other details (FR-RD-06.9)"
           ],
-          "fullName": "an idempotency key sent again with other details is refused for another ride, and creates nothing there",
+          "fullName": "an idempotency key sent again with other details (FR-RD-06.9) is refused for another ride, and creates nothing there",
           "status": "passed",
           "title": "is refused for another ride, and creates nothing there",
-          "duration": 351.76989999999995,
+          "duration": 340.9891,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -828,12 +828,12 @@
         },
         {
           "ancestorTitles": [
-            "an idempotency key sent again with other details"
+            "an idempotency key sent again with other details (FR-RD-06.9)"
           ],
-          "fullName": "an idempotency key sent again with other details is refused for another pickup point, keeping the first request as it was",
+          "fullName": "an idempotency key sent again with other details (FR-RD-06.9) is refused for another pickup point, keeping the first request as it was",
           "status": "passed",
           "title": "is refused for another pickup point, keeping the first request as it was",
-          "duration": 310.8778,
+          "duration": 265.70730000000003,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -841,12 +841,12 @@
         },
         {
           "ancestorTitles": [
-            "an idempotency key sent again with other details"
+            "an idempotency key sent again with other details (FR-RD-06.9)"
           ],
-          "fullName": "an idempotency key sent again with other details is claimed once when its first uses for different rides arrive at the same moment",
+          "fullName": "an idempotency key sent again with other details (FR-RD-06.9) is claimed once when its first uses for different rides arrive at the same moment",
           "status": "passed",
           "title": "is claimed once when its first uses for different rides arrive at the same moment",
-          "duration": 666.9010000000001,
+          "duration": 613.8006999999999,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -854,12 +854,12 @@
         },
         {
           "ancestorTitles": [
-            "an idempotency key sent again with other details"
+            "an idempotency key sent again with other details (FR-RD-06.9)"
           ],
-          "fullName": "an idempotency key sent again with other details cannot be claimed twice even past the application, by the key table itself",
+          "fullName": "an idempotency key sent again with other details (FR-RD-06.9) cannot be claimed twice even past the application, by the key table itself",
           "status": "passed",
           "title": "cannot be claimed twice even past the application, by the key table itself",
-          "duration": 331.2260000000001,
+          "duration": 231.85489999999982,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -867,20 +867,20 @@
         },
         {
           "ancestorTitles": [
-            "an idempotency key sent again with other details"
+            "an idempotency key sent again with other details (FR-RD-06.9)"
           ],
-          "fullName": "an idempotency key sent again with other details still replays the same request sent again unchanged",
+          "fullName": "an idempotency key sent again with other details (FR-RD-06.9) still replays the same request sent again unchanged",
           "status": "passed",
           "title": "still replays the same request sent again unchanged",
-          "duration": 316.89859999999976,
+          "duration": 247.70590000000016,
           "failureMessages": [],
           "meta": {},
           "tags": [],
           "benchmarks": []
         }
       ],
-      "startTime": 1793267471827,
-      "endTime": 1793267473804.8987,
+      "startTime": 1793637901174,
+      "endTime": 1793637902874.7058,
       "status": "passed",
       "message": "",
       "name": "apps/web/test/integration/bugs/idempotency-key-reuse.int.test.ts"
@@ -894,7 +894,7 @@
           "fullName": "timestamp parameters compared with an interval lets a rider with no unpaid shares request a seat",
           "status": "passed",
           "title": "lets a rider with no unpaid shares request a seat",
-          "duration": 280.98879999999997,
+          "duration": 283.5208,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -904,10 +904,10 @@
           "ancestorTitles": [
             "timestamp parameters compared with an interval"
           ],
-          "fullName": "timestamp parameters compared with an interval still refuses a rider whose share has been due for more than seven days",
+          "fullName": "timestamp parameters compared with an interval still refuses a rider whose share has been due for more than seven days (FR-RD-11.5)",
           "status": "passed",
-          "title": "still refuses a rider whose share has been due for more than seven days",
-          "duration": 230.0235,
+          "title": "still refuses a rider whose share has been due for more than seven days (FR-RD-11.5)",
+          "duration": 240.7504,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -917,10 +917,10 @@
           "ancestorTitles": [
             "timestamp parameters compared with an interval"
           ],
-          "fullName": "timestamp parameters compared with an interval allows a share that has been due for less than seven days",
+          "fullName": "timestamp parameters compared with an interval allows a share that has been due for less than seven days (FR-RD-11.5)",
           "status": "passed",
-          "title": "allows a share that has been due for less than seven days",
-          "duration": 288.8862999999999,
+          "title": "allows a share that has been due for less than seven days (FR-RD-11.5)",
+          "duration": 243.69050000000004,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -930,18 +930,18 @@
           "ancestorTitles": [
             "timestamp parameters compared with an interval"
           ],
-          "fullName": "timestamp parameters compared with an interval sends each payment reminder once, 24 hours and then 72 hours after completion",
+          "fullName": "timestamp parameters compared with an interval sends each payment reminder once, 24 hours and then 72 hours after completion (FR-RD-11.4)",
           "status": "passed",
-          "title": "sends each payment reminder once, 24 hours and then 72 hours after completion",
-          "duration": 239.99700000000007,
+          "title": "sends each payment reminder once, 24 hours and then 72 hours after completion (FR-RD-11.4)",
+          "duration": 219.04110000000003,
           "failureMessages": [],
           "meta": {},
           "tags": [],
           "benchmarks": []
         }
       ],
-      "startTime": 1793267475746,
-      "endTime": 1793267476785.997,
+      "startTime": 1793637906790,
+      "endTime": 1793637907777.041,
       "status": "passed",
       "message": "",
       "name": "apps/web/test/integration/bugs/timestamp-parameters.int.test.ts"
@@ -952,10 +952,10 @@
           "ancestorTitles": [
             "requesting a seat (FR-RD-06)"
           ],
-          "fullName": "requesting a seat (FR-RD-06) records a pending request with its snapshot, history and idempotency key, and tells the owner",
+          "fullName": "requesting a seat (FR-RD-06) records a pending request with its snapshot, history and idempotency key, and tells the owner (FR-RD-06.1, FR-RO-05.5)",
           "status": "passed",
-          "title": "records a pending request with its snapshot, history and idempotency key, and tells the owner",
-          "duration": 318.75410000000005,
+          "title": "records a pending request with its snapshot, history and idempotency key, and tells the owner (FR-RD-06.1, FR-RO-05.5)",
+          "duration": 281.2893,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -968,7 +968,7 @@
           "fullName": "requesting a seat (FR-RD-06) answers a retried request with the same idempotency key once, without a second request (FR-RD-06.9)",
           "status": "passed",
           "title": "answers a retried request with the same idempotency key once, without a second request (FR-RD-06.9)",
-          "duration": 346.7395,
+          "duration": 301.3142,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -978,10 +978,10 @@
           "ancestorTitles": [
             "requesting a seat (FR-RD-06)"
           ],
-          "fullName": "requesting a seat (FR-RD-06) refuses the owner, an unknown pickup point and a fourth waiting request",
+          "fullName": "requesting a seat (FR-RD-06) refuses the owner, an unknown pickup point and a fourth waiting request (FR-RD-06.2)",
           "status": "passed",
-          "title": "refuses the owner, an unknown pickup point and a fourth waiting request",
-          "duration": 537.9173000000001,
+          "title": "refuses the owner, an unknown pickup point and a fourth waiting request (FR-RD-06.2)",
+          "duration": 364.15869999999995,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -991,10 +991,10 @@
           "ancestorTitles": [
             "requesting a seat (FR-RD-06)"
           ],
-          "fullName": "requesting a seat (FR-RD-06) shows the owner the waiting requests and the rider their own history",
+          "fullName": "requesting a seat (FR-RD-06) shows the owner the waiting requests and the rider their own history (FR-RO-05.1, FR-RD-06.10)",
           "status": "passed",
-          "title": "shows the owner the waiting requests and the rider their own history",
-          "duration": 338.1482000000001,
+          "title": "shows the owner the waiting requests and the rider their own history (FR-RO-05.1, FR-RD-06.10)",
+          "duration": 257.49080000000004,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1004,10 +1004,10 @@
           "ancestorTitles": [
             "the owner deciding (FR-RO-05)"
           ],
-          "fullName": "the owner deciding (FR-RO-05) accepting gives the rider a seat, updates everyone’s share and records why",
+          "fullName": "the owner deciding (FR-RO-05) accepting gives the rider a seat, updates everyone’s share and records why (FR-RO-05.2, FR-RO-05.3, FR-RO-07.2)",
           "status": "passed",
-          "title": "accepting gives the rider a seat, updates everyone’s share and records why",
-          "duration": 288.49,
+          "title": "accepting gives the rider a seat, updates everyone’s share and records why (FR-RO-05.2, FR-RO-05.3, FR-RO-07.2)",
+          "duration": 276.54319999999984,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1017,10 +1017,10 @@
           "ancestorTitles": [
             "the owner deciding (FR-RO-05)"
           ],
-          "fullName": "the owner deciding (FR-RO-05) rejecting leaves the seat free and tells the rider",
+          "fullName": "the owner deciding (FR-RO-05) rejecting leaves the seat free and tells the rider (FR-RO-05.4, FR-RD-06.4)",
           "status": "passed",
-          "title": "rejecting leaves the seat free and tells the rider",
-          "duration": 303.72440000000006,
+          "title": "rejecting leaves the seat free and tells the rider (FR-RO-05.4, FR-RD-06.4)",
+          "duration": 273.4537,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1030,10 +1030,10 @@
           "ancestorTitles": [
             "the owner deciding (FR-RO-05)"
           ],
-          "fullName": "the owner deciding (FR-RO-05) lets only the owner decide, and only the rider withdraw",
+          "fullName": "the owner deciding (FR-RO-05) lets only the owner decide, and only the rider withdraw (NFR-RO-SEC-01)",
           "status": "passed",
-          "title": "lets only the owner decide, and only the rider withdraw",
-          "duration": 465.40920000000006,
+          "title": "lets only the owner decide, and only the rider withdraw (NFR-RO-SEC-01)",
+          "duration": 284.47500000000014,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1043,10 +1043,10 @@
           "ancestorTitles": [
             "the rider changing their mind (FR-RD-06.10, FR-RD-07)"
           ],
-          "fullName": "the rider changing their mind (FR-RD-06.10, FR-RD-07) withdraws a waiting request once, and the owner is told",
+          "fullName": "the rider changing their mind (FR-RD-06.10, FR-RD-07) withdraws a waiting request once, and the owner is told (FR-RD-07.1)",
           "status": "passed",
-          "title": "withdraws a waiting request once, and the owner is told",
-          "duration": 329.67520000000013,
+          "title": "withdraws a waiting request once, and the owner is told (FR-RD-07.1)",
+          "duration": 262.5437000000002,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1056,18 +1056,18 @@
           "ancestorTitles": [
             "the rider changing their mind (FR-RD-06.10, FR-RD-07)"
           ],
-          "fullName": "the rider changing their mind (FR-RD-06.10, FR-RD-07) leaves before lock with nothing owed, freeing the seat for others",
+          "fullName": "the rider changing their mind (FR-RD-06.10, FR-RD-07) leaves before lock with nothing owed, freeing the seat for others (FR-RD-07.2)",
           "status": "passed",
-          "title": "leaves before lock with nothing owed, freeing the seat for others",
-          "duration": 351.8465000000001,
+          "title": "leaves before lock with nothing owed, freeing the seat for others (FR-RD-07.2)",
+          "duration": 319.8366000000001,
           "failureMessages": [],
           "meta": {},
           "tags": [],
           "benchmarks": []
         }
       ],
-      "startTime": 1793267430345,
-      "endTime": 1793267433626.8464,
+      "startTime": 1793637885348,
+      "endTime": 1793637887969.8367,
       "status": "passed",
       "message": "",
       "name": "apps/web/test/integration/rides/join-requests.int.test.ts"
@@ -1076,12 +1076,12 @@
       "assertionResults": [
         {
           "ancestorTitles": [
-            "cancelling a ride (FR-RO-04.2)"
+            "cancelling a ride (FR-RO-04.4)"
           ],
-          "fullName": "cancelling a ride (FR-RO-04.2) cancels every request and seat claim and tells each rider they owe nothing",
+          "fullName": "cancelling a ride (FR-RO-04.4) cancels every request and seat claim and tells each rider they owe nothing (FR-RD-06.7, FR-RD-06.11)",
           "status": "passed",
-          "title": "cancels every request and seat claim and tells each rider they owe nothing",
-          "duration": 467.7457,
+          "title": "cancels every request and seat claim and tells each rider they owe nothing (FR-RD-06.7, FR-RD-06.11)",
+          "duration": 361.2437,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1089,25 +1089,12 @@
         },
         {
           "ancestorTitles": [
-            "cancelling a ride (FR-RO-04.2)"
+            "cancelling a ride (FR-RO-04.4)"
           ],
-          "fullName": "cancelling a ride (FR-RO-04.2) refuses anyone but the owner, and a ride whose window is over",
+          "fullName": "cancelling a ride (FR-RO-04.4) refuses anyone but the owner, and a ride whose window is over (FR-RO-04.5, NFR-RO-SEC-01)",
           "status": "passed",
-          "title": "refuses anyone but the owner, and a ride whose window is over",
-          "duration": 308.26880000000006,
-          "failureMessages": [],
-          "meta": {},
-          "tags": [],
-          "benchmarks": []
-        },
-        {
-          "ancestorTitles": [
-            "editing a ride (FR-RO-04.1)"
-          ],
-          "fullName": "editing a ride (FR-RO-04.1) asks the owner to confirm a change that affects accepted riders, then tells them",
-          "status": "passed",
-          "title": "asks the owner to confirm a change that affects accepted riders, then tells them",
-          "duration": 407.6336000000001,
+          "title": "refuses anyone but the owner, and a ride whose window is over (FR-RO-04.5, NFR-RO-SEC-01)",
+          "duration": 302.08119999999997,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1117,10 +1104,23 @@
           "ancestorTitles": [
             "editing a ride (FR-RO-04.1)"
           ],
-          "fullName": "editing a ride (FR-RO-04.1) sends a waiting request back to the rider when the departure moves more than 10 minutes",
+          "fullName": "editing a ride (FR-RO-04.1) asks the owner to confirm a change that affects accepted riders, then tells them (FR-RO-04.2, FR-RO-04.3)",
           "status": "passed",
-          "title": "sends a waiting request back to the rider when the departure moves more than 10 minutes",
-          "duration": 385.58669999999984,
+          "title": "asks the owner to confirm a change that affects accepted riders, then tells them (FR-RO-04.2, FR-RO-04.3)",
+          "duration": 324.2879999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "editing a ride (FR-RO-04.1)"
+          ],
+          "fullName": "editing a ride (FR-RO-04.1) sends a waiting request back to the rider when the departure moves more than 10 minutes (FR-RD-06.5, P-09)",
+          "status": "passed",
+          "title": "sends a waiting request back to the rider when the departure moves more than 10 minutes (FR-RD-06.5, P-09)",
+          "duration": 295.12840000000006,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1133,15 +1133,15 @@
           "fullName": "editing a ride (FR-RO-04.1) refuses edits that break the ride’s rules",
           "status": "passed",
           "title": "refuses edits that break the ride’s rules",
-          "duration": 507.4316000000001,
+          "duration": 380.4417000000001,
           "failureMessages": [],
           "meta": {},
           "tags": [],
           "benchmarks": []
         }
       ],
-      "startTime": 1793267469469,
-      "endTime": 1793267471546.4316,
+      "startTime": 1793637903135,
+      "endTime": 1793637904798.4417,
       "status": "passed",
       "message": "",
       "name": "apps/web/test/integration/rides/manage-ride.int.test.ts"
@@ -1150,12 +1150,12 @@
       "assertionResults": [
         {
           "ancestorTitles": [
-            "offering a ride (FR-RO-01 to FR-RO-03)"
+            "offering a ride (FR-RO-03)"
           ],
-          "fullName": "offering a ride (FR-RO-01 to FR-RO-03) stores the ride with the vehicle capacity and gives the owner the first seat",
+          "fullName": "offering a ride (FR-RO-03) stores the ride with the vehicle capacity and gives the owner the first seat (FR-RO-03.1, FR-RO-03.3)",
           "status": "passed",
-          "title": "stores the ride with the vehicle capacity and gives the owner the first seat",
-          "duration": 320.8150999999998,
+          "title": "stores the ride with the vehicle capacity and gives the owner the first seat (FR-RO-03.1, FR-RO-03.3)",
+          "duration": 246.2237,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1163,12 +1163,12 @@
         },
         {
           "ancestorTitles": [
-            "offering a ride (FR-RO-01 to FR-RO-03)"
+            "offering a ride (FR-RO-03)"
           ],
-          "fullName": "offering a ride (FR-RO-01 to FR-RO-03) refuses an invalid offer field by field and stores nothing",
+          "fullName": "offering a ride (FR-RO-03) refuses an invalid offer field by field and stores nothing (FR-RO-03.2)",
           "status": "passed",
-          "title": "refuses an invalid offer field by field and stores nothing",
-          "duration": 220.04100000000017,
+          "title": "refuses an invalid offer field by field and stores nothing (FR-RO-03.2)",
+          "duration": 208.10970000000003,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1176,25 +1176,12 @@
         },
         {
           "ancestorTitles": [
-            "offering a ride (FR-RO-01 to FR-RO-03)"
+            "offering a ride (FR-RO-03)"
           ],
-          "fullName": "offering a ride (FR-RO-01 to FR-RO-03) refuses a ride that overlaps or departs within two hours of the owner’s other ride",
+          "fullName": "offering a ride (FR-RO-03) refuses a ride that overlaps or departs within two hours of the owner’s other ride (FR-RO-03.2)",
           "status": "passed",
-          "title": "refuses a ride that overlaps or departs within two hours of the owner’s other ride",
-          "duration": 330.5653000000002,
-          "failureMessages": [],
-          "meta": {},
-          "tags": [],
-          "benchmarks": []
-        },
-        {
-          "ancestorTitles": [
-            "searching for a ride (FR-RD-03, FR-RD-08.1)"
-          ],
-          "fullName": "searching for a ride (FR-RD-03, FR-RD-08.1) shows an open ride with its seats and the share a new rider would pay",
-          "status": "passed",
-          "title": "shows an open ride with its seats and the share a new rider would pay",
-          "duration": 220.96830000000045,
+          "title": "refuses a ride that overlaps or departs within two hours of the owner’s other ride (FR-RO-03.2)",
+          "duration": 267.71310000000005,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1204,10 +1191,10 @@
           "ancestorTitles": [
             "searching for a ride (FR-RD-03, FR-RD-08.1)"
           ],
-          "fullName": "searching for a ride (FR-RD-03, FR-RD-08.1) never shows the owner their own ride, nor a rider a ride they are on",
+          "fullName": "searching for a ride (FR-RD-03, FR-RD-08.1) shows an open ride with its seats and the share a new rider would pay (FR-RD-03.1, FR-RD-03.3)",
           "status": "passed",
-          "title": "never shows the owner their own ride, nor a rider a ride they are on",
-          "duration": 391.8207000000002,
+          "title": "shows an open ride with its seats and the share a new rider would pay (FR-RD-03.1, FR-RD-03.3)",
+          "duration": 241.9841,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1217,10 +1204,10 @@
           "ancestorTitles": [
             "searching for a ride (FR-RD-03, FR-RD-08.1)"
           ],
-          "fullName": "searching for a ride (FR-RD-03, FR-RD-08.1) hides rides that are locked, full, or outside the filters",
+          "fullName": "searching for a ride (FR-RD-03, FR-RD-08.1) never shows the owner their own ride, nor a rider a ride they are on (FR-RD-03.2)",
           "status": "passed",
-          "title": "hides rides that are locked, full, or outside the filters",
-          "duration": 692.6700000000001,
+          "title": "never shows the owner their own ride, nor a rider a ride they are on (FR-RD-03.2)",
+          "duration": 293.0530000000001,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1230,18 +1217,31 @@
           "ancestorTitles": [
             "searching for a ride (FR-RD-03, FR-RD-08.1)"
           ],
-          "fullName": "searching for a ride (FR-RD-03, FR-RD-08.1) keeps a ride the viewer has asked to join visible with its request state",
+          "fullName": "searching for a ride (FR-RD-03, FR-RD-08.1) hides rides that are locked, full, or outside the filters (FR-RD-03.2)",
           "status": "passed",
-          "title": "keeps a ride the viewer has asked to join visible with its request state",
-          "duration": 298.8262000000004,
+          "title": "hides rides that are locked, full, or outside the filters (FR-RD-03.2)",
+          "duration": 413.5395000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "searching for a ride (FR-RD-03, FR-RD-08.1)"
+          ],
+          "fullName": "searching for a ride (FR-RD-03, FR-RD-08.1) keeps a ride the viewer has asked to join visible with its request state (FR-RD-03.2)",
+          "status": "passed",
+          "title": "keeps a ride the viewer has asked to join visible with its request state (FR-RD-03.2)",
+          "duration": 243.16879999999992,
           "failureMessages": [],
           "meta": {},
           "tags": [],
           "benchmarks": []
         }
       ],
-      "startTime": 1793267458591,
-      "endTime": 1793267461068.8262,
+      "startTime": 1793637898998,
+      "endTime": 1793637900913.1687,
       "status": "passed",
       "message": "",
       "name": "apps/web/test/integration/rides/offer-and-search.int.test.ts"
@@ -1250,12 +1250,12 @@
       "assertionResults": [
         {
           "ancestorTitles": [
-            "the last seat (FR-RO-05.3, NFR-RD-05)"
+            "the last seat"
           ],
-          "fullName": "the last seat (FR-RO-05.3, NFR-RD-05) refuses a request when the ride is full, and an accept that would overfill it",
+          "fullName": "the last seat refuses a request when the ride is full, and an accept that would overfill it (FR-RD-06.2, FR-RD-06.3, FR-RO-05.2)",
           "status": "passed",
-          "title": "refuses a request when the ride is full, and an accept that would overfill it",
-          "duration": 500.9941,
+          "title": "refuses a request when the ride is full, and an accept that would overfill it (FR-RD-06.2, FR-RD-06.3, FR-RO-05.2)",
+          "duration": 418.1168,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1263,12 +1263,12 @@
         },
         {
           "ancestorTitles": [
-            "the last seat (FR-RO-05.3, NFR-RD-05)"
+            "the last seat"
           ],
-          "fullName": "the last seat (FR-RO-05.3, NFR-RD-05) withdraws a rider’s other request within two hours once they get a seat (P-08)",
+          "fullName": "the last seat withdraws a rider’s other request within two hours once they get a seat (FR-RD-06.8, P-08)",
           "status": "passed",
-          "title": "withdraws a rider’s other request within two hours once they get a seat (P-08)",
-          "duration": 367.31179999999995,
+          "title": "withdraws a rider’s other request within two hours once they get a seat (FR-RD-06.8, P-08)",
+          "duration": 348.08940000000007,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1276,12 +1276,12 @@
         },
         {
           "ancestorTitles": [
-            "locking the ride (FR-RO-07, P-06)"
+            "locking the ride (P-06)"
           ],
-          "fullName": "locking the ride (FR-RO-07, P-06) fixes every share when the owner locks early, owner first, and closes waiting requests",
+          "fullName": "locking the ride (P-06) fixes every share when the owner locks early, owner first, and closes waiting requests (FR-RO-06.2, FR-RD-08.3, FR-RD-06.7)",
           "status": "passed",
-          "title": "fixes every share when the owner locks early, owner first, and closes waiting requests",
-          "duration": 416.6693,
+          "title": "fixes every share when the owner locks early, owner first, and closes waiting requests (FR-RO-06.2, FR-RD-08.3, FR-RD-06.7)",
+          "duration": 404.18450000000007,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1289,12 +1289,12 @@
         },
         {
           "ancestorTitles": [
-            "locking the ride (FR-RO-07, P-06)"
+            "locking the ride (P-06)"
           ],
-          "fullName": "locking the ride (FR-RO-07, P-06) lets only the owner lock",
+          "fullName": "locking the ride (P-06) lets only the owner lock (FR-RO-06.2, NFR-RO-SEC-01)",
           "status": "passed",
-          "title": "lets only the owner lock",
-          "duration": 340.00670000000014,
+          "title": "lets only the owner lock (FR-RO-06.2, NFR-RO-SEC-01)",
+          "duration": 289.23160000000007,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1302,12 +1302,12 @@
         },
         {
           "ancestorTitles": [
-            "locking the ride (FR-RO-07, P-06)"
+            "locking the ride (P-06)"
           ],
-          "fullName": "locking the ride (FR-RO-07, P-06) locks by itself an hour before departure, on the next request",
+          "fullName": "locking the ride (P-06) locks by itself an hour before departure, on the next request (FR-RO-06.3)",
           "status": "passed",
-          "title": "locks by itself an hour before departure, on the next request",
-          "duration": 336.0444000000002,
+          "title": "locks by itself an hour before departure, on the next request (FR-RO-06.3)",
+          "duration": 298.2816,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1315,12 +1315,12 @@
         },
         {
           "ancestorTitles": [
-            "leaving after lock (FR-RD-07.2, P-10)"
+            "leaving after lock (FR-RD-07.3)"
           ],
-          "fullName": "leaving after lock (FR-RD-07.2, P-10) asks the rider to confirm, then keeps their locked share payable",
+          "fullName": "leaving after lock (FR-RD-07.3) asks the rider to confirm, then keeps their locked share payable",
           "status": "passed",
           "title": "asks the rider to confirm, then keeps their locked share payable",
-          "duration": 466.02779999999984,
+          "duration": 304.7921000000001,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1328,20 +1328,20 @@
         },
         {
           "ancestorTitles": [
-            "leaving after lock (FR-RD-07.2, P-10)"
+            "leaving after lock (FR-RD-07.3)"
           ],
-          "fullName": "leaving after lock (FR-RD-07.2, P-10) refuses a malformed confirmation flag",
+          "fullName": "leaving after lock (FR-RD-07.3) refuses a malformed confirmation flag",
           "status": "passed",
           "title": "refuses a malformed confirmation flag",
-          "duration": 380.55800000000045,
+          "duration": 275.4643000000001,
           "failureMessages": [],
           "meta": {},
           "tags": [],
           "benchmarks": []
         }
       ],
-      "startTime": 1793267466352,
-      "endTime": 1793267469159.558,
+      "startTime": 1793637893933,
+      "endTime": 1793637896271.4644,
       "status": "passed",
       "message": "",
       "name": "apps/web/test/integration/rides/seats-and-lock.int.test.ts"
@@ -1352,10 +1352,10 @@
           "ancestorTitles": [
             "raising an SOS"
           ],
-          "fullName": "raising an SOS creates one alert per person, however often they tap, and tells nobody in the pool",
+          "fullName": "raising an SOS creates one alert per person, however often they tap, and tells nobody in the pool (FR-RD-15.2, FR-RD-15.4, FR-RO-13.2)",
           "status": "passed",
-          "title": "creates one alert per person, however often they tap, and tells nobody in the pool",
-          "duration": 488.20540000000005,
+          "title": "creates one alert per person, however often they tap, and tells nobody in the pool (FR-RD-15.2, FR-RD-15.4, FR-RO-13.2)",
+          "duration": 407.00640000000004,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1365,10 +1365,10 @@
           "ancestorTitles": [
             "raising an SOS"
           ],
-          "fullName": "raising an SOS keeps the mobile number and a snapshot of the trip for the admins",
+          "fullName": "raising an SOS keeps the mobile number and a snapshot of the trip for the admins (FR-RD-15.2, FR-RD-02.7)",
           "status": "passed",
-          "title": "keeps the mobile number and a snapshot of the trip for the admins",
-          "duration": 586.9013,
+          "title": "keeps the mobile number and a snapshot of the trip for the admins (FR-RD-15.2, FR-RD-02.7)",
+          "duration": 361.8216,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1378,10 +1378,10 @@
           "ancestorTitles": [
             "raising an SOS"
           ],
-          "fullName": "raising an SOS is only for people on the ride while the trip is under way",
+          "fullName": "raising an SOS is only for people on the ride while the trip is under way (FR-RD-15.1)",
           "status": "passed",
-          "title": "is only for people on the ride while the trip is under way",
-          "duration": 481.6546000000003,
+          "title": "is only for people on the ride while the trip is under way (FR-RD-15.1)",
+          "duration": 312.05330000000004,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1391,10 +1391,10 @@
           "ancestorTitles": [
             "raising an SOS"
           ],
-          "fullName": "raising an SOS lets only the person who raised it add a location or call it a false alarm",
+          "fullName": "raising an SOS lets only the person who raised it add a location or call it a false alarm (FR-RD-15.5)",
           "status": "passed",
-          "title": "lets only the person who raised it add a location or call it a false alarm",
-          "duration": 603.4076,
+          "title": "lets only the person who raised it add a location or call it a false alarm (FR-RD-15.5)",
+          "duration": 381.9439,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1407,7 +1407,7 @@
           "fullName": "admins handling an SOS (CS455-65) shows the alert until acknowledged, then closes it with a note, auditing each step",
           "status": "passed",
           "title": "shows the alert until acknowledged, then closes it with a note, auditing each step",
-          "duration": 570.1297,
+          "duration": 422.43039999999996,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1420,7 +1420,7 @@
           "fullName": "admins handling an SOS (CS455-65) keeps students out of the incident routes",
           "status": "passed",
           "title": "keeps students out of the incident routes",
-          "duration": 411.47779999999966,
+          "duration": 353.6093000000001,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1433,15 +1433,15 @@
           "fullName": "admins handling an SOS (CS455-65) keeps the original alert unchangeable in the database",
           "status": "passed",
           "title": "keeps the original alert unchangeable in the database",
-          "duration": 621.1161000000002,
+          "duration": 361.8366000000001,
           "failureMessages": [],
           "meta": {},
           "tags": [],
           "benchmarks": []
         }
       ],
-      "startTime": 1793267462303,
-      "endTime": 1793267466067.1162,
+      "startTime": 1793637888331,
+      "endTime": 1793637890932.8367,
       "status": "passed",
       "message": "",
       "name": "apps/web/test/integration/trip/sos.int.test.ts"
@@ -1452,10 +1452,10 @@
           "ancestorTitles": [
             "starting pickup"
           ],
-          "fullName": "starting pickup waits for the lock, and only the owner can start it",
+          "fullName": "starting pickup waits for the lock, and only the owner can start it (FR-RO-09.1, NFR-RO-SEC-01)",
           "status": "passed",
-          "title": "waits for the lock, and only the owner can start it",
-          "duration": 539.2828,
+          "title": "waits for the lock, and only the owner can start it (FR-RO-09.1, NFR-RO-SEC-01)",
+          "duration": 342.8688,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1465,10 +1465,10 @@
           "ancestorTitles": [
             "starting pickup"
           ],
-          "fullName": "starting pickup cannot skip pickup, and cannot start once the departure window is over",
+          "fullName": "starting pickup cannot skip pickup, and cannot start once the departure window is over (FR-RO-09.1)",
           "status": "passed",
-          "title": "cannot skip pickup, and cannot start once the departure window is over",
-          "duration": 486.91730000000007,
+          "title": "cannot skip pickup, and cannot start once the departure window is over (FR-RO-09.1)",
+          "duration": 358.977,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1481,7 +1481,7 @@
           "fullName": "starting pickup rejects an unknown step",
           "status": "passed",
           "title": "rejects an unknown step",
-          "duration": 333.34760000000006,
+          "duration": 283.1104,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1491,10 +1491,10 @@
           "ancestorTitles": [
             "during pickup"
           ],
-          "fullName": "during pickup lets a rider check in and the owner mark them arrived or undo it",
+          "fullName": "during pickup lets a rider check in and the owner mark them arrived or undo it (FR-RD-10.4, FR-RO-09.3)",
           "status": "passed",
-          "title": "lets a rider check in and the owner mark them arrived or undo it",
-          "duration": 571.8388,
+          "title": "lets a rider check in and the owner mark them arrived or undo it (FR-RD-10.4, FR-RO-09.3)",
+          "duration": 378.3921,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1504,10 +1504,10 @@
           "ancestorTitles": [
             "during pickup"
           ],
-          "fullName": "during pickup refuses a no-show until five minutes after the rider’s pickup time (P-19)",
+          "fullName": "during pickup refuses a no-show until five minutes after the rider’s pickup time (FR-RO-10.1, P-19)",
           "status": "passed",
-          "title": "refuses a no-show until five minutes after the rider’s pickup time (P-19)",
-          "duration": 432.1833999999999,
+          "title": "refuses a no-show until five minutes after the rider’s pickup time (FR-RO-10.1, P-19)",
+          "duration": 291.26240000000007,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1517,10 +1517,10 @@
           "ancestorTitles": [
             "during pickup"
           ],
-          "fullName": "during pickup records a no-show after the grace period: off the ride, owes nothing, told how to dispute",
+          "fullName": "during pickup records a no-show after the grace period: off the ride, owes nothing, told how to dispute (FR-RO-10.2, FR-RO-10.3, FR-RD-10.3)",
           "status": "passed",
-          "title": "records a no-show after the grace period: off the ride, owes nothing, told how to dispute",
-          "duration": 675.1424999999999,
+          "title": "records a no-show after the grace period: off the ride, owes nothing, told how to dispute (FR-RO-10.2, FR-RO-10.3, FR-RD-10.3)",
+          "duration": 383.5227,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1533,7 +1533,7 @@
           "fullName": "the trip and completion (FR-RO-09.4) stores the final pool and shares: the no-show’s share is spread over the others",
           "status": "passed",
           "title": "stores the final pool and shares: the no-show’s share is spread over the others",
-          "duration": 716.0229999999997,
+          "duration": 379.12509999999975,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1546,7 +1546,7 @@
           "fullName": "the trip and completion (FR-RO-09.4) counts unmarked riders as on board when the trip starts",
           "status": "passed",
           "title": "counts unmarked riders as on board when the trip starts",
-          "duration": 440.0957000000003,
+          "duration": 305.7596000000003,
           "failureMessages": [],
           "meta": {},
           "tags": [],
@@ -1556,18 +1556,18 @@
           "ancestorTitles": [
             "the trip and completion (FR-RO-09.4)"
           ],
-          "fullName": "the trip and completion (FR-RO-09.4) answers the live trip stamp to people on the ride only",
+          "fullName": "the trip and completion (FR-RO-09.4) answers the live trip stamp to people on the ride only (FR-RD-10.1)",
           "status": "passed",
-          "title": "answers the live trip stamp to people on the ride only",
-          "duration": 599.7213000000002,
+          "title": "answers the live trip stamp to people on the ride only (FR-RD-10.1)",
+          "duration": 296.9526000000001,
           "failureMessages": [],
           "meta": {},
           "tags": [],
           "benchmarks": []
         }
       ],
-      "startTime": 1793267433983,
-      "endTime": 1793267438778.7212,
+      "startTime": 1793637882043,
+      "endTime": 1793637885063.9526,
       "status": "passed",
       "message": "",
       "name": "apps/web/test/integration/trip/trip-flow.int.test.ts"

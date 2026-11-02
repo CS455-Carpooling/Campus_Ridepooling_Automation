@@ -50,7 +50,7 @@ async function auditActions(entityId: string) {
 
 // Core workflow phases 9 and 10 (CS455-112): ratings and complaints (FR-RD-12, FR-RD-13).
 describe('complaints (FR-RD-13)', () => {
-  it('opens on completion, files once per person, and falls back to manual review without Gemini', async () => {
+  it('opens on completion, files once per person, and falls back to manual review without Gemini (FR-RD-13.1, FR-RD-13.2, FR-RD-13.4, SYS-NFR-09)', async () => {
     const { owner, ride, riders, seats } = await completedRide();
 
     const filed = await complain(riders[0], ride.id, {
@@ -84,7 +84,7 @@ describe('complaints (FR-RD-13)', () => {
     expect([again.status, again.body.code]).toEqual([409, 'already_filed']);
   });
 
-  it('refuses before the trip, outsiders, oneself and a too-short description', async () => {
+  it('refuses before the trip, outsiders, oneself and a too-short description (FR-RD-13.1)', async () => {
     const before = await pooledRide({ riders: 1 });
     const [ownerSeat] = await seatsOf(before.ride.id);
     const early = await complain(before.riders[0], before.ride.id, {
@@ -118,7 +118,7 @@ describe('complaints (FR-RD-13)', () => {
     expect(Object.keys(short.body.fields)).toEqual(['description']);
   });
 
-  it('lets a rider marked as a no-show dispute it before the ride is completed', async () => {
+  it('lets a rider marked as a no-show dispute it before the ride is completed (FR-RD-10.3, FR-RD-13.1)', async () => {
     const { owner, ride, riders } = await pooledRide({ riders: 1, startsIn: -20 });
     expect((await tripStep(owner, ride.id, 'pickup_in_progress')).status).toBe(200);
     const [ownerSeat, seat] = await seatsOf(ride.id);
@@ -132,7 +132,7 @@ describe('complaints (FR-RD-13)', () => {
     expect(disputed.status).toBe(201);
   });
 
-  it('is reviewed by an admin with a version check, and every step is audited', async () => {
+  it('is reviewed by an admin with a version check, and every step is audited (OA-FR-18, SYS-NFR-08)', async () => {
     const { ride, riders, seats } = await completedRide();
     const admin = await signedInAdmin();
     const reference = (
@@ -186,7 +186,7 @@ describe('complaints (FR-RD-13)', () => {
 });
 
 describe('ratings (FR-RD-12, FR-RO-12)', () => {
-  it('opens on completion, once per rater, never for oneself', async () => {
+  it('opens on completion, once per rater, never for oneself (FR-RD-12.1, FR-RD-12.2, FR-RO-12.1)', async () => {
     const { owner, ride, riders, seats } = await completedRide();
 
     const rated = await rateRide(riders[0], ride.id, [
@@ -207,7 +207,7 @@ describe('ratings (FR-RD-12, FR-RO-12)', () => {
     expect([outOfRange.status, outOfRange.body.code]).toEqual([400, 'invalid_ratings']);
   });
 
-  it('is closed before completion and never covers a no-show', async () => {
+  it('is closed before completion and never covers a no-show (FR-RD-12.2, FR-RO-12.2)', async () => {
     const { owner, ride, riders } = await pooledRide({ riders: 2, startsIn: -20 });
     const [ownerSeat, missing] = await seatsOf(ride.id);
     const early = await rateRide(riders[1], ride.id, [{ occupantId: ownerSeat.id, score: 5 }]);
@@ -226,7 +226,7 @@ describe('ratings (FR-RD-12, FR-RO-12)', () => {
 });
 
 describe('warnings and suspensions (OA-FR-21 to OA-FR-28)', () => {
-  it('blocks a warned rider until they acknowledge the warning', async () => {
+  it('blocks a warned rider until they acknowledge the warning (OA-FR-21, FR-RD-01.6)', async () => {
     const admin = await signedInAdmin();
     const rider = await signedInStudent();
 
@@ -262,7 +262,7 @@ describe('warnings and suspensions (OA-FR-21 to OA-FR-28)', () => {
     expect(other.status).toBe(404);
   });
 
-  it('stops a suspended rider offering or joining rides until an admin lifts it', async () => {
+  it('stops a suspended rider offering or joining rides until an admin lifts it (OA-FR-23, OA-FR-28, SYS-FR-24, FR-RD-01.5)', async () => {
     const admin = await signedInAdmin();
     const rider = await signedInStudent();
     const otherOwner = await signedInStudent();
@@ -310,7 +310,7 @@ describe('warnings and suspensions (OA-FR-21 to OA-FR-28)', () => {
     ]);
   });
 
-  it('allows enforcement by admins only, in the API and in the database', async () => {
+  it('allows enforcement by admins only, in the API and in the database (SYS-NFR-03)', async () => {
     const student = await signedInStudent();
     const rider = await signedInStudent();
 

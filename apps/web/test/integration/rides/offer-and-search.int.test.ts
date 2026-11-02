@@ -27,8 +27,8 @@ const searchFor = (viewerId: string, extra: Record<string, unknown> = {}) =>
   });
 
 // Core workflow phase 2 (CS455-111): an owner offers a ride and riders find it.
-describe('offering a ride (FR-RO-01 to FR-RO-03)', () => {
-  it('stores the ride with the vehicle capacity and gives the owner the first seat', async () => {
+describe('offering a ride (FR-RO-03)', () => {
+  it('stores the ride with the vehicle capacity and gives the owner the first seat (FR-RO-03.1, FR-RO-03.3)', async () => {
     const owner = await signedInStudent();
     const created = await callRoute(createRide, {
       method: 'POST',
@@ -56,7 +56,7 @@ describe('offering a ride (FR-RO-01 to FR-RO-03)', () => {
     expect(seats.rows).toEqual([{ user_id: owner.id }]);
   });
 
-  it('refuses an invalid offer field by field and stores nothing', async () => {
+  it('refuses an invalid offer field by field and stores nothing (FR-RO-03.2)', async () => {
     const owner = await signedInStudent();
     const refused = await callRoute(createRide, {
       method: 'POST',
@@ -83,7 +83,7 @@ describe('offering a ride (FR-RO-01 to FR-RO-03)', () => {
     expect((await pool.query('SELECT count(*)::int AS n FROM rides')).rows[0].n).toBe(0);
   });
 
-  it('refuses a ride that overlaps or departs within two hours of the owner’s other ride', async () => {
+  it('refuses a ride that overlaps or departs within two hours of the owner’s other ride (FR-RO-03.2)', async () => {
     const owner = await signedInStudent();
     await offerRide(owner, { departureStart: inMinutes(180), departureEnd: inMinutes(240) });
 
@@ -112,7 +112,7 @@ describe('offering a ride (FR-RO-01 to FR-RO-03)', () => {
 });
 
 describe('searching for a ride (FR-RD-03, FR-RD-08.1)', () => {
-  it('shows an open ride with its seats and the share a new rider would pay', async () => {
+  it('shows an open ride with its seats and the share a new rider would pay (FR-RD-03.1, FR-RD-03.3)', async () => {
     const owner = await signedInStudent({ name: 'Owner Asha' });
     const rider = await signedInStudent();
     const ride = await offerRide(owner, { expectedTotalFare: 601 });
@@ -133,7 +133,7 @@ describe('searching for a ride (FR-RD-03, FR-RD-08.1)', () => {
     });
   });
 
-  it('never shows the owner their own ride, nor a rider a ride they are on', async () => {
+  it('never shows the owner their own ride, nor a rider a ride they are on (FR-RD-03.2)', async () => {
     const owner = await signedInStudent();
     const rider = await signedInStudent();
     const ride = await offerRide(owner);
@@ -143,7 +143,7 @@ describe('searching for a ride (FR-RD-03, FR-RD-08.1)', () => {
     expect(await searchFor(rider.id)).toEqual([]);
   });
 
-  it('hides rides that are locked, full, or outside the filters', async () => {
+  it('hides rides that are locked, full, or outside the filters (FR-RD-03.2)', async () => {
     const viewer = await signedInStudent();
     const [nearOwner, fullOwner, autoOwner] = await Promise.all([
       signedInStudent(),
@@ -168,7 +168,7 @@ describe('searching for a ride (FR-RD-03, FR-RD-08.1)', () => {
     expect(await searchFor(viewer.id, { hubId: 'bus-stand' })).toEqual([]);
   });
 
-  it('keeps a ride the viewer has asked to join visible with its request state', async () => {
+  it('keeps a ride the viewer has asked to join visible with its request state (FR-RD-03.2)', async () => {
     const owner = await signedInStudent();
     const rider = await signedInStudent();
     const ride = await offerRide(owner);

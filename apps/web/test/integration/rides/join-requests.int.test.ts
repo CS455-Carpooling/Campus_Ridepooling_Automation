@@ -27,7 +27,7 @@ async function eventsOf(requestId: string) {
 
 // Core workflow phases 3 and 4 (CS455-111): a rider asks for a seat, the owner decides.
 describe('requesting a seat (FR-RD-06)', () => {
-  it('records a pending request with its snapshot, history and idempotency key, and tells the owner', async () => {
+  it('records a pending request with its snapshot, history and idempotency key, and tells the owner (FR-RD-06.1, FR-RO-05.5)', async () => {
     const owner = await signedInStudent();
     const rider = await signedInStudent();
     const ride = await offerRide(owner, { expectedTotalFare: 600 });
@@ -87,7 +87,7 @@ describe('requesting a seat (FR-RD-06)', () => {
     expect(counts.rows[0]).toEqual({ requests: 1, owner_notices: 1 });
   });
 
-  it('refuses the owner, an unknown pickup point and a fourth waiting request', async () => {
+  it('refuses the owner, an unknown pickup point and a fourth waiting request (FR-RD-06.2)', async () => {
     const owner = await signedInStudent();
     const rider = await signedInStudent();
     const ride = await offerRide(owner);
@@ -108,7 +108,7 @@ describe('requesting a seat (FR-RD-06)', () => {
     expect([fourth.status, fourth.body.code]).toEqual([409, 'active_request_limit']);
   });
 
-  it('shows the owner the waiting requests and the rider their own history', async () => {
+  it('shows the owner the waiting requests and the rider their own history (FR-RO-05.1, FR-RD-06.10)', async () => {
     const owner = await signedInStudent();
     const rider = await signedInStudent({ name: 'Rider Ravi' });
     const outsider = await signedInStudent();
@@ -134,7 +134,7 @@ describe('requesting a seat (FR-RD-06)', () => {
 });
 
 describe('the owner deciding (FR-RO-05)', () => {
-  it('accepting gives the rider a seat, updates everyone’s share and records why', async () => {
+  it('accepting gives the rider a seat, updates everyone’s share and records why (FR-RO-05.2, FR-RO-05.3, FR-RO-07.2)', async () => {
     const owner = await signedInStudent();
     const rider = await signedInStudent();
     const ride = await offerRide(owner, { expectedTotalFare: 600 });
@@ -167,7 +167,7 @@ describe('the owner deciding (FR-RO-05)', () => {
     });
   });
 
-  it('rejecting leaves the seat free and tells the rider', async () => {
+  it('rejecting leaves the seat free and tells the rider (FR-RO-05.4, FR-RD-06.4)', async () => {
     const owner = await signedInStudent();
     const rider = await signedInStudent();
     const ride = await offerRide(owner);
@@ -189,7 +189,7 @@ describe('the owner deciding (FR-RO-05)', () => {
     expect([again.status, again.body.code]).toEqual([409, 'request_not_active']);
   });
 
-  it('lets only the owner decide, and only the rider withdraw', async () => {
+  it('lets only the owner decide, and only the rider withdraw (NFR-RO-SEC-01)', async () => {
     const owner = await signedInStudent();
     const rider = await signedInStudent();
     const other = await signedInStudent();
@@ -210,7 +210,7 @@ describe('the owner deciding (FR-RO-05)', () => {
 });
 
 describe('the rider changing their mind (FR-RD-06.10, FR-RD-07)', () => {
-  it('withdraws a waiting request once, and the owner is told', async () => {
+  it('withdraws a waiting request once, and the owner is told (FR-RD-07.1)', async () => {
     const owner = await signedInStudent();
     const rider = await signedInStudent();
     const ride = await offerRide(owner);
@@ -230,7 +230,7 @@ describe('the rider changing their mind (FR-RD-06.10, FR-RD-07)', () => {
     expect([again.status, again.body.code]).toEqual([409, 'request_not_active']);
   });
 
-  it('leaves before lock with nothing owed, freeing the seat for others', async () => {
+  it('leaves before lock with nothing owed, freeing the seat for others (FR-RD-07.2)', async () => {
     const owner = await signedInStudent();
     const rider = await signedInStudent();
     const searcher = await signedInStudent();

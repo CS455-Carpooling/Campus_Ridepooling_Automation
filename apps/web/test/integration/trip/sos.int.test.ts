@@ -40,7 +40,7 @@ async function rideInPickup() {
 
 // Core workflow phase 11 (CS455-112): SOS (FR-RD-15, FR-RO-13.2) and its handling (CS455-65).
 describe('raising an SOS', () => {
-  it('creates one alert per person, however often they tap, and tells nobody in the pool', async () => {
+  it('creates one alert per person, however often they tap, and tells nobody in the pool (FR-RD-15.2, FR-RD-15.4, FR-RO-13.2)', async () => {
     const { owner, ride, riders } = await rideInPickup();
 
     const raised = await sos(riders[0], ride.id);
@@ -68,7 +68,7 @@ describe('raising an SOS', () => {
     }
   });
 
-  it('keeps the mobile number and a snapshot of the trip for the admins', async () => {
+  it('keeps the mobile number and a snapshot of the trip for the admins (FR-RD-15.2, FR-RD-02.7)', async () => {
     const { ride, riders } = await rideInPickup();
     await pool.query(`UPDATE user_profiles SET mobile_number = '9876500001' WHERE user_id = $1`, [
       riders[0].id,
@@ -87,7 +87,7 @@ describe('raising an SOS', () => {
     expect(rows[0].context.occupants).toHaveLength(3);
   });
 
-  it('is only for people on the ride while the trip is under way', async () => {
+  it('is only for people on the ride while the trip is under way (FR-RD-15.1)', async () => {
     const { owner, ride, riders } = await pooledRide({ riders: 1, startsIn: 30 });
     const before = await sos(riders[0], ride.id);
     expect([before.status, before.body.code]).toEqual([409, 'not_active']);
@@ -97,7 +97,7 @@ describe('raising an SOS', () => {
     expect(outsider.status).toBe(404);
   });
 
-  it('lets only the person who raised it add a location or call it a false alarm', async () => {
+  it('lets only the person who raised it add a location or call it a false alarm (FR-RD-15.5)', async () => {
     const { owner, ride, riders } = await rideInPickup();
     const id = (await sos(riders[0], ride.id)).body.incident.id;
 

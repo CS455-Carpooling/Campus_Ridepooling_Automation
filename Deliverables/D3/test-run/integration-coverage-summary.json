@@ -1,28 +1,28 @@
 {
   "total": {
     "lines": {
-      "total": 6101,
-      "covered": 1475,
+      "total": 6112,
+      "covered": 1472,
       "skipped": 0,
-      "pct": 24.17
+      "pct": 24.08
     },
     "statements": {
-      "total": 7031,
-      "covered": 1606,
+      "total": 7042,
+      "covered": 1603,
       "skipped": 0,
-      "pct": 22.84
+      "pct": 22.76
     },
     "functions": {
-      "total": 1380,
+      "total": 1382,
       "covered": 268,
       "skipped": 0,
-      "pct": 19.42
+      "pct": 19.39
     },
     "branches": {
-      "total": 6495,
-      "covered": 1130,
+      "total": 6494,
+      "covered": 1125,
       "skipped": 0,
-      "pct": 17.39
+      "pct": 17.32
     },
     "branchesTrue": {
       "total": 0,
@@ -1385,25 +1385,25 @@
   },
   "apps/web/src/app/api/auth/reset/route.ts": {
     "lines": {
-      "total": 13,
+      "total": 26,
       "covered": 0,
       "skipped": 0,
       "pct": 0
     },
     "functions": {
-      "total": 1,
+      "total": 2,
       "covered": 0,
       "skipped": 0,
       "pct": 0
     },
     "statements": {
-      "total": 15,
+      "total": 29,
       "covered": 0,
       "skipped": 0,
       "pct": 0
     },
     "branches": {
-      "total": 14,
+      "total": 18,
       "covered": 0,
       "skipped": 0,
       "pct": 0
@@ -4817,28 +4817,28 @@
   },
   "apps/web/src/lib/auth.ts": {
     "lines": {
-      "total": 82,
-      "covered": 37,
+      "total": 85,
+      "covered": 40,
       "skipped": 0,
-      "pct": 45.12
+      "pct": 47.05
     },
     "functions": {
-      "total": 26,
-      "covered": 8,
+      "total": 27,
+      "covered": 9,
       "skipped": 0,
-      "pct": 30.76
+      "pct": 33.33
     },
     "statements": {
-      "total": 94,
-      "covered": 41,
+      "total": 97,
+      "covered": 44,
       "skipped": 0,
-      "pct": 43.61
+      "pct": 45.36
     },
     "branches": {
-      "total": 52,
+      "total": 53,
       "covered": 27,
       "skipped": 0,
-      "pct": 51.92
+      "pct": 50.94
     }
   },
   "apps/web/src/lib/complaint-ai-rules.ts": {
@@ -5337,28 +5337,28 @@
   },
   "apps/web/src/lib/payment-settlement.ts": {
     "lines": {
-      "total": 39,
-      "covered": 8,
+      "total": 34,
+      "covered": 2,
       "skipped": 0,
-      "pct": 20.51
+      "pct": 5.88
     },
     "functions": {
       "total": 3,
-      "covered": 2,
+      "covered": 1,
       "skipped": 0,
-      "pct": 66.66
+      "pct": 33.33
     },
     "statements": {
-      "total": 47,
-      "covered": 8,
+      "total": 41,
+      "covered": 2,
       "skipped": 0,
-      "pct": 17.02
+      "pct": 4.87
     },
     "branches": {
-      "total": 58,
-      "covered": 5,
+      "total": 52,
+      "covered": 0,
       "skipped": 0,
-      "pct": 8.62
+      "pct": 0
     }
   },
   "apps/web/src/lib/profile-data.ts": {
