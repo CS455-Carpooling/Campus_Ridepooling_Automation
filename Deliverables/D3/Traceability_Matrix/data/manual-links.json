@@ -1,0 +1,220 @@
+{
+  "about": "Requirement-to-test links made by reading the test, for tests whose names do not cite the requirement ID. Each link is [test file, text the test's full name contains]. make-matrix.mjs refuses to build if a link matches no test in the recorded runs.",
+  "links": {
+    "FR-RD-01.1": [
+      ["apps/web/src/lib/auth.test.ts", "EMAIL_RE accepts only iitk.ac.in addresses"],
+      ["apps/web/src/components/PageShells.test.tsx", "limits email input to IITK addresses"]
+    ],
+    "FR-RD-01.3": [
+      ["apps/web/src/app/api/auth/login/route.test.ts", "returns 403 when the email is not verified yet"]
+    ],
+    "FR-RD-01.4": [
+      ["apps/web/src/lib/auth.test.ts", "getCurrentUser returns null for an unknown or expired session"],
+      ["apps/web/src/lib/auth.test.ts", "destroySession deletes the stored session and the cookie"]
+    ],
+    "FR-RD-02.1": [
+      ["apps/web/src/lib/session.test.ts", "requires first-sign-in profile setup before opening rider pages"],
+      ["apps/web/src/lib/profile-data.test.ts", "hasCompletedProfileSetup requires an active campus pickup point"]
+    ],
+    "FR-RD-02.2": [
+      ["apps/web/src/app/api/profile/route.test.ts", "rejects more than ten tags"]
+    ],
+    "FR-RD-02.3": [
+      ["apps/web/src/app/api/profile/route.test.ts", "saves profile fields and tag visibility atomically"],
+      ["apps/web/src/components/profile/ProfileEditor.test.tsx", "selects new tags as visible by default and saves preferences"]
+    ],
+    "FR-RD-03.1": [
+      ["apps/web/src/lib/ride-search-rules.test.ts", "parseSearchRequest accepts the filters the search form sends"]
+    ],
+    "FR-RD-04.1": [
+      ["apps/web/src/lib/ai/validate-ranking.test.ts", "rejects duplicate IDs and caps results at five"],
+      ["apps/web/src/components/rides/AskAiRecommendations.test.tsx", "shows loading and then trusted ride details with explanations"]
+    ],
+    "FR-RD-04.2": [
+      ["apps/web/src/lib/ai/validate-ranking.test.ts", "accepts only eligible IDs and removes factors whose data is unavailable"],
+      ["apps/web/src/lib/ai/shared-interest-enrichment.test.ts", "omits the factor when any participant has not consented"]
+    ],
+    "FR-RD-04.3": [
+      ["apps/web/src/lib/ai/validate-ranking.test.ts", "accepts only eligible IDs and removes factors whose data is unavailable"],
+      ["apps/web/src/lib/ai/recommendation-pipeline.test.ts", "falls back when the model returns only ineligible IDs"]
+    ],
+    "FR-RD-04.5": [
+      ["apps/web/src/lib/ai/fallback-ranking.test.ts", "ranks overlapping windows ahead of a cheaper but distant window"],
+      ["apps/web/src/lib/ai/fallback-ranking.test.ts", "uses estimated fare share to break equal departure-distance ties"],
+      ["apps/web/src/lib/ai/recommendation-pipeline.test.ts", "returns current trusted ride details if the model fails"]
+    ],
+    "FR-RD-06.6": [
+      ["apps/web/src/lib/join-requests.test.ts", "reconfirms the latest terms and changes the request back to pending"],
+      ["apps/web/src/lib/join-requests.test.ts", "allows a rider to decline changed terms"]
+    ],
+    "FR-RD-09.1": [
+      ["apps/web/src/lib/ride-chat.test.ts", "opens once the ride locks and closes after completion"]
+    ],
+    "FR-RD-09.2": [
+      ["apps/web/src/lib/ride-chat-realtime.test.ts", "delivers to connected members within the one-second target"]
+    ],
+    "FR-RD-09.3": [
+      ["apps/web/src/lib/ride-chat.test.ts", "loads the pool chat only for current members"]
+    ],
+    "FR-RD-09.4": [
+      ["apps/web/src/lib/ride-chat.test.ts", "stores a valid message, rejects oversized text and rate-limited posts"]
+    ],
+    "FR-RD-09.7": [
+      ["apps/web/src/components/rides/RideChat.test.tsx", "sends normal and one-tap messages live"]
+    ],
+    "FR-RD-11.1": [
+      ["apps/web/test/integration/trip/trip-flow.int.test.ts", "stores the final pool and shares"],
+      ["apps/web/src/lib/payment-settlement.test.ts", "does not create a payable share for a no-show seat"]
+    ],
+    "FR-RD-11.2": [
+      ["apps/web/src/lib/payment-settlement.test.ts", "lets only the rider mark their own Due share Paid and notifies the owner"],
+      ["apps/web/src/lib/payment-rules.test.ts", "accepts cash/UPI and a trimmed optional reference up to 50 characters"],
+      ["apps/web/src/components/rides/SettlementPanel.test.tsx", "lets a rider mark their own external payment paid"]
+    ],
+    "FR-RD-11.3": [
+      ["apps/web/src/lib/payment-settlement.test.ts", "opens an admin-reviewable Payment complaint and notifies the rider on dispute"],
+      ["apps/web/src/components/rides/SettlementPanel.test.tsx", "shows payment details and confirm/dispute controls only to the owner"]
+    ],
+    "FR-RD-11.5": [
+      ["apps/web/src/lib/join-requests.test.ts", "blocks a new request when a rider has a Due share older than seven days"]
+    ],
+    "FR-RD-14.1": [
+      ["apps/web/src/lib/join-requests.test.ts", "rejects a waiting request and notifies its rider"],
+      ["apps/web/src/lib/join-requests.test.ts", "expires waiting requests, and notifies the pool"],
+      ["apps/web/src/lib/notification-realtime.test.ts", "re-reads the persisted row and delivers only to that row recipient"]
+    ],
+    "FR-RD-14.2": [
+      ["apps/web/src/components/notifications/NotificationsCentre.test.tsx", "shows notification content, timestamp, unread state and a valid ride link"]
+    ],
+    "FR-RD-15.3": [
+      ["apps/web/src/components/rides/SosPanel.test.tsx", "with the emergency numbers and the no-dispatch note already on screen"]
+    ],
+    "FR-RD-16.4": [
+      ["apps/web/src/app/api/profile/export/route.test.ts", "downloads only the signed-in user account, profile and trip data as JSON"]
+    ],
+    "AI-RD-01": [
+      ["apps/web/src/lib/ai/chatbot.test.ts", "declines unrelated homework or academic questions"]
+    ],
+    "AI-RD-06": [
+      ["apps/web/src/lib/ai/validate-ranking.test.ts", "accepts only eligible IDs and removes factors whose data is unavailable"],
+      ["apps/web/src/lib/ai/recommendation-pipeline.test.ts", "falls back when the model returns only ineligible IDs"]
+    ],
+    "AI-RD-07": [
+      ["apps/web/src/lib/ai/validate-ranking.test.ts", "returns an empty ranking for malformed model output"],
+      ["apps/web/src/lib/ai/chatbot.test.ts", "retries once when Gemini returns a filter outside"]
+    ],
+    "AI-RD-08": [
+      ["apps/web/src/app/api/chatbot/route.test.ts", "enforces 20 requests/hour per rider limit"]
+    ],
+    "AI-RD-13": [
+      ["apps/web/src/lib/ai/recommendation-pipeline.test.ts", "returns current trusted ride details if the model fails"],
+      ["apps/web/src/app/api/rides/recommendations/route.test.ts", "returns a safe error when the service fails"],
+      ["apps/web/src/lib/ai/chatbot.test.ts", "informs the rider and links to manual search when AI service is unavailable"]
+    ],
+    "FR-RO-02.1": [
+      ["apps/web/src/app/api/profile/route.test.ts", "saves profile fields and tag visibility atomically"],
+      ["apps/web/src/components/profile/ProfileEditor.test.tsx", "selects new tags as visible by default and saves preferences"]
+    ],
+    "FR-RO-06.1": [
+      ["apps/web/src/lib/ride-view.test.ts", "gives capacity, people on board, free seats and the total fare"],
+      ["apps/web/src/components/rides/RideDetails.test.tsx", "shows capacity, seats taken and free, and the total fare"]
+    ],
+    "FR-RO-07.1": [
+      ["apps/web/src/components/rides/RideDetails.test.tsx", "lists everyone with their role, campus place and share, owner first"],
+      ["apps/web/src/components/rides/RideDetails.test.tsx", "shows capacity, seats taken and free, and the total fare"]
+    ],
+    "FR-RO-07.3": [
+      ["apps/web/src/lib/ride-view.test.ts", "splits the fare owner first, then riders in the order they joined"],
+      ["apps/web/src/components/landing/FareCalculator.test.tsx", "names who pays the extra rupee"]
+    ],
+    "FR-RO-08.1": [
+      ["apps/web/src/lib/ride-chat.test.ts", "opens once the ride locks and closes after completion"],
+      ["apps/web/src/lib/ride-chat.test.ts", "loads the pool chat only for current members"]
+    ],
+    "FR-RO-08.2": [
+      ["apps/web/src/lib/ride-chat.test.ts", "loads the pool chat only for current members"]
+    ],
+    "FR-RO-11.1": [
+      ["apps/web/src/components/rides/SettlementPanel.test.tsx", "shows payment details and confirm/dispute controls only to the owner"]
+    ],
+    "FR-RO-11.2": [
+      ["apps/web/src/lib/payment-settlement.test.ts", "refuses non-owner decisions before exposing settlement state"],
+      ["apps/web/src/components/rides/SettlementPanel.test.tsx", "shows payment details and confirm/dispute controls only to the owner"]
+    ],
+    "FR-RO-11.3": [
+      ["apps/web/src/lib/payment-settlement.test.ts", "does not create a payable share for a no-show seat"],
+      ["apps/web/src/components/rides/SettlementPanel.test.tsx", "does not offer a payment action to a no-show"]
+    ],
+    "FR-RO-11.4": [
+      ["apps/web/test/integration/bugs/timestamp-parameters.int.test.ts", "sends each payment reminder once, 24 hours and then 72 hours after completion"],
+      ["apps/web/src/app/api/cron/payment-reminders/route.test.ts", "runs transactionally with the configured bearer secret"]
+    ],
+    "FR-RO-14.1": [
+      ["apps/web/src/lib/join-requests.test.ts", "creates an idempotent pending request, event, and owner notification in the transaction"],
+      ["apps/web/src/lib/payment-settlement.test.ts", "lets only the rider mark their own Due share Paid and notifies the owner"]
+    ],
+    "FR-RO-14.2": [
+      ["apps/web/src/lib/join-requests.test.ts", "rejects a waiting request and notifies its rider"],
+      ["apps/web/test/integration/rides/manage-ride.int.test.ts", "cancels every request and seat claim and tells each rider they owe nothing"],
+      ["apps/web/test/integration/rides/manage-ride.int.test.ts", "asks the owner to confirm a change that affects accepted riders, then tells them"]
+    ],
+    "NFR-RD-08": [
+      ["apps/web/test/integration/rides/offer-and-search.int.test.ts", "shows an open ride with its seats and the share a new rider would pay"],
+      ["apps/web/test/integration/rides/join-requests.int.test.ts", "records a pending request with its snapshot, history and idempotency key"],
+      ["apps/web/test/integration/rides/join-requests.int.test.ts", "withdraws a waiting request once, and the owner is told"],
+      ["apps/web/test/integration/trip/sos.int.test.ts", "creates one alert per person, however often they tap"]
+    ],
+    "NFR-RD-21": [
+      ["apps/web/src/components/rides/SosPanel.test.tsx", "with the emergency numbers and the no-dispatch note already on screen"],
+      ["apps/web/src/app/page.test.tsx", "explains SOS, including that it does not replace calling 112"]
+    ],
+    "NFR-RO-DEP-04": [
+      ["apps/web/test/integration/adversarial/time-boundaries.int.test.ts", "departing in 59.5 minutes: a seat request answers 409"],
+      ["apps/web/test/integration/adversarial/time-boundaries.int.test.ts", "drops a ride from search results at the same minute"]
+    ],
+    "NFR-RO-SEC-03": [
+      ["apps/web/test/integration/trip/sos.int.test.ts", "creates one alert per person, however often they tap, and tells nobody in the pool"],
+      ["apps/web/test/integration/trip/sos.int.test.ts", "lets only the person who raised it add a location"],
+      ["apps/web/test/integration/trip/sos.int.test.ts", "keeps students out of the incident routes"]
+    ],
+    "NFR-RO-SEC-04": [
+      ["apps/web/src/lib/ride-chat.test.ts", "loads the pool chat only for current members"],
+      ["apps/web/src/lib/ride-chat.test.ts", "keeps an expired pool chat while a complaint citing it is unresolved"]
+    ],
+    "NFR-RO-SEC-06": [
+      ["apps/web/src/components/rides/SettlementPanel.test.tsx", "never displays another rider"],
+      ["apps/web/src/lib/admin-auth.test.ts", "requireAdminApi answers 403 to a student"]
+    ],
+    "OA-FR-16": [
+      ["apps/web/src/lib/admin-queries.test.ts", "gives the ride with everyone on it and its complaints"],
+      ["apps/web/src/app/admin/rides/[id]/page.test.tsx", "shows the ride read only, with its people and complaints"]
+    ],
+    "SYS-FR-04": [
+      ["apps/web/src/app/api/rides/route.test.ts", "uses database capacity and creates the owner rider in one transaction"],
+      ["apps/web/test/integration/rides/offer-and-search.int.test.ts", "stores the ride with the vehicle capacity"]
+    ],
+    "SYS-FR-08": [
+      ["apps/web/src/lib/ride-options.test.ts", "does not include inactive rows"],
+      ["apps/web/src/app/api/profile/route.test.ts", "rejects inactive configured values and rolls back"]
+    ],
+    "SYS-FR-14": [
+      ["apps/web/src/lib/ride-view.test.ts", "splits the fare owner first, then riders in the order they joined"],
+      ["apps/web/src/components/landing/FareCalculator.test.tsx", "names who pays the extra rupee"]
+    ],
+    "SYS-FR-15": [
+      ["apps/web/src/lib/ride-view.test.ts", "splits the fare owner first, then riders in the order they joined"],
+      ["apps/web/src/lib/trip.test.ts", "so the total still adds up"]
+    ],
+    "SYS-NFR-01": [
+      ["apps/web/src/lib/admin-api.test.ts", "before/after for the audit"],
+      ["apps/web/src/lib/admin-config.test.ts", "returns the one before for the audit"]
+    ],
+    "SYS-NFR-10": [
+      ["apps/web/src/lib/ai-enforcement.test.ts", "requires approval to exactly match the recommendation"],
+      ["apps/web/src/lib/ai-enforcement.test.ts", "records a rejection without calling the enforcement service"]
+    ]
+  },
+  "coverage": {
+    "NFR-RD-17": "Unit suite statement coverage against the 80 % gate that CI enforces (apps/web/vitest.config.mts)"
+  }
+}

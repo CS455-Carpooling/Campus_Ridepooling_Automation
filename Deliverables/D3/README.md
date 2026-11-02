@@ -14,6 +14,7 @@ Due 6 November 2026. Each report has its own folder with its LaTeX source (`main
 | Performance/load test report | | Mahir | |
 | Security/threat-model report | | Chaitanya, Prithviraj | |
 | Failure/recovery report | | Chaitanya, Prithviraj | |
+| Requirements traceability matrix (requirement, Jira, GitHub, tests) | [`Traceability_Matrix/`](./Traceability_Matrix/main.pdf) | Mainak | Draft |
 
 The recorded test run and the script that turns it into the report tables are in
 [`test-run/`](./test-run/README.md).
