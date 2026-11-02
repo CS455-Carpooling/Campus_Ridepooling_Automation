@@ -7,7 +7,7 @@
 **Run date:** 2 November 2026 (local run; terminal output supplied)  
 **Coverage provider:** Vitest with V8
 
-> **Evidence note:** The test and coverage figures below come from the supplied local execution of `npm test -- --coverage` on 2 November 2026. The output path is `Campus_Ridepooling_Automation-master 2`, which looks like an extracted repository archive; the output does not establish that this directory is a Git checkout, that it was freshly pulled from `master`, or which commit it represents. Therefore, the test results are verified locally, but the requirement to prove the run was against latest `master` remains open until `git rev-parse HEAD` and `git status` are captured from a Git checkout. The supplied output contains the text coverage table, but no HTML report or machine-readable summary file was supplied; preserve those separately before final submission.
+> **Evidence note:** The test and coverage figures below come from the local execution of `npm test -- --coverage` on 2 November 2026. The user has confirmed that the working copy had been pulled from the latest `master` before the run. The exact tested commit SHA was not captured in the terminal output, so this report records the source as latest `master` by user confirmation without asserting an unverified SHA. The HTML coverage archive is included in this PR at `Deliverables/D3/unit-coverage-report.zip`; the text coverage table and aggregate metrics are recorded below.
 
 ## 1. Execution summary
 
@@ -57,11 +57,11 @@ The following are concrete examples from the supplied Vitest coverage table, ord
 
 | B1 requirement | Status | Evidence / remaining work |
 |---|---|---|
-| Run unit tests with coverage on master | **Partially verified** | `npm test -- --coverage` completed successfully: 200 test files and 1,530 tests passed. The supplied output does not prove that the working directory was a fresh Git checkout of latest `master`; capture `git rev-parse HEAD` and `git status` from the updated checkout. |
+| Run unit tests with coverage on master | **Passed (user-confirmed)** | `npm test -- --coverage` completed successfully: 200 test files and 1,530 tests passed. The user confirmed the working copy had been pulled from latest `master` before execution; the exact SHA was not captured. |
 | Overall 80% coverage gate | **Passed by local output** | Statements 87.44%, branches 80.70%, functions 88.63%, lines 89.80%. Confirm the exact metric used by NFR-RD-17 with the project rubric/configuration. |
 | Summary by area (library, API routes, components) | **Partially complete** | Qualitative area summary and representative weak files are listed. Separate weighted area totals need a fresh machine-readable coverage summary. |
 | List weakest-covered files and explain why / add tests | **Partially complete** | Weak files and likely follow-up actions are identified. File-by-file intent must be checked before treating 0% as a missing-test defect. |
-| Save HTML report | **Outstanding** | No HTML coverage artifact was retained by the inspected GitHub Actions run. Generate locally on final master and attach/commit the report as required by the team convention. |
+| Save HTML report | **Completed** | The generated HTML coverage report is preserved as `Deliverables/D3/unit-coverage-report.zip` in this PR. |
 | Refresh final numbers on 5 Nov | **Outstanding** | Re-run against final master on 5 November and update this report with the final commit SHA and results. |
 
 ## 5. Reproduction instructions
@@ -89,4 +89,4 @@ After the command completes:
 
 The supplied local test run is green: 200 test files and 1,530 tests passed. Aggregate coverage exceeds 80% for statements, branches, functions, and lines, although branch coverage has only a 0.70 percentage-point margin. Coverage is not uniform: several files show 0%, and a few API/UI files have materially lower branch or function coverage.
 
-B1 is therefore **not fully complete yet**. The remaining work is to validate the weak-file scope, preserve the generated HTML and machine-readable coverage report, calculate genuine area-level summaries, verify the tested commit is latest `master`, capture the exact HEAD SHA, and refresh all results on the final master on 5 November.
+B1 is therefore **substantially complete, pending finalization**. The local run was performed from a working copy pulled from latest `master` (user-confirmed), and the HTML coverage report is preserved in this PR. Remaining work is to validate the weak-file scope, calculate genuine area-level summaries from a machine-readable coverage report, record the exact tested HEAD SHA if available, confirm the NFR-RD-17 gate definition, and refresh the results on final master on 5 November.
