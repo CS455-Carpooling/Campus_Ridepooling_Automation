@@ -3,13 +3,11 @@
 **Story:** Story B (Khushi) — Unit and system testing, defect history  
 **Scope:** B1 — Unit tests and coverage report  
 **Repository:** `CS455-Carpooling/Campus_Ridepooling_Automation`  
-**Branch tested:** `master`  
-**Commit tested:** `8f15a9a9b5689b6aab0113f28e5719b047b1dc77`  
-**CI run:** [GitHub Actions run #229](https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/actions/runs/41085419528)  
+**Local working directory:** `Campus_Ridepooling_Automation-master 2/apps/web`  
 **Run date:** 2 November 2026 (local run; terminal output supplied)  
 **Coverage provider:** Vitest with V8
 
-> **Evidence note:** The test and coverage figures below now come from the local execution of `npm test -- --coverage` on 2 November 2026; the terminal output was supplied for this update. The output shows the checkout path but does not include `git rev-parse HEAD`, so the exact local HEAD SHA was not captured. At the time of this update, `origin/master` points to `8f15a9a9b5689b6aab0113f28e5719b047b1dc77`, the same commit previously recorded for the CI run. Confirm the local checkout SHA with `git rev-parse HEAD` if a precise run-to-commit audit trail is required. The local output contains the text coverage table, but no HTML report or machine-readable summary file was supplied; preserve those separately before final submission.
+> **Evidence note:** The test and coverage figures below come from the supplied local execution of `npm test -- --coverage` on 2 November 2026. The output path is `Campus_Ridepooling_Automation-master 2`, which looks like an extracted repository archive; the output does not establish that this directory is a Git checkout, that it was freshly pulled from `master`, or which commit it represents. Therefore, the test results are verified locally, but the requirement to prove the run was against latest `master` remains open until `git rev-parse HEAD` and `git status` are captured from a Git checkout. The supplied output contains the text coverage table, but no HTML report or machine-readable summary file was supplied; preserve those separately before final submission.
 
 ## 1. Execution summary
 
@@ -39,7 +37,7 @@ The coverage output is a per-file Vitest table; it does not provide separately c
 
 ## 3. Weakest-covered files and recommended action
 
-The following are concrete examples from the CI coverage table, ordered roughly from most urgent. Percentages are exactly as printed by Vitest.
+The following are concrete examples from the supplied Vitest coverage table, ordered roughly from most urgent. Percentages are exactly as printed by Vitest.
 
 | File (as shown in CI output) | Statements | Branches | Functions | Lines | Recommendation |
 |---|---:|---:|---:|---:|---|
@@ -59,8 +57,8 @@ The following are concrete examples from the CI coverage table, ordered roughly 
 
 | B1 requirement | Status | Evidence / remaining work |
 |---|---|---|
-| Run unit tests with coverage on master | **Passed in supplied local run** | `npm test -- --coverage` completed successfully: 200 test files and 1,530 tests passed. The exact local HEAD SHA was not included in the captured output; current `origin/master` is `8f15a9a`. |
-| Overall 80% coverage gate | **Passed in inspected CI** | Statements 87.44%, branches 80.70%, functions 88.63%, lines 89.80%. Confirm the exact metric used by NFR-RD-17 with the project rubric/configuration. |
+| Run unit tests with coverage on master | **Partially verified** | `npm test -- --coverage` completed successfully: 200 test files and 1,530 tests passed. The supplied output does not prove that the working directory was a fresh Git checkout of latest `master`; capture `git rev-parse HEAD` and `git status` from the updated checkout. |
+| Overall 80% coverage gate | **Passed by local output** | Statements 87.44%, branches 80.70%, functions 88.63%, lines 89.80%. Confirm the exact metric used by NFR-RD-17 with the project rubric/configuration. |
 | Summary by area (library, API routes, components) | **Partially complete** | Qualitative area summary and representative weak files are listed. Separate weighted area totals need a fresh machine-readable coverage summary. |
 | List weakest-covered files and explain why / add tests | **Partially complete** | Weak files and likely follow-up actions are identified. File-by-file intent must be checked before treating 0% as a missing-test defect. |
 | Save HTML report | **Outstanding** | No HTML coverage artifact was retained by the inspected GitHub Actions run. Generate locally on final master and attach/commit the report as required by the team convention. |
@@ -77,7 +75,7 @@ npm ci
 npm test -- --coverage
 ```
 
-The web workspace currently runs Vitest with coverage through its package test script. The CI log for the inspected run shows the underlying command as `vitest run --coverage`.
+The web workspace currently runs Vitest with coverage through its package test script. The supplied output shows the underlying workspace command as `vitest run --coverage`.
 
 After the command completes:
 
@@ -89,6 +87,6 @@ After the command completes:
 
 ## 6. Conclusion
 
-The supplied local master test run is green: 200 test files and 1,530 tests passed. Aggregate coverage exceeds 80% for statements, branches, functions, and lines, although branch coverage has only a 0.70 percentage-point margin. Coverage is not uniform: several files show 0%, and a few API/UI files have materially lower branch or function coverage.
+The supplied local test run is green: 200 test files and 1,530 tests passed. Aggregate coverage exceeds 80% for statements, branches, functions, and lines, although branch coverage has only a 0.70 percentage-point margin. Coverage is not uniform: several files show 0%, and a few API/UI files have materially lower branch or function coverage.
 
-B1 is therefore **not fully complete yet**. The remaining work is to validate the weak-file scope, preserve the generated HTML and machine-readable coverage report, calculate genuine area-level summaries, capture the exact tested HEAD SHA, and refresh all results on the final master on 5 November.
+B1 is therefore **not fully complete yet**. The remaining work is to validate the weak-file scope, preserve the generated HTML and machine-readable coverage report, calculate genuine area-level summaries, verify the tested commit is latest `master`, capture the exact HEAD SHA, and refresh all results on the final master on 5 November.
