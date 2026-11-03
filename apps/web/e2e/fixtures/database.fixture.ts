@@ -13,12 +13,14 @@ export interface E2ETestDatabase {
 }
 
 export interface TestRideOptions {
-  originId: string;
-  destinationId: string;
-  departureTime: Date;
-  vehicleType: string;
+  direction: 'to_hub' | 'from_hub';
+  hubId: string;
+  campusLocationId: string;
+  departureStart: Date;
+  departureEnd: Date;
+  vehicleTypeId: string;
   capacity: number;
-  totalFare: number;
+  expectedTotalFare: number;
   state: 'scheduled' | 'pickup_in_progress' | 'in_transit' | 'completed' | 'cancelled';
   lockedAt?: Date | null;
 }
@@ -74,21 +76,41 @@ export async function createTestDatabaseFixture(): Promise<E2ETestDatabase> {
 
   const cleanTransactionalData = async () => {
     if (!pool) return;
-    // Truncate only transactional tables, preserving configuration and locations
+    // Truncate only transactional tables, preserving reference tables (locations, vehicle_types, interest_tags, external_fare_ranges)
     await pool.query(`
       TRUNCATE TABLE
-        incidents,
+        sos_incidents,
+        chatbot_audits,
+        chatbot_preference_proposals,
+        ride_final_shares,
+        ride_recommendation_audits,
+        ride_recommendation_feedback,
+        ride_recommendation_reports,
+        ride_recommendation_rate_events,
+        ai_enforcement_decisions,
+        complaint_ai_analyses,
+        rider_suspensions,
+        rider_warnings,
+        complaint_chat_messages,
         complaints,
-        ride_chat_reports,
-        ride_chats,
-        fare_settlements,
+        admin_audit_log,
         ride_ratings,
-        ride_requests,
+        notifications,
+        ride_chat_complaints,
+        ride_chat_message_limits,
+        ride_chat_messages,
+        ride_chats,
+        ride_join_request_events,
+        ride_join_request_keys,
+        alone,
+        ride_join_requests,
+        riders,
         rides,
-        user_warnings,
-        user_suspensions,
-        sessions,
+        user_profile_tags,
         user_profiles,
+        rate_limits,
+        auth_tokens,
+        sessions,
         users
       CASCADE;
     `);
@@ -98,42 +120,54 @@ export async function createTestDatabaseFixture(): Promise<E2ETestDatabase> {
     ownerId: string,
     options: Partial<TestRideOptions> = {},
   ): Promise<string> => {
-    const originId = options.originId || 'hall-1';
-    const destinationId = options.destinationId || 'kanpur-central';
-    const departureTime = options.departureTime || new Date(Date.now() + 4 * 3600 * 1000);
-    const vehicleType = options.vehicleType || 'cab';
-    const capacity = options.capacity || 4;
-    const totalFare = options.totalFare || 350;
+    const direction = options.direction || 'to_hub';
+    const hubId = options.hubId || 'kanpur-central';
+    const campusLocationId = options.campusLocationId || 'hall-1';
+    const vehicleTypeId = options.vehicleTypeId || 'car';
+    const capacitySnapshot = options.capacity || 4;
+    const now = new Date();
+    const departureStart = options.departureStart || new Date(now.getTime() + 3 * 3600 * 1000);
+    const departureEnd = options.departureEnd || new Date(departureStart.getTime() + 3600 * 1000);
+    const expectedTotalFare = options.expectedTotalFare || 600;
     const state = options.state || 'scheduled';
     const lockedAt = options.lockedAt !== undefined ? options.lockedAt : null;
 
     const { rows } = await query(
       `INSERT INTO rides (
-         owner_id, origin_id, destination_id, departure_time, vehicle_type,
-         capacity, total_fare, state, locked_at
+         owner_id, direction, hub_id, vehicle_type_id,
+         capacity_snapshot, departure_start, departure_end,
+         expected_total_fare, state, locked_at
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING id`,
       [
         ownerId,
-        originId,
-        destinationId,
-        departureTime,
-        vehicleType,
-        capacity,
-        totalFare,
+        direction,
+        hubId,
+        vehicleTypeId,
+        capacitySnapshot,
+        departureStart,
+        departureEnd,
+        expectedTotalFare,
         state,
         lockedAt,
       ],
     );
-    return rows[0].id as string;
+    const rideId = rows[0].id as string;
+    await query(
+      `INSERT INTO riders (ride_id, user_id, campus_location_id)
+       VALUES ($1, $2, $3)`,
+      [rideId, ownerId, campusLocationId],
+    );
+    return rideId;
   };
 
   const moveDeparture = async (rideId: string, minutes: number) => {
     if (!pool) return;
     await pool.query(
       `UPDATE rides
-       SET departure_time = departure_time + make_interval(mins => $1)
+       SET departure_start = departure_start + make_interval(mins => $1),
+           departure_end = departure_end + make_interval(mins => $1)
        WHERE id = $2`,
       [minutes, rideId],
     );

@@ -1,4 +1,18 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
+
+function fromEnvLocal(name: string): string | undefined {
+  try {
+    const dir = typeof __dirname !== 'undefined' ? __dirname : process.cwd();
+    const content = fs.readFileSync(path.join(dir, '.env.local'), 'utf8');
+    return content.match(new RegExp(`^${name}\\s*=\\s*(.+)$`, 'm'))?.[1]?.trim();
+  } catch {
+    return undefined;
+  }
+}
+process.env.TEST_DATABASE_URL ??= fromEnvLocal('TEST_DATABASE_URL');
+process.env.ALLOW_TEST_DATABASE_RESET ??= fromEnvLocal('ALLOW_TEST_DATABASE_RESET');
 
 const PORT = Number(process.env.PORT || 3000);
 const BASE_URL = process.env.APP_URL || `http://localhost:${PORT}`;
@@ -54,6 +68,8 @@ export default defineConfig({
         env: {
           PORT: String(PORT),
           APP_URL: BASE_URL,
+          DATABASE_URL:
+            process.env.TEST_DATABASE_URL || 'postgres://crp:pass@127.0.0.1:5433/crp_test',
           NODE_ENV: 'development',
         },
       },
