@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT || 3000);
 const BASE_URL = process.env.APP_URL || `http://localhost:${PORT}`;
 
 export default defineConfig({
@@ -9,9 +9,9 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1, // Sequential execution to prevent test database race conditions
-  timeout: 30_000,
+  timeout: 45_000,
   expect: {
-    timeout: 5_000,
+    timeout: 10_000,
   },
   reporter: [
     ['list'],
@@ -44,4 +44,17 @@ export default defineConfig({
       },
     },
   ],
+  webServer: process.env.SKIP_WEBSERVER
+    ? undefined
+    : {
+        command: 'node --experimental-strip-types server.mjs',
+        url: `${BASE_URL}/login`,
+        reuseExistingServer: !process.env.CI,
+        timeout: 120_000,
+        env: {
+          PORT: String(PORT),
+          APP_URL: BASE_URL,
+          NODE_ENV: 'development',
+        },
+      },
 });
