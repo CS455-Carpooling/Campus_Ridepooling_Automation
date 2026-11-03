@@ -51,6 +51,18 @@ export class RequestPageHelper {
     await expect(this.page.locator('p[role="status"]').first()).toContainText(/updated/i);
   }
 
+  async reconfirmTerms(): Promise<void> {
+    const reconfirmBtn = this.page.getByRole('button', { name: /confirm new terms/i });
+    await reconfirmBtn.click();
+    await expect(this.page.locator('p[role="status"]')).toContainText(/updated/i);
+  }
+
+  async declineTerms(): Promise<void> {
+    const declineBtn = this.page.getByRole('button', { name: /decline/i });
+    await declineBtn.click();
+    await expect(this.page.locator('p[role="status"]')).toContainText(/updated/i);
+  }
+
   async verifyRiderStatus(expectedStatus: RegExp | string): Promise<void> {
     const section = this.page.locator('section[aria-labelledby="your-request-heading"]');
     await expect(section.getByText(expectedStatus).first()).toBeVisible();
