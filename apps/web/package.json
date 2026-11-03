@@ -11,6 +11,7 @@
     "test": "vitest run --coverage",
     "test:watch": "vitest",
     "test:integration": "vitest run --config vitest.integration.config.mts",
+    "test:e2e": "playwright test",
     "db:migrate": "node scripts/migrate.mjs",
     "admin:grant": "node scripts/admin-role.mjs grant",
     "admin:revoke": "node scripts/admin-role.mjs revoke"
@@ -25,6 +26,7 @@
     "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "@tailwindcss/postcss": "^4",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
