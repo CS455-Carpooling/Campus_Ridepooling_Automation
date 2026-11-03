@@ -44,6 +44,15 @@ jobs:
       - name: Test
         run: npm run test
 
+      - name: Upload unit coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-coverage-${{ github.sha }}
+          path: apps/web/coverage/
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Build
         run: npm run build
 
