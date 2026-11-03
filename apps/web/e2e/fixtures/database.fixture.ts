@@ -132,13 +132,32 @@ export async function createTestDatabaseFixture(): Promise<E2ETestDatabase> {
     const state = options.state || 'scheduled';
     const lockedAt = options.lockedAt !== undefined ? options.lockedAt : null;
 
+    let pickupStartedAt: Date | null = null;
+    let tripStartedAt: Date | null = null;
+    let completedAt: Date | null = null;
+    let cancelledAt: Date | null = null;
+
+    if (state === 'pickup_in_progress') {
+      pickupStartedAt = new Date(now.getTime() - 20 * 60 * 1000);
+    } else if (state === 'in_transit') {
+      pickupStartedAt = new Date(now.getTime() - 40 * 60 * 1000);
+      tripStartedAt = new Date(now.getTime() - 10 * 60 * 1000);
+    } else if (state === 'completed') {
+      pickupStartedAt = new Date(now.getTime() - 60 * 60 * 1000);
+      tripStartedAt = new Date(now.getTime() - 30 * 60 * 1000);
+      completedAt = now;
+    } else if (state === 'cancelled') {
+      cancelledAt = now;
+    }
+
     const { rows } = await query(
       `INSERT INTO rides (
          owner_id, direction, hub_id, vehicle_type_id,
          capacity_snapshot, departure_start, departure_end,
-         expected_total_fare, state, locked_at
+         expected_total_fare, state, locked_at,
+         pickup_started_at, trip_started_at, completed_at, cancelled_at
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
        RETURNING id`,
       [
         ownerId,
@@ -151,6 +170,10 @@ export async function createTestDatabaseFixture(): Promise<E2ETestDatabase> {
         expectedTotalFare,
         state,
         lockedAt,
+        pickupStartedAt,
+        tripStartedAt,
+        completedAt,
+        cancelledAt,
       ],
     );
     const rideId = rows[0].id as string;
