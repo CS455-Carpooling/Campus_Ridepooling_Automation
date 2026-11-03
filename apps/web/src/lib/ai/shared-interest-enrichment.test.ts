@@ -21,6 +21,7 @@ describe('enrichSharedInterests', () => {
   it('deduplicates candidate IDs and initializes missing rows as unavailable', async () => {
     h.query.mockResolvedValueOnce({ rows: [] });
     const result = await enrichSharedInterests(RIDER, [RIDE_A, RIDE_A, RIDE_B]);
+
     expect([...result.entries()]).toEqual([
       [RIDE_A, { sharedInterestTags: null }],
       [RIDE_B, { sharedInterestTags: null }],
@@ -30,36 +31,62 @@ describe('enrichSharedInterests', () => {
   });
 
   it('maps approved shared labels and leaves unreturned candidates unavailable', async () => {
-    h.query.mockResolvedValueOnce({ rows: [{
-      ride_id: RIDE_A,
-      all_participants_consented: true,
-      all_participants_have_visible_tags: true,
-      shared_tag_names: ['Hobbies', 'Academic tracks', 'Hobbies'],
-    }] });
+    h.query.mockResolvedValueOnce({
+      rows: [
+        {
+          ride_id: RIDE_A,
+          all_participants_consented: true,
+          all_participants_have_visible_tags: true,
+          shared_tag_names: ['Hobbies', 'Academic tracks', 'Hobbies'],
+        },
+      ],
+    });
+
     const result = await enrichSharedInterests(RIDER, [RIDE_A, RIDE_B]);
-    expect(result.get(RIDE_A)).toEqual({ sharedInterestTags: ['Academic tracks', 'Hobbies'] });
+
+    expect(result.get(RIDE_A)).toEqual({
+      sharedInterestTags: ['Academic tracks', 'Hobbies'],
+    });
     expect(result.get(RIDE_B)).toEqual({ sharedInterestTags: null });
   });
 
   it('withholds labels when any participant has not consented', async () => {
-    h.query.mockResolvedValueOnce({ rows: [{
-      ride_id: RIDE_A,
-      all_participants_consented: false,
-      all_participants_have_visible_tags: true,
-      shared_tag_names: ['Hobbies'],
-    }] });
+    h.query.mockResolvedValueOnce({
+      rows: [
+        {
+          ride_id: RIDE_A,
+          all_participants_consented: false,
+          all_participants_have_visible_tags: true,
+          shared_tag_names: ['Hobbies'],
+        },
+      ],
+    });
+
     const result = await enrichSharedInterests(RIDER, [RIDE_A]);
+
     expect(result.get(RIDE_A)).toEqual({ sharedInterestTags: null });
   });
 
   it('distinguishes no common interest from missing visible-tag data', async () => {
-    h.query.mockResolvedValueOnce({ rows: [
-      { ride_id: RIDE_A, all_participants_consented: true,
-        all_participants_have_visible_tags: true, shared_tag_names: null },
-      { ride_id: RIDE_B, all_participants_consented: true,
-        all_participants_have_visible_tags: false, shared_tag_names: ['Hobbies'] },
-    ] });
+    h.query.mockResolvedValueOnce({
+      rows: [
+        {
+          ride_id: RIDE_A,
+          all_participants_consented: true,
+          all_participants_have_visible_tags: true,
+          shared_tag_names: null,
+        },
+        {
+          ride_id: RIDE_B,
+          all_participants_consented: true,
+          all_participants_have_visible_tags: false,
+          shared_tag_names: ['Hobbies'],
+        },
+      ],
+    });
+
     const result = await enrichSharedInterests(RIDER, [RIDE_A, RIDE_B]);
+
     expect(result.get(RIDE_A)).toEqual({ sharedInterestTags: [] });
     expect(result.get(RIDE_B)).toEqual({ sharedInterestTags: null });
   });
