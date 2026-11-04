@@ -156,8 +156,8 @@ SQL and future write paths that might bypass the current service. The targeted D
 experiment is `apps/web/test/integration/concurrency/last-seat.int.test.ts`; it dispatches 49
 acceptance attempts and one leave operation together for 100 rounds, with one free seat at each
 round's start. The report source is in
-`Deliverables/D3/Concurrency_Report/main.tex`. Execution evidence remains pending until the
-PostgreSQL integration test has run; no result is assumed by this decision record.
+`Deliverables/D3/Concurrency_Report/main.tex`. The PostgreSQL integration test and complete integration suite have passed locally; the measured
+results are recorded in the D3 concurrency report.
 
 ## 4. Decision B — AI architecture for rider suggestions and Admin complaint analysis
 
