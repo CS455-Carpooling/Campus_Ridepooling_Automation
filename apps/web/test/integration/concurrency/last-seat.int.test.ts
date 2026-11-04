@@ -123,7 +123,11 @@ describe('NFR-RD-05: repeated last-seat concurrency experiment', () => {
       let maximumObservedOccupants = initial.occupants;
       let totalAcceptedInRaces = 0;
       let serialCleanupLeaves = 0;
-      const roundSummaries: Array<{ round: number; accepted: number; maxOccupants: number }> = [];
+      const roundSummaries: Array<{
+        round: number;
+        accepted: number;
+        maxOccupants: number;
+      }> = [];
 
       for (let round = 1; round <= ITERATIONS; round += 1) {
         const acceptors = riders.filter((rider) => rider.id !== activeRider.id);
