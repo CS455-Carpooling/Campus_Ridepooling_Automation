@@ -98,11 +98,23 @@ describe('an idempotency key sent again with other details', () => {
     const ride = await offerRide(await signedInStudent());
     const rider = await signedInStudent();
     const first = await requestSeat(rider, ride.id, { idempotencyKey: 'same' });
-    const again = await requestSeat(rider, ride.id, { idempotencyKey: 'same' });
-    expect(again.status).toBe(200);
-    expect(again.body.request).toMatchObject({
-      kind: 'existing',
-      requestId: first.body.request.requestId,
-    });
+    const durations: number[] = [];
+
+    for (let iteration = 0; iteration < 10; iteration += 1) {
+      const started = performance.now();
+      const again = await requestSeat(rider, ride.id, { idempotencyKey: 'same' });
+      durations.push(performance.now() - started);
+      expect(again.status).toBe(200);
+      expect(again.body.request).toMatchObject({
+        kind: 'existing',
+        requestId: first.body.request.requestId,
+      });
+    }
+
+    const averageMs = durations.reduce((sum, duration) => sum + duration, 0) / durations.length;
+    console.info(
+      `[D3 report metrics] idempotency replay mean: ${averageMs.toFixed(2)} ms / 10 runs`,
+    );
+    expect(averageMs).toBeLessThan(100);
   });
 });

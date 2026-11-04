@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SearchRideRequest, SearchRideResult } from '@/lib/ride-search';
 
+vi.mock('server-only', () => ({}));
+
 const h = vi.hoisted(() => ({
   query: vi.fn(),
   searchRides: vi.fn(),
@@ -114,5 +116,24 @@ describe('rankRideRecommendations fallback', () => {
       message: 'No eligible rides match these filters.',
     });
     expect(h.searchRides).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps deterministic fallback execution within the report latency target', async () => {
+    const durations: number[] = [];
+
+    for (let iteration = 0; iteration < 20; iteration += 1) {
+      const started = performance.now();
+      const response = await rankRideRecommendations('viewer-1', filters, async () => {
+        throw new Error('Gemini unavailable');
+      });
+      durations.push(performance.now() - started);
+      expect(response.source).toBe('fallback');
+    }
+
+    const averageMs = durations.reduce((sum, duration) => sum + duration, 0) / durations.length;
+    console.info(
+      `[D3 report metrics] fallback pipeline mean: ${averageMs.toFixed(2)} ms / 20 runs`,
+    );
+    expect(averageMs).toBeLessThan(250);
   });
 });

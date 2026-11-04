@@ -86,6 +86,47 @@ describe('POST /api/auth/reset', () => {
     ]);
   });
 
+  it('rolls back token consumption when the password update fails', async () => {
+    let tokenAvailable = true;
+    let tokenAtTransactionStart = tokenAvailable;
+    m.clientQuery.mockImplementation(async (sql: string) => {
+      if (sql === 'BEGIN') {
+        tokenAtTransactionStart = tokenAvailable;
+        return { rows: [], rowCount: 0 };
+      }
+      if (sql.includes('DELETE FROM auth_tokens')) {
+        tokenAvailable = false;
+        return { rows: [{ user_id: 'u1' }], rowCount: 1 };
+      }
+      if (sql.includes('UPDATE users')) {
+        throw new Error('injected password update failure');
+      }
+      if (sql === 'ROLLBACK') {
+        tokenAvailable = tokenAtTransactionStart;
+        return { rows: [], rowCount: 0 };
+      }
+      return { rows: [], rowCount: 1 };
+    });
+    m.consumeToken.mockImplementation(async (_token, _purpose, executor) => {
+      const { rows } = await executor.query(
+        'DELETE FROM auth_tokens WHERE token_hash=$1 AND purpose=$2 AND expires_at>now() RETURNING user_id',
+      );
+      return rows[0]?.user_id ?? null;
+    });
+
+    const res = await post({ token: 'tok', password: 'password123' });
+
+    expect(res.status).toBe(500);
+    expect(m.clientQuery.mock.calls.map(([sql]) => sql)).toEqual([
+      'BEGIN',
+      expect.stringMatching(/DELETE FROM auth_tokens/),
+      expect.stringMatching(/UPDATE users/),
+      'ROLLBACK',
+    ]);
+    expect(tokenAvailable).toBe(true);
+    expect(m.release).toHaveBeenCalledOnce();
+  });
+
   it('fails before opening a transaction when password hashing fails', async () => {
     m.consumeToken.mockResolvedValue('u1');
     m.hashPassword.mockRejectedValue(new Error('hash failed'));

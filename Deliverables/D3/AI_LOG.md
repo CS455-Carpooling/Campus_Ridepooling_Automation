@@ -217,3 +217,19 @@ credentials or session tokens were retained in the repository.
 ### Response 12
 
 > The latest `master` changes were merged into CS455-121, the duplicate migration statement was removed, the existing hardening and performance fixes were preserved, and the new prompt/response entries were added to the D3 AI log.
+
+### Prompt 13
+
+> Check failure tests and recovery mechanisms, plan a step-by-step way, and author the Failure and Recovery Test Report for D3 without modifying existing application code.
+
+### Response 13
+
+> Reviewed the five primary failure domains across the platform: (1) LLM/Gemini API timeouts and outages with 8s budgets and deterministic `/rides` search fallbacks, (2) idempotency key collisions and cross-ride replay defenses (Defect 18 / PR #87), (3) mid-transaction database failures and atomic rollbacks (Defects 8 & 16), (4) realtime Socket.IO reconnection, malformed cookie resilience (Defect 6), and inactivity enforcement (Defects 2 & 9), and (5) malformed model output pruning. Authored the comprehensive Failure and Recovery Test Report in LaTeX (`Deliverables/D3/Failure_and_Recovery_Report/main.tex`) adhering to `common/d3report.sty` and in Markdown (`Deliverables/D3/failure-and-recovery-test-report.md`), and updated `Deliverables/D3/README.md`. Committed each step atomically on branch `Prithviraj/test-report`.
+
+### Prompt 14
+
+> Author the Security and Threat-Model Report for D3, following the same step-by-step approach without modifying any existing working code.
+
+### Response 14
+
+> Analyzed the application's security architecture across trust boundaries, verifying Role-Based Access Control (M64, Rider vs Admin with `requireAdminApi` and database triggers), input validation with UUID regex and 100% parameterized SQL (M65), cryptographic secret and cookie lifecycle management (M66), and a STRIDE threat model covering 6 threats (BOLA/IDOR, replay forgery, prompt injection, admin privilege escalation, secret leakage, and realtime eavesdropping) with concrete automated test scenarios (M68). Documented the post-mortems of seven remediated security defects (Defects 1, 2 & 13, 3, 5 & 14, 10, 11 & 12, 18). Authored the LaTeX report (`Deliverables/D3/Security_and_Threat_Model_Report/main.tex`) adhering to `common/d3report.sty` and the Markdown report (`Deliverables/D3/security-and-threat-model-report.md`), and updated `Deliverables/D3/README.md`. Committed in atomic steps on branch `prithviraj/test-report`.
