@@ -182,10 +182,16 @@ HTTP server. The application database pool is configured with \texttt{max: 10}. 
 this experiment creates 50 concurrent application-level operations, but at most ten connections
 from this pool can be active at once. It must not be described as a 50-database-session test.
 
-The test checks committed snapshots after route calls resolve. It is a repeatable correctness
-stress test of the actual request handlers and database, not a latency benchmark or a proof about
-all possible schedules. The database trigger additionally serializes direct seat-row writers
-against the same ride row.
+The test checks committed snapshots after route calls resolve. Because the observation query
+uses the same ten-connection pool, it can be scheduled after additional concurrent transactions
+have committed; these snapshots are not a linear trace of every individual commit. The trigger
+provides write-time enforcement independently of this sampling. The test is a repeatable
+correctness stress test of the actual request handlers and database, not a latency benchmark or
+a proof about all possible schedules.
+
+The repository's pull-request CI also provisions PostgreSQL 16 and runs the complete integration
+suite. The new test therefore participates in that database-backed CI job; its result should be
+recorded from the actual check run rather than inferred from the source code.
 
 \subsection{Run instructions}
 
