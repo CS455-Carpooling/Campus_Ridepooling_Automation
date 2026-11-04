@@ -28,7 +28,7 @@ export default defineConfig({
       // layout.tsx loads fonts through next/font, which only runs inside a Next.js
       // build; `npm run build` exercises it.
       exclude: ['src/**/*.test.{ts,tsx}', 'src/app/**/layout.tsx'],
-      reporter: ['text', 'html'],
+      reporter: ['text', 'html', 'json-summary'],
       // NFR-RD-17: at least 80 % coverage; the test run fails below this.
       thresholds: { lines: 80, statements: 80, functions: 80, branches: 80 },
     },
