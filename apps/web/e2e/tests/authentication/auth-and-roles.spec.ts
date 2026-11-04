@@ -1,4 +1,5 @@
-import { test, expect } from '../../fixtures/auth.fixture';
+import { test, expect, injectSessionCookie } from '../../fixtures/auth.fixture';
+import { seedRider } from '../../fixtures/users.fixture';
 
 test.describe('Authentication & Role Access Control (E2E)', () => {
   test('unauthenticated user is redirected to login from protected routes', async ({ page }) => {
@@ -52,22 +53,40 @@ test.describe('Authentication & Role Access Control (E2E)', () => {
   test('isolated browser contexts maintain separate sessions without cross-contamination', async ({
     browser,
     baseURL,
+    db,
   }) => {
+    const userA = await seedRider(db, { name: 'Isolated Rider A' });
+
     const contextA = await browser.newContext();
     const contextB = await browser.newContext();
 
-    const pageA = await contextA.newPage();
-    const pageB = await contextB.newPage();
+    try {
+      // 1. Inject distinct session cookie into context A only
+      await injectSessionCookie(contextA, userA.sessionToken, baseURL || 'http://localhost:3000');
 
-    await pageA.goto(baseURL || 'http://localhost:3000');
-    await pageB.goto(baseURL || 'http://localhost:3000');
+      const pageA = await contextA.newPage();
+      const pageB = await contextB.newPage();
 
-    // Verify cookies in context A are not shared with context B
-    const cookiesA = await contextA.cookies();
-    const cookiesB = await contextB.cookies();
+      // 2. Assert context A contains the distinct session cookie
+      const cookiesA = await contextA.cookies();
+      const sessionCookieA = cookiesA.find((c) => c.name === 'crp_session');
+      expect(sessionCookieA).toBeDefined();
+      expect(sessionCookieA?.value).toBe(userA.sessionToken);
 
-    expect(cookiesA).toEqual(cookiesB); // both initially clean
-    await contextA.close();
-    await contextB.close();
+      // 3. Assert context B does NOT contain the session cookie
+      const cookiesB = await contextB.cookies();
+      const sessionCookieB = cookiesB.find((c) => c.name === 'crp_session');
+      expect(sessionCookieB).toBeUndefined();
+
+      // 4. Verify functional isolation on protected routes
+      await pageA.goto((baseURL || 'http://localhost:3000') + '/rides');
+      await expect(pageA).not.toHaveURL(/\/login/);
+
+      await pageB.goto((baseURL || 'http://localhost:3000') + '/rides');
+      await expect(pageB).toHaveURL(/\/login/);
+    } finally {
+      await contextA.close();
+      await contextB.close();
+    }
   });
 });
