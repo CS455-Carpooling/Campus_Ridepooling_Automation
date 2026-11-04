@@ -13,7 +13,7 @@ Rubric Criteria Addressed: **M58 (Failure and recovery tests)**, **M62 ($\ge 3$ 
 
 This report documents the failure-injection experiments, resilience audits, and automatic recovery verifications performed across the Campus Ride-Pooling platform for CS455 Deliverable 3. Distributed systems and production multi-tenant web applications routinely encounter network partitions, third-party service outages, server restarts during ongoing database writes, and concurrent client replays.
 
-The platform was subjected to **5 failure domains** spanning external AI inference failures, transactional database interruptions, idempotent request collisions, realtime WebSocket disconnections, and adversarial prompt injections. Across all test suites, the platform achieved a **100% pass rate**, maintaining absolute transactional consistency (zero orphaned records, zero double-allocated seats, zero corrupted balances) and enforcing sub-second deterministic fallbacks.
+The platform was subjected to **5 failure domains** spanning external AI inference failures, transactional database interruptions, idempotent request collisions, realtime WebSocket disconnections, and adversarial prompt injections. The prior D3 report recorded a **100% pass rate** and zero orphaned records, double-allocated seats, or corrupted balances in its tested scenarios. Those are historical results; the underlying run artifacts are not available here, so this review does not independently reproduce them. For this review, all **61 focused unit tests passed**; PostgreSQL-backed integration tests could not be rerun because the configured local database at `127.0.0.1:5433` was unavailable.
 
 ---
 
@@ -30,7 +30,7 @@ flowchart TD
     subgraph Edge ["Application Server (Next.js / Node.js)"]
         Guard["Route Guard & Inactivity Gate"]
         Idemp["Idempotency Filter (ride_join_request_keys)"]
-        TimeBudget["8-Second Execution Budget (Promise.race)"]
+        TimeBudget["31-Second Route Deadline (Promise.race)"]
         Fallback["Deterministic Ranking Heuristic"]
     end
 
@@ -44,7 +44,7 @@ flowchart TD
     Idemp -->|New / Valid Request| TimeBudget
     Idemp -->|Conflicting Reused Key| Browser
     TimeBudget -->|Invoke Model| Gemini
-    Gemini --x|Outage / Timeout > 8s| Fallback
+    Gemini --x|Provider timeout > 15s| Fallback
     Fallback -->|Deterministic Heuristic| Browser
     TimeBudget -->|Transactional Writes| Postgres
     Postgres --x|Mid-Tx Crash| Postgres
@@ -58,12 +58,12 @@ flowchart TD
 
 ## 2. Failure Scenarios and Recovery Mechanisms
 
-### Scenario A: External LLM Service Failure, Outage, and 8-Second SLA Timeout (M62.a)
+### Scenario A: External LLM Service Failure, Outage, and Timeout (M62.a)
 
 * **Component Under Test**: Chatbot Interface (`apps/web/src/app/api/chatbot/route.ts`, `apps/web/src/lib/ai/chatbot.ts`) and AI Recommendation Engine (`apps/web/src/lib/ai/recommendation-pipeline.ts`, `apps/web/src/lib/ai/recommendations.ts`).
 * **Injected Failure Mode**:
   1. The Google Gemini API experiences complete network unreachable status or returns HTTP 500/503.
-  2. The inference call exceeds the required 8-second execution budget (`CHATBOT_TIMEOUT_MS = 8000ms`).
+  2. The Gemini request exceeds its configured 15-second provider timeout (`CHATBOT_GEMINI_TIMEOUT_MS = 15000ms`), or chatbot processing exceeds the 31-second route deadline (`CHATBOT_TIMEOUT_MS = 31000ms`).
   3. The rider exceeds the maximum query rate limit of 20 AI requests per hour (`AI-RD-09`).
 
 ```mermaid
@@ -76,28 +76,31 @@ sequenceDiagram
     participant Audit as Audit Logger (PostgreSQL)
 
     Rider->>API: POST /api/chatbot { message: "Find cab to station" }
-    API->>API: Start 8000ms Timeout Timer (Promise.race)
+    API->>API: Start 31000ms Route Deadline (Promise.race)
     API->>Model: generateContent(prompt)
-    alt Gemini Responds within 8s
+    alt Gemini Responds within 15s
         Model-->>API: 200 OK (Structured Intent)
         API->>Rider: 200 OK (AI Results)
-    else Timeout (> 8000ms) or 503 Outage
-        API->>API: Timeout Timer Fires (AbortController)
+    else Gemini timeout at 15s or provider error
+        API->>API: AbortSignal.timeout fires
+        API->>Fallback: Deterministic parser / ride search
+        Fallback-->>API: Search results with fallback metadata
+        API-->>Rider: 200 OK (fallback results)
+    else Overall route deadline exceeds 31s
         API->>Audit: logChatbotAudit(outcome: "timeout", fallback_used: true)
-        API->>Fallback: Build Service Unavailable Payload
-        Fallback-->>API: { kind: "service_unavailable", fallbackLink: "/rides" }
         API-->>Rider: 504 Gateway Timeout (with Manual Search Link)
     end
 ```
 
 * **Observed Recovery Behavior**:
-  * **Chatbot Route**: When the external call times out or throws an error, the endpoint gracefully catches the exception, logs an immutable audit row with `outcome = 'timeout'` / `'error'`, and returns HTTP 504 or 503 with a direct fallback link to `/rides` (`Manual Ride Search`). The client UI renders this fallback link so the rider can immediately proceed with manual search.
+  * **Gemini Provider Timeout**: `AbortSignal.timeout(15000)` aborts the external request. The chatbot catches the timeout as a model failure, marks fallback as used, and continues with deterministic parsing and the ordinary ride search flow where possible. The provider timeout alone does not force an HTTP 504.
+  * **Route Deadline**: If the overall chatbot processing promise exceeds `CHATBOT_TIMEOUT_MS = 31000`, the route logs an audit row with `outcome = 'timeout'` and returns HTTP 504 with a direct fallback link to `/rides` (`Manual Ride Search`).
   * **Ride Recommendation Pipeline**: When model ranking fails, `rankFallbackRides` automatically activates. It executes a secondary trusted SQL search and sorts rides by:
     1. Minimal temporal distance between rider and ride departure windows (overlapping windows receive distance 0).
     2. Lowest estimated fare share per rider.
     3. Deterministic ride ID tie-breaker.
-    The response is delivered with `source: "fallback"` and latency under 20 ms.
-  * **Verification**: `apps/web/src/lib/ai/chatbot.test.ts` (lines 472–487) and `apps/web/src/lib/ai/recommendation-pipeline.test.ts` (lines 46–115).
+    The response is delivered with `source: "fallback"`. The measured fallback latency and its mocked-test limitations are documented in Section 4.
+  * **Verification**: `apps/web/src/lib/ai/chatbot-gemini.test.ts` (aborted provider request), `apps/web/src/lib/ai/chatbot.test.ts` (fallback after a timeout error), `apps/web/src/app/api/chatbot/route.test.ts` (31-second route deadline and 504/audit), and `apps/web/src/lib/ai/recommendation-pipeline.test.ts` (model failure fallback).
 
 ---
 
@@ -194,11 +197,11 @@ sequenceDiagram
   3. Stale connections persisting past the 7-day inactivity expiration window.
 
 * **Observed Recovery Behavior**:
-  * **Transport Fallback & Reconnection**: The Socket.IO client automatically triggers reconnection attempts using randomized exponential backoff. If the WebSocket protocol is blocked or fails, it seamlessly falls back to HTTP long-polling without disconnecting the user from the ride chat UI.
-  * **Defensive Handshake Parsing (Defect 6)**: Malformed or unparseable cookies previously triggered uncaught exceptions that threatened node process uptime. Handshake parsing now runs in a defensive try/catch block, rejecting bad cookies with `auth_failed` while maintaining 100% server availability.
+  * **Transport Fallback & Reconnection**: The Socket.IO client is configured to retry connections and support HTTP long-polling. These client behaviors are implementation observations; the new server-security tests do not measure transport fallback or reconnection timing.
+  * **Defensive Handshake Parsing (Defect 6)**: Malformed or unparseable cookies previously triggered uncaught exceptions that threatened node process uptime. Handshake parsing now rejects bad cookies with an authentication error while keeping the server available for valid handshakes.
   * **Session Inactivity Enforcement (Defects 2 & 9)**: Realtime handshakes strictly validate that the user's session has been active within the last 7 days (`last_activity_at > now() - interval '7 days'`). Active message traffic refreshes this timestamp, ensuring parity with HTTP session policies.
   * **State Synchronization on Reconnect**: Following a socket reconnect, the frontend client automatically invokes `/api/rides/[id]/chat` and `/api/notifications` to fetch missed messages and reconcile local state.
-  * **Verification**: `apps/web/server.mjs` test suite and adversarial tests.
+  * **Verification**: `apps/web/test/server-security.test.ts` exercises a malformed-cookie handshake, confirms a subsequent valid connection succeeds, and verifies stale-session rejection. It does not test client reconnect/state synchronization.
 
 ---
 
@@ -220,16 +223,18 @@ sequenceDiagram
 
 | Domain | Injected Fault / Trigger | Expected System Recovery | Verification Test File | Status |
 |---|---|---|---|:---:|
-| **AI Timeout** | Gemini API latency $> 8000\,$ms | Graceful HTTP 504; fallback link to `/rides`; audit logged | `apps/web/src/lib/ai/chatbot.test.ts` | **PASS** |
+| **AI Timeout** | Gemini provider request exceeds 15 s; overall route exceeds 31 s | Provider timeout falls back deterministically; route deadline returns HTTP 504 with `/rides` link and audit | `apps/web/src/lib/ai/chatbot-gemini.test.ts`, `apps/web/src/lib/ai/chatbot.test.ts`, `apps/web/src/app/api/chatbot/route.test.ts` | **PASS** |
 | **AI Outage** | Gemini returns HTTP 500/503 | Graceful HTTP 503; fallback link to `/rides`; audit logged | `apps/web/src/lib/ai/chatbot.test.ts` | **PASS** |
 | **Model Output** | AI returns invalid / hallucinated hub IDs | Output discarded; heuristic departure ranking used | `apps/web/src/lib/ai/recommendation-pipeline.test.ts` | **PASS** |
 | **AI Rate Limit** | Rider exceeds 20 requests/hour | HTTP 429 `rateLimited: true`; manual search fallback | `apps/web/src/app/api/chatbot/route.test.ts` | **PASS** |
 | **Duplicate Key** | Idempotency key reused for different ride | HTTP 409 `idempotency_key_reused`; zero rows created | `apps/web/test/integration/bugs/idempotency-key-reuse.int.test.ts` | **PASS** |
 | **Key Replay** | Idempotency key reused with same payload | HTTP 200 `{ kind: "existing" }`; safely replayed | `apps/web/test/integration/bugs/idempotency-key-reuse.int.test.ts` | **PASS** |
 | **Key Race** | 4 concurrent requests with same key | PostgreSQL row locks serialize; exactly 1 created | `apps/web/test/integration/bugs/idempotency-key-reuse.int.test.ts` | **PASS** |
-| **Mid-Tx Crash** | Database failure mid-password reset | Entire transaction rolls back; reset token preserved | `apps/web/src/app/api/auth/reset/route.test.ts` | **PASS** |
-| **Malformed Cookie**| Corrupted cookie in WebSocket handshake | Handshake refused cleanly (`auth_failed`); server stable | `apps/web/server.mjs` / Defect 6 | **PASS** |
-| **Socket Inactivity**| Session inactive $> 7$ days | WebSocket connection terminated; login required | `apps/web/server.mjs` / Defects 2 & 9 | **PASS** |
+| **Mid-Tx Crash** | Database failure after reset-token deletion | Transaction rolls back; reset token, password, and session remain unchanged | `apps/web/src/app/api/auth/reset/route.test.ts`, `apps/web/test/integration/auth/reset-failure.int.test.ts` | **PASS** (unit test run; DB integration test added, not run locally) |
+| **Malformed Cookie**| Corrupted cookie in WebSocket handshake | Handshake refused cleanly; subsequent valid connection succeeds | `apps/web/test/server-security.test.ts` | **PASS** |
+| **Socket Inactivity**| Session inactive $> 7$ days | WebSocket handshake refused by session policy | `apps/web/test/server-security.test.ts` | **PASS** |
+
+`PASS` reflects the cited test's recorded outcome; only the six unit-test files listed in the current-run basis below were rerun in this review. PostgreSQL integration scenarios were not rerun.
 
 ---
 
@@ -237,11 +242,25 @@ sequenceDiagram
 
 | Metric | Target SLA | Measured / Observed | Compliance Status |
 |---|---|---|:---:|
-| **Chatbot Failure Timeout (RTO)** | $\le 8.0\,$s | $8.0\,$s (enforced via `Promise.race`) | **Compliant** |
-| **Deterministic Fallback Latency** | $\le 250\,$ms | $14.2\,$ms average | **Compliant** |
-| **Data Loss on Transaction Failure (RPO)** | $0$ records | Zero orphaned rows; 100% rollback | **Compliant** |
-| **Idempotency Collision Detection Latency**| $\le 100\,$ms | $8.5\,$ms average | **Compliant** |
-| **WebSocket Reconnection Grace Window** | $\le 5.0\,$s | Immediate retry with exponential backoff | **Compliant** |
+| **Gemini Provider Timeout** | $\le 15.0\,$s | 15.0 s configured; abort-signal propagation and fallback verified; elapsed duration not measured | **Behavior verified; duration not measured** |
+| **Chatbot Route Deadline** | $\le 31.0\,$s | 31.0 s configured; fake-timer test verifies HTTP 504 and audit | **Verified by unit test** |
+| **Deterministic Fallback Latency** | $\le 250\,$ms | 0.10 ms mean across 20 in-process runs with model/database dependencies mocked; prior report recorded 14.2 ms without retaining its run artifact | **Target passed in mocked test; not end-to-end** |
+| **Data Loss on Transaction Failure (RPO)** | $0$ records | Unit transaction simulation verifies rollback; real PostgreSQL integration test added but unavailable locally | **Unit verified; DB run pending** |
+| **Idempotency Collision Detection Latency**| $\le 100\,$ms | Prior report recorded 8.5 ms; new 10-replay integration benchmark logs its mean and checks the target when run | **DB benchmark not run locally** |
+| **WebSocket Reconnection Grace Window** | $\le 5.0\,$s | Client reconnect behavior is implementation-configured; this report's new server tests cover origin, malformed-cookie, and inactivity handshakes, not reconnection timing | **Not measured in this run** |
+
+### Measurement and Test-Run Basis
+
+The latency figures are test-environment observations, not production SLO measurements. The fallback benchmark measures the recommendation pipeline with its model and database dependencies mocked; it checks a 250 ms mean budget over 20 runs and logged a 0.10 ms mean on 4 November 2026. The prior report's 14.2 ms fallback and 8.5 ms idempotency figures are retained as historical observations without their original run artifacts. The new idempotency benchmark measures 10 sequential same-key API replays against PostgreSQL, reports their mean, and checks the 100 ms budget. It could not be run in this environment because PostgreSQL was unavailable at `127.0.0.1:5433`; its result is not yet available.
+
+The focused unit command run from `apps/web` was:
+
+```text
+npx vitest run src/app/api/auth/reset/route.test.ts src/app/api/chatbot/route.test.ts src/lib/ai/chatbot.test.ts src/lib/ai/chatbot-gemini.test.ts src/lib/ai/recommendation-pipeline.test.ts test/server-security.test.ts
+Result: 6 test files passed; 61 tests passed.
+```
+
+The PostgreSQL integration command was attempted, but could not connect to `127.0.0.1:5433`. Its added failure-injection test and the idempotency benchmark remain ready for execution when the configured test database is available.
 
 ---
 
@@ -257,10 +276,10 @@ During the testing process for Deliverable 3, several key failure handling vulne
    * *Remediation*: Bounded idempotency keys to their specific ride ID and pickup point; conflicting requests now return HTTP 409 `idempotency_key_reused`.
 3. **Defect 6 (WebSocket Malformed Cookie Node Process Crash)**:
    * *Vulnerability*: Malformed cookies during WebSocket handshake threw unhandled parse exceptions in `server.mjs`.
-   * *Remediation*: Defensive try/catch error boundaries were introduced to reject invalid cookies cleanly with `auth_failed`, ensuring uninterrupted realtime server availability.
+   * *Remediation*: Defensive cookie decoding and authentication middleware reject invalid cookies cleanly; the security regression test verifies the server subsequently accepts a valid connection.
 
 ---
 
 ## 6. Conclusion
 
-The Campus Ride-Pooling and Split-Fare System has been rigorously tested against simulated real-world failures and edge cases. By enforcing database-backed ACID guarantees, deterministic heuristic fallbacks for external AI services, strict idempotency boundaries, and defensive WebSocket connection handling, the platform maintains uninterrupted availability, prevents data corruption, and satisfies all CS455 Deliverable 3 failure and recovery testing requirements.
+The cited tests and implementation controls address simulated failures and edge cases across the five domains. The current rerun verified the focused unit scenarios described above; database-backed ACID behavior, end-to-end availability, and production data-integrity outcomes were not independently measured in this review. The documented controls include transactional rollback, deterministic heuristic fallbacks for external AI services, strict idempotency boundaries, and defensive WebSocket connection handling.
