@@ -175,7 +175,7 @@ test.describe('Rider Join Request Lifecycle Workflows (FR-RD-06, FR-RO-05, Deliv
     ownerContext,
     riderContext,
   }) => {
-    const rideId = await db.createRideRow(ownerContext.user.id, {
+    const rideIdA = await db.createRideRow(ownerContext.user.id, {
       direction: 'to_hub',
       hubId: 'kanpur-central',
       campusLocationId: 'hall-1',
@@ -187,16 +187,86 @@ test.describe('Rider Join Request Lifecycle Workflows (FR-RD-06, FR-RO-05, Deliv
       state: 'scheduled',
     });
 
-    await riderContext.page.goto(`/rides/${rideId}`);
-    const riderHelper = new RequestPageHelper(riderContext.page);
-    await riderHelper.requestSeat('Hall 1');
+    const rideIdB = await db.createRideRow(ownerContext.user.id, {
+      direction: 'to_hub',
+      hubId: 'kanpur-central',
+      campusLocationId: 'hall-1',
+      vehicleTypeId: 'car',
+      capacity: 4,
+      expectedTotalFare: 600,
+      departureStart: new Date(Date.now() + 52 * 3600 * 1000),
+      departureEnd: new Date(Date.now() + 54 * 3600 * 1000),
+      state: 'scheduled',
+    });
 
-    // Query database count of requests for this ride and rider
-    const { rows } = await db.query(
-      `SELECT count(*) as count FROM ride_join_requests WHERE ride_id = $1 AND rider_id = $2`,
-      [rideId, riderContext.user.id],
+    await riderContext.page.goto(`/rides/${rideIdA}`);
+
+    const idempotencyKey = crypto.randomUUID();
+
+    // 1. Send first request with idempotency key
+    const first = await riderContext.page.evaluate(
+      async ({ rId, key }) => {
+        const res = await fetch(`/api/rides/${rId}/requests`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pickupLocationId: 'hall-1',
+            idempotencyKey: key,
+          }),
+        });
+        return { status: res.status, body: await res.json() };
+      },
+      { rId: rideIdA, key: idempotencyKey },
     );
 
+    expect(first.status).toBe(201);
+    expect(first.body.request.kind).toBe('created');
+    const createdRequestId = first.body.request.request.id;
+
+    // 2. Send identical request with same idempotency key for the same ride
+    const second = await riderContext.page.evaluate(
+      async ({ rId, key }) => {
+        const res = await fetch(`/api/rides/${rId}/requests`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pickupLocationId: 'hall-1',
+            idempotencyKey: key,
+          }),
+        });
+        return { status: res.status, body: await res.json() };
+      },
+      { rId: rideIdA, key: idempotencyKey },
+    );
+
+    expect(second.status).toBe(200);
+    expect(second.body.request.kind).toBe('existing');
+    expect(second.body.request.request.id).toBe(createdRequestId);
+
+    // 3. Query database count of requests for this ride and rider - exactly 1 row
+    const { rows } = await db.query(
+      `SELECT count(*) as count FROM ride_join_requests WHERE ride_id = $1 AND rider_id = $2`,
+      [rideIdA, riderContext.user.id],
+    );
     expect(Number(rows[0].count)).toBe(1);
+
+    // 4. Send same idempotency key for another ride -> expect 409 idempotency_key_reused
+    const reused = await riderContext.page.evaluate(
+      async ({ rId, key }) => {
+        const res = await fetch(`/api/rides/${rId}/requests`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pickupLocationId: 'hall-1',
+            idempotencyKey: key,
+          }),
+        });
+        return { status: res.status, body: await res.json() };
+      },
+      { rId: rideIdB, key: idempotencyKey },
+    );
+
+    expect(reused.status).toBe(409);
+    expect(reused.body.code).toBe('idempotency_key_reused');
   });
 });

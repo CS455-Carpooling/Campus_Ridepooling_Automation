@@ -23,7 +23,7 @@ test.describe('Fare Calculation & Settlement Workflows (FR-RD-08.4, Table T-2, C
       expectedTotalFare: totalFare,
       departureStart,
       departureEnd,
-      state: 'completed',
+      state: 'pickup_in_progress',
       lockedAt: new Date(now.getTime() - 3 * 3600 * 1000),
     });
 
@@ -42,16 +42,18 @@ test.describe('Fare Calculation & Settlement Workflows (FR-RD-08.4, Table T-2, C
       [rideId, rider2.id],
     );
 
-    // 3. Populate final shares matching Table T-2: 500 / 3 => 167, 167, 166
-    // Position must be >= 1, and owner payment_status must be NULL.
-    await db.query(
-      `INSERT INTO ride_final_shares (ride_id, user_id, role, position, share, payment_status)
-       VALUES
-         ($1, $2, 'owner', 1, 167, NULL),
-         ($1, $3, 'rider', 2, 167, 'due'),
-         ($1, $4, 'rider', 3, 166, 'due')`,
-      [rideId, ownerContext.user.id, riderContext.user.id, rider2.id],
+    // 3. Complete ride through the app so it executes Table T-2 activeShares and writes ride_final_shares
+    const completeRes = await ownerContext.page.evaluate(
+      async ({ rId }) => {
+        const res = await fetch(`/api/rides/${rId}/complete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        return { status: res.status, body: await res.json() };
+      },
+      { rId: rideId },
     );
+    expect(completeRes.status).toBe(200);
 
     // 4. Verify in database: Table T-2 split for 500 / 3 gives 167, 167, 166
     const { rows: shares } = await db.query(
@@ -169,7 +171,7 @@ test.describe('Fare Calculation & Settlement Workflows (FR-RD-08.4, Table T-2, C
       expectedTotalFare: 600,
       departureStart: new Date(now.getTime() - 2 * 3600 * 1000),
       departureEnd: new Date(now.getTime() - 1 * 3600 * 1000),
-      state: 'completed',
+      state: 'pickup_in_progress',
       lockedAt: new Date(now.getTime() - 3 * 3600 * 1000),
     });
 
@@ -180,12 +182,27 @@ test.describe('Fare Calculation & Settlement Workflows (FR-RD-08.4, Table T-2, C
       [rideId, riderContext.user.id, ownerContext.user.id],
     );
 
-    // Owner absorbs whole fare, no-show gets no share entry
-    await db.query(
-      `INSERT INTO ride_final_shares (ride_id, user_id, role, position, share, payment_status)
-       VALUES ($1, $2, 'owner', 1, 600, NULL)`,
-      [rideId, ownerContext.user.id],
+    // Complete ride through the app so it executes activeShares: owner absorbs 600, no-show gets no share entry
+    const completeRes = await ownerContext.page.evaluate(
+      async ({ rId }) => {
+        const res = await fetch(`/api/rides/${rId}/complete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        return { status: res.status, body: await res.json() };
+      },
+      { rId: rideId },
     );
+    expect(completeRes.status).toBe(200);
+
+    // Verify in database: only owner share exists with 600
+    const { rows: finalShares } = await db.query(
+      `SELECT user_id, role, share FROM ride_final_shares WHERE ride_id = $1`,
+      [rideId],
+    );
+    expect(finalShares).toHaveLength(1);
+    expect(finalShares[0].role).toBe('owner');
+    expect(Number(finalShares[0].share)).toBe(600);
 
     // Rider views ride page
     await riderContext.page.goto(`/rides/${rideId}`);

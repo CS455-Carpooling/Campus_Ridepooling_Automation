@@ -122,22 +122,22 @@ test.describe('Ride Management & Trip Progress Lifecycle (FR-RO-04, FR-RO-06, FR
     // Verify ride state is now "Pickup in progress"
     await expect(ownerContext.page.getByText('Pickup in progress')).toBeVisible();
 
-    // 4. Rider views live pickup status and checks in
+    // 4. Rider views live pickup status
     await riderContext.page.goto(`/rides/${rideId}`);
     await expect(riderContext.page.getByText('Pickup in progress')).toBeVisible();
 
-    const checkInBtn = riderContext.page.getByRole('button', { name: /check in/i });
-    if ((await checkInBtn.count()) > 0) {
-      await checkInBtn.click();
-      await expect(riderContext.page.getByText(/checked in/i)).toBeVisible();
-    }
-
     // 5. Owner marks rider arrived
     await ownerContext.page.goto(`/rides/${rideId}`);
-    const markArrivedBtn = ownerContext.page.getByRole('button', { name: /mark arrived/i });
-    if ((await markArrivedBtn.count()) > 0) {
-      await markArrivedBtn.first().click();
-    }
+    const arrivedBtn = ownerContext.page.getByRole('button', {
+      name: `${riderContext.user.name} arrived`,
+    });
+    await expect(arrivedBtn).toBeVisible();
+    await arrivedBtn.click();
+    await expect(
+      ownerContext.page.getByRole('button', {
+        name: `Undo arrived for ${riderContext.user.name}`,
+      }),
+    ).toBeVisible();
 
     // 6. Owner starts the trip
     const startTripBtn = ownerContext.page.getByRole('button', { name: /start the trip/i });

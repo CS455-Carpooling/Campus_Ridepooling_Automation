@@ -32,17 +32,38 @@ test.describe('Itinerary Drift & Reconfirmation Lifecycle (FR-RD-06.5, P-09, CS4
     await riderHelper.requestSeat('Hall 2');
     await riderHelper.verifyRiderStatus(/waiting for the ride owner/i);
 
-    // 3. Simulate material itinerary shift (> 10m drift threshold per FR-RD-06)
-    await db.query(
-      `UPDATE ride_join_requests
-       SET status = 'needs_reconfirmation',
-           reason_code = 'itinerary_changed',
-           current_departure_start = snapshot_departure_start + interval '25 minutes',
-           current_pickup_at = snapshot_pickup_at + interval '25 minutes',
-           updated_at = now()
-       WHERE ride_id = $1 AND rider_id = $2`,
+    // 3. Owner updates departure time by 25 minutes through the app (> 10m drift threshold per P-09)
+    const newDepartureStart = new Date(departureStart.getTime() + 25 * 60 * 1000);
+    const newDepartureEnd = new Date(departureEnd.getTime() + 25 * 60 * 1000);
+    const editRes = await ownerContext.page.evaluate(
+      async ({ rId, depStart, depEnd }) => {
+        const res = await fetch(`/api/rides/${rId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'edit',
+            departureStart: depStart,
+            departureEnd: depEnd,
+            confirmAffectedRiders: true,
+          }),
+        });
+        return { status: res.status, body: await res.json() };
+      },
+      {
+        rId: rideId,
+        depStart: newDepartureStart.toISOString(),
+        depEnd: newDepartureEnd.toISOString(),
+      },
+    );
+    expect(editRes.status).toBe(200);
+
+    // Verify application drift detection updated the request status to needs_reconfirmation
+    const { rows: reqRows } = await db.query(
+      `SELECT status, reason_code FROM ride_join_requests WHERE ride_id = $1 AND rider_id = $2`,
       [rideId, riderContext.user.id],
     );
+    expect(reqRows[0].status).toBe('needs_reconfirmation');
+    expect(reqRows[0].reason_code).toBe('itinerary_changed');
 
     // 4. Rider reloads and sees reconfirmation request
     await riderContext.page.reload();
@@ -104,17 +125,38 @@ test.describe('Itinerary Drift & Reconfirmation Lifecycle (FR-RD-06.5, P-09, CS4
     await riderContext.page.goto(`/rides/${rideId}`);
     await riderHelper.requestSeat('Hall 2');
 
-    // 3. Simulate material itinerary shift
-    await db.query(
-      `UPDATE ride_join_requests
-       SET status = 'needs_reconfirmation',
-           reason_code = 'itinerary_changed',
-           current_departure_start = snapshot_departure_start + interval '30 minutes',
-           current_pickup_at = snapshot_pickup_at + interval '30 minutes',
-           updated_at = now()
-       WHERE ride_id = $1 AND rider_id = $2`,
+    // 3. Owner updates departure time by 30 minutes through the app (> 10m drift threshold per P-09)
+    const newDepartureStart = new Date(departureStart.getTime() + 30 * 60 * 1000);
+    const newDepartureEnd = new Date(departureEnd.getTime() + 30 * 60 * 1000);
+    const editRes = await ownerContext.page.evaluate(
+      async ({ rId, depStart, depEnd }) => {
+        const res = await fetch(`/api/rides/${rId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'edit',
+            departureStart: depStart,
+            departureEnd: depEnd,
+            confirmAffectedRiders: true,
+          }),
+        });
+        return { status: res.status, body: await res.json() };
+      },
+      {
+        rId: rideId,
+        depStart: newDepartureStart.toISOString(),
+        depEnd: newDepartureEnd.toISOString(),
+      },
+    );
+    expect(editRes.status).toBe(200);
+
+    // Verify application drift detection updated the request status to needs_reconfirmation
+    const { rows: reqRows } = await db.query(
+      `SELECT status, reason_code FROM ride_join_requests WHERE ride_id = $1 AND rider_id = $2`,
       [rideId, riderContext.user.id],
     );
+    expect(reqRows[0].status).toBe('needs_reconfirmation');
+    expect(reqRows[0].reason_code).toBe('itinerary_changed');
 
     // 4. Rider views drifted terms and clicks Decline
     await riderContext.page.reload();
