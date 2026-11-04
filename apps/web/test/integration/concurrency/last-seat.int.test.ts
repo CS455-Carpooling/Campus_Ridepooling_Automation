@@ -24,28 +24,13 @@ type Occupancy = {
 };
 
 async function occupancyOf(rideId: string, ownerId: string): Promise<Occupancy> {
-  const { rows } = await pool.query<{
-    capacity: number;
-    occupants: number;
-    accepted_requests: number;
-  }>(
-    `SELECT
-       ride.capacity_snapshot AS capacity,
-       (SELECT count(*)::int FROM riders
-        WHERE ride_id = ride.id AND left_at IS NULL) AS occupants,
-       (SELECT count(*)::int FROM ride_join_requests
-        WHERE ride_id = ride.id AND status = 'accepted') AS accepted_requests
-     FROM rides ride
-     WHERE ride.id = $1`,
-    [rideId],
-  );
-  const row = rows[0];
-  if (!row) throw new Error(`Ride ${rideId} disappeared during the concurrency test.`);
+  const view = await getRideView(rideId, ownerId);
+  if (!view) throw new Error(`Ride ${rideId} is not visible to its owner.`);
   return {
-    capacity: row.capacity,
-    occupants: row.occupants,
-    acceptedRequests: row.accepted_requests,
-    seatsLeft: (await getRideView(rideId, ownerId))?.seatsLeft ?? -1,
+    capacity: view.capacity,
+    occupants: view.occupants.length,
+    acceptedRequests: view.occupants.filter((occupant) => !occupant.isOwner).length,
+    seatsLeft: view.seatsLeft,
   };
 }
 
@@ -86,11 +71,11 @@ async function ensurePendingRequest(
   return requestId;
 }
 
-async function runAndObserve(rideId: string, operation: Promise<RouteResult>) {
+async function runAndObserve(rideId: string, ownerId: string, operation: Promise<RouteResult>) {
   const result = await operation;
   // Each route promise resolves only after its transaction has committed or rolled back.
   // The following read therefore checks a committed state, not an uncommitted intermediate.
-  const snapshot = await occupancyOf(rideId);
+  const snapshot = await occupancyOf(rideId, ownerId);
   return { result, snapshot };
 }
 
@@ -133,9 +118,9 @@ describe('NFR-RD-05: repeated last-seat concurrency experiment', () => {
 
       const concurrent = [
         ...acceptors.map((rider, index) =>
-          runAndObserve(ride.id, actOnRequest(owner, ride.id, pendingRequestIds[index], 'accept')),
+          runAndObserve(ride.id, owner.id, actOnRequest(owner, ride.id, pendingRequestIds[index], 'accept')),
         ),
-        runAndObserve(ride.id, actOnRequest(activeRider, ride.id, activeRequestId, 'leave')),
+        runAndObserve(ride.id, owner.id, actOnRequest(activeRider, ride.id, activeRequestId, 'leave')),
       ];
 
       const settled = await Promise.allSettled(concurrent);
