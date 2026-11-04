@@ -24,8 +24,8 @@ async function rideRow(rideId: string) {
 }
 
 // Core workflow (CS455-111): the owner changes or cancels a ride people have joined.
-describe('cancelling a ride (FR-RO-04.2)', () => {
-  it('cancels every request and seat claim and tells each rider they owe nothing', async () => {
+describe('cancelling a ride (FR-RO-04.4)', () => {
+  it('cancels every request and seat claim and tells each rider they owe nothing (FR-RD-06.7, FR-RD-06.11)', async () => {
     const owner = await signedInStudent();
     const rider = await signedInStudent();
     const waiter = await signedInStudent();
@@ -62,7 +62,7 @@ describe('cancelling a ride (FR-RO-04.2)', () => {
     expect([again.status, again.body.code]).toEqual([409, 'ride_closed']);
   });
 
-  it('refuses anyone but the owner, and a ride whose window is over', async () => {
+  it('refuses anyone but the owner, and a ride whose window is over (FR-RO-04.5, NFR-RO-SEC-01)', async () => {
     const owner = await signedInStudent();
     const rider = await signedInStudent();
     const ride = await offerRide(owner);
@@ -79,7 +79,7 @@ describe('cancelling a ride (FR-RO-04.2)', () => {
 });
 
 describe('editing a ride (FR-RO-04.1)', () => {
-  it('asks the owner to confirm a change that affects accepted riders, then tells them', async () => {
+  it('asks the owner to confirm a change that affects accepted riders, then tells them (FR-RO-04.2, FR-RO-04.3)', async () => {
     const owner = await signedInStudent();
     const rider = await signedInStudent();
     const ride = await offerRide(owner, { expectedTotalFare: 600 });
@@ -102,7 +102,7 @@ describe('editing a ride (FR-RO-04.1)', () => {
     expect(told.map((n) => n.type)).toContain('ride_share_update');
   });
 
-  it('sends a waiting request back to the rider when the departure moves more than 10 minutes', async () => {
+  it('sends a waiting request back to the rider when the departure moves more than 10 minutes (FR-RD-06.5, P-09)', async () => {
     const owner = await signedInStudent();
     const rider = await signedInStudent();
     const ride = await offerRide(owner);

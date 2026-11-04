@@ -12,7 +12,7 @@ const count = async (table: string) =>
 
 // Adversarial (CS455-113): bodies and identifiers a client should never send. Each must get a
 // clean 4xx, store nothing, and never a 500.
-describe('malformed bodies', () => {
+describe('malformed bodies (NFR-RD-10)', () => {
   it.each([
     ['broken JSON', '{"direction": "to_hub",'],
     ['a JSON array', '[1, 2, 3]'],
@@ -66,7 +66,7 @@ describe('malformed bodies', () => {
   });
 });
 
-describe('oversized input', () => {
+describe('oversized input (NFR-RD-10)', () => {
   it('refuses an idempotency key or pickup ID beyond its limit', async () => {
     const ride = await offerRide(await signedInStudent());
     const rider = await signedInStudent();
@@ -99,7 +99,7 @@ describe('oversized input', () => {
   });
 });
 
-describe('identifiers', () => {
+describe('identifiers (NFR-RD-10)', () => {
   it.each([
     'not-a-uuid',
     "' OR '1'='1",
@@ -127,7 +127,7 @@ describe('identifiers', () => {
   });
 });
 
-describe('hostile text', () => {
+describe('hostile text (NFR-RD-10)', () => {
   it('stores SQL and markup in a complaint as plain text', async () => {
     const { owner, ride, riders } = await pooledRide({ riders: 1, startsIn: 30 });
     for (const step of ['pickup_in_progress', 'completed']) {

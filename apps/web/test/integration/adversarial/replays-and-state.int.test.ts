@@ -19,7 +19,7 @@ import {
 
 // Adversarial (CS455-113): repeated and out-of-order requests.
 describe('replayed requests', () => {
-  it('refuses a different pickup sent with an idempotency key already used (bug 2, #87)', async () => {
+  it('refuses a different pickup sent with an idempotency key already used (FR-RD-06.9, bug 2, #87)', async () => {
     const ride = await offerRide(await signedInStudent());
     const rider = await signedInStudent();
     const first = await requestSeat(rider, ride.id, {
@@ -35,7 +35,7 @@ describe('replayed requests', () => {
     expect((await requestRow(first.body.request.requestId)).pickup_location_id).toBe('hall-2');
   });
 
-  it('does not answer a request for one ride with a request on another (bug 2, #87)', async () => {
+  it('does not answer a request for one ride with a request on another (FR-RD-06.9, bug 2, #87)', async () => {
     const rideA = await offerRide(await signedInStudent());
     const rideB = await offerRide(await signedInStudent());
     const rider = await signedInStudent();
@@ -89,7 +89,7 @@ describe('actions out of order', () => {
     expect([pickup.status, pickup.body.code]).toEqual([409, 'cancelled']);
   });
 
-  it('refuses leaving, checking in and new requests once pickup has started', async () => {
+  it('refuses leaving, checking in and new requests once pickup has started (FR-RD-07.5)', async () => {
     const { owner, ride, riders, requestIds } = await pooledRide({ riders: 1, startsIn: 30 });
     expect((await tripStep(owner, ride.id, 'pickup_in_progress')).status).toBe(200);
     expect((await tripStep(owner, ride.id, 'in_transit')).status).toBe(200);

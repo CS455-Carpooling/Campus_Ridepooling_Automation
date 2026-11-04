@@ -9,7 +9,7 @@ import { offerRide, requestRow, requestSeat, signedInStudent } from '../fixtures
  * Found by the adversarial suite (CS455-113). A key now replays only the request it was first
  * sent with (FR-RD-06.9).
  */
-describe('an idempotency key sent again with other details', () => {
+describe('an idempotency key sent again with other details (FR-RD-06.9)', () => {
   it('is refused for another ride, and creates nothing there', async () => {
     const rideA = await offerRide(await signedInStudent());
     const rideB = await offerRide(await signedInStudent());
