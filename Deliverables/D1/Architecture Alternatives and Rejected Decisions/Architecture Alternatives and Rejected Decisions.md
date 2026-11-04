@@ -117,6 +117,35 @@ boundary make that correctness much more direct to implement and verify.
 | **Event sourcing / event-first core state** | It offers a strong history of changes and naturally supports subscribers. | Auditability is needed, but the requirements also need straightforward current-state validation and atomic writes. Implementing event replay, projections, idempotency, ordering, and compensation would add substantial complexity. The chosen design stores authoritative relational state and immutable audit records, then emits events after state changes for notification. |
 | **Database-trigger-driven integration** | Triggers can react automatically when rows change. | Business workflows would become implicit in database code and difficult to observe, authorize, test, and version. Direct service calls through the API/application boundary make domain decisions explicit; the notification bus is invoked from services after a successful state transition. |
 
+
+### 3.5 D3 implementation refinement — seat-capacity enforcement
+
+The implementation retains the selected pessimistic, ride-scoped transaction strategy. The
+request-decision service locks the student row with `FOR UPDATE`, then locks the ride row with
+`FOR NO KEY UPDATE`, and finally locks/re-reads the request row. The acceptance branch reads the
+active occupant rows only after acquiring the ride lock, checks the stored capacity, and commits
+the seat, request state, event, and related updates together. The leave branch uses the same
+ride-row lock before changing occupancy. `FOR NO KEY UPDATE` is the implemented lock mode; it
+serializes competing seat-allocation transactions on the ride row without taking the stronger
+`FOR UPDATE` lock.
+
+The D3 review also made one database-enforcement refinement to the original C10 wording. The
+active-occupant invariant is a cross-row aggregate (`COUNT(active riders) <= capacity_snapshot`).
+A PostgreSQL `CHECK` constraint cannot safely reference and count rows in another table. The
+implementation therefore uses a row trigger on rider activation/reactivation: it locks the parent
+ride row, counts active occupants, and rejects an over-capacity write. A second trigger rejects a
+capacity reduction below the active occupant count. This is a database-level invariant guard,
+not a literal `CHECK` constraint; C10 in the build checklist records this technically necessary
+implementation choice.
+
+The guard complements application-level validation rather than replacing it. It protects direct
+SQL and future write paths that might bypass the current service. The targeted D3 integration
+experiment is `apps/web/test/integration/concurrency/last-seat.int.test.ts`; it dispatches 49
+acceptance attempts and one leave operation together for 100 rounds, with one free seat at each
+round's start. The report source is in
+`Deliverables/D3/Concurrency_Report/main.tex`. Execution evidence remains pending until the
+PostgreSQL integration test has run; no result is assumed by this decision record.
+
 ### 3.4 Consequences and boundaries
 
 The key positive consequence is a dependable synchronous write path: authorization
