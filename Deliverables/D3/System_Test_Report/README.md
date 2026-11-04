@@ -142,9 +142,12 @@ flowchart TD
 - **TC-TIME-03:** Late cancellation after lock window penalizes rider with fixed locked share liability (`FR-RD-06.10`, `SYS-FR-18`).
 
 ### Suite 11: AI Recommendations & Conversational Assistant (`recommendations-and-chatbot.spec.ts`)
-- **TC-AI-01:** "Ask AI to Suggest" ranks available rides and handles 8-second timeout with deterministic fallback (`AI-RD-01`, `AI-RD-02`).
-- **TC-AI-02:** Chatbot strictly refuses transactional actions (booking/cancellation) and returns direct manual navigation links (`AI-RD-05`, `FR-RD-05.4`).
-- **TC-AI-03:** Chatbot preference proposal requires explicit user confirmation before updating profile (`FR-RD-05.3`, `AI-RD-04`).
+- **TC-AI-01:** "Ask AI to Suggest" normal-path discovery ranks eligible rides (`AI-RD-01`).
+- **TC-AI-02:** Fault injection (Gemini timeout): deterministic route interception asserts that upstream AI timeouts trigger the deterministic fallback status banner and eligible candidate rides within a verified $<8$-second elapsed bound (`AI-RD-02`).
+- **TC-AI-03:** Fault injection (503 Service Unavailable): asserts that upstream AI service outages render an accessible alert banner (`div[role="alert"]`) and allow graceful retry recovery via "Try again".
+- **TC-AI-04:** Fault injection (Invalid schema / 500 error): asserts that malformed upstream responses are handled gracefully without client runtime crashes.
+- **TC-AI-05:** Chatbot strictly refuses transactional actions (booking/cancellation/payment) and returns direct manual navigation links (`AI-RD-05`, `FR-RD-05.4`).
+- **TC-AI-06:** Chatbot preference proposal requires explicit user confirmation before updating profile (`FR-RD-05.3`, `AI-RD-04`).
 
 ### Suite 12: SOS Safety & Incident Management (`sos-and-safety.spec.ts`)
 - **TC-SOS-01:** Rider triggers SOS during active trip; unique incident reference (`SOS-XXXXXXXX`) is created (`FR-RD-15`, `CS455-64`).

@@ -68,7 +68,7 @@ The table below provides bidirectional traceability between the functional and n
 \texttt{OA-FR-16..20} & Complaints Queue & Safety complaint prioritization, under review state, resolution outcome & \textbf{PASS} (1/1) \\
 \texttt{OA-FR-21..28} & Enforcement & Disciplinary account suspension, blocking ride offers and joins, reactivation & \textbf{PASS} (1/1) \\
 \midrule
-\texttt{AI-RD-01..06} & AI Features & Gemini ride ranking, 8s deterministic fallback, preference learning rules & \textbf{PASS} (3/3) \\
+\texttt{AI-RD-01..06} & AI Features & Gemini ranking, injected 8s timeout fallback bound, 503 recovery, guardrails & \textbf{PASS} (6/6) \\
 \texttt{SYS-NFR-01..12} & System Quality & CSRF/origin protection, idempotency enforcement, room isolation, audit & \textbf{PASS} (45/45) \\
 \bottomrule
 \end{longtable}
@@ -93,7 +93,7 @@ The table below provides bidirectional traceability between the functional and n
   \item \textbf{Table T-2 Split-Fare Verification (\file{cross-role/fare-and-settlement.spec.ts}):} Implements Deliverable 1 Table T-2 whole-rupee splitting: total fare of ₹500 split across 3 riders produces shares of ₹167, ₹167, and ₹166, with remainder assigned to earliest occupants. Verifies that marked no-shows owe ₹0.
   \item \textbf{Seat Contention Race (\file{cross-role/concurrency-seats.spec.ts}):} Two riders simultaneously contend for the single available seat on a capacity-limited vehicle. Verifies optimistic concurrency control: the first accepted rider takes the seat; subsequent acceptance is blocked in the UI and rejected with HTTP 409 at the database level.
   \item \textbf{Socket.IO Real-Time Messaging (\file{realtime/pool-chat-and-notifications.spec.ts}):} Uses two concurrent browser contexts to verify instant delivery of pool chat messages over WebSockets. Proves namespace/room isolation: riders in ride A cannot eavesdrop on or receive messages from ride B.
-  \item \textbf{AI Assistant and Guardrails (\file{ai/recommendations-and-chatbot.spec.ts}):} Exercises "Ask AI to Suggest" ranking with 8-second fallback timeout. Validates strict transactional boundaries: conversational queries asking the bot to book seats or cancel rides are refused with direct manual guidance links.
+  \item \textbf{AI Assistant and Guardrails (\file{ai/recommendations-and-chatbot.spec.ts}):} Exercises "Ask AI to Suggest" normal ranking. Applies deterministic route-level fault injection for Gemini timeout ($<8$s elapsed recovery bound), 503 service outage alerts with retry recovery, and malformed response resilience. Validates strict transactional boundaries: conversational queries asking the bot to book seats or cancel rides are refused with direct manual guidance links.
 \end{itemize}
 
 \section{Defect History and Architectural Observations}
