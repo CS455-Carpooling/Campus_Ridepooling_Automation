@@ -27,7 +27,7 @@ In contrast to unit testing (over 1,500 tests) and isolated route integration te
 | Metric | Result |
 |---|---|
 | **Total System Test Suites** | 13 test files |
-| **Total Test Cases** | **45 passed** / 0 failed / 0 skipped |
+| **Total Test Cases** | **48 passed** / 0 failed / 0 skipped |
 | **Pass Rate** | **100.0%** |
 | **Total Execution Duration** | ~1.4 minutes (sequential single-worker execution) |
 | **Target Browser Engine** | Chromium (Desktop Chrome profile) |
@@ -91,7 +91,7 @@ flowchart TD
 ### Suite 2: Authentication & Role Access Control (`auth-and-roles.spec.ts`)
 - **TC-AUTH-01:** Unauthenticated user navigating to protected URLs (`/rides`, `/home`) is automatically redirected to `/login`.
 - **TC-AUTH-02:** Login form validates and rejects non-IITK email addresses (`FR-RD-01.1`, `US-RD-01-AC1`).
-- **TC-AUTH-03:** Student rider account attempting to open `/admin` is rejected with 403 Forbidden (`SYS-FR-39`, `SYS-FR-41`).
+- **TC-AUTH-03:** Unauthenticated requests and unauthorized non-admin accounts attempting to open `/admin` are rejected with login redirect or HTTP 403 Forbidden (`SYS-FR-39`, `SYS-FR-41`, `US-OA-19`).
 - **TC-AUTH-04:** Multi-context test proves session cookies in rider and owner browser contexts remain strictly isolated.
 
 ### Suite 3: Ride Creation & Discovery (`ride-creation-and-discovery.spec.ts`)
@@ -111,11 +111,9 @@ flowchart TD
 - **TC-REQ-06:** Idempotency test: duplicate request submission with identical key does not duplicate database records (`CS455-75`).
 
 ### Suite 5: Ride Management & Trip Progression (`ride-management-trip-flow.spec.ts`)
-- **TC-TRIP-01:** Owner locks ride at lock window, freezing passenger list and calculating initial shares (`FR-RO-07`, `Table T-1`).
-- **TC-TRIP-02:** Owner starts pickup sequence, checks off arriving riders at designated pickup points (`FR-RO-08`).
-- **TC-TRIP-03:** Owner marks absent passenger as no-show; no-show rider is removed from active pool (`FR-RO-09.2`).
-- **TC-TRIP-04:** Owner starts transit and completes ride; ride transitions to completed and ratings become active (`FR-RO-09`, `FR-RO-12`).
-- **TC-TRIP-05:** End-to-end trip progression: scheduled -> locked -> pickup -> in-transit -> completed.
+- **TC-TRIP-01:** Owner locks scheduled ride early and verifies locked state (`FR-RO-06.2`, `FR-RO-06.3`).
+- **TC-TRIP-02:** Owner cancels scheduled ride and verifies cancellation status (`FR-RO-04.4`).
+- **TC-TRIP-03:** Full trip lifecycle: owner starts pickup, checks off arriving rider, starts trip, and completes ride (`FR-RO-09`, `FR-RD-10`).
 
 ### Suite 6: Fare Calculation & Settlement (`fare-and-settlement.spec.ts`)
 - **TC-FARE-01:** Table T-2 whole-rupee splitting: total fare of ₹500 across 3 occupants yields ₹167, ₹167, and ₹166, with remainder allocated to earliest joined occupants (`FR-RD-08`, `Table T-2`).
@@ -128,18 +126,17 @@ flowchart TD
 - **TC-RT-03:** Real-time notifications centre displays push alerts and allows marking notifications as read (`FR-RD-11`).
 
 ### Suite 8: Itinerary Drift & Reconfirmation (`itinerary-drift.spec.ts`)
-- **TC-DRIFT-01:** Owner shifts departure time by $\ge$15 minutes; rider request status transitions to `needs_reconfirmation` (`FR-RD-07.2`, `FR-RO-06.2`).
-- **TC-DRIFT-02:** Rider reviews drift and accepts revised departure; status reconciles to agreed (`FR-RD-07.3`).
-- **TC-DRIFT-03:** Attempting to modify departure time after ride lock is strictly refused by the server (`FR-RO-06.4`).
+- **TC-DRIFT-01:** Material itinerary drift (>10 min) requires rider reconfirmation before owner can accept (`FR-RD-06.5`, `P-09`, `CS455-75`).
+- **TC-DRIFT-02:** Rider declines drifted terms and request transitions to withdrawn (`FR-RD-06.5`, `P-09`).
 
 ### Suite 9: Concurrency & Seat Contention (`concurrency-seats.spec.ts`)
 - **TC-CONC-01:** Two riders contend for the last seat; owner accepts rider A, UI dynamically disables acceptance for rider B (`FR-RD-04`, `Table T-1`).
 - **TC-CONC-02:** Simultaneous parallel accept API requests: database-level locking ensures only one succeeds; the second receives HTTP 409 `ride_full`.
 
 ### Suite 10: Time Boundaries & Late Cancellations (`time-boundaries.spec.ts`)
-- **TC-TIME-01:** Join requests submitted after ride lock window are rejected with `ride_closed` (`FR-RD-06.3`).
-- **TC-TIME-02:** Free cancellation permitted within 10-minute grace period of acceptance (`FR-RD-06.9`, `SYS-FR-17`).
-- **TC-TIME-03:** Late cancellation after lock window penalizes rider with fixed locked share liability (`FR-RD-06.10`, `SYS-FR-18`).
+- **TC-TIME-01:** Lock boundary: ride locks 1 hour before departure and rejects new join requests with `ride_locked` (`FR-RO-06.2`, `FR-RO-06.3`, `FR-RD-06.3`).
+- **TC-TIME-02:** Leaving after lock imposes late-cancellation liability with locked share payable (`FR-RD-07.3`, `P-19`).
+- **TC-TIME-03:** No-show 5-minute grace period enforces wait time before owner can mark rider no-show (`FR-RO-10.1`, `P-19`).
 
 ### Suite 11: AI Recommendations & Conversational Assistant (`recommendations-and-chatbot.spec.ts`)
 - **TC-AI-01:** "Ask AI to Suggest" normal-path discovery ranks eligible rides (`AI-RD-01`).
@@ -210,5 +207,5 @@ npx playwright show-report test-results/playwright-report
 
 ## 7. Conclusion
 
-The CS455 Campus Ride-Pooling system testing implementation satisfies all requirements of **Deliverable 3**. With **45 passed test cases** covering every functional workflow, multi-role lifecycle, and edge case across real browser sessions and a dedicated test database, the system demonstrates robust production readiness, rigorous safety guarantees, and complete requirement traceability.
+The CS455 Campus Ride-Pooling system testing implementation satisfies all requirements of **Deliverable 3**. With **48 passed test cases** covering every functional workflow, multi-role lifecycle, and edge case across real browser sessions and a dedicated test database, the system demonstrates robust production readiness, rigorous safety guarantees, and complete requirement traceability.
 

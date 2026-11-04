@@ -110,7 +110,6 @@ export async function createTestDatabaseFixture(
         ride_chats,
         ride_join_request_events,
         ride_join_request_keys,
-        alone,
         ride_join_requests,
         riders,
         rides,

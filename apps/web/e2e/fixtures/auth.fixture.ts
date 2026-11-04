@@ -63,10 +63,14 @@ export const test = base.extend<AuthTestFixtures, AuthWorkerFixtures>({
     { scope: 'worker' },
   ],
 
-  db: async ({ dbPool }, use) => {
-    const database = await createTestDatabaseFixture(dbPool);
-    await use(database);
-  },
+  db: [
+    async ({ dbPool }, use) => {
+      const database = await createTestDatabaseFixture(dbPool);
+      await database.cleanTransactionalData();
+      await use(database);
+    },
+    { auto: true },
+  ],
 
   createAuthenticatedContext: async ({ browser, baseURL }, use) => {
     const contexts: BrowserContext[] = [];
