@@ -280,6 +280,13 @@ describe('NFR-RD-05: repeated last-seat concurrency experiment', () => {
       });
     }
 
+    await expect(
+      pool.query('UPDATE rides SET capacity_snapshot = 2 WHERE id = $1', [ride.id]),
+    ).rejects.toMatchObject({
+      code: '23514',
+      constraint: 'rides_capacity_not_below_occupancy',
+    });
+
     const final = await occupancyOf(ride.id);
     expect(final).toMatchObject({ capacity: 3, occupants: 3, availableSeats: 0 });
     expect(final.occupants).toBeLessThanOrEqual(final.capacity);
