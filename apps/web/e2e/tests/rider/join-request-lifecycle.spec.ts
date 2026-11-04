@@ -221,7 +221,7 @@ test.describe('Rider Join Request Lifecycle Workflows (FR-RD-06, FR-RO-05, Deliv
 
     expect(first.status).toBe(201);
     expect(first.body.request.kind).toBe('created');
-    const createdRequestId = first.body.request.request.id;
+    const createdRequestId = first.body.request.requestId;
 
     // 2. Send identical request with same idempotency key for the same ride
     const second = await riderContext.page.evaluate(
@@ -241,7 +241,7 @@ test.describe('Rider Join Request Lifecycle Workflows (FR-RD-06, FR-RO-05, Deliv
 
     expect(second.status).toBe(200);
     expect(second.body.request.kind).toBe('existing');
-    expect(second.body.request.request.id).toBe(createdRequestId);
+    expect(second.body.request.requestId).toBe(createdRequestId);
 
     // 3. Query database count of requests for this ride and rider - exactly 1 row
     const { rows } = await db.query(

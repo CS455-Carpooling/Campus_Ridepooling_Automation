@@ -42,7 +42,9 @@ test.describe('Fare Calculation & Settlement Workflows (FR-RD-08.4, Table T-2, C
       [rideId, rider2.id],
     );
 
-    // 3. Complete ride through the app so it executes Table T-2 activeShares and writes ride_final_shares
+    // 3. Complete ride through the app so it executes Table T-2 activeShares and writes ride_final_shares.
+    // The owner's page must be on the app first: fetch() needs it to resolve the relative URL.
+    await ownerContext.page.goto(`/rides/${rideId}`);
     const completeRes = await ownerContext.page.evaluate(
       async ({ rId }) => {
         const res = await fetch(`/api/rides/${rId}/complete`, {
@@ -183,6 +185,7 @@ test.describe('Fare Calculation & Settlement Workflows (FR-RD-08.4, Table T-2, C
     );
 
     // Complete ride through the app so it executes activeShares: owner absorbs 600, no-show gets no share entry
+    await ownerContext.page.goto(`/rides/${rideId}`);
     const completeRes = await ownerContext.page.evaluate(
       async ({ rId }) => {
         const res = await fetch(`/api/rides/${rId}/complete`, {

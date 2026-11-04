@@ -162,10 +162,16 @@ test.describe('SOS Safety & Incident Management (FR-RD-15, FR-RO-13, SYS-NFR-07,
     // 4. Admin acknowledges the alert
     const ackBtn = adminContext.page.getByRole('button', { name: /^acknowledge$/i });
     await expect(ackBtn).toBeVisible();
-    await ackBtn.click();
-
-    // Acknowledge button disappears after transition completes
-    await expect(ackBtn).not.toBeVisible();
+    // While the request is in flight the button reads "Saving…", so it disappears at once;
+    // wait for the server's answer before reloading, or the reload can cancel the request.
+    const incidentPatch = (response: { url(): string; request(): { method(): string } }) =>
+      response.url().endsWith(`/api/admin/incidents/${incidentId}`) &&
+      response.request().method() === 'PATCH';
+    const [ackResponse] = await Promise.all([
+      adminContext.page.waitForResponse(incidentPatch),
+      ackBtn.click(),
+    ]);
+    expect(ackResponse.status()).toBe(200);
     await adminContext.page.reload();
     await expect(adminContext.page.locator('body')).toContainText(/acknowledged/i);
 
@@ -177,7 +183,11 @@ test.describe('SOS Safety & Incident Management (FR-RD-15, FR-RO-13, SYS-NFR-07,
     );
 
     const closeBtn = adminContext.page.getByRole('button', { name: /close the alert/i });
-    await closeBtn.click();
+    const [closeResponse] = await Promise.all([
+      adminContext.page.waitForResponse(incidentPatch),
+      closeBtn.click(),
+    ]);
+    expect(closeResponse.status()).toBe(200);
 
     // Handle section disappears after closed
     await expect(closeBtn).not.toBeVisible();

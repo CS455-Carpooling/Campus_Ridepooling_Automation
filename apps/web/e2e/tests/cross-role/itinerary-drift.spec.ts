@@ -35,6 +35,8 @@ test.describe('Itinerary Drift & Reconfirmation Lifecycle (FR-RD-06.5, P-09, CS4
     // 3. Owner updates departure time by 25 minutes through the app (> 10m drift threshold per P-09)
     const newDepartureStart = new Date(departureStart.getTime() + 25 * 60 * 1000);
     const newDepartureEnd = new Date(departureEnd.getTime() + 25 * 60 * 1000);
+    // The owner's page must be on the app first: fetch() needs it to resolve the relative URL.
+    await ownerContext.page.goto(`/rides/${rideId}`);
     const editRes = await ownerContext.page.evaluate(
       async ({ rId, depStart, depEnd }) => {
         const res = await fetch(`/api/rides/${rId}`, {
@@ -128,6 +130,8 @@ test.describe('Itinerary Drift & Reconfirmation Lifecycle (FR-RD-06.5, P-09, CS4
     // 3. Owner updates departure time by 30 minutes through the app (> 10m drift threshold per P-09)
     const newDepartureStart = new Date(departureStart.getTime() + 30 * 60 * 1000);
     const newDepartureEnd = new Date(departureEnd.getTime() + 30 * 60 * 1000);
+    // The owner's page must be on the app first: fetch() needs it to resolve the relative URL.
+    await ownerContext.page.goto(`/rides/${rideId}`);
     const editRes = await ownerContext.page.evaluate(
       async ({ rId, depStart, depEnd }) => {
         const res = await fetch(`/api/rides/${rId}`, {
