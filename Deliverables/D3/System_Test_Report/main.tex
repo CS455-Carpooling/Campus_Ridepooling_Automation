@@ -75,7 +75,7 @@ During system test development, several subtle cross-layer interaction behaviors
 
 The complete system test suite can be executed locally or via continuous integration:
 \keybox{\small
-\textbf{Prerequisites:} Docker Desktop running, PostgreSQL container on port 5433.\\[3pt]
+\textbf{Database Setup:} \texttt{docker compose up -d db} starts PostgreSQL; create test database via \texttt{createdb -U crp crp\_test} and load \texttt{apps/web/db/schema.sql}. Set \texttt{TEST\_DATABASE\_URL=postgres://crp:pass@127.0.0.1:5433/crp\_test} and \texttt{ALLOW\_TEST\_DATABASE\_RESET=crp\_test} in \texttt{apps/web/.env.local}. Stop any dev server on port 3000 to avoid session collisions.\\[3pt]
 \texttt{npm run test:e2e}\hfill (from repository root or \texttt{apps/web})\\[2pt]
 \texttt{npm run test:e2e -- apps/web/e2e/tests/admin/admin-workflows.spec.ts}\hfill (single file)\\[2pt]
 \textbf{CI Pipeline:} GitHub Actions workflow \texttt{.github/workflows/ci.yml} runs the \textit{System tests (Playwright E2E)} job on every pull request and master branch push.

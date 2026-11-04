@@ -184,22 +184,48 @@ During the construction and execution of the Playwright system testing suite, th
 
 ### Prerequisites
 - Docker Desktop installed and running
-- PostgreSQL test database on port `5433` (created automatically via `docker compose up -d db`)
-- Node.js 20.9+
+- Node.js 20.9+ (matching repository `.nvmrc`)
 
-### Execution Commands
+### 1. Database Setup
+`docker compose up -d db` creates only the primary `crp` development database. The dedicated test database `crp_test` must be initialized and seeded with the project schema:
 
 ```bash
-# 1. Start database container
+# Start the database container
 docker compose up -d db
 
-# 2. Run the complete Playwright E2E suite
+# Create crp_test and apply database schema
+docker compose exec -T db createdb -U crp crp_test
+docker compose exec -T db psql -U crp -d crp_test < apps/web/db/schema.sql
+# Or using docker exec directly:
+# docker exec -i campus-ride-pooling-db-1 psql -U crp -d crp_test < apps/web/db/schema.sql
+```
+
+### 2. Environment Configuration
+Ensure `apps/web/.env.local` (or your shell environment) defines the test database variables so both the web application server and the Playwright test harness connect to `crp_test`:
+
+```env
+TEST_DATABASE_URL=postgres://crp:pass@127.0.0.1:5433/crp_test
+ALLOW_TEST_DATABASE_RESET=crp_test
+```
+
+> [!IMPORTANT]
+> **Server Port & Session Isolation:**
+> If a development server is already running on port 3000, Playwright's `reuseExistingServer` will connect to that instance rather than spawning a test instance against `crp_test`. This pollutes the development database and causes test failures due to session collisions.
+> **Stop the running development server before executing system tests**, or configure an alternate test port and base URL (e.g., `PORT=3001` and `APP_URL=http://localhost:3001`).
+
+### 3. Execution Commands
+
+```bash
+# Run the complete Playwright E2E suite (from repository root or apps/web)
 npm run test:e2e
 
-# 3. Run a specific test suite
+# Run a specific test suite
 npm run test:e2e -- apps/web/e2e/tests/admin/admin-workflows.spec.ts
 
-# 4. View interactive HTML test report
+# Run tests with visual browser UI
+npm run test:e2e -- --ui
+
+# View interactive HTML test report
 npx playwright show-report test-results/playwright-report
 ```
 

@@ -40,19 +40,31 @@ Configure in `apps/web/.env.local` or pass via shell environment:
 
 ## 3. Test Database Setup & Cleanup Strategy
 
-1. **Database Container:**
-   Run PostgreSQL 16 locally via Docker:
+1. **Database Container & crp_test Initialization:**
+   Running `docker compose up -d db` creates only the primary `crp` database. The dedicated test database `crp_test` must be initialized and seeded with the project schema:
    ```bash
    # From the repository root:
    docker compose up -d db
+   docker compose exec -T db createdb -U crp crp_test
+   docker compose exec -T db psql -U crp -d crp_test < apps/web/db/schema.sql
+   # Or using docker exec directly:
+   # docker exec -i campus-ride-pooling-db-1 psql -U crp -d crp_test < apps/web/db/schema.sql
    ```
    Or run a standalone test database container:
    ```bash
    docker run -d --name crp-test-pg -e POSTGRES_PASSWORD=pass -e POSTGRES_DB=crp_test -p 5433:5432 postgres:16
+   docker exec -i crp-test-pg psql -U postgres -d crp_test < apps/web/db/schema.sql
    ```
 
-2. **Schema Migration:**
-   Apply `apps/web/db/schema.sql` to initialize all tables, default campus places, destination hubs, and vehicle types.
+2. **Required Environment Variables:**
+   Ensure `apps/web/.env.local` contains:
+   ```env
+   TEST_DATABASE_URL=postgres://crp:pass@127.0.0.1:5433/crp_test
+   ALLOW_TEST_DATABASE_RESET=crp_test
+   ```
+
+3. **Server Port & Session Isolation:**
+   If a development server is already active on port 3000, Playwright's `reuseExistingServer` will connect to it and operate against `crp` instead of `crp_test`, causing database pollution and session collisions. Stop any running development server prior to testing, or set `PORT=3001` and `APP_URL=http://localhost:3001`.
 
 3. **Deterministic Accounts & Session Seeding:**
    To avoid triggering real external verification emails, system tests use the deterministic database seeder in `apps/web/test/seed/accounts.ts`. Sessions are injected directly as browser cookies (`crp_session`).
