@@ -177,6 +177,107 @@ CREATE INDEX IF NOT EXISTS riders_active_user_ride_idx
   ON riders(user_id, ride_id)
   WHERE left_at IS NULL;
 
+-- Cross-row capacity invariant. A PostgreSQL CHECK constraint cannot safely count rows in
+-- another table, so serialize every activation of a rider row on its parent ride and validate
+-- the count while holding that ride row lock. Application transactions already take this lock;
+-- the trigger also protects direct SQL writers and other future write paths.
+CREATE OR REPLACE FUNCTION enforce_rider_seat_capacity()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $function$
+DECLARE
+  ride_capacity INTEGER;
+  active_occupants INTEGER;
+BEGIN
+  IF NEW.left_at IS NOT NULL THEN
+    RETURN NEW;
+  END IF;
+
+  SELECT capacity_snapshot
+    INTO ride_capacity
+    FROM rides
+   WHERE id = NEW.ride_id
+   FOR NO KEY UPDATE;
+
+  -- The foreign-key constraint reports a missing parent ride.
+  IF NOT FOUND THEN
+    RETURN NEW;
+  END IF;
+
+  IF TG_OP = 'UPDATE' THEN
+    IF OLD.ride_id = NEW.ride_id THEN
+      SELECT count(*)::INTEGER
+        INTO active_occupants
+        FROM riders
+       WHERE ride_id = NEW.ride_id
+         AND left_at IS NULL
+         AND id <> OLD.id;
+    ELSE
+      SELECT count(*)::INTEGER
+        INTO active_occupants
+        FROM riders
+       WHERE ride_id = NEW.ride_id
+         AND left_at IS NULL;
+    END IF;
+  ELSE
+    SELECT count(*)::INTEGER
+      INTO active_occupants
+      FROM riders
+     WHERE ride_id = NEW.ride_id
+       AND left_at IS NULL;
+  END IF;
+
+  IF active_occupants >= ride_capacity THEN
+    RAISE EXCEPTION USING
+      ERRCODE = '23514',
+      CONSTRAINT = 'riders_ride_capacity',
+      MESSAGE = 'Active riders cannot exceed the ride capacity.';
+  END IF;
+
+  RETURN NEW;
+END;
+$function$;
+
+DROP TRIGGER IF EXISTS riders_enforce_seat_capacity ON riders;
+CREATE TRIGGER riders_enforce_seat_capacity
+BEFORE INSERT OR UPDATE OF ride_id, left_at ON riders
+FOR EACH ROW
+EXECUTE FUNCTION enforce_rider_seat_capacity();
+
+-- Capacity must not be reduced below the current number of active occupants. The UPDATE itself
+-- holds the ride row lock used by the rider trigger, so capacity edits and seat activations
+-- serialize against the same resource.
+CREATE OR REPLACE FUNCTION enforce_ride_capacity_snapshot()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $function$
+DECLARE
+  active_occupants INTEGER;
+BEGIN
+  SELECT count(*)::INTEGER
+    INTO active_occupants
+    FROM riders
+   WHERE ride_id = NEW.id
+     AND left_at IS NULL;
+
+  IF NEW.capacity_snapshot < active_occupants THEN
+    RAISE EXCEPTION USING
+      ERRCODE = '23514',
+      CONSTRAINT = 'rides_capacity_not_below_occupancy',
+      MESSAGE = 'Ride capacity cannot be lower than its active occupant count.';
+  END IF;
+
+  RETURN NEW;
+END;
+$function$;
+
+DROP TRIGGER IF EXISTS rides_enforce_capacity_snapshot ON rides;
+CREATE TRIGGER rides_enforce_capacity_snapshot
+BEFORE UPDATE OF capacity_snapshot ON rides
+FOR EACH ROW
+EXECUTE FUNCTION enforce_ride_capacity_snapshot();
+
+
 -- A rider's seat request is separate from their confirmed seat. Request history is retained
 -- after withdrawal, rejection, expiry, cancellation, or leaving (FR-RD-06.10).
 CREATE TABLE IF NOT EXISTS ride_join_requests (

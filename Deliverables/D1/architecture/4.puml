@@ -29,10 +29,10 @@ JoinSvc --> DB : Insert Pending Requests + Snapshot
 RO --> JoinSvc : Accept Rider A
 JoinSvc --> LockMgr : Initiate Atomic Transaction
 
-LockMgr --> DB : 1. SELECT FOR UPDATE (Lock Ride Row)
-LockMgr --> DB : 2. Validate Seats > 0, Request = Pending
+LockMgr --> DB : 1. SELECT FOR NO KEY UPDATE (Lock Ride Row)
+LockMgr --> DB : 2. Re-read active occupants,\nRevalidate Capacity + Request State
 
-' Corrected Boundary: Includes conflicting request withdrawal
+' Database trigger also serializes direct active-seat inserts/reactivations\n' and rejects a write that would exceed the ride capacity.\n' Corrected Boundary: Includes conflicting request withdrawal
 LockMgr --> DB : [Validation Passed] 3a. Decrement Seats,\nUpdate Status, Recalculate Fares,\nWithdraw Conflicting Requests (FR-RD-06.8), COMMIT
 LockMgr --> DB : [Validation Failed] 3b. ROLLBACK (e.g. Seats = 0)
 

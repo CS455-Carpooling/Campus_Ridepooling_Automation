@@ -157,9 +157,9 @@ keep riders informed — **without ever taking a consequential action unilateral
 
 ### 4.3 Concurrency — the contended-resource guarantee
 
-- [ ] **C9** [MANDATE+PRODUCT] Seat allocation under `SELECT … FOR UPDATE` with **revalidation
-      inside the transaction**
-- [ ] **C10** [MANDATE+PRODUCT] Capacity enforced by a **database check constraint**
+- [ ] **C9** [MANDATE+PRODUCT] Seat allocation under a ride-row lock (`FOR NO KEY UPDATE`
+      in the current implementation) with **revalidation inside the transaction**
+- [ ] **C10** [MANDATE+PRODUCT] Active seat count never exceeds ride capacity; enforced by a **database trigger serialized on the parent ride row** (the invariant spans rows and cannot be expressed as a PostgreSQL `CHECK` constraint)
 - [ ] **C10b** [MANDATE+PRODUCT] **No vehicle double-booking**, enforced by a PostgreSQL
       `EXCLUDE USING gist` constraint over `(vehicle_id, assigned_window)` — a unit cannot be
       allocated twice even under concurrent writers
