@@ -304,6 +304,10 @@ app.prepare().then(() => {
       origin: socketOrigin ? [socketOrigin] : [],
       credentials: true,
     },
+    allowRequest: (req, callback) => {
+      const origin = req.headers.origin;
+      callback(null, typeof origin !== 'string' || origin === socketOrigin);
+    },
     transports: ['websocket', 'polling'],
   });
 
