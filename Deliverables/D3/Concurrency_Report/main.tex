@@ -210,22 +210,36 @@ recording evidence. The direct-writer test is included in the same file.
 
 \section{Results}
 
-\textbf{Execution status: pending.} The experiment and assertions are committed in this branch,
-but the integration suite has not been run in this environment because it does not have access to
-the project's disposable local PostgreSQL database. No pass count, timing, or measured result is
-claimed here.
+\textbf{Execution status: passed locally on 4 November 2026.} The complete
+PostgreSQL-backed integration suite passed: 16 test files and 112 tests, with zero failures, in
+53.27 seconds. The dedicated NFR-RD-05 test also passed both of its tests in that run.
 
-After running the command above, replace this paragraph with the actual output and record:
-\begin{itemize}
-  \item whether all 100 rounds passed;
-  \item the emitted total acceptance attempts (expected: 4,900), concurrent leave operations
-        (expected: 100), and total concurrent operations (expected: 5,000);
-  \item the measured number of successful acceptances and serial cleanup leaves;
-  \item the maximum observed occupancy (must be no greater than three);
-  \item whether the direct SQL race admitted exactly one insert.
-\end{itemize}
-A failed run must be investigated and reported as a failure; do not edit the expected result to
-make a failing run appear successful.
+The emitted result for the full-suite run was:
+\begin{lstlisting}
+{
+  "iterations": 100,
+  "concurrentOperationsPerRound": 50,
+  "concurrentAcceptanceAttempts": 4900,
+  "concurrentLeaveOperations": 100,
+  "totalConcurrentOperations": 5000,
+  "acceptedInConcurrentRounds": 170,
+  "serialCleanupLeaves": 70,
+  "maximumObservedOccupants": 3,
+  "capacity": 3,
+  "invariantViolations": 0
+}
+\end{lstlisting}
+
+Thus, 5,000 mixed route-handler operations were launched in 100 rounds. The ride never exceeded
+its capacity of three occupants, all measured occupancy snapshots satisfied the seat/request
+invariants, and the round-end state was restored to two occupants with one seat available. The
+separate direct-database-writer test also passed: exactly one of two competing inserts for the
+final seat succeeded, the other was rejected with SQLSTATE \texttt{23514}, and reducing capacity
+below active occupancy was rejected.
+
+A separate targeted run also passed the same two tests. Its race-dependent counters differed
+(166 concurrent acceptances and 66 serial cleanup leaves), as expected from lock acquisition
+order; the invariant results were unchanged.
 
 \section{Concurrency strategy alternatives}
 
@@ -272,10 +286,9 @@ against workload evidence rather than adopted pre-emptively.
 \section{Limitations and follow-up}
 
 \begin{enumerate}
-  \item Run the integration test against the disposable local PostgreSQL database and attach the
-        complete command output to the D3 test evidence.
-  \item Run the full integration suite after the schema trigger change, not only this targeted
-        test, to detect interactions with ride creation, acceptance, leaving, and capacity edits.
+  \item Retain the local integration-test output as execution evidence for the D3 submission.
+  \item Re-run the integration suite after any subsequent changes to the ride/request transaction
+        or the capacity triggers.
   \item The current pool limit is ten connections. A separate deployment/load test is required
         before making claims about 50 concurrent database sessions or production throughput.
   \item The test does not simulate process crashes, multiple application hosts, network latency,
@@ -288,9 +301,9 @@ against workload evidence rather than adopted pre-emptively.
 
 The application serializes acceptance and leave decisions on the parent ride row and revalidates
 occupancy inside the transaction. The schema-level trigger extends that protection to direct
-database writers. The added integration experiment dispatches 50 mixed acceptance/leave
-operations in each of 100 rounds and checks committed seat invariants. The implementation is
-ready for execution evidence; the report remains a draft until the local PostgreSQL run is
-completed and its actual results are recorded.
+database writers. The 100-round local PostgreSQL experiment and the complete integration suite
+passed, with zero observed capacity-invariant violations. This is correctness evidence for the
+implemented route-handler and database path; it is not a 50-database-session load test or a claim
+about production throughput.
 
 \end{document}
