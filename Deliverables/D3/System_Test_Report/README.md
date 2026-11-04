@@ -73,7 +73,7 @@ flowchart TD
 ```
 
 ### Safety and Isolation Guardrails
-1. **Dedicated Database (`crp_test`):** System tests never touch development or production databases. The harness validates that `ALLOW_TEST_DATABASE_RESET=crp_test`, the target database name ends with `_test`, the host is localhost, and the database contains the required comment marker: `COMMENT ON DATABASE crp_test IS 'CS455 Campus Ride-Pooling test database'`.
+1. **Dedicated Database (`crp_test`):** System tests never touch development or production databases. The fixture refuses to connect unless `ALLOW_TEST_DATABASE_RESET=crp_test` is set, the target database name ends with `_test`, and the host is local (`testDatabaseUrl()` from the integration harness).
 2. **Deterministic Data Fixtures:** Transactional data (`rides`, `riders`, `complaints`, `sos_incidents`, etc.) is cleaned before each test while preserving static reference catalogs (`locations`, `vehicle_types`, `interest_tags`).
 3. **Session & Cookie Injection:** Valid cryptographic SHA-256 session tokens are seeded directly into browser cookies (`crp_session`), allowing multiple distinct user roles to interact without session collision.
 4. **Accessible Locator Priority:** Selectors use accessible ARIA names (`getByRole`, `getByLabel`, `getByText`) matching assistive technologies and authentic user interactions rather than brittle DOM classes.
@@ -104,38 +104,38 @@ flowchart TD
 
 ### Suite 4: Rider Join Request Lifecycle (`join-request-lifecycle.spec.ts`)
 - **TC-REQ-01:** Complete join request lifecycle: rider requests seat, owner sees pending request and accepts; rider views accepted state (`FR-RD-06`, `FR-RO-05`).
-- **TC-REQ-02:** Owner rejects join request; rider views "not accepted" state and seat remains open (`FR-RD-06.5`).
-- **TC-REQ-03:** Rider withdraws pending request before owner decision; request transitions to withdrawn (`FR-RD-06.8`).
-- **TC-REQ-04:** Rider leaves accepted ride before lock window; seat is released and fare recalculated (`FR-RD-06.9`).
+- **TC-REQ-02:** Owner rejects join request; rider views "not accepted" state and seat remains open (`FR-RD-06.4`).
+- **TC-REQ-03:** Rider withdraws pending request before owner decision; request transitions to withdrawn (`FR-RD-07.1`).
+- **TC-REQ-04:** Rider leaves an accepted ride before the lock and sees that they left (`FR-RD-07.2`).
 - **TC-REQ-05:** Owner cannot request a seat on their own ride (`US-RD-06`, `FR-RO-01`).
-- **TC-REQ-06:** Idempotency test: duplicate request submission with identical key does not duplicate database records (`CS455-75`).
+- **TC-REQ-06:** Idempotency: sending the same key twice gives one request, and the same key for another ride is refused with 409 `idempotency_key_reused` (`FR-RD-06.9`, `CS455-75`).
 
 ### Suite 5: Ride Management & Trip Progression (`ride-management-trip-flow.spec.ts`)
 - **TC-TRIP-01:** Owner locks scheduled ride early and verifies locked state (`FR-RO-06.2`, `FR-RO-06.3`).
 - **TC-TRIP-02:** Owner cancels scheduled ride and verifies cancellation status (`FR-RO-04.4`).
-- **TC-TRIP-03:** Full trip lifecycle: owner starts pickup, checks off arriving rider, starts trip, and completes ride (`FR-RO-09`, `FR-RD-10`).
+- **TC-TRIP-03:** Full trip lifecycle: owner starts pickup, checks off arriving rider, starts trip, and completes ride (`FR-RO-09.1`, `FR-RO-09.3`, `FR-RO-09.4`).
 
 ### Suite 6: Fare Calculation & Settlement (`fare-and-settlement.spec.ts`)
-- **TC-FARE-01:** Table T-2 whole-rupee splitting: total fare of ₹500 across 3 occupants yields ₹167, ₹167, and ₹166, with remainder allocated to earliest joined occupants (`FR-RD-08`, `Table T-2`).
-- **TC-FARE-02:** Rider enters UPI payment reference; owner verifies receipt and marks payment confirmed (`FR-RD-08.4`, `FR-RO-10`).
-- **TC-FARE-03:** No-show rider owes ₹0; entire fare is distributed solely among actual occupants (`P-19`).
+- **TC-FARE-01:** Table T-2 whole-rupee splitting: total fare of ₹500 across 3 occupants yields ₹167, ₹167, and ₹166, with remainder allocated to earliest joined occupants, computed by the app when the ride completes (`FR-RD-08.4`, `Table T-2`).
+- **TC-FARE-02:** Rider enters UPI payment reference; owner verifies receipt and marks payment confirmed (`FR-RD-11.2`, `FR-RD-11.3`).
+- **TC-FARE-03:** No-show rider owes ₹0; entire fare is distributed solely among actual occupants (`FR-RO-10.2`).
 
 ### Suite 7: Real-Time Pool Chat & Notifications (`pool-chat-and-notifications.spec.ts`)
 - **TC-RT-01:** Multi-context live chat over Socket.IO: message sent by rider in context A appears in owner context B without page reload (`FR-RD-09`, `CS455-46`).
-- **TC-RT-02:** Chat room isolation: message posted in ride X is never delivered to members of ride Y (`CS455-60`).
-- **TC-RT-03:** Real-time notifications centre displays push alerts and allows marking notifications as read (`FR-RD-11`).
+- **TC-RT-02:** Chat room isolation: message posted in ride X is never delivered to members of ride Y (`FR-RD-09.3`, `CS455-60`).
+- **TC-RT-03:** Real-time notifications centre displays push alerts and allows marking notifications as read (`FR-RD-14.2`).
 
 ### Suite 8: Itinerary Drift & Reconfirmation (`itinerary-drift.spec.ts`)
 - **TC-DRIFT-01:** Material itinerary drift (>10 min) requires rider reconfirmation before owner can accept (`FR-RD-06.5`, `P-09`, `CS455-75`).
 - **TC-DRIFT-02:** Rider declines drifted terms and request transitions to withdrawn (`FR-RD-06.5`, `P-09`).
 
 ### Suite 9: Concurrency & Seat Contention (`concurrency-seats.spec.ts`)
-- **TC-CONC-01:** Two riders contend for the last seat; owner accepts rider A, UI dynamically disables acceptance for rider B (`FR-RD-04`, `Table T-1`).
-- **TC-CONC-02:** Simultaneous parallel accept API requests: database-level locking ensures only one succeeds; the second receives HTTP 409 `ride_full`.
+- **TC-CONC-01:** Two riders contend for the last seat; owner accepts rider A, UI dynamically disables acceptance for rider B (`FR-RO-05.2`, `Table T-1`).
+- **TC-CONC-02:** Simultaneous parallel accept API requests: database-level locking ensures only one succeeds; the second receives HTTP 409 `ride_full` (`FR-RD-06.3`).
 
 ### Suite 10: Time Boundaries & Late Cancellations (`time-boundaries.spec.ts`)
-- **TC-TIME-01:** Lock boundary: ride locks 1 hour before departure and rejects new join requests with `ride_locked` (`FR-RO-06.2`, `FR-RO-06.3`, `FR-RD-06.3`).
-- **TC-TIME-02:** Leaving after lock imposes late-cancellation liability with locked share payable (`FR-RD-07.3`, `P-19`).
+- **TC-TIME-01:** Lock boundary: ride locks 1 hour before departure and rejects new join requests with `ride_locked` (`FR-RO-06.2`, `FR-RO-06.3`, `FR-RO-06.4`).
+- **TC-TIME-02:** Leaving after lock imposes late-cancellation liability with locked share payable (`FR-RD-07.3`).
 - **TC-TIME-03:** No-show 5-minute grace period enforces wait time before owner can mark rider no-show (`FR-RO-10.1`, `P-19`).
 
 ### Suite 11: AI Recommendations & Conversational Assistant (`recommendations-and-chatbot.spec.ts`)
@@ -147,9 +147,9 @@ flowchart TD
 - **TC-AI-06:** Chatbot preference proposal requires explicit user confirmation before updating profile (`FR-RD-05.3`, `AI-RD-04`).
 
 ### Suite 12: SOS Safety & Incident Management (`sos-and-safety.spec.ts`)
-- **TC-SOS-01:** Rider triggers SOS during active trip; unique incident reference (`SOS-XXXXXXXX`) is created (`FR-RD-15`, `CS455-64`).
+- **TC-SOS-01:** Rider triggers SOS during active trip; unique incident reference (`SOS-XXXXXXXX`) is created (`FR-RD-15.1`, `CS455-64`).
 - **TC-SOS-02:** Strict privacy constraint: other pool members never receive the SOS notification or alert banner (`FR-RD-15.4`).
-- **TC-SOS-03:** Administrator reviews emergency incident queue, acknowledges alert, and closes incident with official safety note (`FR-RO-13.2`, `CS455-65`).
+- **TC-SOS-03:** Administrator reviews emergency incident queue, acknowledges alert, and closes incident with official safety note (`FR-RD-15.2`, `CS455-65`).
 
 ### Suite 13: Admin Governance & Account Enforcement (`admin-workflows.spec.ts`)
 - **TC-ADMIN-01:** Admin configures vehicle types (adds vehicle type with capacity) and inspects hubs/pickup points (`OA-FR-01..07`, `CS455-51`).

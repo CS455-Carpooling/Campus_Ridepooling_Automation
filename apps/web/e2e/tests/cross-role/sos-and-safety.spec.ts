@@ -108,7 +108,7 @@ test.describe('SOS Safety & Incident Management (FR-RD-15, FR-RO-13, SYS-NFR-07,
     await expect(ownerContext.page.locator('body')).not.toContainText(/sos/i);
   });
 
-  test('admin reviews incident queue, acknowledges alert, and resolves with note (FR-RO-13.2)', async ({
+  test('admin reviews incident queue, acknowledges alert, and resolves with note (FR-RD-15.2)', async ({
     db,
     ownerContext,
     riderContext,
