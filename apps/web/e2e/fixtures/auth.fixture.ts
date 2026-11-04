@@ -60,9 +60,22 @@ export const test = base.extend<AuthTestFixtures>({
 
     await use(factory);
 
-    // Cleanup all created browser contexts
+    // Cleanup all created browser contexts and collect errors so they surface
+    const cleanupErrors: unknown[] = [];
     for (const ctx of contexts) {
-      await ctx.close().catch(() => {});
+      try {
+        await ctx.close();
+      } catch (error) {
+        cleanupErrors.push(error);
+      }
+    }
+    if (cleanupErrors.length > 0) {
+      throw new Error(
+        `Failed to close ${cleanupErrors.length} browser context(s) during fixture cleanup:\n` +
+          cleanupErrors
+            .map((e) => (e instanceof Error ? e.stack || e.message : String(e)))
+            .join('\n'),
+      );
     }
   },
 
@@ -74,7 +87,7 @@ export const test = base.extend<AuthTestFixtures>({
 
     await use({ user, context, page });
 
-    await context.close().catch(() => {});
+    await context.close();
   },
 
   ownerContext: async ({ browser, baseURL, db }, use) => {
@@ -85,7 +98,7 @@ export const test = base.extend<AuthTestFixtures>({
 
     await use({ user, context, page });
 
-    await context.close().catch(() => {});
+    await context.close();
   },
 
   adminContext: async ({ browser, baseURL, db }, use) => {
@@ -96,7 +109,7 @@ export const test = base.extend<AuthTestFixtures>({
 
     await use({ user, context, page });
 
-    await context.close().catch(() => {});
+    await context.close();
   },
 });
 
