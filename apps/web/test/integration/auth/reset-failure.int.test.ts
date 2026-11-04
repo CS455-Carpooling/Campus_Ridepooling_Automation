@@ -41,7 +41,7 @@ describe('password reset database failure recovery', () => {
       expect(response.body.error).toBe('Unable to reset the password right now.');
 
       const { rows: remainingToken } = await pool.query(
-        'SELECT id FROM auth_tokens WHERE token_hash = $1 AND purpose = $2',
+        'SELECT token_hash FROM auth_tokens WHERE token_hash = $1 AND purpose = $2',
         [sha256(token), 'reset'],
       );
       const { rows: after } = await pool.query<{ password_hash: string }>(
@@ -49,7 +49,7 @@ describe('password reset database failure recovery', () => {
         [user.id],
       );
       const { rows: sessions } = await pool.query(
-        'SELECT id FROM sessions WHERE user_id = $1',
+        'SELECT token_hash FROM sessions WHERE user_id = $1',
         [user.id],
       );
 

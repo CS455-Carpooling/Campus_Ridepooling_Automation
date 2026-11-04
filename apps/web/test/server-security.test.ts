@@ -132,10 +132,7 @@ describe('Socket.IO security boundaries', () => {
     sessionIsActive = true;
     harness.query.mockClear();
 
-    const malformed = await connect(
-      'https://campus.test',
-      '__Host-crp_session=%E0%A4%A',
-    );
+    const malformed = await connect('https://campus.test', '__Host-crp_session=%E0%A4%A');
     expect(malformed.connected).toBe(false);
     if (malformed.connected) return;
     expect(malformed.error.message).toBe('Authentication required.');

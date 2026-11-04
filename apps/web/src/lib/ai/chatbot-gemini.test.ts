@@ -106,11 +106,7 @@ describe('Gemini chatbot intent interpreter', () => {
             reject(new Error('Gemini request did not receive an abort signal.'));
             return;
           }
-          signal.addEventListener(
-            'abort',
-            () => reject(signal.reason),
-            { once: true },
-          );
+          signal.addEventListener('abort', () => reject(signal.reason), { once: true });
         }),
     );
 

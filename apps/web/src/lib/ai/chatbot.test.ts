@@ -524,9 +524,7 @@ describe('Graceful Service Failure (FR-RD-05.7, US-RD-12-AC4)', () => {
 
     expect(response.kind).toBe('search_results');
     expect(response.aiFallback).toBe(true);
-    expect(onAiMetadata).toHaveBeenLastCalledWith(
-      expect.objectContaining({ fallbackUsed: true }),
-    );
+    expect(onAiMetadata).toHaveBeenLastCalledWith(expect.objectContaining({ fallbackUsed: true }));
   });
 });
 

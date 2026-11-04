@@ -112,7 +112,9 @@ describe('an idempotency key sent again with other details', () => {
     }
 
     const averageMs = durations.reduce((sum, duration) => sum + duration, 0) / durations.length;
-    console.info(`[D3 report metrics] idempotency replay mean: ${averageMs.toFixed(2)} ms / 10 runs`);
+    console.info(
+      `[D3 report metrics] idempotency replay mean: ${averageMs.toFixed(2)} ms / 10 runs`,
+    );
     expect(averageMs).toBeLessThan(100);
   });
 });
