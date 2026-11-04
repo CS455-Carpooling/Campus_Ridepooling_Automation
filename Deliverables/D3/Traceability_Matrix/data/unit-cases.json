@@ -1,5 +1,5 @@
 {
- "startTime": 1793636496395,
+ "startTime": 1793802514852,
  "cases": [
   {
    "file": "apps/web/test/contrast.test.ts",
@@ -3892,6 +3892,11 @@
    "status": "passed"
   },
   {
+   "file": "apps/web/src/app/notifications/page.test.tsx",
+   "name": "NotificationsPage verifies the session before rendering the notifications centre",
+   "status": "passed"
+  },
+  {
    "file": "apps/web/src/app/privacy/page.test.tsx",
    "name": "PrivacyPage has the page title as metadata and as the only h1",
    "status": "passed"
@@ -3899,11 +3904,6 @@
   {
    "file": "apps/web/src/app/privacy/page.test.tsx",
    "name": "PrivacyPage describes the current prototype and links back to registration",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/notifications/page.test.tsx",
-   "name": "NotificationsPage verifies the session before rendering the notifications centre",
    "status": "passed"
   },
   {
@@ -4274,6 +4274,91 @@
   {
    "file": "apps/web/src/components/landing/ThemeToggle.test.tsx",
    "name": "ThemeToggle toggles, updates the label and persists the choice",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
+   "name": "NotificationsCentre shows a loading state while retrieving notifications",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
+   "name": "NotificationsCentre shows an empty state when there are no notifications",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
+   "name": "NotificationsCentre shows notification content, timestamp, unread state and a valid ride link",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
+   "name": "NotificationsCentre marks a notification read only after the API confirms and reflects persisted state",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
+   "name": "NotificationsCentre preserves a confirmed read state when an older refresh resolves afterward",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
+   "name": "NotificationsCentre shows an error and retry when listing fails",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
+   "name": "NotificationsCentre keeps unread state when marking read fails",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
+   "name": "NotificationsCentre accepts all supported notification types in the same response",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
+   "name": "NotificationsCentre keeps notifications visible when the API adds an unknown type",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
+   "name": "NotificationsCentre does not link malformed related ride identifiers",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
+   "name": "NotificationsCentre inserts incoming socket notifications immediately and deduplicates by notification ID",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
+   "name": "NotificationsCentre preserves read state for delayed insert events",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
+   "name": "NotificationsCentre refetches persisted notifications after reconnect",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
+   "name": "NotificationsCentre reports realtime connection errors while keeping the persisted list usable",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
+   "name": "NotificationsCentre reconciles from the API when the server signals a listener resynchronization",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
+   "name": "NotificationsCentre refetches persisted notifications when the tab becomes visible again",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
+   "name": "NotificationsCentre disconnects the socket when the component unmounts",
    "status": "passed"
   },
   {
@@ -5027,16 +5112,6 @@
    "status": "passed"
   },
   {
-   "file": "apps/web/src/components/warnings/WarningAcknowledgement.test.tsx",
-   "name": "WarningAcknowledgement shows the category and requires an explicit acknowledgement",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/components/warnings/WarningAcknowledgement.test.tsx",
-   "name": "WarningAcknowledgement shows an explicit error when acknowledgement fails",
-   "status": "passed"
-  },
-  {
    "file": "apps/web/src/components/ui/Button.test.tsx",
    "name": "Button defaults to type=\"button\" and the primary style",
    "status": "passed"
@@ -5232,88 +5307,13 @@
    "status": "passed"
   },
   {
-   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
-   "name": "NotificationsCentre shows a loading state while retrieving notifications",
+   "file": "apps/web/src/components/warnings/WarningAcknowledgement.test.tsx",
+   "name": "WarningAcknowledgement shows the category and requires an explicit acknowledgement",
    "status": "passed"
   },
   {
-   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
-   "name": "NotificationsCentre shows an empty state when there are no notifications",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
-   "name": "NotificationsCentre shows notification content, timestamp, unread state and a valid ride link",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
-   "name": "NotificationsCentre marks a notification read only after the API confirms and reflects persisted state",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
-   "name": "NotificationsCentre preserves a confirmed read state when an older refresh resolves afterward",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
-   "name": "NotificationsCentre shows an error and retry when listing fails",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
-   "name": "NotificationsCentre keeps unread state when marking read fails",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
-   "name": "NotificationsCentre accepts all supported notification types in the same response",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
-   "name": "NotificationsCentre keeps notifications visible when the API adds an unknown type",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
-   "name": "NotificationsCentre does not link malformed related ride identifiers",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
-   "name": "NotificationsCentre inserts incoming socket notifications immediately and deduplicates by notification ID",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
-   "name": "NotificationsCentre preserves read state for delayed insert events",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
-   "name": "NotificationsCentre refetches persisted notifications after reconnect",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
-   "name": "NotificationsCentre reports realtime connection errors while keeping the persisted list usable",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
-   "name": "NotificationsCentre reconciles from the API when the server signals a listener resynchronization",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
-   "name": "NotificationsCentre refetches persisted notifications when the tab becomes visible again",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/components/notifications/NotificationsCentre.test.tsx",
-   "name": "NotificationsCentre disconnects the socket when the component unmounts",
+   "file": "apps/web/src/components/warnings/WarningAcknowledgement.test.tsx",
+   "name": "WarningAcknowledgement shows an explicit error when acknowledgement fails",
    "status": "passed"
   },
   {
@@ -5803,21 +5803,46 @@
   },
   {
    "file": "apps/web/src/lib/ai/shared-interest-enrichment.test.ts",
+   "name": "enrichSharedInterests does not query when there are no candidate rides",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/lib/ai/shared-interest-enrichment.test.ts",
+   "name": "enrichSharedInterests deduplicates candidate IDs and initializes missing rows as unavailable",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/lib/ai/shared-interest-enrichment.test.ts",
+   "name": "enrichSharedInterests maps approved shared labels and leaves unreturned candidates unavailable",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/lib/ai/shared-interest-enrichment.test.ts",
+   "name": "enrichSharedInterests withholds labels when any participant has not consented",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/lib/ai/shared-interest-enrichment.test.ts",
+   "name": "enrichSharedInterests distinguishes no common interest from missing visible-tag data",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/lib/ai/shared-interest-tags.test.ts",
    "name": "resolveSharedInterestTags returns only shared labels when all participants consent and have visible tags",
    "status": "passed"
   },
   {
-   "file": "apps/web/src/lib/ai/shared-interest-enrichment.test.ts",
+   "file": "apps/web/src/lib/ai/shared-interest-tags.test.ts",
    "name": "resolveSharedInterestTags omits the factor when any participant has not consented",
    "status": "passed"
   },
   {
-   "file": "apps/web/src/lib/ai/shared-interest-enrichment.test.ts",
+   "file": "apps/web/src/lib/ai/shared-interest-tags.test.ts",
    "name": "resolveSharedInterestTags omits the factor when any participant has no usable visible tags",
    "status": "passed"
   },
   {
-   "file": "apps/web/src/lib/ai/shared-interest-enrichment.test.ts",
+   "file": "apps/web/src/lib/ai/shared-interest-tags.test.ts",
    "name": "resolveSharedInterestTags returns an empty list when usable tags exist but there is no common interest",
    "status": "passed"
   },
@@ -5842,61 +5867,6 @@
    "status": "passed"
   },
   {
-   "file": "apps/web/src/app/(app)/chatbot/page.test.tsx",
-   "name": "ChatbotPage (/chatbot Route) redirects unauthenticated riders to /login",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/(app)/chatbot/page.test.tsx",
-   "name": "ChatbotPage (/chatbot Route) renders ChatbotInterface when user is logged in",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/(app)/complaints/pages.test.tsx",
-   "name": "/rides/[id]/complaint (CS455-53) shows the form for someone on the ride, passing a reported message on",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/(app)/complaints/pages.test.tsx",
-   "name": "/rides/[id]/complaint (CS455-53) explains why a trip complaint cannot be filed when the window is not_completed",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/(app)/complaints/pages.test.tsx",
-   "name": "/rides/[id]/complaint (CS455-53) explains why a trip complaint cannot be filed when the window is cancelled",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/(app)/complaints/pages.test.tsx",
-   "name": "/rides/[id]/complaint (CS455-53) explains why a trip complaint cannot be filed when the window is closed",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/(app)/complaints/pages.test.tsx",
-   "name": "/rides/[id]/complaint (CS455-53) is \"not found\" for anyone not on the ride, and asks the signed-out to sign in",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/(app)/complaints/pages.test.tsx",
-   "name": "/complaints (CS455-53, FR-RD-13.5) lists your complaints with status, and only whether action was taken",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/(app)/complaints/pages.test.tsx",
-   "name": "/complaints (CS455-53, FR-RD-13.5) says how to report a problem when there are none, and asks the signed-out to sign in",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/(app)/home/loading.test.tsx",
-   "name": "HomeLoading shows skeletons and announces that the home page is loading",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/(app)/home/page.test.tsx",
-   "name": "HomePage redirects the legacy /home route to the dashboard",
-   "status": "passed"
-  },
-  {
    "file": "apps/web/src/app/admin/ai-decisions/page.test.tsx",
    "name": "/admin/ai-decisions (SYS-FR-38, AI-RD-12) shows the recommendation, decision, final action and authorized admin",
    "status": "passed"
@@ -5909,16 +5879,6 @@
   {
    "file": "apps/web/src/app/admin/ai-decisions/page.test.tsx",
    "name": "/admin/ai-decisions (SYS-FR-38, AI-RD-12) does not query decision history or chatbot audits for a non-admin",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/admin/ai-recommendations/page.test.tsx",
-   "name": "/admin/ai-recommendations shows operational metadata and reports with only a shortened pseudonym",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/admin/ai-recommendations/page.test.tsx",
-   "name": "/admin/ai-recommendations does not query audit data for a non-admin",
    "status": "passed"
   },
   {
@@ -6004,6 +5964,16 @@
   {
    "file": "apps/web/src/app/admin/incidents/pages.test.tsx",
    "name": "/admin/incidents/[id] (CS455-65) is not found for an unknown alert, and not for students",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/admin/ai-recommendations/page.test.tsx",
+   "name": "/admin/ai-recommendations shows operational metadata and reports with only a shortened pseudonym",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/admin/ai-recommendations/page.test.tsx",
+   "name": "/admin/ai-recommendations does not query audit data for a non-admin",
    "status": "passed"
   },
   {
@@ -6114,16 +6084,6 @@
   {
    "file": "apps/web/src/app/api/chatbot/route.test.ts",
    "name": "POST /api/chatbot (Backend API Route & Guardrails) returns graceful fallback and logs error if AI service encounters an unexpected error (FR-RD-05.7)",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/health/route.test.ts",
-   "name": "/api/health returns ready when PostgreSQL responds",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/health/route.test.ts",
-   "name": "/api/health returns an explicit unavailable status when PostgreSQL is down",
    "status": "passed"
   },
   {
@@ -6269,6 +6229,61 @@
   {
    "file": "apps/web/src/app/api/rides/route.test.ts",
    "name": "POST /api/rides rolls back and returns 500 when persistence fails",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/(app)/chatbot/page.test.tsx",
+   "name": "ChatbotPage (/chatbot Route) redirects unauthenticated riders to /login",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/(app)/chatbot/page.test.tsx",
+   "name": "ChatbotPage (/chatbot Route) renders ChatbotInterface when user is logged in",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/(app)/complaints/pages.test.tsx",
+   "name": "/rides/[id]/complaint (CS455-53) shows the form for someone on the ride, passing a reported message on",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/(app)/complaints/pages.test.tsx",
+   "name": "/rides/[id]/complaint (CS455-53) explains why a trip complaint cannot be filed when the window is not_completed",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/(app)/complaints/pages.test.tsx",
+   "name": "/rides/[id]/complaint (CS455-53) explains why a trip complaint cannot be filed when the window is cancelled",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/(app)/complaints/pages.test.tsx",
+   "name": "/rides/[id]/complaint (CS455-53) explains why a trip complaint cannot be filed when the window is closed",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/(app)/complaints/pages.test.tsx",
+   "name": "/rides/[id]/complaint (CS455-53) is \"not found\" for anyone not on the ride, and asks the signed-out to sign in",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/(app)/complaints/pages.test.tsx",
+   "name": "/complaints (CS455-53, FR-RD-13.5) lists your complaints with status, and only whether action was taken",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/(app)/complaints/pages.test.tsx",
+   "name": "/complaints (CS455-53, FR-RD-13.5) says how to report a problem when there are none, and asks the signed-out to sign in",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/(app)/home/loading.test.tsx",
+   "name": "HomeLoading shows skeletons and announces that the home page is loading",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/(app)/home/page.test.tsx",
+   "name": "HomePage redirects the legacy /home route to the dashboard",
    "status": "passed"
   },
   {
@@ -6432,6 +6447,16 @@
    "status": "passed"
   },
   {
+   "file": "apps/web/src/app/api/health/route.test.ts",
+   "name": "/api/health returns ready when PostgreSQL responds",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/health/route.test.ts",
+   "name": "/api/health returns an explicit unavailable status when PostgreSQL is down",
+   "status": "passed"
+  },
+  {
    "file": "apps/web/src/components/admin/incidents/incidents.test.tsx",
    "name": "IncidentAlert (P-22) shows a new alert on its next check, every 3 seconds, until it is acknowledged",
    "status": "passed"
@@ -6562,81 +6587,6 @@
    "status": "passed"
   },
   {
-   "file": "apps/web/src/app/api/auth/forgot/route.test.ts",
-   "name": "POST /api/auth/forgot returns the guard response when blocked",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/auth/forgot/route.test.ts",
-   "name": "POST /api/auth/forgot answers ok without a lookup for a non-IITK email",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/auth/forgot/route.test.ts",
-   "name": "POST /api/auth/forgot answers ok without a lookup when the per-email limit is hit",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/auth/forgot/route.test.ts",
-   "name": "POST /api/auth/forgot sends a reset email for a verified account",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/auth/forgot/route.test.ts",
-   "name": "POST /api/auth/forgot gives the same answer but sends nothing for an unknown account",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/auth/login/route.test.ts",
-   "name": "POST /api/auth/login returns the guard response when blocked",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/auth/login/route.test.ts",
-   "name": "POST /api/auth/login rejects a missing email with 401",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/auth/login/route.test.ts",
-   "name": "POST /api/auth/login rejects a missing password with 401",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/auth/login/route.test.ts",
-   "name": "POST /api/auth/login returns 429 when the per-email limit is hit",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/auth/login/route.test.ts",
-   "name": "POST /api/auth/login spends equal time and returns 401 for an unknown email",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/auth/login/route.test.ts",
-   "name": "POST /api/auth/login returns 401 for a wrong password",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/auth/login/route.test.ts",
-   "name": "POST /api/auth/login returns 403 when the email is not verified yet",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/auth/login/route.test.ts",
-   "name": "POST /api/auth/login creates a session on success and honours \"remember\"",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/auth/login/route.test.ts",
-   "name": "POST /api/auth/login occasionally runs cleanup, and ignores its failures",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/auth/login/route.test.ts",
-   "name": "POST /api/auth/login truncates very long passwords to 128 characters",
-   "status": "passed"
-  },
-  {
    "file": "apps/web/src/app/api/auth/logout/route.test.ts",
    "name": "POST /api/auth/logout rejects a foreign origin without touching the session",
    "status": "passed"
@@ -6747,6 +6697,81 @@
    "status": "passed"
   },
   {
+   "file": "apps/web/src/app/api/auth/forgot/route.test.ts",
+   "name": "POST /api/auth/forgot returns the guard response when blocked",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/auth/forgot/route.test.ts",
+   "name": "POST /api/auth/forgot answers ok without a lookup for a non-IITK email",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/auth/forgot/route.test.ts",
+   "name": "POST /api/auth/forgot answers ok without a lookup when the per-email limit is hit",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/auth/forgot/route.test.ts",
+   "name": "POST /api/auth/forgot sends a reset email for a verified account",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/auth/forgot/route.test.ts",
+   "name": "POST /api/auth/forgot gives the same answer but sends nothing for an unknown account",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/auth/login/route.test.ts",
+   "name": "POST /api/auth/login returns the guard response when blocked",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/auth/login/route.test.ts",
+   "name": "POST /api/auth/login rejects a missing email with 401",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/auth/login/route.test.ts",
+   "name": "POST /api/auth/login rejects a missing password with 401",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/auth/login/route.test.ts",
+   "name": "POST /api/auth/login returns 429 when the per-email limit is hit",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/auth/login/route.test.ts",
+   "name": "POST /api/auth/login spends equal time and returns 401 for an unknown email",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/auth/login/route.test.ts",
+   "name": "POST /api/auth/login returns 401 for a wrong password",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/auth/login/route.test.ts",
+   "name": "POST /api/auth/login returns 403 when the email is not verified yet",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/auth/login/route.test.ts",
+   "name": "POST /api/auth/login creates a session on success and honours \"remember\"",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/auth/login/route.test.ts",
+   "name": "POST /api/auth/login occasionally runs cleanup, and ignores its failures",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/auth/login/route.test.ts",
+   "name": "POST /api/auth/login truncates very long passwords to 128 characters",
+   "status": "passed"
+  },
+  {
    "file": "apps/web/src/app/api/chatbot/confirm-preference/route.test.ts",
    "name": "POST /api/chatbot/confirm-preference rejects unauthenticated requests with 401",
    "status": "passed"
@@ -6767,18 +6792,58 @@
    "status": "passed"
   },
   {
-   "file": "apps/web/src/app/api/cron/payment-reminders/route.test.ts",
-   "name": "POST /api/cron/payment-reminders rejects missing or incorrect bearer secrets",
+   "file": "apps/web/src/app/api/auth/verify/route.test.ts",
+   "name": "GET /api/auth/verify redirects to a failure notice when rate limited",
    "status": "passed"
   },
   {
-   "file": "apps/web/src/app/api/cron/payment-reminders/route.test.ts",
-   "name": "POST /api/cron/payment-reminders runs transactionally with the configured bearer secret",
+   "file": "apps/web/src/app/api/auth/verify/route.test.ts",
+   "name": "GET /api/auth/verify fails for ",
    "status": "passed"
   },
   {
-   "file": "apps/web/src/app/api/cron/payment-reminders/route.test.ts",
-   "name": "POST /api/cron/payment-reminders refuses to run when the scheduler is not configured",
+   "file": "apps/web/src/app/api/auth/verify/route.test.ts",
+   "name": "GET /api/auth/verify fails for ?token=short",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/auth/verify/route.test.ts",
+   "name": "GET /api/auth/verify fails for an unknown or expired token",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/auth/verify/route.test.ts",
+   "name": "GET /api/auth/verify marks the email verified and redirects with a success notice",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/profile/delete/route.test.ts",
+   "name": "POST /api/profile/delete requires authentication and explicit confirmation",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/profile/delete/route.test.ts",
+   "name": "POST /api/profile/delete anonymizes account details, clears auth/profile data, and signs out",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/profile/delete/route.test.ts",
+   "name": "POST /api/profile/delete does not treat an elapsed scheduled window as an active ride",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/profile/delete/route.test.ts",
+   "name": "POST /api/profile/delete keeps an account that has an upcoming ride or a waiting request (FR-RD-16.3)",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/profile/export/route.test.ts",
+   "name": "GET /api/profile/export requires authentication",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/profile/export/route.test.ts",
+   "name": "GET /api/profile/export downloads only the signed-in user account, profile and trip data as JSON",
    "status": "passed"
   },
   {
@@ -6832,36 +6897,6 @@
    "status": "passed"
   },
   {
-   "file": "apps/web/src/app/api/profile/delete/route.test.ts",
-   "name": "POST /api/profile/delete requires authentication and explicit confirmation",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/profile/delete/route.test.ts",
-   "name": "POST /api/profile/delete anonymizes account details, clears auth/profile data, and signs out",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/profile/delete/route.test.ts",
-   "name": "POST /api/profile/delete does not treat an elapsed scheduled window as an active ride",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/profile/delete/route.test.ts",
-   "name": "POST /api/profile/delete keeps an account that has an upcoming ride or a waiting request (FR-RD-16.3)",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/profile/export/route.test.ts",
-   "name": "GET /api/profile/export requires authentication",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/profile/export/route.test.ts",
-   "name": "GET /api/profile/export downloads only the signed-in user account, profile and trip data as JSON",
-   "status": "passed"
-  },
-  {
    "file": "apps/web/src/app/api/rides/recommendations/route.test.ts",
    "name": "POST /api/rides/recommendations requires authentication",
    "status": "passed"
@@ -6879,31 +6914,6 @@
   {
    "file": "apps/web/src/app/api/rides/recommendations/route.test.ts",
    "name": "POST /api/rides/recommendations returns a safe error when the service fails",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/auth/verify/route.test.ts",
-   "name": "GET /api/auth/verify redirects to a failure notice when rate limited",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/auth/verify/route.test.ts",
-   "name": "GET /api/auth/verify fails for ",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/auth/verify/route.test.ts",
-   "name": "GET /api/auth/verify fails for ?token=short",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/auth/verify/route.test.ts",
-   "name": "GET /api/auth/verify fails for an unknown or expired token",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/auth/verify/route.test.ts",
-   "name": "GET /api/auth/verify marks the email verified and redirects with a success notice",
    "status": "passed"
   },
   {
@@ -7017,6 +7027,31 @@
    "status": "passed"
   },
   {
+   "file": "apps/web/src/app/api/admin/complaints/[id]/route.test.ts",
+   "name": "PATCH /api/admin/complaints/[id] (OA-FR-18, CS455-52) moves a complaint on and answers with its new state, audited with before and after",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/admin/complaints/[id]/route.test.ts",
+   "name": "PATCH /api/admin/complaints/[id] (OA-FR-18, CS455-52) needs whether action was taken to resolve",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/admin/complaints/[id]/route.test.ts",
+   "name": "PATCH /api/admin/complaints/[id] (OA-FR-18, CS455-52) answers 409 with the current state on a stale change, or on a resolved complaint",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/admin/complaints/[id]/route.test.ts",
+   "name": "PATCH /api/admin/complaints/[id] (OA-FR-18, CS455-52) answers 404 for an unknown complaint or an ID that is not a UUID",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/admin/complaints/[id]/route.test.ts",
+   "name": "PATCH /api/admin/complaints/[id] (OA-FR-18, CS455-52) passes on the refusal for anyone but an admin",
+   "status": "passed"
+  },
+  {
    "file": "apps/web/src/app/(app)/rides/[id]/loading.test.tsx",
    "name": "RideLoading shows skeletons and announces that the ride is loading",
    "status": "passed"
@@ -7047,28 +7082,18 @@
    "status": "passed"
   },
   {
-   "file": "apps/web/src/app/api/admin/complaints/[id]/route.test.ts",
-   "name": "PATCH /api/admin/complaints/[id] (OA-FR-18, CS455-52) moves a complaint on and answers with its new state, audited with before and after",
+   "file": "apps/web/src/app/api/cron/payment-reminders/route.test.ts",
+   "name": "POST /api/cron/payment-reminders rejects missing or incorrect bearer secrets",
    "status": "passed"
   },
   {
-   "file": "apps/web/src/app/api/admin/complaints/[id]/route.test.ts",
-   "name": "PATCH /api/admin/complaints/[id] (OA-FR-18, CS455-52) needs whether action was taken to resolve",
+   "file": "apps/web/src/app/api/cron/payment-reminders/route.test.ts",
+   "name": "POST /api/cron/payment-reminders runs transactionally with the configured bearer secret",
    "status": "passed"
   },
   {
-   "file": "apps/web/src/app/api/admin/complaints/[id]/route.test.ts",
-   "name": "PATCH /api/admin/complaints/[id] (OA-FR-18, CS455-52) answers 409 with the current state on a stale change, or on a resolved complaint",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/admin/complaints/[id]/route.test.ts",
-   "name": "PATCH /api/admin/complaints/[id] (OA-FR-18, CS455-52) answers 404 for an unknown complaint or an ID that is not a UUID",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/admin/complaints/[id]/route.test.ts",
-   "name": "PATCH /api/admin/complaints/[id] (OA-FR-18, CS455-52) passes on the refusal for anyone but an admin",
+   "file": "apps/web/src/app/api/cron/payment-reminders/route.test.ts",
+   "name": "POST /api/cron/payment-reminders refuses to run when the scheduler is not configured",
    "status": "passed"
   },
   {
@@ -7079,31 +7104,6 @@
   {
    "file": "apps/web/src/app/api/admin/incidents/open/route.test.ts",
    "name": "GET /api/admin/incidents/open (CS455-65, P-22) refuses anyone else",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/admin/riders/[id]/routes.test.ts",
-   "name": "rider enforcement routes (OA-FR-21 to 28, CS455-52) warn: 201, with the reason in the audit record",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/admin/riders/[id]/routes.test.ts",
-   "name": "rider enforcement routes (OA-FR-21 to 28, CS455-52) warn: needs a reason",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/admin/riders/[id]/routes.test.ts",
-   "name": "rider enforcement routes (OA-FR-21 to 28, CS455-52) suspend: needs a length or indefinite, and refuses a second suspension",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/admin/riders/[id]/routes.test.ts",
-   "name": "rider enforcement routes (OA-FR-21 to 28, CS455-52) reactivate: needs a reason, and refuses a rider who is not suspended",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/admin/riders/[id]/routes.test.ts",
-   "name": "rider enforcement routes (OA-FR-21 to 28, CS455-52) answer 404 for an ID that is not a UUID, and pass on refusals for non-admins",
    "status": "passed"
   },
   {
@@ -7129,6 +7129,31 @@
   {
    "file": "apps/web/src/app/api/admin/incidents/[id]/route.test.ts",
    "name": "PATCH /api/admin/incidents/[id] (CS455-65) passes on the refusal for students and signed-out users",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/admin/riders/[id]/routes.test.ts",
+   "name": "rider enforcement routes (OA-FR-21 to 28, CS455-52) warn: 201, with the reason in the audit record",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/admin/riders/[id]/routes.test.ts",
+   "name": "rider enforcement routes (OA-FR-21 to 28, CS455-52) warn: needs a reason",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/admin/riders/[id]/routes.test.ts",
+   "name": "rider enforcement routes (OA-FR-21 to 28, CS455-52) suspend: needs a length or indefinite, and refuses a second suspension",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/admin/riders/[id]/routes.test.ts",
+   "name": "rider enforcement routes (OA-FR-21 to 28, CS455-52) reactivate: needs a reason, and refuses a rider who is not suspended",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/admin/riders/[id]/routes.test.ts",
+   "name": "rider enforcement routes (OA-FR-21 to 28, CS455-52) answer 404 for an ID that is not a UUID, and pass on refusals for non-admins",
    "status": "passed"
   },
   {
@@ -7182,6 +7207,26 @@
    "status": "passed"
   },
   {
+   "file": "apps/web/src/app/api/rides/[id]/arrivals/route.test.ts",
+   "name": "POST /api/rides/[id]/arrivals (FR-RO-09.3, FR-RO-10) marks a rider arrived, or undoes it, by seat",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/rides/[id]/arrivals/route.test.ts",
+   "name": "POST /api/rides/[id]/arrivals (FR-RO-09.3, FR-RO-10) marks a no-show",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/rides/[id]/arrivals/route.test.ts",
+   "name": "POST /api/rides/[id]/arrivals (FR-RO-09.3, FR-RO-10) refuses a body without a seat or status with 400",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/rides/[id]/arrivals/route.test.ts",
+   "name": "POST /api/rides/[id]/arrivals (FR-RO-09.3, FR-RO-10) checks the rate limit, sign-in and the ride ID first",
+   "status": "passed"
+  },
+  {
    "file": "apps/web/src/app/api/rides/[id]/chat/route.test.ts",
    "name": "GET /api/rides/[id]/chat requires a signed-in member",
    "status": "passed"
@@ -7212,41 +7257,6 @@
    "status": "passed"
   },
   {
-   "file": "apps/web/src/app/api/rides/[id]/arrivals/route.test.ts",
-   "name": "POST /api/rides/[id]/arrivals (FR-RO-09.3, FR-RO-10) marks a rider arrived, or undoes it, by seat",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/rides/[id]/arrivals/route.test.ts",
-   "name": "POST /api/rides/[id]/arrivals (FR-RO-09.3, FR-RO-10) marks a no-show",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/rides/[id]/arrivals/route.test.ts",
-   "name": "POST /api/rides/[id]/arrivals (FR-RO-09.3, FR-RO-10) refuses a body without a seat or status with 400",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/rides/[id]/arrivals/route.test.ts",
-   "name": "POST /api/rides/[id]/arrivals (FR-RO-09.3, FR-RO-10) checks the rate limit, sign-in and the ride ID first",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/rides/[id]/complete/route.test.ts",
-   "name": "POST /api/rides/[id]/complete (FR-RO-09.4) passes on the answer of the origin check and rate limit",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/rides/[id]/complete/route.test.ts",
-   "name": "POST /api/rides/[id]/complete (FR-RO-09.4) requires sign-in, and answers 404 for an ID that is not a UUID",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/rides/[id]/complete/route.test.ts",
-   "name": "POST /api/rides/[id]/complete (FR-RO-09.4) is the trip step to Completed, with when rating closes, 72 hours later (P-16)",
-   "status": "passed"
-  },
-  {
    "file": "apps/web/src/app/api/rides/[id]/check-in/route.test.ts",
    "name": "POST /api/rides/[id]/check-in (FR-RD-10.4) checks the signed-in rider in on this ride",
    "status": "passed"
@@ -7254,46 +7264,6 @@
   {
    "file": "apps/web/src/app/api/rides/[id]/check-in/route.test.ts",
    "name": "POST /api/rides/[id]/check-in (FR-RD-10.4) checks the rate limit, sign-in and the ride ID first",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/rides/[id]/lock/route.test.ts",
-   "name": "POST /api/rides/[id]/lock honors rate limits, requires authentication, and checks ride IDs",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/rides/[id]/lock/route.test.ts",
-   "name": "POST /api/rides/[id]/lock locks the ride in a transaction",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/rides/[id]/lock/route.test.ts",
-   "name": "POST /api/rides/[id]/lock rolls back and maps not_found to 404",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/rides/[id]/lock/route.test.ts",
-   "name": "POST /api/rides/[id]/lock rolls back and maps not_owner to 403",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/rides/[id]/lock/route.test.ts",
-   "name": "POST /api/rides/[id]/lock rolls back and maps ride_closed to 409",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/rides/[id]/lock/route.test.ts",
-   "name": "POST /api/rides/[id]/lock rolls back and maps ride_locked to 409",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/rides/[id]/lock/route.test.ts",
-   "name": "POST /api/rides/[id]/lock rolls back and maps unexpected to 409",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/rides/[id]/lock/route.test.ts",
-   "name": "POST /api/rides/[id]/lock returns a server error when lock processing fails",
    "status": "passed"
   },
   {
@@ -7377,6 +7347,46 @@
    "status": "passed"
   },
   {
+   "file": "apps/web/src/app/api/rides/[id]/lock/route.test.ts",
+   "name": "POST /api/rides/[id]/lock honors rate limits, requires authentication, and checks ride IDs",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/rides/[id]/lock/route.test.ts",
+   "name": "POST /api/rides/[id]/lock locks the ride in a transaction",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/rides/[id]/lock/route.test.ts",
+   "name": "POST /api/rides/[id]/lock rolls back and maps not_found to 404",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/rides/[id]/lock/route.test.ts",
+   "name": "POST /api/rides/[id]/lock rolls back and maps not_owner to 403",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/rides/[id]/lock/route.test.ts",
+   "name": "POST /api/rides/[id]/lock rolls back and maps ride_closed to 409",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/rides/[id]/lock/route.test.ts",
+   "name": "POST /api/rides/[id]/lock rolls back and maps ride_locked to 409",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/rides/[id]/lock/route.test.ts",
+   "name": "POST /api/rides/[id]/lock rolls back and maps unexpected to 409",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/rides/[id]/lock/route.test.ts",
+   "name": "POST /api/rides/[id]/lock returns a server error when lock processing fails",
+   "status": "passed"
+  },
+  {
    "file": "apps/web/src/app/api/rides/[id]/ratings/route.test.ts",
    "name": "POST /api/rides/[id]/ratings refuses a suspended rider (FR-RD-01.5, CS455-52)",
    "status": "passed"
@@ -7457,6 +7467,66 @@
    "status": "passed"
   },
   {
+   "file": "apps/web/src/app/api/rides/[id]/requests/route.test.ts",
+   "name": "GET /api/rides/[id]/requests requires sign-in and validates the ride ID before querying",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/rides/[id]/requests/route.test.ts",
+   "name": "GET /api/rides/[id]/requests answers not-found for rides that do not exist",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/rides/[id]/requests/route.test.ts",
+   "name": "GET /api/rides/[id]/requests returns owner requests with the submitted snapshot as fallback for current terms",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/rides/[id]/requests/route.test.ts",
+   "name": "GET /api/rides/[id]/requests returns a rider’s request history, including null accepted time and changed terms",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/rides/[id]/requests/route.test.ts",
+   "name": "POST /api/rides/[id]/requests returns rate-limit and authentication responses without opening a transaction",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/rides/[id]/requests/route.test.ts",
+   "name": "POST /api/rides/[id]/requests rejects invalid ride IDs and invalid request bodies before connecting",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/rides/[id]/requests/route.test.ts",
+   "name": "POST /api/rides/[id]/requests commits a newly created request and returns 201",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/rides/[id]/requests/route.test.ts",
+   "name": "POST /api/rides/[id]/requests returns existing requests as success and rolls back refusals other than a lock transition",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/rides/[id]/requests/route.test.ts",
+   "name": "POST /api/rides/[id]/requests commits a discovered lock transition and reports database failures",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/rides/[id]/complete/route.test.ts",
+   "name": "POST /api/rides/[id]/complete (FR-RO-09.4) passes on the answer of the origin check and rate limit",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/rides/[id]/complete/route.test.ts",
+   "name": "POST /api/rides/[id]/complete (FR-RO-09.4) requires sign-in, and answers 404 for an ID that is not a UUID",
+   "status": "passed"
+  },
+  {
+   "file": "apps/web/src/app/api/rides/[id]/complete/route.test.ts",
+   "name": "POST /api/rides/[id]/complete (FR-RO-09.4) is the trip step to Completed, with when rating closes, 72 hours later (P-16)",
+   "status": "passed"
+  },
+  {
    "file": "apps/web/src/app/api/rides/[id]/sos/route.test.ts",
    "name": "POST /api/rides/[id]/sos (FR-RD-15.1, 15.2) raises the alert as the signed-in user: 201 when new, 200 when already active",
    "status": "passed"
@@ -7489,31 +7559,6 @@
   {
    "file": "apps/web/src/app/api/rides/[id]/trip/route.test.ts",
    "name": "POST /api/rides/[id]/trip (FR-RO-09.1, 09.4) passes on the rate limit, and answers 401 signed out and 404 for a bad ID",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/(app)/rides/[id]/review/loading.test.tsx",
-   "name": "RideReviewLoading shows skeletons and announces that the review page is loading",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/(app)/rides/[id]/review/page.test.tsx",
-   "name": "review page sends a signed-out visitor to sign in, without reading the ride",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/(app)/rides/[id]/review/page.test.tsx",
-   "name": "review page answers not found for a missing ride, or for someone without a seat on it",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/(app)/rides/[id]/review/page.test.tsx",
-   "name": "review page shows the review page to someone on the ride",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/(app)/rides/[id]/review/page.test.tsx",
-   "name": "review page lets a database failure reach the error page instead of claiming the ride is missing",
    "status": "passed"
   },
   {
@@ -7567,48 +7612,28 @@
    "status": "passed"
   },
   {
-   "file": "apps/web/src/app/api/rides/[id]/requests/route.test.ts",
-   "name": "GET /api/rides/[id]/requests requires sign-in and validates the ride ID before querying",
+   "file": "apps/web/src/app/(app)/rides/[id]/review/loading.test.tsx",
+   "name": "RideReviewLoading shows skeletons and announces that the review page is loading",
    "status": "passed"
   },
   {
-   "file": "apps/web/src/app/api/rides/[id]/requests/route.test.ts",
-   "name": "GET /api/rides/[id]/requests answers not-found for rides that do not exist",
+   "file": "apps/web/src/app/(app)/rides/[id]/review/page.test.tsx",
+   "name": "review page sends a signed-out visitor to sign in, without reading the ride",
    "status": "passed"
   },
   {
-   "file": "apps/web/src/app/api/rides/[id]/requests/route.test.ts",
-   "name": "GET /api/rides/[id]/requests returns owner requests with the submitted snapshot as fallback for current terms",
+   "file": "apps/web/src/app/(app)/rides/[id]/review/page.test.tsx",
+   "name": "review page answers not found for a missing ride, or for someone without a seat on it",
    "status": "passed"
   },
   {
-   "file": "apps/web/src/app/api/rides/[id]/requests/route.test.ts",
-   "name": "GET /api/rides/[id]/requests returns a rider’s request history, including null accepted time and changed terms",
+   "file": "apps/web/src/app/(app)/rides/[id]/review/page.test.tsx",
+   "name": "review page shows the review page to someone on the ride",
    "status": "passed"
   },
   {
-   "file": "apps/web/src/app/api/rides/[id]/requests/route.test.ts",
-   "name": "POST /api/rides/[id]/requests returns rate-limit and authentication responses without opening a transaction",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/rides/[id]/requests/route.test.ts",
-   "name": "POST /api/rides/[id]/requests rejects invalid ride IDs and invalid request bodies before connecting",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/rides/[id]/requests/route.test.ts",
-   "name": "POST /api/rides/[id]/requests commits a newly created request and returns 201",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/rides/[id]/requests/route.test.ts",
-   "name": "POST /api/rides/[id]/requests returns existing requests as success and rolls back refusals other than a lock transition",
-   "status": "passed"
-  },
-  {
-   "file": "apps/web/src/app/api/rides/[id]/requests/route.test.ts",
-   "name": "POST /api/rides/[id]/requests commits a discovered lock transition and reports database failures",
+   "file": "apps/web/src/app/(app)/rides/[id]/review/page.test.tsx",
+   "name": "review page lets a database failure reach the error page instead of claiming the ride is missing",
    "status": "passed"
   },
   {

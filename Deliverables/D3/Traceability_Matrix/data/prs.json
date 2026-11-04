@@ -5179,5 +5179,89 @@
     "body": "Preserve the latest performance fixes, remove the duplicate locked_at migration, and record the new review prompts in the D3 AI log.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
    }
   ]
+ },
+ {
+  "baseRefName": "master",
+  "body": "## Summary\n\n- Adds the D3 B1 unit-test and coverage report.\n- Adds five tests for `enrichSharedInterests` using a mocked database pool.\n- Restores the four direct `resolveSharedInterestTags` tests in `shared-interest-tags.test.ts`.\n- Configures Vitest to emit a machine-readable JSON coverage summary.\n- Uploads the generated HTML and JSON coverage output as a GitHub Actions artifact.\n\n## Verified results\n\nCoverage run [#242](https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/actions/runs/41710059405), on tested commit `3daef7f479da0b610b90d10dad6436ee5f72e96b`:\n\n- 201 test files passed; 1,535 tests passed.\n- Statements 87.57%, branches 80.73%, functions 88.71%, lines 89.92%.\n- Format, lint, type-check, unit tests, coverage artifact upload, and production build passed.\n- PostgreSQL integration tests passed.\n\nThe updated report includes weighted coverage summaries for the library, API routes, and components, plus a table of the lowest-covered files. Reproduction instructions use `npm test` from `apps/web`, matching the workspace script.\n\nThe final PR head commit `1db29c48a60b2bbad96b61d3afa4bdce6c2c55a2` was also checked in [CI run #244](https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/actions/runs/41711703522); both CI jobs completed successfully.\n\n## Coverage artifact\n\n[Download the HTML and JSON coverage report from the final PR run #244](https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/actions/runs/41711703522/artifacts/13267419091).\n\nThe artifact contains the generated HTML report and `coverage-summary.json`.",
+  "headRefName": "khushi/d3-unit-test-report",
+  "mergedAt": "2026-11-04T08:52:31Z",
+  "number": 92,
+  "title": "D3: Add unit test and coverage report",
+  "url": "https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/92",
+  "files": [
+   ".github/workflows/ci.yml",
+   "Deliverables/D3/Unit_Test_Report.md",
+   "Deliverables/D3/unit-coverage-report.zip",
+   "apps/web/src/lib/ai/shared-interest-enrichment.test.ts",
+   "apps/web/src/lib/ai/shared-interest-tags.test.ts",
+   "apps/web/vitest.config.mts"
+  ],
+  "commits": [
+   {
+    "oid": "7a743c2bef2978fc714cd16a2b52cb078a3c796a",
+    "headline": "docs(D3): add unit test and coverage report",
+    "body": ""
+   },
+   {
+    "oid": "acb5f2b9c962a01a88336db20238dadc10b8c57a",
+    "headline": "Update D3 unit coverage report with local run",
+    "body": ""
+   },
+   {
+    "oid": "941b4bbd2ce811c9636aa5e2da5e350e90d9f56a",
+    "headline": "Clarify local coverage run provenance in D3 report",
+    "body": ""
+   },
+   {
+    "oid": "1af22c7f7199f155fcc2c75da5a749f976befec9",
+    "headline": "Add HTML unit test coverage report",
+    "body": ""
+   },
+   {
+    "oid": "5af4019b13e7e372e6e687a99b3f3b885fb263ba",
+    "headline": "Clarify latest-master coverage run and preserved HTML report",
+    "body": ""
+   },
+   {
+    "oid": "e5e7723aa0d2f77137c9af029fcd1e75407a64b2",
+    "headline": "test: cover shared interest enrichment query flow",
+    "body": ""
+   },
+   {
+    "oid": "3bcad6d0f9c69fb85e857db8b851eabfe6e7932a",
+    "headline": "docs: focus coverage report on targeted test improvements",
+    "body": ""
+   },
+   {
+    "oid": "9c380cd24132ce87103d4bad0c5f8516b7a4245f",
+    "headline": "docs: report only coverage tests added in this update",
+    "body": ""
+   },
+   {
+    "oid": "ec8955b3076c6699ad9090ba7d650b50a1a37fb9",
+    "headline": "Format shared interest enrichment tests",
+    "body": ""
+   },
+   {
+    "oid": "cbebfc2a25d5adfd4cd02904e4f45d48d78f1ec1",
+    "headline": "Restore shared interest tag resolver unit tests",
+    "body": ""
+   },
+   {
+    "oid": "c22c3f21f24171210456fe768f1d089bf9086023",
+    "headline": "Emit machine-readable unit coverage summary",
+    "body": ""
+   },
+   {
+    "oid": "3daef7f479da0b610b90d10dad6436ee5f72e96b",
+    "headline": "Publish unit coverage output from CI",
+    "body": ""
+   },
+   {
+    "oid": "1db29c48a60b2bbad96b61d3afa4bdce6c2c55a2",
+    "headline": "Update unit test report with verified CI coverage",
+    "body": ""
+   }
+  ]
  }
 ]

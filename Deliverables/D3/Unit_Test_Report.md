@@ -1,7 +1,7 @@
 # D3 Unit Test and Coverage Report
 
-**Story:** Story B (Khushi) — Unit and system testing, defect history  
-**Scope:** B1 — Unit tests and coverage report  
+**Story:** Story B (Khushi): unit and system testing, defect history  
+**Scope:** B1: unit tests and coverage report  
 **Repository:** `CS455-Carpooling/Campus_Ridepooling_Automation`  
 **Coverage run:** 4 November 2026 (GitHub Actions run #242)  
 **Tested commit:** `3daef7f479da0b610b90d10dad6436ee5f72e96b`  
@@ -83,15 +83,17 @@ cd apps/web
 npm test
 ```
 
-To reproduce the CI branch run:
+The tested commit was merged into `master` as `e494209` with no further code change, so the same run can be repeated on master:
 
 ```bash
-git switch khushi/d3-unit-test-report
-git pull origin khushi/d3-unit-test-report
+git switch master
+git pull origin master
 npm ci
 cd apps/web
 npm test
 ```
+
+A local rerun on master on 4 November 2026 gave the same results: 201 files, 1,535 tests, and the coverage figures in Section 1.
 
 The workspace's `test` script is `vitest run --coverage`; do not append another `--coverage` argument.
 
@@ -103,4 +105,4 @@ The workspace's `test` script is `vitest run --coverage`; do not append another 
 - Integration job: PostgreSQL integration tests passed.
 - Coverage artifact: [Download unit coverage HTML and JSON output](https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/actions/runs/41710059405/artifacts/13266899431)
 
-The CI coverage artifact contains the HTML report and machine-readable `coverage-summary.json` used for the aggregate and area calculations above.
+The CI coverage artifact contains the HTML report and machine-readable `coverage-summary.json` used for the aggregate and area calculations above. GitHub keeps the artifact for 14 days only, so the same files are also included in this deliverable as [`unit-coverage-report.zip`](./unit-coverage-report.zip) (open `coverage/index.html`).

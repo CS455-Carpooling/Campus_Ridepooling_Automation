@@ -32,7 +32,8 @@
     ],
     "FR-RD-04.2": [
       ["apps/web/src/lib/ai/validate-ranking.test.ts", "accepts only eligible IDs and removes factors whose data is unavailable"],
-      ["apps/web/src/lib/ai/shared-interest-enrichment.test.ts", "omits the factor when any participant has not consented"]
+      ["apps/web/src/lib/ai/shared-interest-tags.test.ts", "omits the factor when any participant has not consented"],
+      ["apps/web/src/lib/ai/shared-interest-enrichment.test.ts", "withholds labels when any participant has not consented"]
     ],
     "FR-RD-04.3": [
       ["apps/web/src/lib/ai/validate-ranking.test.ts", "accepts only eligible IDs and removes factors whose data is unavailable"],
