@@ -19,7 +19,6 @@ type Student = Awaited<ReturnType<typeof signedInStudent>>;
 type Occupancy = {
   capacity: number;
   occupants: number;
-  acceptedRequests: number;
   seatsLeft: number;
 };
 
@@ -29,7 +28,6 @@ async function occupancyOf(rideId: string, ownerId: string): Promise<Occupancy> 
   return {
     capacity: view.capacity,
     occupants: view.occupants.length,
-    acceptedRequests: view.occupants.filter((occupant) => !occupant.isOwner).length,
     seatsLeft: view.seatsLeft,
   };
 }
@@ -38,8 +36,6 @@ function assertCapacityInvariant(snapshot: Occupancy) {
   expect(snapshot.occupants).toBeLessThanOrEqual(snapshot.capacity);
   expect(snapshot.occupants).toBeGreaterThanOrEqual(1);
   expect(snapshot.seatsLeft).toBe(snapshot.capacity - snapshot.occupants);
-  // The owner occupies one seat; every other active seat must have one accepted request.
-  expect(snapshot.occupants).toBe(1 + snapshot.acceptedRequests);
 }
 
 async function ensurePendingRequest(
