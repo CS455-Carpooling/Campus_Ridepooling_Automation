@@ -15,7 +15,7 @@ Due 6 November 2026. Each report has its own folder with its LaTeX source (`main
 | Security/threat-model report | | Chaitanya, Prithviraj | |
 | Failure/recovery report | | Chaitanya, Prithviraj | |
 
-The Bug/Defect History report records 16 resolved application defects, with regression evidence and traceability to the implementation pull requests. See the [LaTeX report source](./Bug_Report/main.tex) and tracking issue [CS455-135](https://cs455project.atlassian.net/browse/CS455-135).
+The Bug/Defect History report records 26 resolved application defects (16 D3 audit defects and 10 product defects from the D1 review), with evidence, individual Jira Bug links, and traceability to the implementation pull requests. See the [LaTeX report source](./Bug_Report/main.tex), tracking issue [CS455-135](https://cs455project.atlassian.net/browse/CS455-135), D3 audit tracking story [CS455-121](https://cs455project.atlassian.net/browse/CS455-121), and D1 product-review task [CS455-86](https://cs455project.atlassian.net/browse/CS455-86). Each report entry links to its individual Jira Bug.
 
 The recorded test run and the script that turns it into the report tables are in
 [`test-run/`](./test-run/README.md).
