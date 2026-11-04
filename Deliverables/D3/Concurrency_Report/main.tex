@@ -164,13 +164,15 @@ materially as occupants leave or join. This isolates the capacity race from the 
 reconfirmation policy. Each round uses 49 distinct requester identities; pending requests are
 reused where possible and recreated after a rider has left.
 
-For each completed route operation, the test reads committed database state and checks:
-\begin{itemize}
-  \item active occupants never exceed the ride capacity;
-  \item available seats equal capacity minus active occupants;
-  \item every non-owner active occupant has exactly one accepted request;
-  \item the round ends with two active occupants in a capacity-three ride (one available seat).
-\end{itemize}
+After each route operation resolves, the test reads the owner's actual application view with
+\texttt{getRideView(ride.id, owner.id)}. It takes the occupant count from the returned
+\texttt{view.occupants} array and compares the application's displayed \texttt{view.seatsLeft}
+against \texttt{view.capacity - view.occupants.length}. This checks the seat count exposed by the
+ride page rather than recomputing the seat count inside the test itself. For every read, the test
+also checks that the occupant count does not exceed capacity. At the end of each round, after all
+50 concurrent operations and any serial cleanup have completed, it verifies that the view has
+two occupants and one seat left in the capacity-three ride.
+
 The test also includes a separate direct-database-writer race: two inserts compete for the final
 seat and exactly one must be rejected by the database trigger.
 
