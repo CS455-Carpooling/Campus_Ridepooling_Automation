@@ -16,9 +16,7 @@ test.describe('Authentication & Role Access Control (E2E)', () => {
     await expect(page).toHaveURL(/\/login/);
   });
 
-  test('login input rejects non-IITK email domain (FR-RD-01.1, US-RD-01-AC1)', async ({
-    page,
-  }) => {
+  test('login input rejects non-IITK email domain (FR-RD-01.1, US-RD-01-AC1)', async ({ page }) => {
     await page.goto('/login');
 
     const emailInput = page.locator('input[type="email"]');

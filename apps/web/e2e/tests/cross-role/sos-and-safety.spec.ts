@@ -40,12 +40,16 @@ test.describe('SOS Safety & Incident Management (FR-RD-15, FR-RO-13, SYS-NFR-07,
     await sosBtn.click();
 
     // Confirmation question appears
-    await expect(riderContext.page.getByRole('heading', { name: /send an sos alert\?/i })).toBeVisible();
+    await expect(
+      riderContext.page.getByRole('heading', { name: /send an sos alert\?/i }),
+    ).toBeVisible();
     const confirmSosBtn = riderContext.page.getByRole('button', { name: /yes, send sos/i });
     await confirmSosBtn.click();
 
     // 3. Alert is sent and reference is displayed
-    await expect(riderContext.page.getByRole('heading', { name: /your sos alert was sent/i })).toBeVisible();
+    await expect(
+      riderContext.page.getByRole('heading', { name: /your sos alert was sent/i }),
+    ).toBeVisible();
     await expect(riderContext.page.locator('body')).toContainText(/SOS-/);
 
     // 4. Verify in database: sos_incidents record is created with status open
@@ -168,7 +172,9 @@ test.describe('SOS Safety & Incident Management (FR-RD-15, FR-RO-13, SYS-NFR-07,
     // 5. Admin enters handling note and closes the alert
     const noteArea = adminContext.page.getByLabel(/how was it handled\?/i);
     await noteArea.fill('Campus security dispatched; rider reached safe area.');
-    await expect(adminContext.page.getByText(/\d+ of 1000 characters/i)).not.toHaveText('0 of 1000 characters');
+    await expect(adminContext.page.getByText(/\d+ of 1000 characters/i)).not.toHaveText(
+      '0 of 1000 characters',
+    );
 
     const closeBtn = adminContext.page.getByRole('button', { name: /close the alert/i });
     await closeBtn.click();

@@ -73,15 +73,9 @@ test.describe('Time Boundaries, Lock Windows & Cancellation Liability (FR-RO-07,
     await ownerHelper.acceptRequest();
 
     // 3. Ride locks now (early lock by owner or time elapsed)
-    await db.query(
-      `UPDATE rides SET locked_at = now() WHERE id = $1`,
-      [rideId],
-    );
+    await db.query(`UPDATE rides SET locked_at = now() WHERE id = $1`, [rideId]);
     // Populate locked shares on riders table (300 each for 2 occupants of 600 fare)
-    await db.query(
-      `UPDATE riders SET locked_share = 300 WHERE ride_id = $1`,
-      [rideId],
-    );
+    await db.query(`UPDATE riders SET locked_share = 300 WHERE ride_id = $1`, [rideId]);
 
     // 4. Rider views ride and clicks Leave ride
     await riderContext.page.goto(`/rides/${rideId}`);
@@ -160,7 +154,9 @@ test.describe('Time Boundaries, Lock Windows & Cancellation Liability (FR-RO-07,
 
     // Verify No-show grace countdown text is displayed, and No-show action button is NOT yet open
     await expect(ownerContext.page.getByText(/no-show from/i)).toBeVisible();
-    await expect(ownerContext.page.getByRole('button', { name: /is a no-show/i })).not.toBeVisible();
+    await expect(
+      ownerContext.page.getByRole('button', { name: /is a no-show/i }),
+    ).not.toBeVisible();
 
     // Direct API attempt to record no-show fails with grace_period
     const graceAttempt = await ownerContext.page.evaluate(
@@ -194,7 +190,9 @@ test.describe('Time Boundaries, Lock Windows & Cancellation Liability (FR-RO-07,
     await noShowBtn.click();
 
     // Confirmation question appears
-    const confirmNoShowBtn = ownerContext.page.getByRole('button', { name: /yes, mark as a no-show/i });
+    const confirmNoShowBtn = ownerContext.page.getByRole('button', {
+      name: /yes, mark as a no-show/i,
+    });
     await expect(confirmNoShowBtn).toBeVisible();
     await confirmNoShowBtn.click();
 
@@ -202,13 +200,14 @@ test.describe('Time Boundaries, Lock Windows & Cancellation Liability (FR-RO-07,
     await expect(confirmNoShowBtn).not.toBeVisible();
 
     // 5. Database verify: riders.no_show_at and no_show_by are populated (polled for network completion)
-    await expect.poll(async () => {
-      const { rows } = await db.query(
-        `SELECT no_show_at FROM riders WHERE id = $1`,
-        [occupantId],
-      );
-      return rows[0]?.no_show_at;
-    }).not.toBeNull();
+    await expect
+      .poll(async () => {
+        const { rows } = await db.query(`SELECT no_show_at FROM riders WHERE id = $1`, [
+          occupantId,
+        ]);
+        return rows[0]?.no_show_at;
+      })
+      .not.toBeNull();
 
     const { rows: riderRow } = await db.query(
       `SELECT no_show_at, no_show_by FROM riders WHERE id = $1`,

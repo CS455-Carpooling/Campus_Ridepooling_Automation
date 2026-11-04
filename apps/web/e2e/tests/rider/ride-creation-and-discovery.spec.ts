@@ -152,7 +152,9 @@ test.describe('Ride Creation & Discovery Workflows (RO-US-01, US-RD-07, Delivera
 
     // Navigates to results
     await riderContext.page.waitForURL(/\/rides\/results/);
-    await expect(riderContext.page.getByRole('heading', { name: /available rides/i })).toBeVisible();
+    await expect(
+      riderContext.page.getByRole('heading', { name: /available rides/i }),
+    ).toBeVisible();
 
     // Result card contains Kanpur Central
     await expect(riderContext.page.locator('body')).toContainText(/Kanpur Central/i);

@@ -51,7 +51,9 @@ export class RidePageHelper {
 
     // 3. Campus location
     if (params.campusPlaceName) {
-      await this.page.locator('select[name="campusLocationId"]').selectOption({ label: params.campusPlaceName });
+      await this.page
+        .locator('select[name="campusLocationId"]')
+        .selectOption({ label: params.campusPlaceName });
     }
 
     // 4. Vehicle radio
@@ -74,7 +76,9 @@ export class RidePageHelper {
 
     // 3. Campus location
     if (params.campusPlaceName) {
-      await this.page.locator('select[name="campusLocationId"]').selectOption({ label: params.campusPlaceName });
+      await this.page
+        .locator('select[name="campusLocationId"]')
+        .selectOption({ label: params.campusPlaceName });
     }
 
     // 4. Departure window

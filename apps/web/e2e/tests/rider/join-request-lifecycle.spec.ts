@@ -1,6 +1,5 @@
 import { test, expect } from '../../fixtures/auth.fixture';
 import { RequestPageHelper } from '../../helpers/request.helper';
-import { seedRider } from '../../fixtures/users.fixture';
 
 test.describe('Rider Join Request Lifecycle Workflows (FR-RD-06, FR-RO-05, Deliverable 1)', () => {
   test('complete join request lifecycle: request, owner accept, and accepted state display', async ({
@@ -163,8 +162,12 @@ test.describe('Rider Join Request Lifecycle Workflows (FR-RD-06, FR-RO-05, Deliv
     await ownerContext.page.goto(`/rides/${rideId}`);
 
     // Verify owner controls are present (Manage this ride, Join requests) but "Request a seat" button is NOT present
-    await expect(ownerContext.page.getByRole('heading', { name: /manage this ride/i })).toBeVisible();
-    await expect(ownerContext.page.getByRole('button', { name: /request a seat/i })).not.toBeVisible();
+    await expect(
+      ownerContext.page.getByRole('heading', { name: /manage this ride/i }),
+    ).toBeVisible();
+    await expect(
+      ownerContext.page.getByRole('button', { name: /request a seat/i }),
+    ).not.toBeVisible();
   });
 
   test('idempotency: sending identical request does not duplicate database records', async ({

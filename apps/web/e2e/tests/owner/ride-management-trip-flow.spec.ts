@@ -24,12 +24,16 @@ test.describe('Ride Management & Trip Progress Lifecycle (FR-RO-04, FR-RO-07, FR
     await lockBtn.click();
 
     // Verify confirmation status
-    await expect(ownerContext.page.locator('p[role="status"]').first()).toContainText(/the ride is locked/i);
+    await expect(ownerContext.page.locator('p[role="status"]').first()).toContainText(
+      /the ride is locked/i,
+    );
 
     // Verify locked state on page
     await ownerContext.page.reload();
     await expect(ownerContext.page.getByText(/locked since/i)).toBeVisible();
-    await expect(ownerContext.page.getByRole('button', { name: /lock ride now/i })).not.toBeVisible();
+    await expect(
+      ownerContext.page.getByRole('button', { name: /lock ride now/i }),
+    ).not.toBeVisible();
   });
 
   test('owner cancels scheduled ride and verifies cancellation status (FR-RO-04.2)', async ({
@@ -109,7 +113,9 @@ test.describe('Ride Management & Trip Progress Lifecycle (FR-RO-04, FR-RO-07, FR
     await startPickupBtn.click();
 
     // Confirm pickup
-    const confirmStartPickup = ownerContext.page.getByRole('button', { name: /yes, start pickup/i });
+    const confirmStartPickup = ownerContext.page.getByRole('button', {
+      name: /yes, start pickup/i,
+    });
     await expect(confirmStartPickup).toBeVisible();
     await confirmStartPickup.click();
 
@@ -121,7 +127,7 @@ test.describe('Ride Management & Trip Progress Lifecycle (FR-RO-04, FR-RO-07, FR
     await expect(riderContext.page.getByText('Pickup in progress')).toBeVisible();
 
     const checkInBtn = riderContext.page.getByRole('button', { name: /check in/i });
-    if (await checkInBtn.count() > 0) {
+    if ((await checkInBtn.count()) > 0) {
       await checkInBtn.click();
       await expect(riderContext.page.getByText(/checked in/i)).toBeVisible();
     }
@@ -129,7 +135,7 @@ test.describe('Ride Management & Trip Progress Lifecycle (FR-RO-04, FR-RO-07, FR
     // 5. Owner marks rider arrived
     await ownerContext.page.goto(`/rides/${rideId}`);
     const markArrivedBtn = ownerContext.page.getByRole('button', { name: /mark arrived/i });
-    if (await markArrivedBtn.count() > 0) {
+    if ((await markArrivedBtn.count()) > 0) {
       await markArrivedBtn.first().click();
     }
 
@@ -138,7 +144,9 @@ test.describe('Ride Management & Trip Progress Lifecycle (FR-RO-04, FR-RO-07, FR
     await expect(startTripBtn).toBeVisible();
     await startTripBtn.click();
 
-    const confirmStartTrip = ownerContext.page.getByRole('button', { name: /yes, start the trip/i });
+    const confirmStartTrip = ownerContext.page.getByRole('button', {
+      name: /yes, start the trip/i,
+    });
     await expect(confirmStartTrip).toBeVisible();
     await confirmStartTrip.click();
 

@@ -1,6 +1,5 @@
 import { Pool } from 'pg';
 import { testDatabaseUrl, databaseName } from '../../test/integration/test-database';
-import type { Queryable } from '../../test/seed/accounts';
 
 export interface E2ETestDatabase {
   pool: Pool | null;
@@ -29,8 +28,7 @@ const DEFAULT_TEST_URL =
   process.env.TEST_DATABASE_URL ||
   process.env.DATABASE_URL ||
   'postgres://crp:pass@127.0.0.1:5433/crp_test';
-const DEFAULT_ALLOW_RESET =
-  process.env.ALLOW_TEST_DATABASE_RESET || databaseName(DEFAULT_TEST_URL);
+const DEFAULT_ALLOW_RESET = process.env.ALLOW_TEST_DATABASE_RESET || databaseName(DEFAULT_TEST_URL);
 
 let sharedPool: Pool | null = null;
 
@@ -45,7 +43,7 @@ export function getTestPool(): Pool | null {
       });
     }
     return sharedPool;
-  } catch (error) {
+  } catch {
     // If not configured with a valid _test database or missing opt-in, fail safe
     return null;
   }

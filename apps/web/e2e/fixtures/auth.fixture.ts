@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import { test as base, type BrowserContext, type Page } from '@playwright/test';
 import { seedRider, seedOwner, seedAdmin, type SeededUser } from './users.fixture';
 import { createTestDatabaseFixture, type E2ETestDatabase } from './database.fixture';
@@ -35,7 +36,9 @@ export type AuthTestFixtures = {
   riderContext: UserSession;
   ownerContext: UserSession;
   adminContext: UserSession;
-  createAuthenticatedContext: (user: SeededUser) => Promise<{ context: BrowserContext; page: Page }>;
+  createAuthenticatedContext: (
+    user: SeededUser,
+  ) => Promise<{ context: BrowserContext; page: Page }>;
 };
 
 export const test = base.extend<AuthTestFixtures>({

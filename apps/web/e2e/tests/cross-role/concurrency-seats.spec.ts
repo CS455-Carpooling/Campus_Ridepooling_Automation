@@ -38,17 +38,16 @@ test.describe('Concurrency & Seat Contention (FR-RD-04, Table T-1, CS455-75)', (
     await riderContext.page.goto(`/rides/${rideId}`);
     await rider2Page.goto(`/rides/${rideId}`);
 
-    await Promise.all([
-      rider1Helper.requestSeat('Hall 2'),
-      rider2Helper.requestSeat('Hall 3'),
-    ]);
+    await Promise.all([rider1Helper.requestSeat('Hall 2'), rider2Helper.requestSeat('Hall 3')]);
 
     await rider1Helper.verifyRiderStatus(/waiting for the ride owner/i);
     await rider2Helper.verifyRiderStatus(/waiting for the ride owner/i);
 
     // 4. Owner opens the ride page and sees both requests waiting
     await ownerContext.page.goto(`/rides/${rideId}`);
-    const requestsSection = ownerContext.page.locator('section[aria-labelledby="join-requests-heading"]');
+    const requestsSection = ownerContext.page.locator(
+      'section[aria-labelledby="join-requests-heading"]',
+    );
     await expect(requestsSection).toBeVisible();
     await expect(requestsSection.getByText(riderContext.user.name)).toBeVisible();
     await expect(requestsSection.getByText(rider2.name)).toBeVisible();
@@ -84,7 +83,6 @@ test.describe('Concurrency & Seat Contention (FR-RD-04, Table T-1, CS455-75)', (
     db,
     ownerContext,
     riderContext,
-    createAuthenticatedContext,
   }) => {
     // 1. Create a ride with capacity = 2 (1 seat available for riders)
     const now = new Date();

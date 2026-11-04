@@ -11,9 +11,7 @@ test.describe('Application Startup & Smoke Tests', () => {
     await expect(page.getByRole('link', { name: /sign in|log in/i }).first()).toBeVisible();
   });
 
-  test('login page loads with IITK email requirements and security controls', async ({
-    page,
-  }) => {
+  test('login page loads with IITK email requirements and security controls', async ({ page }) => {
     const response = await page.goto('/login');
     expect(response?.status()).toBe(200);
 

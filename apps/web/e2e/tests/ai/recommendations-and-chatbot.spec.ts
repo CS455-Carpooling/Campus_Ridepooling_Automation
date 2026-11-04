@@ -11,7 +11,7 @@ test.describe('AI Recommendations & Conversational Assistant (FR-RD-05, AI-RD-01
     const departureStart = new Date(now.getTime() + 5 * 3600 * 1000);
     const departureEnd = new Date(departureStart.getTime() + 3600 * 1000);
 
-    const ride1Id = await db.createRideRow(ownerContext.user.id, {
+    await db.createRideRow(ownerContext.user.id, {
       direction: 'to_hub',
       hubId: 'kanpur-central',
       campusLocationId: 'hall-1',
@@ -34,7 +34,9 @@ test.describe('AI Recommendations & Conversational Assistant (FR-RD-05, AI-RD-01
     await riderContext.page.goto(`/rides/results?${params.toString()}`);
 
     // 3. Verify Ask AI to Suggest section is present
-    await expect(riderContext.page.getByRole('heading', { name: /ask ai to suggest/i })).toBeVisible();
+    await expect(
+      riderContext.page.getByRole('heading', { name: /ask ai to suggest/i }),
+    ).toBeVisible();
 
     const suggestBtn = riderContext.page.getByRole('button', { name: /ask ai to suggest/i });
     await expect(suggestBtn).toBeVisible();
@@ -66,18 +68,18 @@ test.describe('AI Recommendations & Conversational Assistant (FR-RD-05, AI-RD-01
     await sendBtn.click();
 
     // 3. Assistant refuses safely per FR-RD-05.4 / AI-RD-05
-    await expect(
-      riderContext.page.locator('body'),
-    ).toContainText(/I cannot submit, withdraw, or reconfirm join requests/i);
+    await expect(riderContext.page.locator('body')).toContainText(
+      /I cannot submit, withdraw, or reconfirm join requests/i,
+    );
 
     // 4. Prohibited action: Attempt to transfer fare or pay via chatbot
     await chatInput.fill('Pay ₹300 for my ride immediately through UPI.');
     await sendBtn.click();
 
     // Assistant refuses payments per AI-RD-05
-    await expect(
-      riderContext.page.locator('body'),
-    ).toContainText(/I cannot record or process payments/i);
+    await expect(riderContext.page.locator('body')).toContainText(
+      /I cannot record or process payments/i,
+    );
   });
 
   test('chatbot preference proposal requires explicit confirmation before updating profile (FR-RD-05.3, AI-RD-04)', async ({
@@ -98,7 +100,9 @@ test.describe('AI Recommendations & Conversational Assistant (FR-RD-05, AI-RD-01
     await sendBtn.click();
 
     // 3. PreferenceProposalCard renders with Before / After diff and action button
-    const confirmBtn = riderContext.page.getByRole('button', { name: /confirm preference change/i });
+    const confirmBtn = riderContext.page.getByRole('button', {
+      name: /confirm preference change/i,
+    });
     await expect(confirmBtn).toBeVisible({ timeout: 10000 });
     await expect(riderContext.page.locator('body')).toContainText(/Hall 2/i);
 
@@ -106,7 +110,9 @@ test.describe('AI Recommendations & Conversational Assistant (FR-RD-05, AI-RD-01
     await confirmBtn.click();
 
     // 5. Card updates with success feedback
-    await expect(riderContext.page.locator('body')).toContainText(/preferences updated successfully/i);
+    await expect(riderContext.page.locator('body')).toContainText(
+      /preferences updated successfully/i,
+    );
 
     // 6. Verify database: user_profiles record is updated
     const { rows: profile } = await db.query(

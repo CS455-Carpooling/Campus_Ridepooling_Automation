@@ -47,12 +47,16 @@ test.describe('Itinerary Drift & Reconfirmation Lifecycle (FR-RD-06, S-2, CS455-
     // 4. Rider reloads and sees reconfirmation request
     await riderContext.page.reload();
     await riderHelper.verifyRiderStatus(/your confirmation is needed/i);
-    await expect(riderContext.page.getByRole('button', { name: /confirm new terms/i })).toBeVisible();
+    await expect(
+      riderContext.page.getByRole('button', { name: /confirm new terms/i }),
+    ).toBeVisible();
     await expect(riderContext.page.getByRole('button', { name: /decline/i })).toBeVisible();
 
     // 5. Owner checks ride: cannot accept until rider reconfirms
     await ownerContext.page.goto(`/rides/${rideId}`);
-    const requestsSection = ownerContext.page.locator('section[aria-labelledby="join-requests-heading"]');
+    const requestsSection = ownerContext.page.locator(
+      'section[aria-labelledby="join-requests-heading"]',
+    );
     await expect(requestsSection).toContainText(/rider must reconfirm before acceptance/i);
     const ownerAcceptBtn = requestsSection.getByRole('button', { name: /^accept$/i });
     await expect(ownerAcceptBtn).toBeDisabled();
@@ -130,7 +134,9 @@ test.describe('Itinerary Drift & Reconfirmation Lifecycle (FR-RD-06, S-2, CS455-
 
     // 7. Owner sees no pending requests waiting
     await ownerContext.page.goto(`/rides/${rideId}`);
-    const requestsSection = ownerContext.page.locator('section[aria-labelledby="join-requests-heading"]');
+    const requestsSection = ownerContext.page.locator(
+      'section[aria-labelledby="join-requests-heading"]',
+    );
     await expect(requestsSection).toContainText(/no requests waiting for your decision/i);
   });
 });

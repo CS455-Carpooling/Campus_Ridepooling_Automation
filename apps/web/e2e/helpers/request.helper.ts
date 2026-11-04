@@ -6,7 +6,7 @@ export class RequestPageHelper {
   async requestSeat(pickupLocationName?: string): Promise<void> {
     if (pickupLocationName) {
       const select = this.page.locator('select#request-pickup');
-      if (await select.count() > 0) {
+      if ((await select.count()) > 0) {
         await select.selectOption({ label: pickupLocationName });
       }
     }

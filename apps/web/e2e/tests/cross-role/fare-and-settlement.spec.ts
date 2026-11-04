@@ -67,7 +67,9 @@ test.describe('Fare Calculation & Settlement Workflows (FR-RD-08, Table T-2, CS4
 
     // 5. Verify Rider 1 UI displays their calculated share (₹167)
     await riderContext.page.goto(`/rides/${rideId}`);
-    await expect(riderContext.page.getByRole('heading', { name: /settle ride shares/i })).toBeVisible();
+    await expect(
+      riderContext.page.getByRole('heading', { name: /settle ride shares/i }),
+    ).toBeVisible();
     await expect(riderContext.page.locator('body')).toContainText(/167/);
 
     // 6. Verify Rider 2 UI displays their calculated share (₹166)
@@ -113,7 +115,9 @@ test.describe('Fare Calculation & Settlement Workflows (FR-RD-08, Table T-2, CS4
 
     // 2. Rider opens ride, sees settlement form, fills UPI and reference
     await riderContext.page.goto(`/rides/${rideId}`);
-    await expect(riderContext.page.getByRole('heading', { name: /settle ride shares/i })).toBeVisible();
+    await expect(
+      riderContext.page.getByRole('heading', { name: /settle ride shares/i }),
+    ).toBeVisible();
 
     const methodSelect = riderContext.page.locator('select[name="method"]');
     await methodSelect.selectOption('upi');
@@ -129,7 +133,9 @@ test.describe('Fare Calculation & Settlement Workflows (FR-RD-08, Table T-2, CS4
 
     // 3. Owner opens ride, sees payment marked as paid, and confirms receipt
     await ownerContext.page.goto(`/rides/${rideId}`);
-    await expect(ownerContext.page.getByRole('heading', { name: /settle ride shares/i })).toBeVisible();
+    await expect(
+      ownerContext.page.getByRole('heading', { name: /settle ride shares/i }),
+    ).toBeVisible();
     await expect(ownerContext.page.locator('body')).toContainText(/paid.*UPI/i);
 
     const confirmReceiptBtn = ownerContext.page.getByRole('button', { name: /confirm receipt/i });

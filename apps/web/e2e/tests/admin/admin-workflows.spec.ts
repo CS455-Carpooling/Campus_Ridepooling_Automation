@@ -11,7 +11,9 @@ test.describe('Admin Workflows, Governance & Account Enforcement (OA-FR-01..07, 
 
     // 1. Admin navigates to /admin/configuration
     await adminPage.goto('/admin/configuration');
-    await expect(adminPage.getByRole('heading', { name: 'Configuration', exact: true })).toBeVisible();
+    await expect(
+      adminPage.getByRole('heading', { name: 'Configuration', exact: true }),
+    ).toBeVisible();
 
     // Verify sections for Vehicle types, Hubs and pickup points, Fares
     await expect(adminPage.getByRole('link', { name: /vehicle types/i })).toBeVisible();
@@ -28,7 +30,9 @@ test.describe('Admin Workflows, Governance & Account Enforcement (OA-FR-01..07, 
     await expect(adminPage.getByText('Vikram', { exact: true })).toBeVisible();
 
     // 3. Add a new vehicle type through the form
-    const addSection = adminPage.getByRole('heading', { name: /add a vehicle type/i }).locator('..');
+    const addSection = adminPage
+      .getByRole('heading', { name: /add a vehicle type/i })
+      .locator('..');
     await addSection.getByLabel('Name').fill('Electric Shuttle');
     await addSection.getByLabel('Capacity').fill('8');
 
@@ -47,7 +51,9 @@ test.describe('Admin Workflows, Governance & Account Enforcement (OA-FR-01..07, 
     await expect(adminPage.getByText('Kanpur Central', { exact: false })).toBeVisible();
 
     // Cleanup added vehicle type
-    await db.query(`DELETE FROM vehicle_types WHERE id = 'electric-shuttle' OR name = 'Electric Shuttle'`);
+    await db.query(
+      `DELETE FROM vehicle_types WHERE id = 'electric-shuttle' OR name = 'Electric Shuttle'`,
+    );
   });
 
   test('admin complaint processing lifecycle from submission to resolution (OA-FR-16, OA-FR-18, OA-FR-20, FR-RD-13, CS455-53)', async ({
@@ -70,7 +76,8 @@ test.describe('Admin Workflows, Governance & Account Enforcement (OA-FR-01..07, 
       [rideId, complainant.id, 'hall-1'],
     );
 
-    const descriptionText = 'Driver was speeding dangerously and disregarded safety guidelines along the highway route.';
+    const descriptionText =
+      'Driver was speeding dangerously and disregarded safety guidelines along the highway route.';
     const { rows: compRows } = await db.query(
       `INSERT INTO complaints (
          ride_id, complainant_id, accused_id, category, description, source, status
@@ -91,11 +98,15 @@ test.describe('Admin Workflows, Governance & Account Enforcement (OA-FR-01..07, 
     // The submitted complaint must appear in the list with safety highlighted
     const complaintItem = adminPage.getByRole('link', { name: complaintRef });
     await expect(complaintItem).toBeVisible();
-    await expect(adminPage.locator('li').filter({ hasText: complaintRef })).toContainText(/safety/i);
+    await expect(adminPage.locator('li').filter({ hasText: complaintRef })).toContainText(
+      /safety/i,
+    );
 
     // 3. Admin opens the complaint detail
     await complaintItem.click();
-    await expect(adminPage.getByRole('heading', { name: new RegExp(`Complaint ${complaintRef}`, 'i') })).toBeVisible();
+    await expect(
+      adminPage.getByRole('heading', { name: new RegExp(`Complaint ${complaintRef}`, 'i') }),
+    ).toBeVisible();
     await expect(adminPage.getByText(descriptionText)).toBeVisible();
     await expect(adminPage.getByRole('link', { name: 'Complainant Student' })).toBeVisible();
     await expect(adminPage.getByRole('link', { name: 'Reported Owner' })).toBeVisible();
@@ -108,16 +119,17 @@ test.describe('Admin Workflows, Governance & Account Enforcement (OA-FR-01..07, 
     // Wait until transition finishes and status label becomes 'Under review'
     await expect(adminPage.getByText('Under review', { exact: true })).toBeVisible();
     await expect(underReviewBtn).not.toBeVisible();
-    const { rows: reviewCheck } = await db.query(
-      `SELECT status FROM complaints WHERE id = $1`,
-      [complaintId],
-    );
+    const { rows: reviewCheck } = await db.query(`SELECT status FROM complaints WHERE id = $1`, [
+      complaintId,
+    ]);
     expect(reviewCheck[0].status).toBe('under_review');
 
     // 5. Admin resolves the complaint
     const resolveForm = adminPage.getByRole('form', { name: /resolve this complaint/i });
     await resolveForm.getByRole('radio', { name: /yes, action was taken/i }).click();
-    await resolveForm.getByLabel(/note for the record/i).fill('Driver formally warned; caution placed on file.');
+    await resolveForm
+      .getByLabel(/note for the record/i)
+      .fill('Driver formally warned; caution placed on file.');
 
     const resolveBtn = resolveForm.getByRole('button', { name: /resolve complaint/i });
     await resolveBtn.click();
@@ -157,7 +169,9 @@ test.describe('Admin Workflows, Governance & Account Enforcement (OA-FR-01..07, 
     // 3. Suspend account
     const suspendForm = adminPage.getByRole('form', { name: /suspend rider account/i });
     await suspendForm.getByLabel(/reason category/i).selectOption('no_show');
-    await suspendForm.getByLabel(/^reason$/i).fill('Repeated failure to arrive at confirmed pickup point.');
+    await suspendForm
+      .getByLabel(/^reason$/i)
+      .fill('Repeated failure to arrive at confirmed pickup point.');
     await suspendForm.getByLabel(/indefinite suspension/i).check();
 
     // Click Review suspension -> Confirm suspension
@@ -213,20 +227,23 @@ test.describe('Admin Workflows, Governance & Account Enforcement (OA-FR-01..07, 
       state: 'scheduled',
     });
 
-    const joinAttempt = await riderPage.evaluate(async (params) => {
-      const res = await fetch(`/api/rides/${params.rideId}/requests`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'sec-fetch-site': 'same-origin',
-        },
-        body: JSON.stringify({
-          pickupLocationId: 'hall-1',
-          idempotencyKey: crypto.randomUUID(),
-        }),
-      });
-      return { status: res.status, body: await res.json() };
-    }, { rideId: targetRideId });
+    const joinAttempt = await riderPage.evaluate(
+      async (params) => {
+        const res = await fetch(`/api/rides/${params.rideId}/requests`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'sec-fetch-site': 'same-origin',
+          },
+          body: JSON.stringify({
+            pickupLocationId: 'hall-1',
+            idempotencyKey: crypto.randomUUID(),
+          }),
+        });
+        return { status: res.status, body: await res.json() };
+      },
+      { rideId: targetRideId },
+    );
 
     expect(joinAttempt.status).toBe(403);
     expect(joinAttempt.body.error).toMatch(/suspended/i);
@@ -235,12 +252,18 @@ test.describe('Admin Workflows, Governance & Account Enforcement (OA-FR-01..07, 
     await adminPage.reload();
     const reactivateForm = adminPage.getByRole('form', { name: /reactivate rider account/i });
     await expect(reactivateForm).toBeVisible();
-    await reactivateForm.getByLabel(/reason for reactivation/i).fill('Disciplinary period concluded and student counselled.');
+    await reactivateForm
+      .getByLabel(/reason for reactivation/i)
+      .fill('Disciplinary period concluded and student counselled.');
 
-    const reviewReactivateBtn = reactivateForm.getByRole('button', { name: /review reactivation/i });
+    const reviewReactivateBtn = reactivateForm.getByRole('button', {
+      name: /review reactivation/i,
+    });
     await reviewReactivateBtn.click();
 
-    const confirmReactivateBtn = reactivateForm.getByRole('button', { name: /confirm reactivation/i });
+    const confirmReactivateBtn = reactivateForm.getByRole('button', {
+      name: /confirm reactivation/i,
+    });
     await expect(confirmReactivateBtn).toBeVisible();
     await confirmReactivateBtn.click();
 
