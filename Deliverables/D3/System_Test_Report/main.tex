@@ -1,0 +1,85 @@
+\documentclass[10pt]{article}
+\usepackage{../common/d3report}
+\hypersetup{pdftitle={CS455 D3 System Test Report},pdfauthor={Khushi Ranawat}}
+
+\begin{document}
+
+\makereporttitle{System Test Report}
+  {Deliverable 3, Campus Ride-Pooling and Split-Fare System}
+  {Prepared by Khushi Ranawat \quad Jira CS455 Deliverable 3 \quad November 2026}
+
+\keybox{\textbf{Result.} \textbf{48 of 48} end-to-end browser system tests passed in \textbf{13} test specification files, executing in \textbf{1.4 minutes} with a 100\% pass rate against the complete integrated application stack: Next.js 16 frontend and backend, Node.js HTTP/WebSocket server, Socket.IO real-time channels, and a dedicated PostgreSQL 16 database (\texttt{crp\_test}). The suite validates all core user journeys, multi-role interactions, and edge cases defined in Deliverable 1 requirements.}
+
+\section{Executive Summary and Scope}
+
+Deliverable 3 requires comprehensive system-level validation demonstrating that the complete Campus Ride-Pooling and Split-Fare application operates reliably from an end-user perspective. While the unit test suite (more than 1,500 tests) verifies functions with mocked dependencies, and the route integration test suite exercises isolated API handlers, only browser-based system testing exercises the full vertical stack:
+\begin{enumerate}
+  \item \textbf{Complete Integration:} Real Chromium browser sessions interacting with real Next.js client and server components, custom Node.js application server (\texttt{server.mjs}), Socket.IO WebSocket bi-directional transport, and PostgreSQL 16 database.
+  \item \textbf{Zero Backend Mocking:} No route mocks or database mocks. Every user interaction traverses the real network, invokes real authorization middleware, executes transactional SQL, evaluates database constraints and triggers, and updates the DOM.
+  \item \textbf{Multi-Context Role Interactions:} Cross-role interactions (e.g., rider submitting requests, owner managing pickups, two riders contending for a seat, concurrent Socket.IO messages, administrator moderating complaints) run in separate, isolated browser contexts simultaneously.
+\end{enumerate}
+
+\section{System Test Architecture and Harness}
+
+The system testing framework is built on Playwright Test with TypeScript, structured for deterministic execution, test isolation, and strict reproducibility.
+
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.28\linewidth}X@{}}
+\toprule
+\textbf{Layer / Component} & \textbf{Implementation Details} \\
+\midrule
+\textbf{Test Runner} & Playwright Test (\texttt{@playwright/test}) with Chromium engine, headless execution, single worker mode (\texttt{workers: 1}) to eliminate inter-test database race conditions. \\
+\textbf{Application Server} & Custom Node.js server (\texttt{server.mjs}) initialized via Playwright's \texttt{webServer} directive on port 3000, hosting Next.js request handlers, WebSocket server, and notification publishers. \\
+\textbf{Database Isolation} & Dedicated test database \texttt{crp\_test} running on PostgreSQL 16 (port 5433). Validated with safety guardrails: the fixture refuses non-local hosts, non-\texttt{\_test} names, and a missing \texttt{ALLOW\_TEST\_DATABASE\_RESET} opt-in. \\
+\textbf{Data Fixtures} & Transactional data is truncated before each test while preserving static reference seeds (campus places, transport hubs, vehicle types). Distinct user accounts (Rider, Owner, Admin) are seeded per test with cryptographically valid SHA-256 session cookies injected directly into isolated browser contexts. \\
+\textbf{Page Object Helpers} & Reusable helper abstractions (\texttt{RidePageHelper}, \texttt{RequestPageHelper}, \texttt{NotificationHelper}) ensuring accessible locator queries (\texttt{getByRole}, \texttt{getByLabel}) rather than brittle CSS selectors. \\
+\bottomrule
+\end{tabularx}
+
+\section{Requirement Traceability}
+
+In accordance with the Deliverable 3 traceability framework (\href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/93}{PR \#93}), requirement traceability is centralized in \file{Deliverables/D3/Traceability\_Matrix/}. All browser system tests cite exact Deliverable 1 requirement IDs in their test titles and assertions, enabling automated extraction and linkage into the project-wide traceability matrix and coverage artifacts.
+
+\section{Key Test Suites and Coverage Analysis}
+
+\subsection{1. Core Rider and Owner Journeys}
+\begin{itemize}
+  \item \textbf{Ride Creation and Search (\file{rider/ride-creation-and-discovery.spec.ts}):} Validates authenticated owner creating rides with direction, destination hub, pickup point, vehicle type, and departure window. Validates client-side and server-side validation error displays when required fields are missing. Validates rider searching with multi-attribute filters.
+  \item \textbf{Join Request Lifecycle (\file{rider/join-request-lifecycle.spec.ts}):} Validates complete end-to-end state transitions (\texttt{pending} $\rightarrow$ \texttt{accepted}, \texttt{pending} $\rightarrow$ \texttt{rejected}, \texttt{pending} $\rightarrow$ \texttt{withdrawn}, \texttt{accepted} $\rightarrow$ \texttt{left}). Proves idempotency keys prevent duplicate database requests when duplicate submissions occur.
+  \item \textbf{Trip Progress Management (\file{owner/ride-management-trip-flow.spec.ts}):} Exercises locking a ride early, cancelling a ride, and the trip sequence Start Pickup $\rightarrow$ Mark Arrived $\rightarrow$ Start Trip $\rightarrow$ Complete Ride. Marking a no-show after the grace period is covered in \file{cross-role/time-boundaries.spec.ts}.
+\end{itemize}
+
+\subsection{2. Safety, Incidents and Governance}
+\begin{itemize}
+  \item \textbf{SOS Emergency Workflow (\file{cross-role/sos-and-safety.spec.ts}):} Tests raising SOS during active trip states (\texttt{pickup\_in\_progress}, \texttt{in\_transit}). Confirms \texttt{sos\_incidents} row generation with unique tracking reference (\texttt{SOS-XXXXXXXX}). Validates requirement \texttt{FR-RD-15.4}: other pool members are never alerted or exposed to the SOS trigger. Verifies operations admin incident desk workflow: queue ingestion, acknowledgment, resolution with closure note.
+  \item \textbf{Admin Workflows and Account Suspension (\file{admin/admin-workflows.spec.ts}):} Tests configuration management (adding vehicle types and inspecting hubs). Exercises complaint processing from submission to resolution. Validates suspension enforcement: disciplined riders are strictly forbidden from offering rides (HTTP 403 / suspended banner) and submitting join requests. Validates administrative reactivation.
+\end{itemize}
+
+\subsection{3. Cross-Role Interactions, Concurrency and Real-Time Services}
+\begin{itemize}
+  \item \textbf{Table T-2 Split-Fare Verification (\file{cross-role/fare-and-settlement.spec.ts}):} Implements Deliverable 1 Table T-2 whole-rupee splitting: total fare of Rs~500 split across 3 riders produces shares of Rs~167, Rs~167, and Rs~166, with remainder assigned to earliest occupants. Verifies that marked no-shows owe Rs~0.
+  \item \textbf{Seat Contention Race (\file{cross-role/concurrency-seats.spec.ts}):} Two riders simultaneously contend for the single available seat on a capacity-limited vehicle. Verifies optimistic concurrency control: the first accepted rider takes the seat; subsequent acceptance is blocked in the UI and rejected with HTTP 409 at the database level.
+  \item \textbf{Socket.IO Real-Time Messaging (\file{realtime/pool-chat-and-notifications.spec.ts}):} Uses two concurrent browser contexts to verify instant delivery of pool chat messages over WebSockets. Proves namespace/room isolation: riders in ride A cannot eavesdrop on or receive messages from ride B.
+  \item \textbf{AI Assistant and Guardrails (\file{ai/recommendations-and-chatbot.spec.ts}):} Exercises "Ask AI to Suggest" normal ranking. Applies deterministic route-level fault injection for Gemini timeout ($<8$s elapsed recovery bound), 503 service outage alerts with retry recovery, and malformed response resilience. Validates strict transactional boundaries: conversational queries asking the bot to book seats or cancel rides are refused with direct manual guidance links.
+\end{itemize}
+
+\section{Defect History and Architectural Observations}
+
+During system test development, several subtle cross-layer interaction behaviors were analyzed and validated against Deliverable 1 specifications:
+\begin{enumerate}
+  \item \textbf{Origin Validation (\texttt{sameOrigin}):} Mutating endpoints (POST, PATCH) strictly enforce same-origin verification. Browser automation tests dispatching concurrent API requests within a context must execute via \texttt{page.evaluate(() => fetch(...))} rather than detached HTTP clients to carry authentic browser headers.
+  \item \textbf{Next.js Route Transition Transitions:} Server component actions invoke \texttt{router.refresh()} within \texttt{useTransition}. System tests interact after waiting for transition spinners and status label changes, ensuring tests reflect confirmed persistent server state.
+  \item \textbf{Accessible Semantic Selectors:} All tests prioritize accessibility-tree selectors (\texttt{getByRole}, \texttt{getByLabel}) matching real screen-reader and user interactions rather than implementation-specific HTML classes.
+\end{enumerate}
+
+\section{Environment and Reproduction}
+
+The complete system test suite can be executed locally or via continuous integration:
+\keybox{\small
+\textbf{Database Setup:} \texttt{docker compose up -d db} starts PostgreSQL; create test database via \texttt{createdb -U crp crp\_test} and load \texttt{apps/web/db/schema.sql}. Set \texttt{TEST\_DATABASE\_URL=postgres://crp:pass@127.0.0.1:5433/crp\_test} and \texttt{ALLOW\_TEST\_DATABASE\_RESET=crp\_test} in \texttt{apps/web/.env.local}. Stop any dev server on port 3000 to avoid session collisions.\\[3pt]
+\texttt{npm run test:e2e}\hfill (from repository root or \texttt{apps/web})\\[2pt]
+\texttt{npm run test:e2e -- apps/web/e2e/tests/admin/admin-workflows.spec.ts}\hfill (single file)\\[2pt]
+\textbf{CI Pipeline:} GitHub Actions workflow \texttt{.github/workflows/ci.yml} runs the \textit{System tests (Playwright E2E)} job on every pull request and master branch push.
+}
+
+\end{document}
+

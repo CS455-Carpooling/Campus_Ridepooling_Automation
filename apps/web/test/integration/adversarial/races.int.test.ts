@@ -22,8 +22,8 @@ const statuses = (answers: Array<{ status: number }>) => answers.map((a) => a.st
 // Adversarial (CS455-113): a few requests at the same moment, as double clicks and two people
 // acting at once produce. Each runs on its own pooled connection, so they really overlap in the
 // database. The 50-request last-seat experiment (NFR-RD-05) is in the concurrency report.
-describe('requests at the same moment', () => {
-  it('gives the last seat to exactly one of two accepted riders', async () => {
+describe('requests at the same moment (NFR-RO-DEP-02)', () => {
+  it('gives the last seat to exactly one of two accepted riders (FR-RD-06.3)', async () => {
     const owner = await signedInStudent();
     // An auto with the owner and one rider: one seat left.
     const ride = await offerRide(owner, { vehicleTypeId: 'auto' });
@@ -85,7 +85,7 @@ describe('requests at the same moment', () => {
     expect((await seatsOf(ride.id)).map((seat) => seat.locked_share)).toEqual([300, 300]);
   });
 
-  it('raises one SOS for five quick taps', async () => {
+  it('raises one SOS for five quick taps (FR-RD-15.2)', async () => {
     const { owner, ride, riders } = await pooledRide({ riders: 1, startsIn: 30 });
     expect((await tripStep(owner, ride.id, 'pickup_in_progress')).status).toBe(200);
     const answers = await Promise.all(

@@ -1,0 +1,106 @@
+\documentclass[10pt]{article}
+\PassOptionsToPackage{landscape}{geometry}
+\usepackage{../common/d3report}
+\hypersetup{pdftitle={CS455 D3 Requirements Traceability Matrix},pdfauthor={Mainak Sarkar}}
+\input{generated/summary.tex}
+
+% A shaded row that starts each area of the matrix.
+\newcommand{\sectionrow}[1]{\rule{0pt}{2.6ex}{\sffamily\bfseries\color{hdrblue}#1}}
+
+\begin{document}
+
+\makereporttitle{Requirements Traceability Matrix}
+  {Deliverable 3, Campus Ride-Pooling and Split-Fare System}
+  {Prepared by Mainak Sarkar \quad Requirement $\rightarrow$ Jira $\rightarrow$ GitHub $\rightarrow$ test
+  \quad Tests run on \UnitRunDate}
+
+\keybox{\textbf{Result.} \TraceRequirements{} requirements of the Deliverable 1 specification are
+traced to \TraceJira{} Jira issues, \TracePulls{} merged pull requests, \TraceCases{} automated
+test cases and \TraceGroups{} test groups in \TraceFiles{} test files. Every one of those passed in
+the recorded runs:
+the unit suite (\UnitRunCases{} tests) and the integration and adversarial suite
+(\IntegrationRunCases{} tests against a real PostgreSQL database), both on the master branch.}
+
+\section{Reading the matrix}
+\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{0.14\linewidth}X@{}}
+\toprule
+Requirement & The requirement's identifier and statement from the Deliverable 1 specification (rider,
+ride owner and Operations Admin documents). Long statements are shortened; the full text of each is
+in \file{traceability-matrix.csv}. \\
+Jira & The CS455 Jira issues of the pull requests in the GitHub column, as named in their titles,
+branches, own commits and Jira sections. \\
+GitHub & The merged pull requests that introduced the code under test, that cite the requirement,
+and that introduced its tests; up to five are shown, the CSV lists all of them. \\
+Tests & The test files that verify the requirement, each with the number of its test cases and test
+groups that do, largest first. A test verifies a requirement when its own title cites the
+requirement's identifier. An identifier in the title of a \texttt{describe()} block is about the
+block as a whole, so it links that block as one test group, which passes when every test in it
+passed; it does not link each test inside. Requirements marked \textsuperscript{\dag} are verified by tests whose names do not cite the
+identifier; each of those links was made by reading the test and is listed in
+\file{data/manual-links.json}. \\
+Result & Passed test cases and test groups out of those linked, from the recorded runs. \\
+\bottomrule
+\end{tabularx}
+
+\section{How the matrix is built}
+Every cell comes from a recorded source, so the matrix can be rebuilt and checked rather than
+maintained by hand. A requirement is listed when at least one passing automated test verifies it.
+
+\begin{itemize}
+  \item \textbf{Requirements}: parsed from the Deliverable 1 requirement documents in
+    \texttt{Deliverables/D1/Requirements Engineering/users/}.
+  \item \textbf{Tests}: the recorded unit run (\file{data/unit-cases.json}) and integration run
+    (\file{Deliverables/D3/test-run/integration-results.json}). Titles such as
+    ``complaints (FR-RD-13.1 to 13.4)'' or ``(OA-FR-34, 36)'' cite every requirement in the range or
+    list. The build refuses to run if a link in \file{data/manual-links.json} matches no recorded test.
+  \item \textbf{Pull request text}: HTML comments in a pull request body are the template's hints
+    and examples, so they are removed before looking for requirement identifiers and Jira keys.
+  \item \textbf{GitHub}: a snapshot of the \SnapshotPulls{} merged pull requests with their changed
+    files and commits (\file{data/prs.json}). The pull request that introduced a file is the first
+    merged one that changed it. A commit counts only for the first merged pull request that
+    contains it, since a stacked pull request also lists the commits below it.
+  \item \textbf{Coverage}: NFR-RD-17 is verified by the unit suite's statement coverage
+    (\CoverageStatements\,\%) against the 80\,\% gate that continuous integration enforces.
+\end{itemize}
+
+\keybox{\small
+\texttt{node Deliverables/D3/Traceability\_Matrix/snapshot-prs.mjs}\hfill (merged pull requests)\\
+\texttt{node Deliverables/D3/Traceability\_Matrix/make-matrix.mjs -{}-unit <run.json> -{}-coverage <summary.json>}\hfill (tables and CSV)\\[2pt]
+The commands that record the test runs are in \file{Deliverables/D3/Traceability_Matrix/README.md}.}
+
+\section{Summary by area}
+\begin{center}\small
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Area & Requirements & Jira issues & Pull requests & Tests and groups \\
+\midrule
+\tabinput{generated/section-summary.tex}
+\midrule
+\textbf{Total (distinct)} & \textbf{\TraceRequirements} & \textbf{\TraceJira} & \textbf{\TracePulls} & \textbf{\TraceEntries} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{The matrix}
+{\scriptsize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.39\linewidth}>{\raggedright\arraybackslash}p{0.14\linewidth}>{\raggedright\arraybackslash}p{0.12\linewidth}>{\raggedright\arraybackslash}p{0.24\linewidth}>{\raggedright\arraybackslash}p{0.065\linewidth}@{}}
+\toprule
+\textbf{Requirement} & \textbf{Jira} & \textbf{GitHub} & \textbf{Tests} & \textbf{Result} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Requirement} & \textbf{Jira} & \textbf{GitHub} & \textbf{Tests} & \textbf{Result} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{5}{@{}r@{}}{\textsuperscript{\dag}\,verified by tests whose names do not cite the identifier (see \file{data/manual-links.json})} \\
+\endfoot
+\bottomrule
+\endlastfoot
+\tabinput{generated/matrix-rows.tex}
+\end{longtable}
+}
+
+\end{document}

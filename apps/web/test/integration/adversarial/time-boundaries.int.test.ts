@@ -35,7 +35,7 @@ async function completedMinutesAgo(minutesAgo: number) {
 
 const DAY = 24 * 60;
 
-describe('the lock, an hour before departure (P-06)', () => {
+describe('the lock, an hour before departure (FR-RO-06.4, P-06)', () => {
   it.each([
     [60.5, 201, undefined],
     [59.5, 409, 'ride_locked'],
@@ -66,7 +66,7 @@ describe('the lock, an hour before departure (P-06)', () => {
   });
 });
 
-describe('the no-show grace period, five minutes after the agreed pickup (P-19)', () => {
+describe('the no-show grace period, five minutes after the agreed pickup (FR-RO-10.1, P-19)', () => {
   it.each([
     [4.9, 409, 'grace_period'],
     [5.1, 200, undefined],
@@ -105,7 +105,7 @@ describe('the complaint window, seven days after completion (FR-RD-13.1)', () =>
   });
 });
 
-describe('the rating window, 72 hours after completion (P-16)', () => {
+describe('the rating window, 72 hours after completion (FR-RD-12.1, P-16)', () => {
   it.each([
     ['72 hours less a minute', 72 * 60 - 1, 201, undefined],
     ['72 hours and a minute', 72 * 60 + 1, 409, 'closed'],
@@ -121,7 +121,7 @@ describe('the rating window, 72 hours after completion (P-16)', () => {
   });
 });
 
-describe('the end of the departure window', () => {
+describe('the end of the departure window (FR-RO-04.5)', () => {
   it.each([
     [59, 200, undefined],
     [61, 409, 'window_over'],

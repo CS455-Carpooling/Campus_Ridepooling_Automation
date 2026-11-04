@@ -37,7 +37,7 @@ vi.mock('../../../lib/ai/chatbot-audit', () => ({
   logChatbotAudit: h.logChatbotAudit,
 }));
 
-import { POST, CHATBOT_HOURLY_LIMIT } from './route';
+import { POST, CHATBOT_HOURLY_LIMIT, CHATBOT_TIMEOUT_MS } from './route';
 
 const USER = {
   id: '11111111-1111-4000-8000-111111111111',
@@ -111,6 +111,39 @@ describe('POST /api/chatbot (Backend API Route & Guardrails)', () => {
       }),
     );
     expect(h.processChatbotMessage).not.toHaveBeenCalled();
+  });
+
+  it('returns a 504 fallback and audit record when chatbot processing exceeds its deadline', async () => {
+    vi.useFakeTimers();
+    h.readJson.mockResolvedValue({ message: 'Find a ride to Kanpur Central' });
+    h.processChatbotMessage.mockImplementation(() => new Promise(() => undefined));
+
+    try {
+      const request = POST(
+        new Request('http://localhost/api/chatbot', {
+          method: 'POST',
+          body: JSON.stringify({ message: 'Find a ride to Kanpur Central' }),
+        }),
+      );
+      await vi.advanceTimersByTimeAsync(CHATBOT_TIMEOUT_MS);
+      const response = await request;
+      const body = await response.json();
+
+      expect(CHATBOT_TIMEOUT_MS).toBe(31_000);
+      expect(response.status).toBe(504);
+      expect(body.kind).toBe('service_unavailable');
+      expect(body.fallbackLink.href).toBe('/rides');
+      expect(h.logChatbotAudit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          outcome: 'timeout',
+          validationOutcome: 'timeout',
+          fallbackUsed: true,
+          latencyMs: CHATBOT_TIMEOUT_MS,
+        }),
+      );
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('rejects empty or whitespace-only messages with 400', async () => {

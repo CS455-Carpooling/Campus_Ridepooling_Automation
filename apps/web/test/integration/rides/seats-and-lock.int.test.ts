@@ -26,8 +26,8 @@ const lock = (owner: { token: string }, rideId: string) =>
   callRoute(lockRide, { method: 'POST', params: { id: rideId }, as: owner });
 
 // Core workflow phases 4 and 5 (CS455-111): seats run out, then the ride locks.
-describe('the last seat (FR-RO-05.3, NFR-RD-05)', () => {
-  it('refuses a request when the ride is full, and an accept that would overfill it', async () => {
+describe('the last seat', () => {
+  it('refuses a request when the ride is full, and an accept that would overfill it (FR-RD-06.2, FR-RD-06.3, FR-RO-05.2)', async () => {
     const owner = await signedInStudent();
     const [first, second, late] = await Promise.all([
       signedInStudent(),
@@ -51,7 +51,7 @@ describe('the last seat (FR-RO-05.3, NFR-RD-05)', () => {
     expect((await seatsOf(ride.id)).filter((seat) => seat.left_at === null)).toHaveLength(3);
   });
 
-  it('withdraws a rider’s other request within two hours once they get a seat (P-08)', async () => {
+  it('withdraws a rider’s other request within two hours once they get a seat (FR-RD-06.8, P-08)', async () => {
     const [ownerA, ownerB, rider] = await Promise.all([
       signedInStudent(),
       signedInStudent(),
@@ -85,8 +85,8 @@ describe('the last seat (FR-RO-05.3, NFR-RD-05)', () => {
   });
 });
 
-describe('locking the ride (FR-RO-07, P-06)', () => {
-  it('fixes every share when the owner locks early, owner first, and closes waiting requests', async () => {
+describe('locking the ride (P-06)', () => {
+  it('fixes every share when the owner locks early, owner first, and closes waiting requests (FR-RO-06.2, FR-RD-08.3, FR-RD-06.7)', async () => {
     const owner = await signedInStudent();
     const [first, second, waiter] = await Promise.all([
       signedInStudent(),
@@ -117,7 +117,7 @@ describe('locking the ride (FR-RO-07, P-06)', () => {
     expect([late.status, late.body.code]).toEqual([409, 'ride_locked']);
   });
 
-  it('lets only the owner lock', async () => {
+  it('lets only the owner lock (FR-RO-06.2, NFR-RO-SEC-01)', async () => {
     const owner = await signedInStudent();
     const rider = await signedInStudent();
     const ride = await offerRide(owner);
@@ -128,7 +128,7 @@ describe('locking the ride (FR-RO-07, P-06)', () => {
     expect((await rideRow(ride.id)).locked_at).toBeNull();
   });
 
-  it('locks by itself an hour before departure, on the next request', async () => {
+  it('locks by itself an hour before departure, on the next request (FR-RO-06.3)', async () => {
     const owner = await signedInStudent();
     const rider = await signedInStudent();
     const ride = await offerRide(owner, { expectedTotalFare: 500 });
@@ -143,7 +143,7 @@ describe('locking the ride (FR-RO-07, P-06)', () => {
   });
 });
 
-describe('leaving after lock (FR-RD-07.2, P-10)', () => {
+describe('leaving after lock (FR-RD-07.3)', () => {
   it('asks the rider to confirm, then keeps their locked share payable', async () => {
     const owner = await signedInStudent();
     const rider = await signedInStudent();
