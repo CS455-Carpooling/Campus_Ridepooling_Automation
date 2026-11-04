@@ -114,9 +114,17 @@ describe('NFR-RD-05: repeated last-seat concurrency experiment', () => {
 
       const concurrent = [
         ...acceptors.map((rider, index) =>
-          runAndObserve(ride.id, owner.id, actOnRequest(owner, ride.id, pendingRequestIds[index], 'accept')),
+          runAndObserve(
+            ride.id,
+            owner.id,
+            actOnRequest(owner, ride.id, pendingRequestIds[index], 'accept'),
+          ),
         ),
-        runAndObserve(ride.id, owner.id, actOnRequest(activeRider, ride.id, activeRequestId, 'leave')),
+        runAndObserve(
+          ride.id,
+          owner.id,
+          actOnRequest(activeRider, ride.id, activeRequestId, 'leave'),
+        ),
       ];
 
       const settled = await Promise.allSettled(concurrent);
