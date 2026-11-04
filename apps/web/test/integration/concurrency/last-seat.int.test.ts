@@ -123,11 +123,7 @@ describe('NFR-RD-05: repeated last-seat concurrency experiment', () => {
       let maximumObservedOccupants = initial.occupants;
       let totalAcceptedInRaces = 0;
       let serialCleanupLeaves = 0;
-      const roundSummaries: Array<{
-        round: number;
-        accepted: number;
-        maxOccupants: number;
-      }> = [];
+      let completedRounds = 0;
 
       for (let round = 1; round <= ITERATIONS; round += 1) {
         const acceptors = riders.filter((rider) => rider.id !== activeRider.id);
@@ -222,14 +218,10 @@ describe('NFR-RD-05: repeated last-seat concurrency experiment', () => {
           availableSeats: 1,
         });
         maximumObservedOccupants = Math.max(maximumObservedOccupants, endOfRound.occupants);
-        roundSummaries.push({
-          round,
-          accepted: accepted.length,
-          maxOccupants: Math.max(...observations.map((entry) => entry.snapshot.occupants)),
-        });
+        completedRounds += 1;
       }
 
-      expect(roundSummaries).toHaveLength(ITERATIONS);
+      expect(completedRounds).toBe(ITERATIONS);
       expect(totalAcceptedInRaces).toBeGreaterThanOrEqual(ITERATIONS);
       expect(totalAcceptedInRaces).toBeLessThanOrEqual(2 * ITERATIONS);
       expect(maximumObservedOccupants).toBeLessThanOrEqual(3);
