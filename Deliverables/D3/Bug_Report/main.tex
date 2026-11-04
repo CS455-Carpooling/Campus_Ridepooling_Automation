@@ -6,9 +6,9 @@
 \makereporttitle{Bug and Defect History Report}
   {Deliverable 3, Campus Ride-Pooling and Split-Fare System}
   {Prepared by Khushi Ranawat \quad Jira CS455-135}
-\keybox{\textbf{Executive summary.} This report records 16 distinct, resolved application defects identified during implementation, security review, database integration, and adversarial testing. Findings are consolidated to avoid counting the same underlying issue twice. Each entry summarizes system impact, cause, correction, and available regression or pull-request evidence.}
+\keybox{\textbf{Executive summary.} This report records 26 distinct, resolved application defects: 16 from the D3 security, reliability, and database audit, and 10 product defects found during the D1 code review recorded in CS455-86. Overlapping observations are consolidated so the same underlying issue is not counted twice. Each entry summarizes system impact, cause, correction, and the available regression, pull-request, and Jira evidence.}
 \section{Scope and evidence}
-The report covers defects with a concrete failure mode and a corresponding code fix. It focuses on authentication and authorization, realtime workflows, database reliability, request integrity, and production configuration. Duplicate observations are consolidated into one defect; supporting test details are retained as evidence rather than counted as separate bugs.
+The report covers defects with a concrete failure mode and a corresponding code fix. It includes authentication and authorization, realtime workflows, database reliability, request integrity, production configuration, and product-rule defects found by review of the D1 requirements. The first 16 entries cover the D3 audit; entries 17--26 cover the ten product defects fixed in PR #67 and tracked by CS455-86. Duplicate observations are consolidated into one defect; supporting test details are retained as evidence rather than counted as separate bugs.
 \section{Defect summary}
 \small
 \begin{longtable}{@{}p{0.055\linewidth}p{0.28\linewidth}p{0.57\linewidth}@{}}
@@ -31,6 +31,16 @@ The report covers defects with a concrete failure mode and a corresponding code 
 14 & Database correctness & Existing cursor indexes were not upgraded by \texttt{IF NOT EXISTS} \\
 15 & Request reliability & Untyped timestamp parameters caused PostgreSQL 500 responses \\
 16 & Request integrity & Reusing an idempotency key for different request details replayed the wrong request \\
+17 & Ride matching & One rider could hold overlapping seats or offer overlapping rides (P-08) \\
+18 & Suspension enforcement & A suspended rider could continue posting in pool chats \\
+19 & Complaint retention & Pool chat deletion could remove messages cited by an unresolved complaint \\
+20 & Admin security & Chat-report resolution lacked audit and request protections \\
+21 & Complaint eligibility & A rider who left before the trip could still file trip complaints \\
+22 & Ratings and history & Completed-trip counts and rating eligibility included no-shows or leavers \\
+23 & Ride editing & Edited rides did not enforce the three-hour departure-window limit \\
+24 & Account integrity & Account deletion could orphan active seats or waiting requests \\
+25 & Request notifications & Itinerary reconfirmation silently returned a request to Pending \\
+26 & Trip lifecycle & Scheduled ride cancellation and start did not consistently respect the departure-window end \\
 \bottomrule
 \end{longtable}
 \normalsize
@@ -39,81 +49,144 @@ The report covers defects with a concrete failure mode and a corresponding code 
 \textbf{Impact.} The Socket.IO server reflected arbitrary browser origins while allowing credentials. A malicious origin could attempt to establish a socket using a victim's authenticated browser session and access ride-chat or notification events available to that victim.
 \textbf{Cause.} The CORS configuration used a permissive origin reflector with credentialed access.
 \textbf{Fix.} The server now derives an explicit origin allow-list from the canonical application URL. Credentialed realtime access is limited to the configured application origin.
-\textbf{Evidence.} Adversarial cross-origin handshake coverage verifies rejection of untrusted origins. PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/91}{\#91}; Jira \href{https://cs455project.atlassian.net/browse/CS455-121}{CS455-121}.
+\textbf{Evidence.} The WebSocket handshake regression in \file{apps/web/test/server-security.test.ts} rejects an untrusted Origin. The handshake enforcement uses \texttt{allowRequest} in \texttt{server.mjs}; it was added in PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/94}{\#94}, not by the CORS allow-list in PR \#91. Jira \href{https://cs455project.atlassian.net/browse/CS455-136}{CS455-136}.
 \subsection{Realtime authentication bypassed inactivity expiry}
 \textbf{Impact.} A remembered session inactive beyond the seven-day policy could be rejected by HTTP routes but still authenticate a Socket.IO connection.
 \textbf{Cause.} Realtime session lookup checked absolute expiry but omitted the inactivity predicate applied by HTTP authentication.
 \textbf{Fix.} Realtime authentication and revalidation now enforce the same seven-day inactivity bound as HTTP session validation.
-\textbf{Evidence.} Regression coverage compares HTTP and Socket.IO behavior for an old inactive session. PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/91}{\#91}; Jira \href{https://cs455project.atlassian.net/browse/CS455-121}{CS455-121}.
+\textbf{Evidence.} \file{apps/web/test/server-security.test.ts} verifies that a Socket.IO connection is rejected for a session outside the seven-day inactivity window. PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/94}{\#94}; Jira \href{https://cs455project.atlassian.net/browse/CS455-137}{CS455-137}.
 \subsection{PostgreSQL TLS certificate verification was disabled}
 \textbf{Impact.} External PostgreSQL connections were encrypted but did not verify the server certificate, allowing an intercepted connection to use an untrusted certificate.
 \textbf{Cause.} Render-style connection configuration set \texttt{rejectUnauthorized: false}.
 \textbf{Fix.} Certificate verification is enabled consistently in the application pool, custom server, migration script, and administrative role script.
-\textbf{Evidence.} TLS configuration tests assert certificate verification. PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/91}{\#91}; Jira \href{https://cs455project.atlassian.net/browse/CS455-121}{CS455-121}.
+\textbf{Evidence.} \file{apps/web/src/lib/db.test.ts} verifies that the Render PostgreSQL URL path enables certificate verification. PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/91}{\#91}; Jira \href{https://cs455project.atlassian.net/browse/CS455-138}{CS455-138}.
 \subsection{Migration referenced \texttt{rides.locked\_at} before adding it}
 \textbf{Impact.} Upgrading an older database could fail while creating a partial index that referenced \texttt{locked\_at}, blocking startup.
 \textbf{Cause.} The index was declared before the compatibility \texttt{ALTER TABLE} statement.
 \textbf{Fix.} The compatibility column addition now runs before every index or predicate that references the column; the duplicate later alteration was removed.
-\textbf{Evidence.} Legacy-schema migration coverage exercises a table without the column. PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/91}{\#91}; Jira \href{https://cs455project.atlassian.net/browse/CS455-121}{CS455-121}.
+\textbf{Evidence.} The migration ordering and dependency were reviewed in PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/91}{\#91}; no automated legacy-schema migration test exists. Jira \href{https://cs455project.atlassian.net/browse/CS455-139}{CS455-139}.
 \subsection{Client-controlled forwarding headers bypassed IP rate limits}
 \textbf{Impact.} Varying a trusted-looking forwarding-header value could create a new rate-limit key for repeated requests, weakening throttling on authentication, registration, chatbot, and ride mutation endpoints.
 \textbf{Cause.} IP extraction trusted the first client-supplied \texttt{X-Forwarded-For} value and a separate \texttt{X-Real-IP} path.
 \textbf{Fix.} The separate client-controllable \texttt{X-Real-IP} trust path was removed. Extraction uses the final proxy-appended \texttt{X-Forwarded-For} hop and bounds the key value. The overlapping header observations are counted once.
-\textbf{Evidence.} Unit tests cover final-hop selection and header handling. PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/91}{\#91}; Jira \href{https://cs455project.atlassian.net/browse/CS455-121}{CS455-121}.
+\textbf{Evidence.} \file{apps/web/src/lib/auth.test.ts} verifies final-hop \texttt{X-Forwarded-For} selection and confirms that \texttt{X-Real-IP} does not override it. PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/91}{\#91}; Jira \href{https://cs455project.atlassian.net/browse/CS455-140}{CS455-140}.
 \subsection{Malformed cookies could throw during websocket authentication}
 \textbf{Impact.} A malformed percent-encoded cookie could throw during websocket authentication instead of following the normal unauthenticated rejection path.
 \textbf{Cause.} Cookie decoding did not handle malformed percent-encoding.
 \textbf{Fix.} Decoding is wrapped in a narrow error handler. The malformed cookie is treated as empty and authentication fails closed without an uncaught parser exception.
-\textbf{Evidence.} The websocket regression test supplies malformed percent-encoded cookie input. PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/91}{\#91}; Jira \href{https://cs455project.atlassian.net/browse/CS455-121}{CS455-121}.
+\textbf{Evidence.} \file{apps/web/test/server-security.test.ts} supplies a malformed percent-encoded cookie, verifies authentication rejection, and confirms that a subsequent valid connection still succeeds. PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/94}{\#94}; Jira \href{https://cs455project.atlassian.net/browse/CS455-141}{CS455-141}.
 \Needspace{9\baselineskip}
 \subsection{Existing request tables could lack \texttt{updated\_at}}
 \textbf{Impact.} An older \texttt{ride\_join\_requests} table without \texttt{updated\_at} could fail when the schema bootstrap referenced the missing column.
 \textbf{Cause.} The compatibility migration did not add \texttt{updated\_at} before subsequent backfill statements used it.
 \textbf{Fix.} The schema adds the column when absent, backfills it from available timestamps, and applies its default and not-null constraint before later references.
-\textbf{Evidence.} Legacy-schema migration coverage exercises the compatibility path. PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/91}{\#91}; Jira \href{https://cs455project.atlassian.net/browse/CS455-121}{CS455-121}.
+\textbf{Evidence.} The compatibility migration and statement ordering were reviewed in PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/91}{\#91}; no automated legacy-schema migration test exists. Jira \href{https://cs455project.atlassian.net/browse/CS455-142}{CS455-142}.
 \subsection{Password-reset operations were not atomic}
 \textbf{Impact.} A failure after token consumption but before updating the password or revoking sessions could leave a reset partially completed.
 \textbf{Cause.} Token consumption, password update, and session deletion were separate database operations.
 \textbf{Fix.} These operations now run in one transaction and commit or roll back together. Password hashing runs before acquiring the database connection, limiting transaction and row-lock duration.
-\textbf{Evidence.} Reset-flow tests cover transactional success and rollback behavior. PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/91}{\#91}; Jira \href{https://cs455project.atlassian.net/browse/CS455-121}{CS455-121}.
+\textbf{Evidence.} \file{apps/web/src/app/api/auth/reset/route.test.ts} covers commit and rollback behavior; PR \#94 adds the failure-injection integration test in \file{apps/web/test/integration/auth/reset-failure.int.test.ts}. PRs \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/91}{\#91} and \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/94}{\#94}; Jira \href{https://cs455project.atlassian.net/browse/CS455-143}{CS455-143}.
 \subsection{Active realtime use did not refresh session activity}
 \textbf{Impact.} A user actively using realtime features could have a session expire under the inactivity policy.
 \textbf{Cause.} Successful realtime authentication checked the session but did not refresh its activity timestamp.
 \textbf{Fix.} Authenticated realtime activity conditionally updates \texttt{last\_activity\_at}, with a five-minute write throttle.
-\textbf{Evidence.} Realtime session tests verify activity refresh and throttled writes. PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/91}{\#91}; Jira \href{https://cs455project.atlassian.net/browse/CS455-121}{CS455-121}.
+\textbf{Evidence.} The server-side refresh and five-minute throttle were reviewed in PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/91}{\#91}; no automated test covers the realtime refresh/throttle path. Jira \href{https://cs455project.atlassian.net/browse/CS455-144}{CS455-144}.
 \subsection{Realtime sockets bypassed account eligibility gates}
 \textbf{Impact.} Users with incomplete profiles or unacknowledged warnings could be blocked from protected HTTP workflows but still authenticate realtime access.
 \textbf{Cause.} Socket authentication omitted profile-completion and warning-acknowledgement checks.
 \textbf{Fix.} Realtime authentication and revalidation now enforce the same eligibility gates as HTTP requests, with the same admin exception.
-\textbf{Evidence.} Realtime authorization tests cover incomplete profiles and unacknowledged warnings. PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/91}{\#91}; Jira \href{https://cs455project.atlassian.net/browse/CS455-121}{CS455-121}.
+\textbf{Evidence.} The realtime profile and warning predicates were reviewed in PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/91}{\#91}; no automated realtime eligibility test exists. Jira \href{https://cs455project.atlassian.net/browse/CS455-145}{CS455-145}.
 \subsection{Missing production \texttt{APP\_URL} was not rejected at startup}
 \textbf{Impact.} Production could start with an empty Socket.IO origin allow-list, silently preventing browser realtime connections.
 \textbf{Cause.} The server fell back to an empty origin when \texttt{APP\_URL} was not configured outside development.
 \textbf{Fix.} The server now fails fast in production when \texttt{APP\_URL} is absent or blank.
-\textbf{Evidence.} Startup configuration checks cover the missing production URL case. PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/91}{\#91}; Jira \href{https://cs455project.atlassian.net/browse/CS455-121}{CS455-121}.
+\textbf{Evidence.} The fail-fast startup validation was reviewed in PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/91}{\#91}; no automated test covers the missing-production-\texttt{APP\_URL} startup case. Jira \href{https://cs455project.atlassian.net/browse/CS455-146}{CS455-146}.
 \subsection{Production realtime accepted the development cookie name}
 \textbf{Impact.} Production Socket.IO authentication accepted the development session-cookie name as an alternative to the host-prefixed production cookie.
 \textbf{Cause.} Realtime authentication accepted either cookie name regardless of environment.
 \textbf{Fix.} The cookie name is selected by environment: development uses \texttt{crp\_session}; production accepts only \texttt{\_\_Host-crp\_session}.
-\textbf{Evidence.} Cookie-policy tests verify environment-specific behavior. PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/91}{\#91}; Jira \href{https://cs455project.atlassian.net/browse/CS455-121}{CS455-121}.
+\textbf{Evidence.} \file{apps/web/src/lib/auth.test.ts} verifies the HTTP production \texttt{\_\_Host-} cookie policy only. The realtime cookie-name selection was reviewed in PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/91}{\#91}; no automated test covers rejection of the development cookie name by realtime authentication. Jira \href{https://cs455project.atlassian.net/browse/CS455-147}{CS455-147}.
 \subsection{HTTP authentication could revive an inactivity-expired session}
 \textbf{Impact.} An idle-expired remembered session could be rejected during lookup and then refreshed by the same request, allowing later authentication with the stale cookie.
 \textbf{Cause.} The refresh update omitted the expiry and seven-day inactivity predicates used by active-session lookup.
 \textbf{Fix.} Refresh now requires both absolute expiry and recent activity, so only an already-valid session can be updated.
-\textbf{Evidence.} Authentication tests exercise stale sessions across repeated requests. PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/91}{\#91}; Jira \href{https://cs455project.atlassian.net/browse/CS455-121}{CS455-121}.
+\textbf{Evidence.} \file{apps/web/src/lib/auth.test.ts} checks the seven-day inactivity condition, absolute expiry, and the refresh predicate. PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/91}{\#91}; Jira \href{https://cs455project.atlassian.net/browse/CS455-148}{CS455-148}.
 \subsection{Existing cursor indexes were not upgraded by \texttt{IF NOT EXISTS}}
 \textbf{Impact.} Existing databases retained older same-named indexes, so cursor ordering continued to use outdated index definitions.
 \textbf{Cause.} PostgreSQL skips creation when an index of the same name exists; it does not replace its definition.
 \textbf{Fix.} The affected notification and complaint-analysis cursor indexes are explicitly dropped and recreated with the required ordering columns.
-\textbf{Evidence.} Schema bootstrap and cursor-query coverage exercise the corrected definitions. PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/91}{\#91}; Jira \href{https://cs455project.atlassian.net/browse/CS455-121}{CS455-121}.
+\textbf{Evidence.} The explicit drop-and-recreate statements were reviewed in the schema change in PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/91}{\#91}; no automated cursor-index migration test exists. Jira \href{https://cs455project.atlassian.net/browse/CS455-149}{CS455-149}.
 \subsection{Untyped timestamp parameters caused PostgreSQL 500 responses}
 \textbf{Impact.} Seat-request submission and the payment-reminder scheduler could fail against PostgreSQL with a parameter type/operator error and return HTTP 500.
 \textbf{Cause.} JavaScript \texttt{Date} parameters were used in timestamp/interval expressions without an explicit PostgreSQL timestamp type.
 \textbf{Fix.} The affected SQL parameters now use explicit \texttt{timestamptz} casts.
-\textbf{Evidence.} Four focused regression tests are in \file{apps/web/test/integration/bugs/timestamp-parameters.int.test.ts}. PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/84}{\#84}; Jira \href{https://cs455project.atlassian.net/browse/CS455-133}{CS455-133}.
+\textbf{Evidence.} Four focused regression tests are in \file{apps/web/test/integration/bugs/timestamp-parameters.int.test.ts}. PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/84}{\#84}; Jira \href{https://cs455project.atlassian.net/browse/CS455-133}{CS455-133} (Bug).
 \subsection{Idempotency-key reuse replayed a different request}
 \textbf{Impact.} Reusing a key for another ride or pickup point returned the original request as though it were a valid retry. A rider could be told a request already existed even though nothing was created for the intended ride, or a changed pickup point could be ignored.
 \textbf{Cause.} The idempotency check treated the key alone as sufficient to identify a replay and did not require the ride and pickup payload to match.
 \textbf{Fix.} A key now replays only the same logical request. Reuse with different ride or pickup details returns HTTP 409 with \texttt{idempotency\_key\_reused}; the client discards the stale key.
-\textbf{Evidence.} Five regression cases are in \file{apps/web/test/integration/bugs/idempotency-key-reuse.int.test.ts}. PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/87}{\#87}; Jira \href{https://cs455project.atlassian.net/browse/CS455-134}{CS455-134}.
+\textbf{Evidence.} Five regression cases are in \file{apps/web/test/integration/bugs/idempotency-key-reuse.int.test.ts}. PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/87}{\#87}; Jira \href{https://cs455project.atlassian.net/browse/CS455-134}{CS455-134} (Bug).
+
+\section{Product defects found during D1 review (CS455-86)}
+The following ten additional product defects were found by reviewing the D1 requirements and were fixed in PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/67}{\#67}. They are included because the D3 plan counts review findings as well as the D3 audit findings. Each is separately tracked as a Jira Bug and related to the CS455-86 tracking task.
+
+\subsection{One rider could hold overlapping seats or offer overlapping rides (P-08)}
+\textbf{Impact.} One person could participate in two pools at once: holding a seat on an unfinished ride while requesting or accepting another ride within two hours, or offering an overlapping ride.
+\textbf{Cause.} The travel-conflict rule was implemented inconsistently across request, acceptance, offer, edit, and leave operations.
+\textbf{Fix.} PR \#67 centralizes the rule in \texttt{travelConflict()} and applies it across all relevant operations. Offering or moving a ride also withdraws the owner's own waiting requests that conflict with the new ride.
+\textbf{Evidence.} PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/67}{\#67}; regression coverage in \file{apps/web/src/lib/join-requests.test.ts} and \file{apps/web/src/app/api/rides/route.test.ts}; Jira \href{https://cs455project.atlassian.net/browse/CS455-150}{CS455-150}.
+
+\subsection{A suspended rider could continue posting in pool chats}
+\textbf{Impact.} Suspension did not consistently prevent a rider from posting chat messages through both the realtime socket and HTTP send paths.
+\textbf{Cause.} The send paths did not share a single suspension enforcement decision.
+\textbf{Fix.} PR \#67 routes both paths through \texttt{chatSendRefusal()} and a shared suspension rule, while preserving the exemption for the owner of an existing ride.
+\textbf{Evidence.} PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/67}{\#67}; tests in \file{apps/web/src/lib/ride-chat-realtime.test.ts}, \file{apps/web/src/lib/ride-chat.test.ts}, and \file{apps/web/src/lib/suspension-rule.test.ts}; Jira \href{https://cs455project.atlassian.net/browse/CS455-151}{CS455-151}.
+
+\subsection{Pool chat deletion could remove messages cited by an unresolved complaint}
+\textbf{Impact.} A pool chat could be deleted after 30 days while an unresolved complaint still cited one of its messages, removing the links needed for complaint review.
+\textbf{Cause.} Chat-retention checks did not consistently account for unresolved complaints that cited individual messages.
+\textbf{Fix.} PR \#67 centralizes the retention predicate in \texttt{CHAT\_KEPT\_FOR\_COMPLAINT\_SQL} and applies it to both scheduled maintenance and lazy deletion.
+\textbf{Evidence.} PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/67}{\#67}; tests in \file{apps/web/src/lib/ride-chat.test.ts} and \file{apps/web/src/lib/ride-chat-realtime.test.ts}; Jira \href{https://cs455project.atlassian.net/browse/CS455-152}{CS455-152}.
+
+\subsection{Admin chat-report resolution lacked audit and request protections}
+\textbf{Impact.} The admin chat-report endpoint could change complaint state without a corresponding audit record, same-origin validation, or rate limiting, and it remained accessible to the development test admin.
+\textbf{Cause.} The route did not use the shared protected admin-action workflow.
+\textbf{Fix.} PR \#67 applies \texttt{requireAdminApi} and runs the mutation through \texttt{withAdminAction}, committing the state change and audit entry together.
+\textbf{Evidence.} PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/67}{\#67}; tests in \file{apps/web/src/app/api/admin/chat-reports/route.test.ts}; Jira \href{https://cs455project.atlassian.net/browse/CS455-153}{CS455-153}.
+
+\subsection{A rider who left before the trip could still file trip complaints}
+\textbf{Impact.} A rider who left before the trip and owed nothing could still appear in trip complaint eligibility and submit a trip complaint.
+\textbf{Cause.} Complaint eligibility did not distinguish a rider who left before the trip from a late leaver who still owed a locked share.
+\textbf{Fix.} PR \#67 adds the shared \texttt{leftBeforeTrip()} rule. A rider who left before the trip cannot file or receive a trip complaint, while late leavers who still owe their share remain eligible.
+\textbf{Evidence.} PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/67}{\#67}; tests in \file{apps/web/src/lib/complaint-rules.test.ts} and \file{apps/web/src/lib/complaints.test.ts}; Jira \href{https://cs455project.atlassian.net/browse/CS455-154}{CS455-154}.
+
+\subsection{Completed-trip counts and rating eligibility included no-shows or leavers}
+\textbf{Impact.} Public completed-trip counts included no-shows (and profile counts included riders who left); ride history could show a Rate link to a rider who had left.
+\textbf{Cause.} History and profile aggregation did not consistently exclude no-show or left seats, and rating eligibility did not include the leave condition.
+\textbf{Fix.} PR \#67 excludes left and no-show seats from the relevant counts and makes rating unavailable to someone who left.
+\textbf{Evidence.} PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/67}{\#67}; tests in \file{apps/web/src/lib/ride-view.test.ts} and \file{apps/web/src/lib/profile-data.test.ts}; Jira \href{https://cs455project.atlassian.net/browse/CS455-155}{CS455-155}.
+
+\subsection{Editing a ride did not enforce the three-hour maximum departure window}
+\textbf{Impact.} An owner could edit a ride to a departure window longer than the three-hour maximum applied when creating a ride.
+\textbf{Cause.} The edit path did not reuse the validation applied to ride offers.
+\textbf{Fix.} PR \#67 applies the same maximum-window rule when editing and returns HTTP 400 with \texttt{invalid\_departure} for an invalid window.
+\textbf{Evidence.} PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/67}{\#67}; tests in \file{apps/web/src/lib/join-requests.test.ts} and \file{apps/web/src/app/api/rides/[id]/route.test.ts}; Jira \href{https://cs455project.atlassian.net/browse/CS455-156}{CS455-156}.
+
+\subsection{Account deletion could orphan active seats or waiting requests}
+\textbf{Impact.} Deleting an account could anonymize a rider who still held a seat on an active or upcoming ride, or had a waiting request, leaving ride state without an account able to manage it.
+\textbf{Cause.} Account deletion did not block these outstanding ride and request relationships before anonymization.
+\textbf{Fix.} PR \#67 refuses deletion with HTTP 409 and \texttt{active\_rides} while an active/upcoming seat or waiting request remains. Password hashing is deferred until deletion can proceed.
+\textbf{Evidence.} PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/67}{\#67}; tests in \file{apps/web/src/app/api/profile/delete/route.test.ts}; Jira \href{https://cs455project.atlassian.net/browse/CS455-157}{CS455-157}.
+
+\subsection{Itinerary reconfirmation silently returned a request to Pending}
+\textbf{Impact.} After itinerary drift, a rider's reconfirmation could return a request to Pending without notifying the ride owner that the request needed attention again.
+\textbf{Cause.} The reconfirmation path changed request state without sending the owner notification used by the related decline path.
+\textbf{Fix.} PR \#67 sends the owner a \texttt{join\_request} notification when reconfirmation returns the request to Pending.
+\textbf{Evidence.} PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/67}{\#67}; tests in \file{apps/web/src/lib/join-requests.test.ts}; Jira \href{https://cs455project.atlassian.net/browse/CS455-158}{CS455-158}.
+
+\subsection{Scheduled ride cancellation and start did not consistently respect the departure-window end}
+\textbf{Impact.} An owner could not cancel a Scheduled ride after its departure time had passed even though pickup had not started; start and cancel operations did not share a clear end boundary.
+\textbf{Cause.} The Scheduled-to-start and cancellation paths did not consistently use the end of the departure window.
+\textbf{Fix.} PR \#67 permits cancellation and start until the departure window ends, refuses both after that point with \texttt{window\_over}, and does not cut off a trip already under way.
+\textbf{Evidence.} PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/67}{\#67}; tests in \file{apps/web/src/lib/trip-rules.test.ts}, \file{apps/web/src/lib/trip.test.ts}, and \file{apps/web/src/components/rides/RideManagementControls.test.tsx}; Jira \href{https://cs455project.atlassian.net/browse/CS455-159}{CS455-159}.
 \end{document}
