@@ -1,7 +1,13 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import { test as base, type BrowserContext, type Page } from '@playwright/test';
+import type { Pool } from 'pg';
 import { seedRider, seedOwner, seedAdmin, type SeededUser } from './users.fixture';
-import { createTestDatabaseFixture, type E2ETestDatabase } from './database.fixture';
+import {
+  createTestDatabaseFixture,
+  closeTestPool,
+  getTestPool,
+  type E2ETestDatabase,
+} from './database.fixture';
 
 export async function injectSessionCookie(
   context: BrowserContext,
@@ -41,9 +47,24 @@ export type AuthTestFixtures = {
   ) => Promise<{ context: BrowserContext; page: Page }>;
 };
 
-export const test = base.extend<AuthTestFixtures>({
-  db: async ({}, use) => {
-    const database = await createTestDatabaseFixture();
+export type AuthWorkerFixtures = {
+  dbPool: Pool | null;
+};
+
+export const test = base.extend<AuthTestFixtures, AuthWorkerFixtures>({
+  dbPool: [
+    async ({}, use) => {
+      const pool = getTestPool();
+      await use(pool);
+      // Close the shared PostgreSQL pool during worker fixture teardown
+      // to prevent connection leaks without closing before worker tests complete.
+      await closeTestPool();
+    },
+    { scope: 'worker' },
+  ],
+
+  db: async ({ dbPool }, use) => {
+    const database = await createTestDatabaseFixture(dbPool);
     await use(database);
   },
 

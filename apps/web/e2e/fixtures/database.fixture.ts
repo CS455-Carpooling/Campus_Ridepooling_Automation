@@ -49,8 +49,18 @@ export function getTestPool(): Pool | null {
   }
 }
 
-export async function createTestDatabaseFixture(): Promise<E2ETestDatabase> {
-  const pool = getTestPool();
+export async function closeTestPool(): Promise<void> {
+  if (sharedPool) {
+    const poolToClose = sharedPool;
+    sharedPool = null;
+    await poolToClose.end();
+  }
+}
+
+export async function createTestDatabaseFixture(
+  injectedPool?: Pool | null,
+): Promise<E2ETestDatabase> {
+  const pool = injectedPool !== undefined ? injectedPool : getTestPool();
 
   const isAvailable = async () => {
     if (!pool) return false;
@@ -195,7 +205,7 @@ export async function createTestDatabaseFixture(): Promise<E2ETestDatabase> {
   };
 
   const close = async () => {
-    // Keep connection alive across tests, closed on process exit
+    await closeTestPool();
   };
 
   return {
