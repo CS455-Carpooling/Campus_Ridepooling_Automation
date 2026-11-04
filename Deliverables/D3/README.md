@@ -10,7 +10,7 @@ Due 6 November 2026. Each report has its own folder with its LaTeX source (`main
 | Unit test and coverage report | | Khushi | |
 | System test report | | Khushi | |
 | Bug/defect history | | Khushi | |
-| Concurrency report | | Mahir | |
+| Concurrency report | [`Concurrency_Report/main.tex`](./Concurrency_Report/main.tex) | Mahir | Draft — 100-round test added; execution evidence pending |
 | Performance/load test report | | Mahir | |
 | Security/threat-model report | [`Security_and_Threat_Model_Report/`](./Security_and_Threat_Model_Report/main.tex) ([Markdown](./security-and-threat-model-report.md)) | Chaitanya, Prithviraj | Complete |
 | Failure/recovery report | [`Failure_and_Recovery_Report/`](./Failure_and_Recovery_Report/main.tex) ([Markdown](./failure-and-recovery-test-report.md)) | Chaitanya, Prithviraj | Complete |
