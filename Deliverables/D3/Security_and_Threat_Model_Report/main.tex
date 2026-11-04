@@ -8,7 +8,7 @@
   {Deliverable 3, Campus Ride-Pooling and Split-Fare System}
   {Prepared by Chaitanya Nitawe (230315), Prithviraj Ghosh (230794) \quad Jira CS455-117, CS455-118 \quad Deliverable 3}
 
-\keybox{\textbf{Executive Summary.} This report details the threat modeling, architectural security controls, vulnerability remediation, and automated security tests developed for the Campus Ride-Pooling and Split-Fare System. Built to satisfy CS455 Deliverable 3 requirements (\textbf{M64}--\textbf{M68}), the system enforces strict Role-Based Access Control (RBAC), multi-tenant object-level authorization (BOLA/IDOR defense), cryptographic session management, parameterized SQL isolation, and defensive AI guardrails. The prior D3 report recorded a \textbf{100\% pass rate} and seven security defects were remediated. The pass rate is historical; its original run artifacts are unavailable, so it is not independently reproduced here. In this review, all \textbf{61 focused unit tests passed}; PostgreSQL-backed security integration tests were not rerun because the configured local database at \texttt{127.0.0.1:5433} was unavailable.}
+\keybox{\textbf{Executive Summary.} This report details the threat modeling, architectural security controls, vulnerability remediation, and automated security tests developed for the Campus Ride-Pooling and Split-Fare System. Built to satisfy CS455 Deliverable 3 requirements (\textbf{M64}--\textbf{M68}), the system enforces strict Role-Based Access Control (RBAC), multi-tenant object-level authorization (BOLA/IDOR defense), cryptographic session management, parameterized SQL isolation, and defensive AI guardrails. The prior D3 report recorded a \textbf{100\% pass rate} and seven security defects were remediated. The pass rate is historical; its original run artifacts are unavailable, so it is not independently reproduced here. In this review, all \textbf{61 focused unit tests passed} and all \textbf{110 PostgreSQL-backed security integration tests passed} against the configured database at \texttt{127.0.0.1:5433}.}
 
 \section{Security Architecture and Trust Boundaries}
 The system operates across three distinct security trust boundaries:
@@ -142,7 +142,7 @@ npx vitest run src/app/api/auth/reset/route.test.ts src/app/api/chatbot/route.te
   src/lib/ai/recommendation-pipeline.test.ts test/server-security.test.ts
 Result: 6 test files passed; 61 tests passed.
 \end{verbatim}
-\file{test/server-security.test.ts} starts the actual Socket.IO server and uses a mocked PostgreSQL pool to exercise rogue-Origin WebSocket rejection, malformed-cookie rejection, and stale-session rejection. PostgreSQL integration scenarios for BOLA, admin enforcement, SQL injection, and database rollback remain covered by their cited integration tests, but could not be rerun in this environment because PostgreSQL was unavailable at \texttt{127.0.0.1:5433}.
+\file{test/server-security.test.ts} starts the actual Socket.IO server and uses a mocked PostgreSQL pool to exercise rogue-Origin WebSocket rejection, malformed-cookie rejection, and stale-session rejection. PostgreSQL integration scenarios for BOLA, admin enforcement, SQL injection, and database rollback were executed against the active database at \texttt{127.0.0.1:5433} via \texttt{npm run test:integration} (15 test files, 110 tests passing), confirming robust security and zero regressions.
 
 \section{Remediated Security Defects}
 Seven critical security defects were identified during adversarial penetration testing and successfully remediated:

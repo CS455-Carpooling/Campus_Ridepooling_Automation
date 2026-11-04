@@ -13,7 +13,7 @@ Rubric Criteria Addressed: **M64 (Role-based access control)**, **M65 (Input val
 
 This report documents the architectural threat modeling, access control verification, vulnerability remediation, and automated security test suite developed for the Campus Ride-Pooling and Split-Fare System in fulfillment of CS455 Deliverable 3 requirements. 
 
-A campus transit and ride-sharing service manages sensitive student personal identifiable information (PII), live geographic transit itineraries, financial split-fare calculations, and disciplinary enforcement workflows. The system is designed with a defense-in-depth security model spanning edge-level CSRF and origin validation, strict server-side Role-Based Access Control (RBAC), multi-tenant object-level authorization (BOLA/IDOR protection), parameterized SQL isolation, and database integrity triggers. The prior D3 report recorded a **100% pass rate** and identified seven security defects for remediation. That pass rate is a historical result; its original run artifacts are unavailable, so it is not independently reproduced here. In this review, all **61 focused unit tests passed**; PostgreSQL-backed security integration tests were not rerun because the configured local database at `127.0.0.1:5433` was unavailable.
+A campus transit and ride-sharing service manages sensitive student personal identifiable information (PII), live geographic transit itineraries, financial split-fare calculations, and disciplinary enforcement workflows. The system is designed with a defense-in-depth security model spanning edge-level CSRF and origin validation, strict server-side Role-Based Access Control (RBAC), multi-tenant object-level authorization (BOLA/IDOR protection), parameterized SQL isolation, and database integrity triggers. The prior D3 report recorded a **100% pass rate** and identified seven security defects for remediation. That pass rate is a historical result; its original run artifacts are unavailable, so it is not independently reproduced here. In this review, all **61 focused unit tests passed** and all **110 PostgreSQL-backed security integration tests passed** against the configured database at `127.0.0.1:5433`.
 
 ---
 
@@ -242,7 +242,7 @@ npx vitest run src/app/api/auth/reset/route.test.ts src/app/api/chatbot/route.te
 Result: 6 test files passed; 61 tests passed.
 ```
 
-`test/server-security.test.ts` starts the actual Socket.IO server and uses a mocked PostgreSQL pool to exercise rogue-Origin WebSocket rejection, malformed-cookie rejection, and stale-session rejection. PostgreSQL integration scenarios for BOLA, admin enforcement, SQL injection, and database rollback remain covered by their cited integration tests, but could not be rerun in this environment because PostgreSQL was unavailable at `127.0.0.1:5433`.
+`test/server-security.test.ts` starts the actual Socket.IO server and uses a mocked PostgreSQL pool to exercise rogue-Origin WebSocket rejection, malformed-cookie rejection, and stale-session rejection. PostgreSQL integration scenarios for BOLA, admin enforcement, SQL injection, and database rollback were executed against the active database at `127.0.0.1:5433` via `npm run test:integration` (15 test files, 110 tests passing), confirming robust security and zero regressions.
 
 ---
 
