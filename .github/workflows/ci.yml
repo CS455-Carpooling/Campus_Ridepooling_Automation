@@ -95,3 +95,66 @@ jobs:
 
       - name: Integration tests
         run: npm run test:integration -w @ridepool/web
+
+  # D3 (CS455 Deliverable 3): End-to-end browser system tests using Playwright against
+  # the complete integrated stack (Next.js, Node server, Socket.IO, PostgreSQL test DB).
+  system-testing:
+    name: System tests (Playwright E2E)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      TEST_DATABASE_URL: postgres://crp:ciOnlyPassword123@localhost:5433/crp_test
+      ALLOW_TEST_DATABASE_RESET: crp_test
+      CI: 'true'
+
+    services:
+      db:
+        image: postgres:16
+        env:
+          POSTGRES_DB: crp
+          POSTGRES_USER: crp
+          POSTGRES_PASSWORD: ciOnlyPassword123
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U crp -d crp"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+        working-directory: apps/web
+
+      - name: Initialize test database schema
+        run: |
+          PGPASSWORD=ciOnlyPassword123 psql -h localhost -p 5433 -U crp -d crp -c "CREATE DATABASE crp_test;"
+          PGPASSWORD=ciOnlyPassword123 psql -h localhost -p 5433 -U crp -d crp -c "COMMENT ON DATABASE crp_test IS 'CS455 Campus Ride-Pooling test database';"
+          PGPASSWORD=ciOnlyPassword123 psql -h localhost -p 5433 -U crp -d crp_test -f apps/web/db/schema.sql
+
+      - name: Run E2E system tests
+        run: npm run test:e2e
+        env:
+          TEST_DATABASE_URL: postgres://crp:ciOnlyPassword123@localhost:5433/crp_test
+          ALLOW_TEST_DATABASE_RESET: crp_test
+
+      - name: Upload Playwright test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-system-test-results
+          path: |
+            test-results/
+          retention-days: 14
