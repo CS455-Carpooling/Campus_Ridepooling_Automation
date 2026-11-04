@@ -10,7 +10,7 @@ Due 6 November 2026. Each report has its own folder with its LaTeX source (`main
 | Unit test and coverage report | | Khushi | |
 | System test report | [`System_Test_Report/`](./System_Test_Report/README.md) | Khushi | Completed (48/48 pass) |
 | Bug/defect history | | Khushi | |
-| Concurrency report | | Mahir | |
+| Concurrency report | [`Concurrency_Report/main.tex`](./Concurrency_Report/main.tex) | Mahir | Local PostgreSQL run passed: 100 rounds, 5,000 concurrent route-handler operations, zero capacity violations; full integration suite 112/112 passed |
 | Performance/load test report | | Mahir | |
 | Security/threat-model report | [`Security_and_Threat_Model_Report/`](./Security_and_Threat_Model_Report/main.tex) ([Markdown](./security-and-threat-model-report.md)) | Chaitanya, Prithviraj | Complete |
 | Failure/recovery report | [`Failure_and_Recovery_Report/`](./Failure_and_Recovery_Report/main.tex) ([Markdown](./failure-and-recovery-test-report.md)) | Chaitanya, Prithviraj | Complete |
