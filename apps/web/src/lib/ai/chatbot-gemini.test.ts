@@ -95,6 +95,35 @@ describe('Gemini chatbot intent interpreter', () => {
     });
   });
 
+  it('aborts the Gemini request at the configured timeout and propagates TimeoutError', async () => {
+    const controller = new AbortController();
+    const timeout = vi.spyOn(AbortSignal, 'timeout').mockReturnValue(controller.signal);
+    vi.mocked(fetch).mockImplementation(
+      (_input, init) =>
+        new Promise((_resolve, reject) => {
+          const signal = init?.signal;
+          if (!signal) {
+            reject(new Error('Gemini request did not receive an abort signal.'));
+            return;
+          }
+          signal.addEventListener('abort', () => reject(signal.reason), { once: true });
+        }),
+    );
+
+    try {
+      const request = interpretChatbotRequest(
+        'Find a ride',
+        rideOptions,
+        new Date('2026-10-14T12:00:00Z'),
+      );
+      expect(timeout).toHaveBeenCalledWith(CHATBOT_GEMINI_TIMEOUT_MS);
+      controller.abort(new DOMException('Gemini request timed out.', 'TimeoutError'));
+      await expect(request).rejects.toMatchObject({ name: 'TimeoutError' });
+    } finally {
+      timeout.mockRestore();
+    }
+  });
+
   it('does not call Gemini when the server API key is missing', async () => {
     vi.stubEnv('GEMINI_API_KEY', '');
 
