@@ -10,9 +10,10 @@
 \file{complaints-and-enforcement} & complaints (FR-RD-13): is reviewed by an admin with a version check, and every step is audited (OA-FR-18, SYS-NFR-08) & Pass \\
 \file{complaints-and-enforcement} & ratings (FR-RD-12, FR-RO-12): opens on completion, once per rater, never for oneself (FR-RD-12.1, FR-RD-12.2, FR-RO-12.1) & Pass \\
 \file{complaints-and-enforcement} & ratings (FR-RD-12, FR-RO-12): is closed before completion and never covers a no-show (FR-RD-12.2, FR-RO-12.2) & Pass \\
-\file{complaints-and-enforcement} & warnings and suspensions (OA-FR-21 to OA-FR-28): blocks a warned rider until they acknowledge the warning (OA-FR-21, FR-RD-01.6) & Pass \\
-\file{complaints-and-enforcement} & warnings and suspensions (OA-FR-21 to OA-FR-28): stops a suspended rider offering or joining rides until an admin lifts it (OA-FR-23, OA-FR-28, SYS-FR-24, FR-RD-01.5) & Pass \\
-\file{complaints-and-enforcement} & warnings and suspensions (OA-FR-21 to OA-FR-28): allows enforcement by admins only, in the API and in the database (SYS-NFR-03) & Pass \\
+\file{complaints-and-enforcement} & warnings and suspensions: blocks a warned rider until they acknowledge the warning (OA-FR-21, FR-RD-01.6) & Pass \\
+\file{complaints-and-enforcement} & warnings and suspensions: stops a suspended rider offering or joining rides until an admin lifts it (OA-FR-23, OA-FR-28, SYS-FR-24, FR-RD-01.5) & Pass \\
+\file{complaints-and-enforcement} & warnings and suspensions: allows enforcement by admins only, in the API and in the database (SYS-NFR-03) & Pass \\
+\file{reset-failure} & password reset database failure recovery: rolls back token consumption when the password update fails & Pass \\
 \file{idempotency-key-reuse} & an idempotency key sent again with other details (FR-RD-06.9): is refused for another ride, and creates nothing there & Pass \\
 \file{idempotency-key-reuse} & an idempotency key sent again with other details (FR-RD-06.9): is refused for another pickup point, keeping the first request as it was & Pass \\
 \file{idempotency-key-reuse} & an idempotency key sent again with other details (FR-RD-06.9): is claimed once when its first uses for different rides arrive at the same moment & Pass \\
@@ -39,10 +40,10 @@
 \file{offer-and-search} & offering a ride (FR-RO-03): stores the ride with the vehicle capacity and gives the owner the first seat (FR-RO-03.1, FR-RO-03.3) & Pass \\
 \file{offer-and-search} & offering a ride (FR-RO-03): refuses an invalid offer field by field and stores nothing (FR-RO-03.2) & Pass \\
 \file{offer-and-search} & offering a ride (FR-RO-03): refuses a ride that overlaps or departs within two hours of the owner's other ride (FR-RO-03.2) & Pass \\
-\file{offer-and-search} & searching for a ride (FR-RD-03, FR-RD-08.1): shows an open ride with its seats and the share a new rider would pay (FR-RD-03.1, FR-RD-03.3) & Pass \\
-\file{offer-and-search} & searching for a ride (FR-RD-03, FR-RD-08.1): never shows the owner their own ride, nor a rider a ride they are on (FR-RD-03.2) & Pass \\
-\file{offer-and-search} & searching for a ride (FR-RD-03, FR-RD-08.1): hides rides that are locked, full, or outside the filters (FR-RD-03.2) & Pass \\
-\file{offer-and-search} & searching for a ride (FR-RD-03, FR-RD-08.1): keeps a ride the viewer has asked to join visible with its request state (FR-RD-03.2) & Pass \\
+\file{offer-and-search} & searching for a ride (FR-RD-03): shows an open ride with its seats and the share a new rider would pay (FR-RD-03.1, FR-RD-03.3, FR-RD-08.1) & Pass \\
+\file{offer-and-search} & searching for a ride (FR-RD-03): never shows the owner their own ride, nor a rider a ride they are on (FR-RD-03.2) & Pass \\
+\file{offer-and-search} & searching for a ride (FR-RD-03): hides rides that are locked, full, or outside the filters (FR-RD-03.2) & Pass \\
+\file{offer-and-search} & searching for a ride (FR-RD-03): keeps a ride the viewer has asked to join visible with its request state (FR-RD-03.2) & Pass \\
 \file{seats-and-lock} & the last seat: refuses a request when the ride is full, and an accept that would overfill it (FR-RD-06.2, FR-RD-06.3, FR-RO-05.2) & Pass \\
 \file{seats-and-lock} & the last seat: withdraws a rider's other request within two hours once they get a seat (FR-RD-06.8, P-08) & Pass \\
 \file{seats-and-lock} & locking the ride (P-06): fixes every share when the owner locks early, owner first, and closes waiting requests (FR-RO-06.2, FR-RD-08.3, FR-RD-06.7) & Pass \\
@@ -63,6 +64,6 @@
 \file{trip-flow} & during pickup: lets a rider check in and the owner mark them arrived or undo it (FR-RD-10.4, FR-RO-09.3) & Pass \\
 \file{trip-flow} & during pickup: refuses a no-show until five minutes after the rider's pickup time (FR-RO-10.1, P-19) & Pass \\
 \file{trip-flow} & during pickup: records a no-show after the grace period: off the ride, owes nothing, told how to dispute (FR-RO-10.2, FR-RO-10.3, FR-RD-10.3) & Pass \\
-\file{trip-flow} & the trip and completion (FR-RO-09.4): stores the final pool and shares: the no-show's share is spread over the others & Pass \\
-\file{trip-flow} & the trip and completion (FR-RO-09.4): counts unmarked riders as on board when the trip starts & Pass \\
-\file{trip-flow} & the trip and completion (FR-RO-09.4): answers the live trip stamp to people on the ride only (FR-RD-10.1) & Pass \\
+\file{trip-flow} & the trip and completion: stores the final pool and shares: the no-show's share is spread over the others (FR-RO-09.4) & Pass \\
+\file{trip-flow} & the trip and completion: counts unmarked riders as on board when the trip starts & Pass \\
+\file{trip-flow} & the trip and completion: answers the live trip stamp to people on the ride only (FR-RD-10.1) & Pass \\

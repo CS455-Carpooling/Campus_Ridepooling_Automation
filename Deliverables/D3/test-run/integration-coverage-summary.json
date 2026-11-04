@@ -2,27 +2,27 @@
   "total": {
     "lines": {
       "total": 6112,
-      "covered": 1472,
+      "covered": 1499,
       "skipped": 0,
-      "pct": 24.08
+      "pct": 24.52
     },
     "statements": {
       "total": 7042,
-      "covered": 1603,
+      "covered": 1632,
       "skipped": 0,
-      "pct": 22.76
+      "pct": 23.17
     },
     "functions": {
       "total": 1382,
-      "covered": 268,
+      "covered": 273,
       "skipped": 0,
-      "pct": 19.39
+      "pct": 19.75
     },
     "branches": {
       "total": 6494,
-      "covered": 1125,
+      "covered": 1136,
       "skipped": 0,
-      "pct": 17.32
+      "pct": 17.49
     },
     "branchesTrue": {
       "total": 0,
@@ -1386,27 +1386,27 @@
   "apps/web/src/app/api/auth/reset/route.ts": {
     "lines": {
       "total": 26,
-      "covered": 0,
+      "covered": 18,
       "skipped": 0,
-      "pct": 0
+      "pct": 69.23
     },
     "functions": {
       "total": 2,
-      "covered": 0,
+      "covered": 1,
       "skipped": 0,
-      "pct": 0
+      "pct": 50
     },
     "statements": {
       "total": 29,
-      "covered": 0,
+      "covered": 19,
       "skipped": 0,
-      "pct": 0
+      "pct": 65.51
     },
     "branches": {
       "total": 18,
-      "covered": 0,
+      "covered": 9,
       "skipped": 0,
-      "pct": 0
+      "pct": 50
     }
   },
   "apps/web/src/app/api/auth/verify/route.ts": {
@@ -4818,27 +4818,27 @@
   "apps/web/src/lib/auth.ts": {
     "lines": {
       "total": 85,
-      "covered": 40,
+      "covered": 49,
       "skipped": 0,
-      "pct": 47.05
+      "pct": 57.64
     },
     "functions": {
       "total": 27,
-      "covered": 9,
+      "covered": 13,
       "skipped": 0,
-      "pct": 33.33
+      "pct": 48.14
     },
     "statements": {
       "total": 97,
-      "covered": 44,
+      "covered": 54,
       "skipped": 0,
-      "pct": 45.36
+      "pct": 55.67
     },
     "branches": {
       "total": 53,
-      "covered": 27,
+      "covered": 29,
       "skipped": 0,
-      "pct": 50.94
+      "pct": 54.71
     }
   },
   "apps/web/src/lib/complaint-ai-rules.ts": {

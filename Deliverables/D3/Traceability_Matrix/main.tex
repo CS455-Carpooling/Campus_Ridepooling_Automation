@@ -15,8 +15,9 @@
   \quad Tests run on \UnitRunDate}
 
 \keybox{\textbf{Result.} \TraceRequirements{} requirements of the Deliverable 1 specification are
-traced to \TraceJira{} Jira issues, \TracePulls{} merged pull requests and \TraceCases{} automated
-test cases in \TraceFiles{} test files. Every one of those test cases passed in the recorded runs:
+traced to \TraceJira{} Jira issues, \TracePulls{} merged pull requests, \TraceCases{} automated
+test cases and \TraceGroups{} test groups in \TraceFiles{} test files. Every one of those passed in
+the recorded runs:
 the unit suite (\UnitRunCases{} tests) and the integration and adversarial suite
 (\IntegrationRunCases{} tests against a real PostgreSQL database), both on the master branch.}
 
@@ -30,12 +31,14 @@ Jira & The CS455 Jira issues of the pull requests in the GitHub column, as named
 branches, own commits and Jira sections. \\
 GitHub & The merged pull requests that introduced the code under test, that cite the requirement,
 and that introduced its tests; up to five are shown, the CSV lists all of them. \\
-Tests & The test files that verify the requirement, each with the number of its test cases that do,
-largest first. A test verifies a requirement when its name cites the requirement's identifier.
-Requirements marked \textsuperscript{\dag} are verified by tests whose names do not cite the
+Tests & The test files that verify the requirement, each with the number of its test cases and test
+groups that do, largest first. A test verifies a requirement when its own title cites the
+requirement's identifier. An identifier in the title of a \texttt{describe()} block is about the
+block as a whole, so it links that block as one test group, which passes when every test in it
+passed; it does not link each test inside. Requirements marked \textsuperscript{\dag} are verified by tests whose names do not cite the
 identifier; each of those links was made by reading the test and is listed in
 \file{data/manual-links.json}. \\
-Result & Passed test cases out of those linked, from the recorded runs. \\
+Result & Passed test cases and test groups out of those linked, from the recorded runs. \\
 \bottomrule
 \end{tabularx}
 
@@ -47,9 +50,11 @@ maintained by hand. A requirement is listed when at least one passing automated 
   \item \textbf{Requirements}: parsed from the Deliverable 1 requirement documents in
     \texttt{Deliverables/D1/Requirements Engineering/users/}.
   \item \textbf{Tests}: the recorded unit run (\file{data/unit-cases.json}) and integration run
-    (\file{Deliverables/D3/test-run/integration-results.json}). Test names such as
+    (\file{Deliverables/D3/test-run/integration-results.json}). Titles such as
     ``complaints (FR-RD-13.1 to 13.4)'' or ``(OA-FR-34, 36)'' cite every requirement in the range or
     list. The build refuses to run if a link in \file{data/manual-links.json} matches no recorded test.
+  \item \textbf{Pull request text}: HTML comments in a pull request body are the template's hints
+    and examples, so they are removed before looking for requirement identifiers and Jira keys.
   \item \textbf{GitHub}: a snapshot of the \SnapshotPulls{} merged pull requests with their changed
     files and commits (\file{data/prs.json}). The pull request that introduced a file is the first
     merged one that changed it. A commit counts only for the first merged pull request that
@@ -67,11 +72,11 @@ The commands that record the test runs are in \file{Deliverables/D3/Traceability
 \begin{center}\small
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
-Area & Requirements & Jira issues & Pull requests & Test cases \\
+Area & Requirements & Jira issues & Pull requests & Tests and groups \\
 \midrule
 \tabinput{generated/section-summary.tex}
 \midrule
-\textbf{Total (distinct)} & \textbf{\TraceRequirements} & \textbf{\TraceJira} & \textbf{\TracePulls} & \textbf{\TraceCases} \\
+\textbf{Total (distinct)} & \textbf{\TraceRequirements} & \textbf{\TraceJira} & \textbf{\TracePulls} & \textbf{\TraceEntries} \\
 \bottomrule
 \end{tabular}
 \end{center}

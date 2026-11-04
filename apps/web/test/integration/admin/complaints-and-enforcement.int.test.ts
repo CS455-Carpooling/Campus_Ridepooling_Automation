@@ -225,7 +225,7 @@ describe('ratings (FR-RD-12, FR-RO-12)', () => {
   });
 });
 
-describe('warnings and suspensions (OA-FR-21 to OA-FR-28)', () => {
+describe('warnings and suspensions', () => {
   it('blocks a warned rider until they acknowledge the warning (OA-FR-21, FR-RD-01.6)', async () => {
     const admin = await signedInAdmin();
     const rider = await signedInStudent();

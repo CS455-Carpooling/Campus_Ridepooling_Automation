@@ -19,17 +19,20 @@ The integration and adversarial run is the one the D3 test reports use:
 
 ## How a requirement is linked
 
-- **Tests.** A test verifies a requirement when its name cites the requirement ID, including
+- **Tests.** A test verifies a requirement when its own title cites the requirement ID, including
   ranges and lists such as `FR-RD-13.1 to 13.4` or `OA-FR-34, 36`. A bare group such as `FR-RD-06`
-  cites nothing. Tests whose names do not cite the ID are linked in `data/manual-links.json`
-  after reading them; the build stops if such a link matches no recorded test. A requirement is
-  listed when at least one passing test verifies it.
+  cites nothing. An ID in a `describe()` title is about the block as a whole, so it links that
+  block as one test group (passing when every test in it passed), not each test inside it. Tests
+  whose titles do not cite the ID are linked in `data/manual-links.json` after reading them; the
+  build stops if such a link matches no recorded test. A requirement is listed when at least one
+  passing test verifies it.
 - **GitHub.** The pull requests that introduced the code under test (the first merged one that
   changed the file), that cite the requirement in their title, body or own commits, and that
   introduced its tests. A commit belongs to the first merged pull request that contains it, since a
   stacked pull request also lists the commits below it.
 - **Jira.** The CS455 keys of those pull requests: title, branch, own commit subjects, and the
-  body's opening lines and Jira section.
+  body's opening lines and Jira section. HTML comments in a body (the template's hints and
+  examples) are removed before looking for requirement IDs and Jira keys.
 
 ## Rebuild
 

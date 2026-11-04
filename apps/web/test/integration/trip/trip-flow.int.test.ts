@@ -135,8 +135,8 @@ describe('during pickup', () => {
   });
 });
 
-describe('the trip and completion (FR-RO-09.4)', () => {
-  it('stores the final pool and shares: the no-show’s share is spread over the others', async () => {
+describe('the trip and completion', () => {
+  it('stores the final pool and shares: the no-show’s share is spread over the others (FR-RO-09.4)', async () => {
     const { owner, ride, riders } = await pooledRide({ riders: 2, fare: 900, startsIn: -20 });
     expect((await tripStep(owner, ride.id, 'pickup_in_progress')).status).toBe(200);
     const [, missing] = await seatsOf(ride.id);

@@ -3,8 +3,9 @@
 //
 //   - requirement statements: the Deliverable 1 requirement documents;
 //   - tests: the recorded unit run (data/unit-cases.json) and integration run
-//     (../test-run/integration-results.json); a test verifies a requirement when its name cites
-//     the requirement ID, or when data/manual-links.json links it after reading the test;
+//     (../test-run/integration-results.json); a test verifies a requirement when its own title
+//     cites the requirement ID (a describe() title around it does not count), or when
+//     data/manual-links.json links it after reading the test;
 //   - GitHub: the merged pull requests in data/prs.json (snapshot-prs.mjs) that cite the
 //     requirement, or that introduced the code and the tests that verify it;
 //   - Jira: the CS455 issue keys of those pull requests (title, branch, commits, Jira line).
@@ -50,6 +51,8 @@ if (argValue('--unit')) {
       file.assertionResults.map((test) => ({
         file: fromRoot(file.name),
         name: test.fullName,
+        title: test.title,
+        suite: test.ancestorTitles,
         status: test.status,
       })),
     ),
@@ -199,12 +202,28 @@ const cases = [
     file.assertionResults.map((test) => ({
       file: fromRoot(file.name),
       name: test.fullName,
+      title: test.title,
+      suite: test.ancestorTitles,
       status: test.status,
       kind: 'integration',
     })),
   ),
 ];
-const caseKey = (test) => `${test.file}::${test.name}`;
+const caseKey = (test) => `${test.file}::${test.group ? '[group] ' : ''}${test.name}`;
+
+// A describe() block, as one entry: it passes when every test inside it passed.
+const groups = new Map();
+for (const test of cases) {
+  test.suite.forEach((title, depth) => {
+    const name = test.suite.slice(0, depth + 1).join(' ');
+    const key = `${test.file}::${name}`;
+    if (!groups.has(key)) groups.set(key, { file: test.file, name, title, kind: test.kind, group: true, tests: [] });
+    groups.get(key).tests.push(test);
+  });
+}
+for (const group of groups.values()) {
+  group.status = group.tests.every((test) => test.status === 'passed') ? 'passed' : 'failed';
+}
 
 const links = new Map(); // requirement -> Map(caseKey -> { test, how })
 const link = (id, test, how) => {
@@ -212,7 +231,13 @@ const link = (id, test, how) => {
   const existing = links.get(id).get(caseKey(test));
   if (!existing || (existing.how === 'reading' && how === 'cited')) links.get(id).set(caseKey(test), { test, how });
 };
-for (const test of cases) for (const id of cited(test.name)) link(id, test, 'cited');
+// An ID in a test's own title links that test. An ID in a describe() title is about the group as
+// a whole, not about every test inside it, so it links the group as one entry.
+for (const group of groups.values()) for (const id of cited(group.title)) link(id, group, 'group');
+for (const test of cases) {
+  const inGroup = new Set(test.suite.flatMap((title) => [...cited(title)]));
+  for (const id of cited(test.title)) if (!inGroup.has(id)) link(id, test, 'cited');
+}
 
 const manual = readJson(data('manual-links.json'));
 const broken = [];
@@ -243,6 +268,8 @@ for (const pr of byMerge) for (const commit of pr.commits) if (!commitOwner.has(
 const ownCommits = (pr) =>
   pr.commits.filter((commit) => commitOwner.get(commit.oid) === pr.number && !/^Merge /.test(commit.headline));
 const JIRA = /\bCS455[-_ ](\d+)\b/gi;
+// HTML comments in a body are the PR template's hints and examples, not what the author wrote.
+const bodyOf = (pr) => String(pr.body ?? '').replace(/<!--[\s\S]*?-->/g, '');
 const jiraOf = (pr) => {
   const keys = new Set();
   const take = (text) => {
@@ -255,7 +282,7 @@ const jiraOf = (pr) => {
   // template, and any other line that names Jira. Checklist lines are template text.
   let inJira = false;
   let seenHeading = false;
-  for (const line of String(pr.body ?? '').split('\n')) {
+  for (const line of bodyOf(pr).split('\n')) {
     if (/^#{1,6}\s/.test(line)) {
       seenHeading = true;
       inJira = /jira/i.test(line);
@@ -266,7 +293,7 @@ const jiraOf = (pr) => {
   return [...keys].sort((a, b) => a - b).map((n) => `CS455-${n}`);
 };
 const prText = (pr) =>
-  [pr.title, pr.body, ...ownCommits(pr).flatMap((commit) => [commit.headline, commit.body])].join('\n');
+  [pr.title, bodyOf(pr), ...ownCommits(pr).flatMap((commit) => [commit.headline, commit.body])].join('\n');
 const prCites = new Map(prs.map((pr) => [pr.number, cited(prText(pr))]));
 /** The earliest merged pull request that changed a file: the one that introduced it. */
 const introducedBy = (file) => byMerge.find((pr) => pr.files.includes(file))?.number;
@@ -425,7 +452,9 @@ write(
     .join('\n'),
 );
 
-const allCases = new Set(rows.flatMap((row) => row.tests.map(({ test }) => caseKey(test))));
+const linked = rows.flatMap((row) => row.tests.map(({ test }) => test));
+const allCases = new Set(linked.filter((test) => !test.group).map(caseKey));
+const allGroups = new Set(linked.filter((test) => test.group).map(caseKey));
 const runDate = (start) => new Date(start).toISOString().slice(0, 10);
 write(
   'summary.tex',
@@ -434,6 +463,8 @@ write(
     `\\newcommand{\\TraceJira}{${distinct(rows.flatMap((r) => r.jira))}}`,
     `\\newcommand{\\TracePulls}{${distinct(rows.flatMap((r) => r.pulls))}}`,
     `\\newcommand{\\TraceCases}{${allCases.size}}`,
+    `\\newcommand{\\TraceGroups}{${allGroups.size}}`,
+    `\\newcommand{\\TraceEntries}{${allCases.size + allGroups.size}}`,
     `\\newcommand{\\TraceFiles}{${distinct(rows.flatMap((r) => r.testFiles))}}`,
     `\\newcommand{\\TraceByReading}{${rows.filter((r) => r.byReading).length}}`,
     `\\newcommand{\\TracePassing}{${rows.filter((r) => r.pass).length}}`,
@@ -451,7 +482,7 @@ const csv = (cells) => cells.map((cell) => `"${String(cell).replace(/"/g, '""')}
 fs.writeFileSync(
   path.join(here, 'traceability-matrix.csv'),
   `${[
-    csv(['Section', 'Requirement', 'Statement (Deliverable 1)', 'Jira issues', 'Pull requests', 'Test files', 'Test cases', 'Passed', 'Result', 'Linked by']),
+    csv(['Section', 'Requirement', 'Statement (Deliverable 1)', 'Jira issues', 'Pull requests', 'Test files', 'Tests and test groups', 'Passed', 'Result', 'Linked by']),
     ...rows.map((row) =>
       csv([
         SECTIONS.find(([s]) => s === row.section)[1],
@@ -467,7 +498,7 @@ fs.writeFileSync(
           ? 'coverage gate'
           : row.byReading
             ? 'reading the tests'
-            : 'requirement ID in the test name',
+            : 'requirement ID in a test or describe() title',
       ]),
     ),
   ].join('\n')}\n`,
@@ -480,7 +511,13 @@ fs.writeFileSync(
       row.tests
         .sort((a, b) => natural(caseKey(a.test), caseKey(b.test)))
         .map(({ test, how }) =>
-          csv([row.id, test.file, test.name, test.status, how === 'cited' ? 'ID in test name' : 'reading the test']),
+          csv([
+            row.id,
+            test.file,
+            test.group ? `${test.name} [describe() block of ${test.tests.length} tests]` : test.name,
+            test.status,
+            { cited: 'ID in test title', group: 'ID in describe() title', reading: 'reading the test' }[how],
+          ]),
         ),
     ),
   ].join('\n')}\n`,
@@ -489,7 +526,7 @@ fs.writeFileSync(
 const failing = rows.filter((row) => !row.pass).map((row) => row.id);
 console.log(
   `${rows.length} requirements traced (${rows.filter((r) => r.byReading).length} by reading the tests); ` +
-    `${distinct(rows.flatMap((r) => r.jira))} Jira issues, ${distinct(rows.flatMap((r) => r.pulls))} pull requests, ${allCases.size} test cases` +
+    `${distinct(rows.flatMap((r) => r.jira))} Jira issues, ${distinct(rows.flatMap((r) => r.pulls))} pull requests, ${allCases.size} test cases and ${allGroups.size} test groups` +
     (failing.length ? `; FAILING: ${failing.join(', ')}` : '; all passing'),
 );
 const noJira = rows.filter((row) => !row.jira.length).map((row) => row.id);

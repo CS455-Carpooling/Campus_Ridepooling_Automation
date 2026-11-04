@@ -111,8 +111,8 @@ describe('offering a ride (FR-RO-03)', () => {
   });
 });
 
-describe('searching for a ride (FR-RD-03, FR-RD-08.1)', () => {
-  it('shows an open ride with its seats and the share a new rider would pay (FR-RD-03.1, FR-RD-03.3)', async () => {
+describe('searching for a ride (FR-RD-03)', () => {
+  it('shows an open ride with its seats and the share a new rider would pay (FR-RD-03.1, FR-RD-03.3, FR-RD-08.1)', async () => {
     const owner = await signedInStudent({ name: 'Owner Asha' });
     const rider = await signedInStudent();
     const ride = await offerRide(owner, { expectedTotalFare: 601 });
