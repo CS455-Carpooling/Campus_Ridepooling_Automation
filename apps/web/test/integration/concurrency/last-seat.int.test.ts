@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { pool } from '@/lib/db';
+import { getRideView } from '@/lib/ride-view';
 import type { RouteResult } from '../http';
 import {
   actOnRequest,
@@ -19,10 +20,10 @@ type Occupancy = {
   capacity: number;
   occupants: number;
   acceptedRequests: number;
-  availableSeats: number;
+  seatsLeft: number;
 };
 
-async function occupancyOf(rideId: string): Promise<Occupancy> {
+async function occupancyOf(rideId: string, ownerId: string): Promise<Occupancy> {
   const { rows } = await pool.query<{
     capacity: number;
     occupants: number;
@@ -44,14 +45,14 @@ async function occupancyOf(rideId: string): Promise<Occupancy> {
     capacity: row.capacity,
     occupants: row.occupants,
     acceptedRequests: row.accepted_requests,
-    availableSeats: row.capacity - row.occupants,
+    seatsLeft: (await getRideView(rideId, ownerId))?.seatsLeft ?? -1,
   };
 }
 
 function assertCapacityInvariant(snapshot: Occupancy) {
   expect(snapshot.occupants).toBeLessThanOrEqual(snapshot.capacity);
   expect(snapshot.occupants).toBeGreaterThanOrEqual(1);
-  expect(snapshot.availableSeats).toBe(snapshot.capacity - snapshot.occupants);
+  expect(snapshot.seatsLeft).toBe(snapshot.capacity - snapshot.occupants);
   // The owner occupies one seat; every other active seat must have one accepted request.
   expect(snapshot.occupants).toBe(1 + snapshot.acceptedRequests);
 }
@@ -111,8 +112,8 @@ describe('NFR-RD-05: repeated last-seat concurrency experiment', () => {
     let activeRequestId = await joinRide(owner, ride.id, activeRider);
     const requestIds = new Map<string, string>([[activeRider.id, activeRequestId]]);
 
-    const initial = await occupancyOf(ride.id);
-    expect(initial).toMatchObject({ capacity: 3, occupants: 2, availableSeats: 1 });
+    const initial = await occupancyOf(ride.id, owner.id);
+    expect(initial).toMatchObject({ capacity: 3, occupants: 2, seatsLeft: 1 });
     assertCapacityInvariant(initial);
 
     let maximumObservedOccupants = initial.occupants;
@@ -199,12 +200,12 @@ describe('NFR-RD-05: repeated last-seat concurrency experiment', () => {
       activeRider = accepted[0].rider;
       activeRequestId = accepted[0].requestId;
 
-      const endOfRound = await occupancyOf(ride.id);
+      const endOfRound = await occupancyOf(ride.id, owner.id);
       assertCapacityInvariant(endOfRound);
       expect(endOfRound).toMatchObject({
         capacity: 3,
         occupants: 2,
-        availableSeats: 1,
+        seatsLeft: 1,
       });
       maximumObservedOccupants = Math.max(maximumObservedOccupants, endOfRound.occupants);
       completedRounds += 1;
@@ -270,8 +271,8 @@ describe('NFR-RD-05: repeated last-seat concurrency experiment', () => {
       constraint: 'rides_capacity_not_below_occupancy',
     });
 
-    const final = await occupancyOf(ride.id);
-    expect(final).toMatchObject({ capacity: 3, occupants: 3, availableSeats: 0 });
+    const final = await occupancyOf(ride.id, owner.id);
+    expect(final).toMatchObject({ capacity: 3, occupants: 3, seatsLeft: 0 });
     expect(final.occupants).toBeLessThanOrEqual(final.capacity);
   });
 });
