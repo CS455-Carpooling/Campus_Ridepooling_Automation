@@ -184,7 +184,7 @@ CREATE INDEX IF NOT EXISTS riders_active_user_ride_idx
 CREATE OR REPLACE FUNCTION enforce_rider_seat_capacity()
 RETURNS trigger
 LANGUAGE plpgsql
-AS $
+AS $function$
 DECLARE
   ride_capacity INTEGER;
   active_occupants INTEGER;
@@ -204,13 +204,21 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  IF TG_OP = 'UPDATE' AND OLD.ride_id = NEW.ride_id THEN
-    SELECT count(*)::INTEGER
-      INTO active_occupants
-      FROM riders
-     WHERE ride_id = NEW.ride_id
-       AND left_at IS NULL
-       AND id <> OLD.id;
+  IF TG_OP = 'UPDATE' THEN
+    IF OLD.ride_id = NEW.ride_id THEN
+      SELECT count(*)::INTEGER
+        INTO active_occupants
+        FROM riders
+       WHERE ride_id = NEW.ride_id
+         AND left_at IS NULL
+         AND id <> OLD.id;
+    ELSE
+      SELECT count(*)::INTEGER
+        INTO active_occupants
+        FROM riders
+       WHERE ride_id = NEW.ride_id
+         AND left_at IS NULL;
+    END IF;
   ELSE
     SELECT count(*)::INTEGER
       INTO active_occupants
@@ -228,7 +236,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$;
+$function$;
 
 DROP TRIGGER IF EXISTS riders_enforce_seat_capacity ON riders;
 CREATE TRIGGER riders_enforce_seat_capacity
@@ -242,7 +250,7 @@ EXECUTE FUNCTION enforce_rider_seat_capacity();
 CREATE OR REPLACE FUNCTION enforce_ride_capacity_snapshot()
 RETURNS trigger
 LANGUAGE plpgsql
-AS $
+AS $function$
 DECLARE
   active_occupants INTEGER;
 BEGIN
@@ -261,7 +269,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$;
+$function$;
 
 DROP TRIGGER IF EXISTS rides_enforce_capacity_snapshot ON rides;
 CREATE TRIGGER rides_enforce_capacity_snapshot
