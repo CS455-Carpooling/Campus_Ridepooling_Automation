@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { pool } from '@/lib/db';
+import type { RouteResult } from '../http';
 import {
   actOnRequest,
   joinRide,
@@ -86,7 +87,7 @@ async function ensurePendingRequest(
 
 async function runAndObserve(
   rideId: string,
-  operation: Promise<{ status: number; body: any }>,
+  operation: Promise<RouteResult>,
 ) {
   const result = await operation;
   // Each route promise resolves only after its transaction has committed or rolled back.
@@ -138,7 +139,7 @@ describe('NFR-RD-05: repeated last-seat concurrency experiment', () => {
           ...acceptors.map((rider, index) =>
             runAndObserve(
               ride.id,
-              actOnRequest(rider === activeRider ? owner : owner, ride.id, pendingRequestIds[index], 'accept'),
+              actOnRequest(owner, ride.id, pendingRequestIds[index], 'accept'),
             ),
           ),
           runAndObserve(
@@ -248,7 +249,7 @@ describe('NFR-RD-05: repeated last-seat concurrency experiment', () => {
     300_000,
   );
 
-  it('rejects a direct database insert that would exceed ride capacity', async () => {
+  it('serializes direct database writers and rejects an over-capacity insert', async () => {
     const owner = await signedInStudent();
     const seatedRider = await signedInStudent();
     const firstExtraRider = await signedInStudent();
@@ -256,25 +257,31 @@ describe('NFR-RD-05: repeated last-seat concurrency experiment', () => {
     const ride = await offerRide(owner, { vehicleTypeId: 'auto' });
     await joinRide(owner, ride.id, seatedRider);
 
-    await pool.query(
-      `INSERT INTO riders (ride_id, user_id, campus_location_id)
-       VALUES ($1, $2, 'hall-2')`,
-      [ride.id, firstExtraRider.id],
-    );
-
-    await expect(
+    const writes = await Promise.allSettled([
+      pool.query(
+        `INSERT INTO riders (ride_id, user_id, campus_location_id)
+         VALUES ($1, $2, 'hall-2')`,
+        [ride.id, firstExtraRider.id],
+      ),
       pool.query(
         `INSERT INTO riders (ride_id, user_id, campus_location_id)
          VALUES ($1, $2, 'hall-2')`,
         [ride.id, secondExtraRider.id],
       ),
-    ).rejects.toMatchObject({
-      code: '23514',
-      constraint: 'riders_ride_capacity',
-    });
+    ]);
+
+    expect(writes.filter((entry) => entry.status === 'fulfilled')).toHaveLength(1);
+    const rejectedWrite = writes.find((entry) => entry.status === 'rejected');
+    expect(rejectedWrite?.status).toBe('rejected');
+    if (rejectedWrite?.status === 'rejected') {
+      expect(rejectedWrite.reason).toMatchObject({
+        code: '23514',
+        constraint: 'riders_ride_capacity',
+      });
+    }
 
     const final = await occupancyOf(ride.id);
     expect(final).toMatchObject({ capacity: 3, occupants: 3, availableSeats: 0 });
-    assertCapacityInvariant(final);
+    expect(final.occupants).toBeLessThanOrEqual(final.capacity);
   });
 });
