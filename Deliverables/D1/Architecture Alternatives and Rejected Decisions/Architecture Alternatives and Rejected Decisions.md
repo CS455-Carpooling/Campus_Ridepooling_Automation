@@ -118,6 +118,19 @@ boundary make that correctness much more direct to implement and verify.
 | **Database-trigger-driven integration** | Triggers can react automatically when rows change. | Business workflows would become implicit in database code and difficult to observe, authorize, test, and version. Direct service calls through the API/application boundary make domain decisions explicit; the notification bus is invoked from services after a successful state transition. |
 
 
+### 3.4 Consequences and boundaries
+
+The key positive consequence is a dependable synchronous write path: authorization
+and domain checks occur in application services, then state and audit changes
+commit transactionally. The corresponding trade-off is that the shared data
+layer must be carefully schema-managed and can be a scaling boundary. At this
+scope, that is acceptable and safer than premature distributed consistency.
+
+The notification event bus must be treated as an asynchronous consumer of
+committed changes. It must not decide whether a join succeeds. Likewise, the AI
+components return recommendations to application services; they never directly
+write platform state.
+
 ### 3.5 D3 implementation refinement — seat-capacity enforcement
 
 The implementation retains the selected pessimistic, ride-scoped transaction strategy. The
@@ -145,19 +158,6 @@ acceptance attempts and one leave operation together for 100 rounds, with one fr
 round's start. The report source is in
 `Deliverables/D3/Concurrency_Report/main.tex`. Execution evidence remains pending until the
 PostgreSQL integration test has run; no result is assumed by this decision record.
-
-### 3.4 Consequences and boundaries
-
-The key positive consequence is a dependable synchronous write path: authorization
-and domain checks occur in application services, then state and audit changes
-commit transactionally. The corresponding trade-off is that the shared data
-layer must be carefully schema-managed and can be a scaling boundary. At this
-scope, that is acceptable and safer than premature distributed consistency.
-
-The notification event bus must be treated as an asynchronous consumer of
-committed changes. It must not decide whether a join succeeds. Likewise, the AI
-components return recommendations to application services; they never directly
-write platform state.
 
 ## 4. Decision B — AI architecture for rider suggestions and Admin complaint analysis
 
