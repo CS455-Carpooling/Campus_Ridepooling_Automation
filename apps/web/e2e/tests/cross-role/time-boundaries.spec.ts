@@ -1,8 +1,8 @@
 import { test, expect } from '../../fixtures/auth.fixture';
 import { RequestPageHelper } from '../../helpers/request.helper';
 
-test.describe('Time Boundaries, Lock Windows & Cancellation Liability (FR-RO-07, FR-RD-07, P-19, CS455-63)', () => {
-  test('lock boundary: ride locks 1 hour before departure and rejects new join requests', async ({
+test.describe('Time Boundaries, Lock Windows & Cancellation Liability (FR-RO-06.2, FR-RO-06.3, FR-RD-07, P-19, CS455-63)', () => {
+  test('lock boundary: ride locks 1 hour before departure and rejects new join requests (FR-RO-06.2, FR-RO-06.3)', async ({
     db,
     ownerContext,
     riderContext,

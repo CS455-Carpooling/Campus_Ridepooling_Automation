@@ -170,7 +170,7 @@ test.describe('Rider Join Request Lifecycle Workflows (FR-RD-06, FR-RO-05, Deliv
     ).not.toBeVisible();
   });
 
-  test('idempotency: sending identical request does not duplicate database records', async ({
+  test('idempotency: sending identical request does not duplicate database records (FR-RD-06.9, CS455-75)', async ({
     db,
     ownerContext,
     riderContext,

@@ -1,8 +1,8 @@
 import { test, expect } from '../../fixtures/auth.fixture';
 import { seedRider } from '../../fixtures/users.fixture';
 
-test.describe('Fare Calculation & Settlement Workflows (FR-RD-08, Table T-2, CS455-63)', () => {
-  test('Table T-2 whole-rupee splitting distributes remainder to earliest occupants', async ({
+test.describe('Fare Calculation & Settlement Workflows (FR-RD-08.4, Table T-2, CS455-63)', () => {
+  test('Table T-2 whole-rupee splitting distributes remainder to earliest occupants (FR-RD-08.4)', async ({
     db,
     ownerContext,
     riderContext,

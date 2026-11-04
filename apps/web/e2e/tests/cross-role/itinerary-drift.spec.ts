@@ -1,8 +1,8 @@
 import { test, expect } from '../../fixtures/auth.fixture';
 import { RequestPageHelper } from '../../helpers/request.helper';
 
-test.describe('Itinerary Drift & Reconfirmation Lifecycle (FR-RD-06, S-2, CS455-75)', () => {
-  test('material itinerary drift requires rider reconfirmation before owner can accept', async ({
+test.describe('Itinerary Drift & Reconfirmation Lifecycle (FR-RD-06.5, P-09, CS455-75)', () => {
+  test('material itinerary drift (>10 min) requires rider reconfirmation before owner can accept (FR-RD-06.5, P-09)', async ({
     db,
     ownerContext,
     riderContext,
@@ -82,7 +82,7 @@ test.describe('Itinerary Drift & Reconfirmation Lifecycle (FR-RD-06, S-2, CS455-
     expect(riderRows).toHaveLength(1);
   });
 
-  test('rider declines drifted terms and request transitions to withdrawn', async ({
+  test('rider declines drifted terms and request transitions to withdrawn (FR-RD-06.5, P-09)', async ({
     db,
     ownerContext,
     riderContext,

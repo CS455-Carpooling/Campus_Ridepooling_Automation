@@ -35,43 +35,9 @@ The system testing framework is built on Playwright Test with TypeScript, struct
 \bottomrule
 \end{tabularx}
 
-\section{Requirement Traceability Matrix (RTM)}
+\section{Requirement Traceability}
 
-The table below provides bidirectional traceability between the functional and non-functional requirements specified in Deliverable 1 and the implemented Playwright system tests.
-
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.18\linewidth}>{\raggedright\arraybackslash}p{0.12\linewidth}>{\raggedright\arraybackslash}p{0.48\linewidth}>{\raggedright\arraybackslash}p{0.14\linewidth}@{}}
-\toprule
-\textbf{Requirement ID} & \textbf{Category} & \textbf{Test Case / Journey Covered} & \textbf{Status} \\
-\midrule
-\endhead
-\texttt{FR-RD-01.1..6} & Authentication & Login domain constraint (@iitk.ac.in), role access barriers, unauthenticated redirect & \textbf{PASS} (4/4) \\
-\texttt{FR-RD-02.1..7} & Profile & Profile defaults, interest tags, pickup preferences & \textbf{PASS} (3/3) \\
-\texttt{FR-RD-03.1..7} & Ride Discovery & Search filters, destination hubs, campus pickup points, date-time ranges & \textbf{PASS} (6/6) \\
-\texttt{FR-RD-04.1..8} & Seat Contention & Two-rider seat contention, first-come first-served locking, capacity enforcement & \textbf{PASS} (2/2) \\
-\texttt{FR-RD-05.1..7} & AI Assistant & Chatbot conversational interface, preference proposals, transaction guardrails & \textbf{PASS} (3/3) \\
-\texttt{FR-RD-06.1..11} & Join Requests & Seat request lifecycle: submit, accept, reject, withdraw, leave, idempotency & \textbf{PASS} (6/6) \\
-\texttt{FR-RD-07.1..6} & Itinerary Drift & $\ge$15 min departure shift flags reconfirmation; rider acceptance reconciles & \textbf{PASS} (3/3) \\
-\texttt{FR-RD-08.1..6} & Fare \& Split & Table T-2 whole-rupee splitting algorithm, remainder to earlier occupants & \textbf{PASS} (3/3) \\
-\texttt{FR-RD-09.1..7} & Pool Chat & Real-time bidirectional chat over Socket.IO, room isolation, message caps & \textbf{PASS} (3/3) \\
-\texttt{FR-RD-11.1..6} & Notifications & In-app notifications centre, real-time dispatch, mark read status & \textbf{PASS} (1/1) \\
-\texttt{FR-RD-12.1..4} & Trip Ratings & Mutual post-trip star rating and feedback submission & \textbf{PASS} (1/1) \\
-\texttt{FR-RD-13.1..6} & Complaints & Rider complaint filing against pool members, admin review queue & \textbf{PASS} (1/1) \\
-\texttt{FR-RD-15.1..5} & SOS Emergency & In-transit SOS incident raising, location logging, strict pool privacy & \textbf{PASS} (3/3) \\
-\midrule
-\texttt{FR-RO-01..04} & Ride Creation & Vehicle selection (Car, Auto, Vikram), capacity snapshot, fare estimation & \textbf{PASS} (6/6) \\
-\texttt{FR-RO-05..06} & Request Decision & Owner review of pending join requests, accept/reject decisions, lock time & \textbf{PASS} (6/6) \\
-\texttt{FR-RO-07..09} & Trip Progress & Ride lock, pickup start, rider boarding, no-show marking, transit, completion & \textbf{PASS} (5/5) \\
-\texttt{FR-RO-10..11} & Fare Settlement & Owner verification and confirmation of received external UPI payments & \textbf{PASS} (1/1) \\
-\texttt{FR-RO-12..13} & Governance & Post-trip ratings, incident closure and resolution notes & \textbf{PASS} (2/2) \\
-\midrule
-\texttt{OA-FR-01..07} & Config Mgmt & Vehicle type CRUD, capacity limits, transport hubs, campus pickup points & \textbf{PASS} (1/1) \\
-\texttt{OA-FR-16..20} & Complaints Queue & Safety complaint prioritization, under review state, resolution outcome & \textbf{PASS} (1/1) \\
-\texttt{OA-FR-21..28} & Enforcement & Disciplinary account suspension, blocking ride offers and joins, reactivation & \textbf{PASS} (1/1) \\
-\midrule
-\texttt{AI-RD-01..06} & AI Features & Gemini ranking, injected 8s timeout fallback bound, 503 recovery, guardrails & \textbf{PASS} (6/6) \\
-\texttt{SYS-NFR-01..12} & System Quality & CSRF/origin protection, idempotency enforcement, room isolation, audit & \textbf{PASS} (45/45) \\
-\bottomrule
-\end{longtable}
+In accordance with the Deliverable 3 traceability framework (\href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/93}{PR \#93}), requirement traceability is centralized in \file{Deliverables/D3/Traceability\_Matrix/}. All browser system tests cite exact Deliverable 1 requirement IDs in their test titles and assertions, enabling automated extraction and linkage into the project-wide traceability matrix and coverage artifacts.
 
 \section{Key Test Suites and Coverage Analysis}
 

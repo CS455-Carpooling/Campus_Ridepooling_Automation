@@ -1,7 +1,7 @@
 import { test, expect } from '../../fixtures/auth.fixture';
 
-test.describe('Ride Management & Trip Progress Lifecycle (FR-RO-04, FR-RO-07, FR-RO-09, Deliverable 1)', () => {
-  test('owner locks scheduled ride early and verifies locked state (FR-RO-07)', async ({
+test.describe('Ride Management & Trip Progress Lifecycle (FR-RO-04, FR-RO-06, FR-RO-09, Deliverable 1)', () => {
+  test('owner locks scheduled ride early and verifies locked state (FR-RO-06.2, FR-RO-06.3)', async ({
     db,
     ownerContext,
   }) => {
@@ -36,7 +36,7 @@ test.describe('Ride Management & Trip Progress Lifecycle (FR-RO-04, FR-RO-07, FR
     ).not.toBeVisible();
   });
 
-  test('owner cancels scheduled ride and verifies cancellation status (FR-RO-04.2)', async ({
+  test('owner cancels scheduled ride and verifies cancellation status (FR-RO-04.4)', async ({
     db,
     ownerContext,
   }) => {
