@@ -118,63 +118,6 @@ credentials or session tokens were retained in the repository.
 
 *To be completed by the author.*
 
-## 2026-11-05 — Deployment and Gemini configuration review
-
-### User request
-
-Verify the environment variables required by the deployed application, confirm the
-payment-reminder scheduler secret behavior, verify which Gemini models were actually
-used across the codebase, and make the runtime model consistent without introducing
-unjustified fallback behavior.
-
-### Repository inspection performed
-
-Reviewed the Render deployment configuration, Docker and npm workspace setup, local
-environment templates, the deployment documentation, and all runtime Gemini entry
-points:
-
-- Ride recommendations in `apps/web/src/lib/ai/gemini-ranking.ts`.
-- Chatbot interpretation in `apps/web/src/lib/ai/chatbot-gemini.ts`.
-- Complaint analysis in `apps/web/src/lib/complaint-ai.ts`.
-- Gemini smoke test in `apps/web/test.mjs`.
-- Payment-reminder authentication in
-  `apps/web/src/app/api/cron/payment-reminders/route.ts`.
-
-The review confirmed that `GEMINI_API_KEY` is server-side only. The payment-reminder
-secret is an independently generated bearer token and is unrelated to Gemini.
-Neither secret value was recorded in this log.
-
-### Model consistency change
-
-Before the change, the runtime contained different fallback model identifiers:
-recommendations used `gemini-3.5-flash-lite`, complaint analysis used
-`gemini-2.5-flash`, chatbot interpretation used `gemini-3.1-flash-lite`, and the
-smoke test used another hardcoded value. A shared
-`apps/web/src/lib/ai/gemini-config.ts` module was added with:
-
-```env
-GEMINI_MODEL=gemini-3.1-flash-lite
-```
-
-Recommendations, chatbot interpretation, complaint analysis, and the smoke test now
-use this single configuration value. The obsolete `GEMINI_CHATBOT_MODEL` override
-was removed from the application environment template and setup documentation.
-The complaint-analysis regression assertion was updated to reflect the shared model.
-
-### Validation
-
-- Focused AI regression suite: **3 test files passed, 11 tests passed**.
-- Full application Vitest suite: **202 test files passed, 1,544 tests passed**.
-- `git diff --check`: passed.
-- Typecheck was attempted; the local install reported a missing
-  `@playwright/test` module in existing E2E fixture files, unrelated to the Gemini
-  model change.
-
-Fallback behavior remains intentional and explicit: it is used only when Gemini is
-not configured, the provider request fails or times out, the provider returns invalid
-content, or the model output fails application validation. A successful response
-using the configured model is not replaced by a fallback.
-
 ## Prompt and response log
 
 ### Prompt 1
@@ -290,3 +233,51 @@ using the configured model is not replaced by a fallback.
 ### Response 14
 
 > Analyzed the application's security architecture across trust boundaries, verifying Role-Based Access Control (M64, Rider vs Admin with `requireAdminApi` and database triggers), input validation with UUID regex and 100% parameterized SQL (M65), cryptographic secret and cookie lifecycle management (M66), and a STRIDE threat model covering 6 threats (BOLA/IDOR, replay forgery, prompt injection, admin privilege escalation, secret leakage, and realtime eavesdropping) with concrete automated test scenarios (M68). Documented the post-mortems of seven remediated security defects (Defects 1, 2 & 13, 3, 5 & 14, 10, 11 & 12, 18). Authored the LaTeX report (`Deliverables/D3/Security_and_Threat_Model_Report/main.tex`) adhering to `common/d3report.sty` and the Markdown report (`Deliverables/D3/security-and-threat-model-report.md`), and updated `Deliverables/D3/README.md`. Committed in atomic steps on branch `prithviraj/test-report`.
+
+## 2026-11-05 — Render deployment and Gemini configuration
+
+### User request
+
+Deploy the application to Render.com, prepare D3 deployment documentation, verify
+the environment configuration and Gemini model selection, standardize runtime
+Gemini usage, and update the D3 records and repository README.
+
+### Repository inspection and AI assistance
+
+The assistant reviewed the Docker Compose stack, npm workspace Dockerfile, Render
+deployment settings supplied by the user, environment templates, all runtime Gemini
+entry points, the payment-reminder route, and the D3 documentation structure.
+The assistant produced and revised
+`Deliverables/D3/Deployment_Documentation.md`, updated the README and traceability
+references, and recorded deployment limitations without recording credentials.
+
+### Findings and decisions
+
+- The deployment uses Render.com Free tier with a Docker Web Service and Render
+  Managed PostgreSQL database `crp`.
+- The original D1 planning baseline named GCP. The platform deviation was recorded
+  in the D3 deployment document instead of rewriting the submitted D1 baseline.
+- Runtime Gemini features previously had different model defaults. A shared
+  `apps/web/src/lib/ai/gemini-config.ts` now selects
+  `GEMINI_MODEL=gemini-3.1-flash-lite` for recommendations, chatbot interpretation,
+  complaint analysis, and the smoke test.
+- `GEMINI_API_KEY` remains server-side only. Payment reminders require a separate
+  bearer secret.
+- The Render environment uses mail, Gemini, and payment-reminder variables.
+
+### Validation and review response
+
+- Focused AI regression suite: **3 test files passed, 11 tests passed**.
+- Full application Vitest suite: **202 test files passed, 1,544 tests passed**.
+- `git diff --check`: passed.
+- A GitHub PR review verified the deployed health endpoint, public pages,
+  authentication refusal, origin checks, WebSocket refusal without a session,
+  security headers, and CI status. Its genuine documentation findings were
+  addressed by separating this entry from the prior performance log, documenting
+  Render Free-tier limits and dates, recording the platform deviation, adding the
+  deployment report to the D3 index, and preserving the submitted D1 requirement
+  baseline.
+
+Fallback behavior remains intentional: it is used only for missing configuration,
+provider failure, timeout, invalid provider content, or failed output validation.
+No secret values were copied into the AI log or deployment documentation.

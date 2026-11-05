@@ -23,8 +23,9 @@ The production deployment consists of:
 - Automatic deployments triggered by pushes to the connected GitHub branch.
 
 The application is a Next.js web application with a custom Node.js server and
-Socket.IO support. Running the container continuously on Render allows the
-real-time ride matching, ride chat, and notification channels to remain available.
+Socket.IO support. Render runs the container as a web service, allowing the
+real-time ride matching, ride chat, and notification channels to remain available
+while the service is awake.
 
 ## 2. Architecture and Environment Parity
 
@@ -166,18 +167,18 @@ committed to the repository.
 | `DATABASE_URL` | Render PostgreSQL **Internal Database URL** | Connects the web service to the managed `crp` database over Render's private network. |
 | `APP_URL` | `https://campus-ridepooling-automation.onrender.com` | Defines the public application origin used in links, redirects, origin checks, and real-time connection handshakes. |
 
-### 5.2 Optional and secret variables
+### 5.2 Production service variables
 
-The following variables may also be configured in Render when their associated
-features are enabled:
+The mail, Gemini, and payment-reminder variables below are used by the deployed
+service.
 
 | Variable | Purpose |
 |---|---|
-| `MAIL_SCRIPT_URL` | Google Apps Script endpoint for verification and password-reset email delivery. |
-| `MAIL_SCRIPT_SECRET` | Shared secret for the mail relay. |
+| `MAIL_SCRIPT_URL` | Google Apps Script endpoint for verification and password-reset email delivery. Required for new-account verification and password reset. |
+| `MAIL_SCRIPT_SECRET` | Shared secret for the mail relay. Required alongside `MAIL_SCRIPT_URL`. |
 | `GEMINI_API_KEY` | Server-side Gemini access for recommendations, chatbot responses, and advisory complaint analysis. |
 | `GEMINI_MODEL` | Shared Gemini model identifier for recommendations, chatbot interpretation, and complaint analysis. |
-| `PAYMENT_REMINDER_CRON_SECRET` | Authorization secret for the scheduled payment-reminder endpoint. |
+| `PAYMENT_REMINDER_CRON_SECRET` | Bearer secret used to authorize the payment-reminder endpoint. |
 
 No secret values should be written to this document, committed to Git, or exposed
 in client-side variables.
@@ -261,8 +262,8 @@ In the Render Web Service's environment settings:
 Render automatically builds the Docker image using the configured Dockerfile. The
 container then:
 
-1. Installs production dependencies.
-2. Applies the PostgreSQL schema through `db:migrate`.
+1. Installs production dependencies during the Docker image build.
+2. Applies the PostgreSQL schema through `db:migrate` during container startup.
 3. Starts the custom Next.js and Socket.IO server.
 4. Exposes the service on the port supplied by the container environment.
 
@@ -283,10 +284,42 @@ The deployment should be checked by:
 - Testing registration, email verification, login, ride creation, ride joining,
   chat, and notifications as appropriate for the deployed configuration.
 
-## 7. CI/CD and Release Automation
+## 7. Requirement change and deployment limitations
+
+The original D1 planning baseline named GCP as the intended cloud platform for
+`NFR-RD-18`. The implemented deployment uses Render.com Free tier instead. This
+decision was made on 5 November 2026 because Render supports the repository's
+Docker build directly from GitHub, provides managed PostgreSQL, and runs the
+custom server needed for Socket.IO without adding a separate real-time service.
+The platform change is recorded here rather than rewriting the submitted D1
+requirement baseline.
+
+Rejected alternatives included the originally planned GCP Cloud Run and Cloud SQL
+arrangement, which would require additional service configuration for this
+course deployment, and a serverless-only platform, which would not reliably
+maintain the application's WebSocket connections.
+
+The Render Free tier has these operational limits relevant to the submission:
+
+- The free web service sleeps after 15 minutes without traffic and may take about
+  one minute to wake. Open the production site shortly before a demonstration.
+- The workspace includes 750 free instance hours per month.
+- The free PostgreSQL instance provides 1 GB of storage.
+- The free PostgreSQL database created on 5 November 2026 expires after 30 days
+  (5 December 2026) and is deleted 14 days later (19 December 2026) under the
+  provider's stated free-tier policy. It has no backups.
+- After the course demonstration, preserve the schema and deployment configuration
+  and migrate to a paid or separately backed-up database if the service must
+  remain available.
+
+The deployment uses the mail, Gemini, and payment-reminder variables in Render.
+`MAIL_SCRIPT_SECRET` is managed in Render; its rotation history is not recorded
+in this repository.
+
+## 8. CI/CD and Release Automation
 
 The Render Web Service is linked directly to the GitHub repository. Automatic
-deployments are enabled for pushes to the configured main/master branch.
+deployments are enabled for pushes to the configured `master` branch.
 
 The release flow is:
 
@@ -311,14 +344,16 @@ image. Render replaces the running service using its deployment process, providi
 zero-downtime deployment behavior subject to the platform's health checks and
 available Free-tier resources.
 
-## 8. WebSocket and Real-Time Infrastructure
+## 9. WebSocket and Real-Time Infrastructure
 
 The application uses Socket.IO for real-time ride coordination, chat, and
 notifications. It requires a continuously running server process that can maintain
 long-lived WebSocket connections.
 
 Render was selected because its Docker-based Web Service runs the application
-container continuously. This supports the application's Socket.IO server directly.
+server directly and supports Socket.IO without a separate real-time service. The
+Free tier may sleep after inactivity, so the first request after an idle period
+can take longer while the service wakes.
 Standard serverless platforms commonly terminate or do not preserve WebSocket
 connections between invocations, which would require an additional real-time
 service or a more complex infrastructure design.
@@ -328,7 +363,7 @@ load-balancer configuration for the current single-service deployment. The custo
 server in [`apps/web/server.mjs`](../../apps/web/server.mjs) serves Next.js and
 Socket.IO from the same continuously running process.
 
-## 9. Security and Operational Notes
+## 10. Security and Operational Notes
 
 - Production database traffic uses Render's Internal Database URL.
 - Database credentials and API keys are stored as protected Render environment
@@ -340,10 +375,13 @@ Socket.IO from the same continuously running process.
   deployment.
 - The Free tier has resource, sleep, and availability limitations; these should be
   considered when interpreting first-request latency and real-time behavior.
+- The database currently permits the provider's default external networking
+  configuration; production hardening should restrict the allow list if external
+  administration is no longer needed.
 - Backups, retention, scaling, and uptime guarantees depend on the selected Render
   plan and should be reviewed before production use beyond the course submission.
 
-## 10. Troubleshooting
+## 11. Troubleshooting
 
 ### Docker build cannot find workspace files
 
@@ -381,7 +419,7 @@ Review the Render deployment logs and confirm that:
 - The service can reach the database over Render's private network.
 - The database user has permission to create and modify the application schema.
 
-## 11. Deployment Summary
+## 12. Deployment Summary
 
 The final deployment uses a Render Docker Web Service and a Render Managed
 PostgreSQL Free database named `crp`. The blank Root Directory and explicit
