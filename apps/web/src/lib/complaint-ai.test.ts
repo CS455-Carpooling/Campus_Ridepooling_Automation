@@ -80,7 +80,7 @@ describe('analyzeComplaint (SYS-FR-30 to 33, 46, 47)', () => {
 
     expect(fetch).toHaveBeenCalledOnce();
     const [url, options] = fetch.mock.calls[0] as [string, RequestInit];
-    expect(url).toContain('/v1beta/models/gemini-2.5-flash:generateContent');
+    expect(url).toContain('/v1beta/models/gemini-3.1-flash-lite:generateContent');
     expect(new Headers(options.headers).get('x-goog-api-key')).toBe('test-key');
     const body = JSON.parse(String(options.body)) as {
       contents: Array<{ parts: Array<{ text: string }> }>;
