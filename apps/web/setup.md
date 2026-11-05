@@ -87,9 +87,8 @@ MAIL_SCRIPT_SECRET=
 
 # Optional: server-side Gemini key for recommendations, the chatbot, and admin complaint analysis.
 GEMINI_API_KEY=
-# Shared Gemini model; the chatbot may be overridden with GEMINI_CHATBOT_MODEL.
+# Shared Gemini model used by recommendations, the chatbot, and complaint analysis.
 GEMINI_MODEL=gemini-3.1-flash-lite
-GEMINI_CHATBOT_MODEL=
 
 # Required only when scheduling the post-ride payment reminder endpoint.
 PAYMENT_REMINDER_CRON_SECRET=
@@ -97,10 +96,8 @@ PAYMENT_REMINDER_CRON_SECRET=
 
 For Docker Compose, put `GEMINI_API_KEY` and `GEMINI_MODEL` in the repository-root `.env` beside
 `docker-compose.yml` (copy the root `.env.example` first). Compose forwards those two settings to
-the web service; it does not read `apps/web/.env` or `apps/web/.env.local`. If using the optional
-`GEMINI_CHATBOT_MODEL` override or `PAYMENT_REMINDER_CRON_SECRET` with Compose, configure that
-variable explicitly in the web service environment because the current Compose file does not
-forward it.
+the web service; it does not read `apps/web/.env` or `apps/web/.env.local`. If using `PAYMENT_REMINDER_CRON_SECRET` with Compose, configure that variable explicitly in the
+web service environment because the current Compose file does not forward it.
 
 | Variable | Purpose |
 |---|---|
@@ -110,7 +107,6 @@ forward it.
 | `MAIL_SCRIPT_SECRET` | Shared secret that must match the script's `MAIL_SECRET` property. |
 | `GEMINI_API_KEY` | Optional server-only Gemini key for recommendations, the chatbot and complaint analysis. Never expose it with a `NEXT_PUBLIC_` variable. |
 | `GEMINI_MODEL` | Shared Gemini model ID. The example uses `gemini-3.1-flash-lite`. |
-| `GEMINI_CHATBOT_MODEL` | Optional chatbot-only model override; defaults to `GEMINI_MODEL`. |
 | `PAYMENT_REMINDER_CRON_SECRET` | Secret for the scheduled `POST /api/cron/payment-reminders` endpoint. Keep it in the deployment secret manager and configure the scheduler to send it in the `Authorization` header. |
 
 Make sure `.env*` is listed in `.gitignore` and never commit real values.
