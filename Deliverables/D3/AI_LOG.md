@@ -118,6 +118,63 @@ credentials or session tokens were retained in the repository.
 
 *To be completed by the author.*
 
+## 2026-11-05 — Deployment and Gemini configuration review
+
+### User request
+
+Verify the environment variables required by the deployed application, confirm the
+payment-reminder scheduler secret behavior, verify which Gemini models were actually
+used across the codebase, and make the runtime model consistent without introducing
+unjustified fallback behavior.
+
+### Repository inspection performed
+
+Reviewed the Render deployment configuration, Docker and npm workspace setup, local
+environment templates, the deployment documentation, and all runtime Gemini entry
+points:
+
+- Ride recommendations in `apps/web/src/lib/ai/gemini-ranking.ts`.
+- Chatbot interpretation in `apps/web/src/lib/ai/chatbot-gemini.ts`.
+- Complaint analysis in `apps/web/src/lib/complaint-ai.ts`.
+- Gemini smoke test in `apps/web/test.mjs`.
+- Payment-reminder authentication in
+  `apps/web/src/app/api/cron/payment-reminders/route.ts`.
+
+The review confirmed that `GEMINI_API_KEY` is server-side only. The payment-reminder
+secret is an independently generated bearer token and is unrelated to Gemini.
+Neither secret value was recorded in this log.
+
+### Model consistency change
+
+Before the change, the runtime contained different fallback model identifiers:
+recommendations used `gemini-3.5-flash-lite`, complaint analysis used
+`gemini-2.5-flash`, chatbot interpretation used `gemini-3.1-flash-lite`, and the
+smoke test used another hardcoded value. A shared
+`apps/web/src/lib/ai/gemini-config.ts` module was added with:
+
+```env
+GEMINI_MODEL=gemini-3.1-flash-lite
+```
+
+Recommendations, chatbot interpretation, complaint analysis, and the smoke test now
+use this single configuration value. The obsolete `GEMINI_CHATBOT_MODEL` override
+was removed from the application environment template and setup documentation.
+The complaint-analysis regression assertion was updated to reflect the shared model.
+
+### Validation
+
+- Focused AI regression suite: **3 test files passed, 11 tests passed**.
+- Full application Vitest suite: **202 test files passed, 1,544 tests passed**.
+- `git diff --check`: passed.
+- Typecheck was attempted; the local install reported a missing
+  `@playwright/test` module in existing E2E fixture files, unrelated to the Gemini
+  model change.
+
+Fallback behavior remains intentional and explicit: it is used only when Gemini is
+not configured, the provider request fails or times out, the provider returns invalid
+content, or the model output fails application validation. A successful response
+using the configured model is not replaced by a fallback.
+
 ## Prompt and response log
 
 ### Prompt 1
