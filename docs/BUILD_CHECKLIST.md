@@ -297,10 +297,10 @@ keep riders informed — **without ever taking a consequential action unilateral
 - [ ] **M77** AI-assisted development-time and resource estimation
 - [ ] **M78** Cost estimate: infrastructure, storage, APIs, **model inference**, deployment
 - [ ] **M79** **Gantt chart / timeline**
-- [ ] **M80** **Deployed on AWS or GCP.** Plan: **GCP — Cloud Run (backend, scale-to-zero) + Cloud SQL
-      Postgres w/ PostGIS + Cloud Storage/Firebase Hosting (frontend) + Cloud Scheduler (matcher
-      trigger) + Cloud Logging (observability)**. AWS equivalent: App Runner/ECS + RDS + S3/CloudFront
-      + EventBridge Scheduler + CloudWatch
+- [ ] **M80** **Deployment platform requirement.** The documented deployment was completed on
+      **Render.com Free tier** using a Docker Web Service and Render Managed PostgreSQL. The
+      original AWS/GCP plan was replaced by the verified Render deployment:
+      **Render Web Service + Render Managed PostgreSQL + GitHub automatic deploys**.
 - [ ] **M81** **Free-tier limits not exhausted** — billing alerts configured
 - [ ] **M82** Estimated vs actual cost/resource comparison
 
@@ -336,7 +336,7 @@ keep riders informed — **without ever taking a consequential action unilateral
 | **D0 → D1** | M0.1–M0.10 ticked; **proposal approved by instructor** |
 | **D1 → D2** | M23–M32, M38–M50 ticked; requirements + architecture docs complete; use-case, component, sequence diagrams delivered; initial traceability matrix; Jira backlog + first sprint planned; AI Engineering Log for requirements & architecture |
 | **D2 → D3** | M1–M5, C1–C23, M10–M16, M33–M37, M51–M53 ticked; agent governance implemented and audited; core transactional workflow demonstrable; Jira↔GitHub traceability live; peer reviews evidenced; README + API docs |
-| **D3 → Demo** | M17, M54–M82 ticked; ≥80% coverage; ≥5 defects fixed with regression tests; threat model + security tests; load test with before/after optimization; ≥3 failure scenarios; deployed on GCP/AWS; cost doc; Gantt; final traceability matrix |
+| **D3 → Demo** | M17, M54–M82 ticked; ≥80% coverage; ≥5 defects fixed with regression tests; threat model + security tests; load test with before/after optimization; ≥3 failure scenarios; deployed on Render.com; cost doc; Gantt; final traceability matrix |
 | **Demo → done** | M85–M90; retrospective submitted; all deliverables mirrored in `Deliverables/` |
 
 ---

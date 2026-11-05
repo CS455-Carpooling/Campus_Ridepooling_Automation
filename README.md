@@ -13,6 +13,21 @@ when the ride locks; the group coordinates in a private chat. After the trip, ri
 external settlement, rate each other and report misconduct. AI assists ride discovery and complaint
 review, while ride actions and administrative decisions remain validated and human-controlled.
 
+## Live deployment
+
+The application is deployed on Render.com using a Docker Web Service and a Render Managed
+PostgreSQL database:
+
+- **Production URL:** <https://campus-ridepooling-automation.onrender.com/>
+- **Health endpoint:** <https://campus-ridepooling-automation.onrender.com/api/health>
+- **Runtime:** Render Docker Web Service with the repository root as the build context
+- **Database:** Render Managed PostgreSQL using the `crp` database
+
+The deployment uses Render's Internal Database URL, GitHub-triggered automatic deployments,
+and a continuously running container to support the application's Socket.IO ride coordination,
+chat, and notification features. See the [D3 deployment documentation](Deliverables/D3/Deployment_Documentation.md)
+for the complete configuration and verification procedure.
+
 ## Status
 
 | Deliverable | Due | Status |
