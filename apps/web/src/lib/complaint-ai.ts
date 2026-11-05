@@ -7,11 +7,11 @@ import {
   type ComplaintAiAnalysis,
   type ComplaintAiFallback,
 } from './complaint-ai-rules';
+import { getGeminiModel } from './ai/gemini-config';
 
 const MODEL_TIMEOUT_MS = 8_000;
 const MODEL_OUTPUT_TOKENS = 512;
 const PROMPT_VERSION = 'complaint-analysis-v1';
-const MODEL_DEFAULT = 'gemini-2.5-flash';
 const redactPersonalInfo = (text: string) =>
   text
     .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, '[redacted email]')
@@ -122,7 +122,7 @@ async function requestGemini(context: ComplaintContext): Promise<{
   const apiKey = process.env.GEMINI_API_KEY?.trim();
   if (!apiKey)
     throw new AnalysisFailure('fallback_service_error', 'GEMINI_API_KEY is not configured.');
-  const model = process.env.GEMINI_MODEL?.trim() || MODEL_DEFAULT;
+  const model = getGeminiModel();
   let response: Response;
   try {
     response = await fetch(
@@ -220,7 +220,7 @@ export async function analyzeComplaint(complaintId: string): Promise<void> {
 
   const startedAt = Date.now();
   let analysis: ComplaintAiAnalysis;
-  let model = process.env.GEMINI_MODEL?.trim() || MODEL_DEFAULT;
+  let model = getGeminiModel();
   let inputTokens: number | null = null;
   let outputTokens: number | null = null;
   try {
