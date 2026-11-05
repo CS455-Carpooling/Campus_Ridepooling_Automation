@@ -1,3 +1,24 @@
 % CS455-169
-\section{Deployment, timeline and cost}
-	extit{To be written (CS455-169).}
+\section{Deployment, timeline and cost}\label{sec:deployment}
+
+\subsection{Deployment}
+The application runs on Render.com's Free tier, as a Docker web service with a Render managed PostgreSQL
+database. Pushes to \texttt{master} deploy automatically, and migrations run when the container starts.
+The health endpoint is \url{https://campus-ridepooling-automation.onrender.com/api/health}. The steps,
+configuration and verification are in the
+\repolink{Deliverables/D3/Deployment_Documentation.md}{deployment documentation}.
+
+Deliverable 1 planned GCP (requirement NFR-RD-18). The team chose Render on 5 November because it builds
+the repository's Docker image directly from GitHub, provides managed PostgreSQL and runs the custom server
+that Socket.IO needs. The submitted requirement still says GCP, and the change is recorded in section 7 of
+the deployment documentation rather than by rewriting Deliverable 1.
+
+The Free tier has limits that matter for the demonstration. The service sleeps after 15 minutes without
+traffic and takes about a minute to wake. The database expires on 5 December 2026 and has no backups.
+
+\subsection{Timeline}
+\textit{To be completed from Mahir Jain's timeline and Gantt chart (\jira{CS455-162}) once it is merged.}
+
+\subsection{Cost}
+\textit{To be completed from Chaitanya Nitawe's costing document once it is merged, including estimated
+against actual usage where the document provides it.}
