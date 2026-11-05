@@ -4,13 +4,27 @@
 \graphicspath{{figures/}}
 \hypersetup{pdftitle={CS455 D3 Final Project Report},pdfauthor={Mainak Sarkar, Khushi Ranawat}}
 
+% GitHub and Jira numbers from make-metrics.mjs, test numbers from the recorded runs.
+\input{generated/metrics.tex}
+\input{../Traceability_Matrix/generated/summary.tex}
+\input{../test-run/generated/summary.tex}
+
+% Links used across the sections.
+\newcommand{\repourl}{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation}
+\newcommand{\repolink}[2]{\href{\repourl/blob/master/#1}{#2}}
+\newcommand{\repofile}[1]{\href{\repourl/blob/master/#1}{\nolinkurl{#1}}}
+\newcommand{\pr}[1]{\href{\repourl/pull/#1}{\##1}}
+\newcommand{\jira}[1]{\href{https://cs455project.atlassian.net/browse/#1}{#1}}
+
+\setcounter{tocdepth}{1}
+
 \begin{document}
 
 \makereporttitle{Final Project Report}
   {Deliverable 3, Campus Ride-Pooling and Split-Fare System}
   {Prepared by Mainak Sarkar and Khushi Ranawat}
 
-\tableofcontents
+{\setlength{\parskip}{0pt}\tableofcontents}
 
 % One file per section, so both authors can work without conflicts. Owners are in README.md.
 \input{sections/overview}
