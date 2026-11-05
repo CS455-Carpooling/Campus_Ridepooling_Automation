@@ -1,3 +1,41 @@
 % CS455-168
 \section{Traceability}
-	extit{To be written (CS455-168).}
+
+The \repolink{Deliverables/D3/Traceability_Matrix/main.pdf}{requirements traceability matrix} links
+\TraceRequirements{} Deliverable 1 requirements to \TraceJira{} Jira issues, \TracePulls{} merged pull
+requests and \TraceEntries{} automated tests and test groups. It is generated from recorded test runs and
+a snapshot of the pull requests, so it can be rebuilt and checked rather than maintained by hand. The
+full table is also available as \repofile{Deliverables/D3/Traceability_Matrix/traceability-matrix.csv}.
+
+Table~\ref{tab:chain} follows one requirement along the whole chain. FR-RD-06.8 says that once a rider is
+accepted on a ride, their other active requests for rides departing within two hours are withdrawn and
+those owners are told.
+
+\begin{table}[h]
+\centering\small
+\caption{One complete chain, for requirement FR-RD-06.8.}
+\label{tab:chain}
+\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{0.17\linewidth}X@{}}
+\toprule
+Requirement & FR-RD-06.8 (Must), in the
+  \href{\repourl/blob/master/Deliverables/D1/Requirements\%20Engineering/users/rider/02_functional_requirements.md}{rider functional requirements} \\
+User story & US-RD-18, acceptance criterion US-RD-18-AC2, in the
+  \href{\repourl/blob/master/Deliverables/D1/Requirements\%20Engineering/users/rider/06_user_stories.md}{rider user stories} \\
+Jira issue & \jira{CS455-76} (implementation, under story \jira{CS455-75}) and \jira{CS455-111} (tests,
+  under story \jira{CS455-109}) \\
+Branch & \texttt{CS455-76-CS455-77-Ride-Lifecycle} and \texttt{CS455-111-core-workflow-tests} \\
+Commits & \href{\repourl/commit/6b1746b1bb04c123d62a7f18422882c2f038aa3b}{6b1746b} (implementation) and
+  \href{\repourl/commit/6b258c515350296ded7e0b2826c7fbb74d42fd40}{6b258c5} (tests) \\
+Pull request & \pr{55} (implementation, reviewed by Mainak Sarkar) and \pr{85} (tests) \\
+Test case & ``withdraws a rider's other request within two hours once they get a seat (FR-RD-06.8, P-08)'',
+  in \repofile{apps/web/test/integration/rides/seats-and-lock.int.test.ts} \\
+Test result & Passed in the integration run recorded on \RunDate{}, in
+  \repofile{Deliverables/D3/test-run/integration-results.json} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Two limits apply to the chain. Implementation and tests were often written by different people at
+different times, so one requirement can span several Jira issues and pull requests, as it does here. And
+\PullsNoJira{} of the \PullsMerged{} merged pull requests name no Jira key, so the chain cannot start from
+Jira for those.

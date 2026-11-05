@@ -1,3 +1,49 @@
 % CS455-168
 \section{Quality summary}
-	extit{To be written (CS455-168).}
+
+Table~\ref{tab:quality} gives the main result of each Deliverable 3 report. The reports hold the method,
+evidence and steps to reproduce each result. The code and the tests are the same across them, so their
+counts overlap and should not be added together.
+
+{\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.17\linewidth}>{\raggedright\arraybackslash}p{0.15\linewidth}>{\raggedright\arraybackslash}p{0.62\linewidth}@{}}
+\caption{Main result of each Deliverable 3 report.}\label{tab:quality}\\
+\toprule
+\textbf{Report} & \textbf{Owner} & \textbf{Main result} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Report} & \textbf{Owner} & \textbf{Main result} \\
+\midrule
+\endhead
+\repolink{Deliverables/D3/Unit_Test_Report.md}{Unit test and coverage} & Khushi Ranawat &
+  \UnitRunCases{} tests passed. Statement coverage is \CoverageStatements\,\%, above the 80\,\% gate that
+  continuous integration enforces. \\
+\repolink{Deliverables/D3/Integration_Test_Report/main.pdf}{Integration test} & Mainak Sarkar &
+  \IntPassed{} of \IntTotal{} tests passed in \IntFiles{} files against a real PostgreSQL 16 database,
+  \BugTotal{} of them regression tests for defects the suite found. \\
+\repolink{Deliverables/D3/Adversarial_Test_Report/main.pdf}{Adversarial test} & Mainak Sarkar &
+  \AdvPassed{} of \AdvTotal{} cases passed in \AdvFiles{} files after a fix. The suite found one real
+  weakness, an idempotency key replaying the wrong request, fixed in \pr{87}. \\
+\repolink{Deliverables/D3/System_Test_Report/main.pdf}{System test} & Khushi Ranawat &
+  48 of 48 browser tests passed in 13 files against the complete stack, with no backend mocks. \\
+\repolink{Deliverables/D3/Concurrency_Report/main.pdf}{Concurrency} & Khushi Ranawat &
+  5,000 mixed route-handler operations in 100 rounds on one ride, with zero capacity violations. \\
+\repolink{Deliverables/D3/performance-load-test-report.md}{Performance and load} & Mahir Jain &
+  At 100 virtual users, a SQL optimisation lowered p95 latency from 2.27\,s to 1.76\,s (22.5\,\%).
+  Reliability and correctness targets passed. The p95 and p99 latency targets were not met. \\
+\repolink{Deliverables/D3/Security_and_Threat_Model_Report/main.pdf}{Security and threat model} &
+  Chaitanya Nitawe, Prithviraj Ghosh &
+  Six threats modelled with STRIDE and seven security defects fixed. In the report's own run, 61 focused
+  unit tests and the 110 PostgreSQL integration tests passed. \\
+\repolink{Deliverables/D3/Failure_and_Recovery_Report/main.pdf}{Failure and recovery} &
+  Chaitanya Nitawe, Prithviraj Ghosh &
+  Five failure domains covered, including LLM timeout and duplicate requests. In the report's own run, 61
+  focused unit tests and the 110 PostgreSQL integration tests passed. \\
+\repolink{Deliverables/D3/Bug_Report/main.pdf}{Bug and defect history} & Khushi Ranawat &
+  26 resolved application defects, each with its Jira Bug and pull request (Section~\ref{sec:defects}). \\
+\repolink{Deliverables/D3/Traceability_Matrix/main.pdf}{Traceability matrix} & Mainak Sarkar &
+  \TraceRequirements{} requirements traced to \TraceEntries{} passing tests and test groups. \\
+\bottomrule
+\end{longtable}
+}
