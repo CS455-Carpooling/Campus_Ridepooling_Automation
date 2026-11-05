@@ -1,3 +1,57 @@
 % CS455-170
 \section{Individual contributions}
-	extit{To be written (CS455-170).}
+
+Table~\ref{tab:contributions} combines each member's GitHub and Jira activity, from the snapshots of
+\GithubSnapshotDate{} (GitHub) and \JiraSnapshotDate{} (Jira). These are counts of recorded activity and
+not a measure of effort: one commit can be a single line or a whole feature, and Jira assignment reflects
+how each member broke down their work.
+
+\begin{table}[h]
+\centering\small
+\caption{Recorded activity per member. Commits exclude merge commits; reviews count the distinct pull
+requests a member reviewed.}
+\label{tab:contributions}
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+& \multicolumn{3}{c}{GitHub} & \multicolumn{3}{c}{Jira issues} \\
+\cmidrule(lr){2-4}\cmidrule(l){5-7}
+Member & Merged PRs & Commits & PRs reviewed & Assigned & Done & Reported \\
+\midrule
+\tabinput{generated/contributions.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+{\small
+\begin{longtable}{@{}>{\bfseries\raggedright\arraybackslash}p{0.17\linewidth}>{\raggedright\arraybackslash}p{0.79\linewidth}@{}}
+\caption{Main areas of work per member, with the pull requests that hold them.}\label{tab:areas}\\
+\toprule
+\textbf{Member} & \textbf{Main areas} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Member} & \textbf{Main areas} \\
+\midrule
+\endhead
+Prithviraj Ghosh & First version of the Ride Owner requirements; authentication pages (\pr{19}); chatbot
+  (\pr{75}); security and failure reports with Chaitanya Nitawe (\pr{94}). \\
+Mainak Sarkar & Rider requirements (\pr{1}); application scaffold and landing page (\pr{16}, \pr{17},
+  \pr{18}); ride inputs, details and my rides (\pr{21}, \pr{27} to \pr{31}); ratings (\pr{36} to \pr{40});
+  operations admin foundation, configuration and complaints (\pr{42} to \pr{44}, \pr{47} to \pr{49}); trip
+  and SOS (\pr{56}, \pr{57}); D1 bug review (\pr{67}); integration and adversarial suites and reports
+  (\pr{83} to \pr{89}); traceability matrix (\pr{93}). \\
+Khushi Ranawat & Operations Admin requirements (\pr{3}); create-ride flow (\pr{24}); AI ride recommendation
+  and hobby tags (\pr{51}, \pr{52}); notifications (\pr{53}, \pr{54}, \pr{61}, \pr{66}); unit test report
+  (\pr{92}); defect history (\pr{96}); concurrency experiment and seat-capacity guard (\pr{97}); system test
+  report. \\
+Mahir Jain & Class, sequence and architecture diagrams and design patterns (\pr{10}, \pr{11}, \pr{14});
+  authentication backend (\pr{20}); profile and history (\pr{33}); pool chat (\pr{41}); AI review panel
+  (\pr{50}); ride lifecycle (\pr{55}); hardening, UI and fares (\pr{69} to \pr{74}); LLM integration
+  (\pr{76}); D2 documentation (\pr{77} to \pr{80}); performance testing (\pr{90}); audit defect fixes
+  (\pr{91}); deployment (\pr{98}). \\
+Chaitanya Nitawe & Ride Owner requirements (\pr{4} to \pr{6}); architecture alternatives and rejected
+  decisions (\pr{12}); ride search (\pr{35}, \pr{45}); ride requests (\pr{62}); system test suite (\pr{95});
+  security and failure reports with Prithviraj Ghosh (\pr{94}). \\
+\bottomrule
+\end{longtable}
+}

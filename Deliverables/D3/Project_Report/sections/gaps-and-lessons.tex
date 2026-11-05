@@ -1,3 +1,47 @@
-% CS455-170
-\section{Gaps and lessons}
-	extit{To be written (CS455-170).}
+% CS455-170. Khushi adds any further Jira gaps to the Jira list below.
+\section{Gaps and lessons}\label{sec:gaps}
+
+This section records where the project fell short of its own process. The final Jira cleanup on 5 November
+set statuses and assignees only; the estimates and sprints of past issues were left as they were.
+
+\subsection{Jira}
+\begin{itemize}
+  \item \textbf{Estimates.} \JiraWithEstimate{} of \JiraIssues{} issues have a story point estimate, so the
+    team planned and tracked sprints by issue count rather than by estimated effort.
+  \item \textbf{Sprints and fields.} \JiraNoSprint{} issues are in no sprint, \JiraNoLabels{} have no labels
+    and \JiraUnassigned{} have no assignee.
+  \item \textbf{Statuses lagged behind the work.} \JiraResolvedFinalDay{} issues were marked resolved on
+    5 November, many of them for work merged earlier, so resolution dates are not a reliable record of when
+    work finished.
+  \item \textbf{Issues recorded late.} \JiraCreatedFinalDay{} issues were created on 5 November. They include
+    \JiraDefectBugsFinalDay{} of the \JiraDefectBugs{} defect Bugs, which were recorded after the defects were
+    fixed rather than when they were found.
+\end{itemize}
+
+\subsection{Code review}
+\PullsNoReview{} of the \PullsMerged{} merged pull requests have no recorded review from another member,
+although the handout expects a review on significant pull requests. Nothing enforced it, because
+\texttt{master} has no branch protection.
+
+\subsection{Schedule and scope}
+\begin{itemize}
+  \item \textbf{Late start on testing.} \texttt{master} has no commits for \CommitGapDays{} days between
+    \CommitGapFrom{} and \CommitGapTo{}, and Deliverable 3 testing started only at the end of that gap.
+  \item \textbf{Late deployment.} The platform was chosen and deployed on 5 November, the day before the
+    deadline, which left little time to run the system under real conditions.
+  \item \textbf{Performance targets.} The p95 and p99 latency targets were not met, and the performance report
+    states what would need rerunning before making a stronger claim.
+\end{itemize}
+
+\subsection{Lessons}
+\begin{itemize}
+  \item \textbf{Test against the real database early.} The unit suite cleared its 80\,\% coverage gate with
+    the database mocked, yet the first real PostgreSQL runs found defects it could not see. The coverage
+    gate is necessary but does not show that the parts work together.
+  \item \textbf{Update Jira as the work happens.} A status or Bug recorded at the end costs as much time as one
+    recorded on the day and is worth less as evidence.
+  \item \textbf{Turn the process into a rule.} Requiring a review through branch protection from the first day
+    would have settled the review gap without relying on anyone remembering.
+  \item \textbf{Deploy early.} A walking skeleton on the final platform during Deliverable 2 would have tested
+    the deployment choice while there was still time to change it.
+\end{itemize}
