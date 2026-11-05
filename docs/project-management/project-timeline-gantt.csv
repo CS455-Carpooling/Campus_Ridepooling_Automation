@@ -1,0 +1,21 @@
+ID,Start,End,Phase,Workstream,Scope,Evidence,Timing basis,Confidence
+D0,2026-08-29,2026-08-29,D0,Proposal and approval,"One-page project proposal and approval gate","Milestone","Deadline milestone; start date not specified",High
+D1,2026-09-26,2026-09-26,D1,Requirements architecture and setup,"Requirements, use cases, NFRs, traceability, architecture, diagrams, patterns, alternatives, Jira/GitHub integration, sprint plan and AI log","Milestone","Deadline milestone; start date not specified",High
+IMPL-01,2026-10-02,2026-10-02,D2,Product foundation,"Next.js/TypeScript scaffold, homepage/navigation, landing page and authentication pages","Implementation history","Recorded completion date",High
+IMPL-02,2026-10-03,2026-10-04,D2,Authentication and ride creation,"Auth integration, create-ride inputs/rules, Docker/design system, create flow and invalid-time fix","Implementation history","Recorded completion dates",High
+IMPL-03,2026-10-05,2026-10-06,D2,Ride management,"Ride views/details, my rides, profile, history and routing","Implementation history","Recorded completion dates",High
+IMPL-04,2026-10-07,2026-10-08,D2,Discovery and feedback,"Search, completion, ratings and reviews","Implementation history","Recorded completion dates",High
+IMPL-05,2026-10-09,2026-10-10,D2,Communication and administration,"Pool chat and operations-admin foundation","Implementation history","Recorded completion dates",High
+IMPL-06,2026-10-11,2026-10-12,D2,Admin complaints and AI,"Configuration, complaint/enforcement APIs and pages, complaint queue, AI recommendations and hobby tags","Implementation history","Recorded completion dates",High
+IMPL-07,2026-10-12,2026-10-12,D2,Live lifecycle and safety,"Notifications, ride requests, trips, live controls and SOS","Implementation history","Recorded completion date",High
+IMPL-08,2026-10-13,2026-10-14,D2,Hardening and final features,"Ride-state/SOS fixes, notification hardening, loophole fixes, UI/fare improvements and chatbot work","Implementation history","Recorded completion dates",High
+D2,2026-10-15,2026-10-15,D2,Implementation and sprint execution deadline,"Working implementation, agentic AI, API docs, README, AI logs, sprint history, traceability, peer review and core workflow demo","Milestone and implementation history","Deadline milestone",High
+TEST-01,2026-10-28,2026-10-28,D3,Integration and adversarial assurance,"Real-Postgres CI, workflow tests, database fixes, adversarial suite and reports","Test history","Recorded completion date",High
+TEST-02,2026-10-29,2026-10-29,D3,Performance assurance,"Performance testing and optimization","Test history","Recorded completion date",High
+TEST-03,2026-11-02,2026-11-02,D3,Test evidence and traceability,"Unit tests, coverage report and final requirements traceability","Test history","Recorded completion date",High
+TEST-04,2026-11-03,2026-11-03,D3,Additional test reporting,"Additional test report","Test history","Recorded completion date",High
+TEST-05,2026-11-04,2026-11-04,D3,System reliability,"E2E system tests, defect history, concurrency experiment and seat-capacity guard","Test history","Recorded completion date",High
+TEST-06,2026-11-05,2026-11-05,D3,Deployment,"Deployment configuration and documentation","Deployment history","Recorded completion date",High
+D3,2026-11-06,2026-11-06,D3,Testing security performance cost deployment and reliability deadline,"All D3 reports, defect history, costing, timeline, deployment, final traceability, dashboard/report and AI log","Milestone","Deadline milestone",High
+DEMO-START,2026-11-08,2026-11-08,Final,Scenario-based presentation starts,"Normal, concurrent, failure, security and agentic-AI scenarios","Assessment window","Assessment window",High
+DEMO-END,2026-11-13,2026-11-13,Final,Scenario-based presentation window ends,"End of assigned presentation window","Assessment window","Assessment window",High
