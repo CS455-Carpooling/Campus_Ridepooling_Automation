@@ -46,8 +46,8 @@ Next.js request requires, and should also run in CI.
   explicit opt-in setting and a marker it wrote itself, and it refuses anything else.
 
 ### Verification performed
-The suite was run twice in a row to show it can be rerun, and with a URL naming a non-test database to show
-that it refuses before connecting.
+Six smoke tests cover sign-in, the CSRF check, the administrator role and isolation between tests, and unit
+tests cover every refusal of the database guard. The new CI job runs the suite on every pull request.
 
 ### Student evaluation and decision
 *To be completed by Mainak.*
@@ -77,7 +77,7 @@ test to pass.
   ride's completion time, rather than retrying the test.
 
 ### Verification performed
-The suite passed locally and in CI. The regression tests were confirmed to cover the failing query.
+The suite passed locally and in CI, and the fix in #84 carries its own regression tests.
 
 ### Student evaluation and decision
 *To be completed by Mainak.*
@@ -129,9 +129,9 @@ the review points from Khushi.
 - Test titles relabelled with exact requirement identifiers where they were vague.
 
 ### Errors identified
-- **Linking too strict.** After the first review, linking only on a test's own title dropped 1,045 links and
-  35 requirements. Identifiers in a `describe()` title now link the block as one group, which passes only if
-  every test inside it passed.
+- **Linking too strict.** Linking only on a test's own title, tried after Khushi's review, dropped 1,045 links
+  and 35 requirements. Identifiers in a `describe()` title now link the block as one group, which passes only
+  if every test inside it passed.
 - **False citations.** The pull request template's hints, inside HTML comments, were being read as requirement
   identifiers, and a mention in a file-level comment is not evidence. Both are now excluded.
 - **Double counting.** Stacked pull requests list the commits below them, so a commit now counts only for the
@@ -140,7 +140,7 @@ the review points from Khushi.
   parses the D1 documents instead.
 
 ### Verification performed
-The matrix was rebuilt from the recorded runs and every manual link was checked by reading the test.
+The build fails if a manual link matches no recorded test, and each manual link was made by reading the test.
 
 ### Student evaluation and decision
 *To be completed by Mainak.*
@@ -164,9 +164,9 @@ trust, and draft the review. Report must-fix points only where asked.
 
 ### Errors identified
 These errors were in the assistant's own drafts:
-- **#96:** one defect's before and after behaviour was the wrong way round, and a draft named a route,
-  `GET /api/rides/[id]`, that does not exist. Both were caught before the review was shared.
-- **#96:** a count was stated as 13 of 16 when it was 14, also caught before sharing.
+- **Caught before the reviews were shared:** one defect's before and after behaviour was the wrong way round
+  in the #96 draft, a draft named a route, `GET /api/rides/[id]`, that does not exist, and a count was stated as
+  13 of 16 when it was 14.
 - **#94 and #96:** the assistant advised citing #94 for two defects whose code fixes are in #91. This reached
   CS455-137, CS455-141 and the bug report, and its correction is tracked in CS455-176.
 
@@ -185,7 +185,7 @@ in the two existing report stories with descriptions and sub-tasks, without crea
 
 ### Output and changes
 The assistant applied these through the Atlassian connector, on Mainak's account:
-- 42 issues moved to Done after checking their work was complete.
+- 42 issues moved to Done.
 - 26 Bugs assigned to the people who fixed them.
 - Descriptions and estimates for CS455-163 and CS455-164, and sub-tasks CS455-165 to CS455-177.
 
