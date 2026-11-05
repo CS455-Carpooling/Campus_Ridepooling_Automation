@@ -217,8 +217,9 @@ reports, and state the project's gaps plainly.
 ### Output and changes
 - `snapshot-github.mjs`, `import-jira.mjs` and `make-metrics.mjs`, which feed `generated/`. The snapshots store
   people by name only.
-- Sections on the overview, GitHub workflow, traceability, quality summary, deployment, contributions, gaps and
-  lessons.
+- Sections on the overview, GitHub workflow, traceability, quality summary, deployment, timeline, contributions,
+  gaps and lessons.
+- The Gantt chart in the timeline section, rendered from the unchanged Mermaid source merged in #99.
 
 ### Errors identified
 - **Query size.** The first GitHub snapshot went over GitHub's query limit and was rewritten as a paginated query.
@@ -228,7 +229,7 @@ reports, and state the project's gaps plainly.
 ### Verification performed
 The report builds without LaTeX errors, and its pages were read as rendered. The production health endpoint
 returned 200. For the worked traceability example, the implementation commit was checked to contain the rule
-that the requirement describes.
+that the requirement describes. In the rendered Gantt chart, all 15 task bars have width in Mermaid 10 and 11.
 
 ### Student evaluation and decision
 *To be completed by Mainak.*
