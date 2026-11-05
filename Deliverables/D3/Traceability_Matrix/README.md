@@ -2,6 +2,11 @@
 
 Requirement (Deliverable 1) → Jira issue → GitHub pull request → automated test → result.
 
+The operational deployment requirement `NFR-RD-18` is evidenced by the Render.com
+deployment documented in [`../Deployment_Documentation.md`](../Deployment_Documentation.md),
+including the production `/api/health` check. The deployed platform is Render.com Free
+tier, not GCP.
+
 | File | What it is |
 |---|---|
 | [`main.pdf`](./main.pdf) | The matrix, with how it is built and a summary by area (LaTeX source `main.tex`) |

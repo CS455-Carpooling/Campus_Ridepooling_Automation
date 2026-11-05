@@ -50,7 +50,7 @@ holiday weekend). Performance targets apply at this load.
 |---|---|---|---|---|---|---|
 | NFR-RD-16 | *Environmental.* The rider interface shall support current browsers. | Latest two versions of Chrome, Firefox, Edge and Safari (iOS) | Should | Test | All | — |
 | NFR-RD-17 | *Development.* Rider modules shall be developed in TypeScript and covered by automated tests. | ≥ 80 % statement coverage of rider modules; continuous integration rejects changes below this | Must | Analysis | All | — |
-| NFR-RD-18 | *Operational.* Rider-facing services shall be deployed on the chosen cloud platform within free-tier limits and expose health checks. | Deployed on GCP; health endpoint per service; no free-tier limit exceeded during the load test | Must | Inspection | All | — |
+| NFR-RD-18 | *Operational.* Rider-facing services shall be deployed on the chosen cloud platform within free-tier limits and expose health checks. | Deployed on Render.com Free tier; `/api/health` returns success; no free-tier limit exceeded during the deployment verification | Must | Inspection | All | — |
 
 ## External requirements
 
