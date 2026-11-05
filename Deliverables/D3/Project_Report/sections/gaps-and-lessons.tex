@@ -36,8 +36,9 @@ although the handout expects a review on significant pull requests. Nothing enfo
 \subsection{Lessons}
 \begin{itemize}
   \item \textbf{Test against the real database early.} The unit suite cleared its 80\,\% coverage gate with
-    the database mocked, yet the first real PostgreSQL runs found defects it could not see. The coverage
-    gate is necessary but does not show that the parts work together.
+    the database mocked, yet from 14 to 28 October every seat request failed with a 500 on a real database
+    (\pr{84}), and no test showed it. The coverage gate is necessary but does not show that the parts work
+    together.
   \item \textbf{Update Jira as the work happens.} A status or Bug recorded at the end costs as much time as one
     recorded on the day and is worth less as evidence.
   \item \textbf{Turn the process into a rule.} Requiring a review through branch protection from the first day
