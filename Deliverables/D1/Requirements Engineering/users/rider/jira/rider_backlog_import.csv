@@ -399,7 +399,7 @@ Verification: Analysis
 Applies to: All"
 NFR-RD-18 Operational. Rider-facing services shall be deployed on the chosen cloud platform withi…,Task,High,rider,d1,nfr,,"Operational. Rider-facing services shall be deployed on the chosen cloud platform within free-tier limits and expose health checks.
 
-Target: Deployed on Render.com Free tier; /api/health returns success; no free-tier limit exceeded during deployment verification
+Target: Deployed on GCP; health endpoint per service; no free-tier limit exceeded during the load test
 Verification: Inspection
 Applies to: All"
 NFR-RD-19 Legislative. Rider data handling shall follow the principles of India's Digital Persona…,Task,High,rider,d1,nfr,,"Legislative. Rider data handling shall follow the principles of India's Digital Personal Data Protection Act, 2023: purpose limitation, data minimisation and consent.
