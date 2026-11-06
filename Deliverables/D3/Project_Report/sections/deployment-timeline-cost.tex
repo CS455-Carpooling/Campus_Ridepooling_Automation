@@ -18,19 +18,40 @@ traffic and takes about a minute to wake. The database expires on 5 December 202
 
 \subsection{Timeline}
 The \repolink{Deliverables/D3/project-timeline-gantt.md}{timeline and Gantt chart} (\jira{CS455-162}) covers
-the project from the proposal to the final demonstration, and Figure~\ref{fig:gantt} shows it. Each work bar
+the project from the proposal to the final demonstration, and Figure~\ref{fig:gantt} on the last page shows it. Each work bar
 runs from the day the pull requests for that work opened to the day they merged. Deliverable 1 work ran from
 23 to 26 September, implementation from 2 to 15 October, and Deliverable 3 testing, reporting and deployment
 from 28 October to 5 November.
 
-\begin{figure}[h]
-\centering
-% Rendered with Mermaid 11.4.1 from the unchanged source in project-timeline-gantt.md.
-\includegraphics[width=\linewidth]{project-timeline-gantt}
-\caption{Project timeline, rendered from the Mermaid source in the timeline document.}
-\label{fig:gantt}
-\end{figure}
-
 \subsection{Cost}
-\textit{To be completed from Chaitanya Nitawe's costing document once it is merged, including estimated
-against actual usage where the document provides it.}
+The \repolink{Deliverables/D3/Costing_Documentation/project_costing_report.pdf}{costing report}
+(\jira{CS455-178}) estimates the monthly operating cost of the current setup and of two production sizes,
+from prices checked on 6 November 2026 at a rate of 94 rupees to the dollar.
+Table~\ref{tab:cost} summarises it. Totals include 18\,\% GST.
+
+\begin{table}[h]
+\centering\small
+\caption{Estimated monthly operating cost.}
+\label{tab:cost}
+\begin{tabular}{@{}lllr@{}}
+\toprule
+Setup & Web service & Database & Monthly cost \\
+\midrule
+Current demonstration & Render Free & Render Free, 1\,GB & INR 0 \\
+Pilot, about 1,000 students & Render Starter & Basic-256mb, 5\,GB & INR 2,640 (USD 28.08) \\
+Full scale, about 5,000 students & Render Standard & Basic-1gb, 20\,GB & INR 12,567 (USD 133.69) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Model inference is the largest cost at both production sizes: INR 799 of the INR 2,237 pre-tax pilot cost,
+and INR 3,995 of INR 10,650 at full scale. That figure assumes 20,000 and 100,000 Gemini calls a month, at
+500 input and 200 output tokens per call. The token counts are not measured, so the costing report also
+gives the effect of doubling them. Salaries, monitoring tools and bandwidth above the included allowance are
+excluded.
+
+The current setup costs nothing and stays within its free limits. A single web service stays within Render's
+750 free hours a month, and the database expires after the presentation window. GitHub Actions ran 465
+workflows, about 1,030 elapsed minutes, at no charge, because standard runners are free for a public
+repository. Section 7 of the costing report compares estimated and actual usage and lists the production
+figures that were not collected.
