@@ -6,6 +6,14 @@ execution window; the late addition of its files does not change that schedule.
 
 ## Gantt chart
 
+### Column-header meaning
+
+The date headers across the top are **week-start labels**. Each header marks
+the first day of a seven-day calendar column, and the six days that follow
+continue to the right. For example, **05 Sep** means the week beginning
+5 September 2026, not a single-day deadline. Teal bars show dated work
+windows, blue bars show phase groups, and orange diamonds mark milestones.
+
 ```mermaid
 gantt
     title Campus Ridepooling Automation — August to November 2026
