@@ -139,6 +139,7 @@ const macros = {
   JiraCarriedOver: count((i) => i.sprints.length > 1),
   JiraCreatedFinalDay: count((i) => istDay(i.created) === FINAL_DAY),
   JiraResolvedFinalDay: count((i) => i.resolved && istDay(i.resolved) === FINAL_DAY),
+  JiraResolvedDeadline: count((i) => i.resolved && istDay(i.resolved) === '2026-11-06'),
   JiraBugs: count((i) => i.type === 'Bug'),
   JiraDefectBugs: count((i) => i.type === 'Bug' && i.labels.includes('d3')),
   JiraDefectBugsFinalDay: count((i) => i.type === 'Bug' && i.labels.includes('d3') && istDay(i.created) === FINAL_DAY),

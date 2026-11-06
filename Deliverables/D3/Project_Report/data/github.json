@@ -1,6 +1,6 @@
 {
- "recordedAt": "2026-11-05T17:17:39.647Z",
- "masterHead": "69b0cef",
+ "recordedAt": "2026-11-06T16:20:59.244Z",
+ "masterHead": "5c8411d",
  "prs": [
   {
    "number": 1,
@@ -3718,9 +3718,363 @@
      "submittedAt": "2026-11-05T06:54:08Z"
     }
    ]
+  },
+  {
+   "number": 99,
+   "title": "Cs455 162 timeline",
+   "author": "Mahir Jain",
+   "branch": "CS455-162-Timeline",
+   "body": "## Jira issue\r\n\r\n[CS455-162 ](https://cs455project.atlassian.net/browse/CS455-162?atlOrigin=eyJpIjoiYmIyMDQxN2EyZGY4NGQxZmJlYTc3MDUzNzk5YjQ2MDgiLCJwIjoiaiJ9)\r\n\r\n## What and why\r\nTimeline and gannt chart added",
+   "createdAt": "2026-11-05T16:35:32Z",
+   "mergedAt": "2026-11-05T18:12:24Z",
+   "additions": 193,
+   "deletions": 0,
+   "commits": [
+    {
+     "oid": "8c4a1e8753a0cd480ccf1c30ece06d480fac9051",
+     "headline": "docs: add project Gantt chart"
+    },
+    {
+     "oid": "ec263ccb47ca80fba813c3177c24d49647e410d8",
+     "headline": "docs: add project timeline data"
+    },
+    {
+     "oid": "0c5e6576ff5a4e32c22f447e7972811aa2126df7",
+     "headline": "docs: record latest D3 AI interaction"
+    },
+    {
+     "oid": "93a344c4dd061b9f057844fae0e8e515a0deb9f0",
+     "headline": "Merge branch 'master' of https://github.com/CS455-Carpooling/Campus_R…"
+    },
+    {
+     "oid": "c30005c324e7d29b69c4e161fb0e932aefc8cf40",
+     "headline": "docs: update D3 AI log"
+    },
+    {
+     "oid": "e03b7964330a66858132013599bdc1b2a836cef8",
+     "headline": "docs: add timeline to D3 README"
+    },
+    {
+     "oid": "2d9067446cb6c082002b5502d6469e23e81a1632",
+     "headline": "docs: update timeline source"
+    },
+    {
+     "oid": "4f86d3757bce29eb19176b36ed41214eadccf324",
+     "headline": "docs: update timeline data"
+    },
+    {
+     "oid": "cc1c6d132902dec33a47ee2d24334b02d0ae3b05",
+     "headline": "docs: add timeline PDF source"
+    },
+    {
+     "oid": "3253f3ac263d384414442db1470556208d53feac",
+     "headline": "docs: add rendered timeline PDF"
+    }
+   ],
+   "reviews": [
+    {
+     "reviewer": "Mainak Sarkar",
+     "state": "COMMENTED",
+     "submittedAt": "2026-11-05T17:09:19Z"
+    }
+   ]
+  },
+  {
+   "number": 100,
+   "title": "Cs455 160 deployment",
+   "author": "Mahir Jain",
+   "branch": "CS455-160-Deployment",
+   "body": "## Jira issue\n\n[CS455-160](https://cs455project.atlassian.net/browse/CS455-160?atlOrigin=eyJpIjoiNWUwMDNjNjBkOGJiNGY5ODkwZGZlOTdjMmQ1MjAzZWYiLCJwIjoiaiJ9)\n\n## What and why\n\nUpdated the rider non-functional requirements, traceability matrix, Jira backlog, D3 documentation indexes, and build checklist to keep project requirements, deliverables, and validation status consistent. These documentation updates improve traceability and ensure the final D3 submission checklist accurately reflects completed reports and project artifacts.\n\n\n[CS455-160]: https://cs455project.atlassian.net/browse/CS455-160?atlOrigin=eyJpIjoiNWRkNTljNzYxNjVmNDY3MDlhMDU5Y2ZhYzA5YTRkZjUiLCJwIjoiZ2l0aHViLWNvbS1KU1cifQ",
+   "createdAt": "2026-11-05T16:41:08Z",
+   "mergedAt": "2026-11-05T17:43:01Z",
+   "additions": 9,
+   "deletions": 13,
+   "commits": [
+    {
+     "oid": "bc64cbdebcf7a2751524decfabf0170d082592da",
+     "headline": "docs: update rider non-functional requirements"
+    },
+    {
+     "oid": "b88f8808e5459a3a7fee6dcb44ef5d7bb5c651be",
+     "headline": "docs: update rider traceability matrix"
+    },
+    {
+     "oid": "e5232f121d4f6f6e252046a32c071e49e35aff7d",
+     "headline": "docs: update rider Jira backlog"
+    },
+    {
+     "oid": "2b13626188ab015782fa4d9cb1404867a133e217",
+     "headline": "docs: update D3 README"
+    },
+    {
+     "oid": "5207328dcd3d917776093117a94abea3d1adf495",
+     "headline": "docs: update D3 traceability README"
+    },
+    {
+     "oid": "d5720805bee6301e7259a0640a2a025af8d198b1",
+     "headline": "docs: update build checklist"
+    }
+   ],
+   "reviews": [
+    {
+     "reviewer": "Mainak Sarkar",
+     "state": "APPROVED",
+     "submittedAt": "2026-11-05T17:09:22Z"
+    }
+   ]
+  },
+  {
+   "number": 102,
+   "title": "some formatting fixes",
+   "author": "Mahir Jain",
+   "branch": "CS455-162-Timeline",
+   "body": "",
+   "createdAt": "2026-11-06T04:25:35Z",
+   "mergedAt": "2026-11-06T04:25:45Z",
+   "additions": 117,
+   "deletions": 6,
+   "commits": [
+    {
+     "oid": "6ff5c8632b5789e7dfd6dc0353dabab3c6313636",
+     "headline": "some formatting fixes"
+    }
+   ],
+   "reviews": []
+  },
+  {
+   "number": 103,
+   "title": "ui fixes to timeline and deployment doc updation",
+   "author": "Mahir Jain",
+   "branch": "CS455-162-Timeline",
+   "body": "## Jira issue\n\n[CS455-162 ](https://cs455project.atlassian.net/browse/CS455-162?atlOrigin=eyJpIjoiM2ZmZjc3N2YyMGNkNDc4YWI3MDZiNmVjMWVlOThlMjEiLCJwIjoiaiJ9)\n\n## What and why\n\nGannt chart's visual representation was updated to make it easy to read . Apart from that sample admin user's addition to the render deployment was logged into the deployment documentation .",
+   "createdAt": "2026-11-06T06:23:15Z",
+   "mergedAt": "2026-11-06T08:31:59Z",
+   "additions": 142,
+   "deletions": 151,
+   "commits": [
+    {
+     "oid": "68f87824f099b4d3c5526435cfe02b6a34ca2627",
+     "headline": "ui fixes to timeline and deployment doc updation"
+    },
+    {
+     "oid": "4f794c8fa53da57a7a406e9581844990f62e759e",
+     "headline": "ai log updated"
+    },
+    {
+     "oid": "96c30e11b9c2e712559a2228228b4ed7e32e4165",
+     "headline": "final files"
+    },
+    {
+     "oid": "076fbbed75a9ef19824bf98f181a79b60eae58a1",
+     "headline": "CS455-162: Fix the Gantt chart legend colours"
+    },
+    {
+     "oid": "35cccbb355144282ff8f2f9d081c9b41fae11940",
+     "headline": "CS455-162: Remove the LaTeX build files of the Gantt chart"
+    },
+    {
+     "oid": "c0e4f0ff10a90dfb9664ddfa77cfa11cabda244b",
+     "headline": "CS455-162: Record the new Gantt chart in the D3 AI log"
+    }
+   ],
+   "reviews": [
+    {
+     "reviewer": "Mainak Sarkar",
+     "state": "APPROVED",
+     "submittedAt": "2026-11-06T08:09:22Z"
+    }
+   ]
+  },
+  {
+   "number": 104,
+   "title": "[CS455-178] Project Costing documentation ",
+   "author": "Chaitanya Nitawe",
+   "branch": "chaitanya/CS455-178-costing-report",
+   "body": "",
+   "createdAt": "2026-11-06T14:25:20Z",
+   "mergedAt": "2026-11-06T16:16:18Z",
+   "additions": 196,
+   "deletions": 0,
+   "commits": [
+    {
+     "oid": "f58366d4a406ed5699dee8b9955a8a33361e2895",
+     "headline": "CS455-178 doc : Project Costing documentation with current vs pilot v…"
+    },
+    {
+     "oid": "3d00bcd081dd0247c8b013f557e02c44a52f7108",
+     "headline": "project report updated"
+    },
+    {
+     "oid": "543cbe9f050dc3242979e7d2b91a77c901d1255b",
+     "headline": "Added PDF file for submission"
+    },
+    {
+     "oid": "0b6762276c758ad0b0477c5f7a1813039021383d",
+     "headline": "Merge master into CS455-178-costing-report"
+    },
+    {
+     "oid": "af8e7d4fb440eb0c9c48dd5c98b9e620fefbbad0",
+     "headline": "CS455-178: Correct the costing report's prices and rebuild the PDF"
+    },
+    {
+     "oid": "010e9fc5e5c80f7b6dff4fa9320439701379945f",
+     "headline": "CS455-178: Add the costing report to the D3 README"
+    },
+    {
+     "oid": "d98241dc0ad888b77cb8f0dacf503071fe0cb98e",
+     "headline": "CS455-178: Use measured Gemini request sizes, and add actual usage an…"
+    }
+   ],
+   "reviews": [
+    {
+     "reviewer": "Mainak Sarkar",
+     "state": "COMMENTED",
+     "submittedAt": "2026-11-06T15:14:15Z"
+    }
+   ]
   }
  ],
  "commits": [
+  {
+   "hash": "d98241d",
+   "author": "Mainak Sarkar",
+   "date": "2026-11-06T21:39:36+05:30"
+  },
+  {
+   "hash": "010e9fc",
+   "author": "Mainak Sarkar",
+   "date": "2026-11-06T20:32:26+05:30"
+  },
+  {
+   "hash": "af8e7d4",
+   "author": "Mainak Sarkar",
+   "date": "2026-11-06T20:32:26+05:30"
+  },
+  {
+   "hash": "543cbe9",
+   "author": "Chaitanya Nitawe",
+   "date": "2026-11-06T19:54:36+05:30"
+  },
+  {
+   "hash": "3d00bcd",
+   "author": "Chaitanya Nitawe",
+   "date": "2026-11-06T19:52:45+05:30"
+  },
+  {
+   "hash": "f58366d",
+   "author": "Chaitanya Nitawe",
+   "date": "2026-11-06T19:44:06+05:30"
+  },
+  {
+   "hash": "c0e4f0f",
+   "author": "Mainak Sarkar",
+   "date": "2026-11-06T13:39:02+05:30"
+  },
+  {
+   "hash": "35cccbb",
+   "author": "Mainak Sarkar",
+   "date": "2026-11-06T13:39:02+05:30"
+  },
+  {
+   "hash": "076fbbe",
+   "author": "Mainak Sarkar",
+   "date": "2026-11-06T13:39:02+05:30"
+  },
+  {
+   "hash": "96c30e1",
+   "author": "Mahir Jain",
+   "date": "2026-11-06T12:02:17+05:30"
+  },
+  {
+   "hash": "4f794c8",
+   "author": "Mahir Jain",
+   "date": "2026-11-06T11:53:38+05:30"
+  },
+  {
+   "hash": "68f8782",
+   "author": "Mahir Jain",
+   "date": "2026-11-06T11:50:15+05:30"
+  },
+  {
+   "hash": "6ff5c86",
+   "author": "Mahir Jain",
+   "date": "2026-11-06T09:55:01+05:30"
+  },
+  {
+   "hash": "3253f3a",
+   "author": "Mahir Jain",
+   "date": "2026-11-05T23:20:55+05:30"
+  },
+  {
+   "hash": "cc1c6d1",
+   "author": "Mahir Jain",
+   "date": "2026-11-05T23:20:55+05:30"
+  },
+  {
+   "hash": "4f86d37",
+   "author": "Mahir Jain",
+   "date": "2026-11-05T23:20:55+05:30"
+  },
+  {
+   "hash": "2d90674",
+   "author": "Mahir Jain",
+   "date": "2026-11-05T23:20:54+05:30"
+  },
+  {
+   "hash": "e03b796",
+   "author": "Mahir Jain",
+   "date": "2026-11-05T23:20:54+05:30"
+  },
+  {
+   "hash": "c30005c",
+   "author": "Mahir Jain",
+   "date": "2026-11-05T23:20:54+05:30"
+  },
+  {
+   "hash": "d572080",
+   "author": "Mahir Jain",
+   "date": "2026-11-05T22:09:06+05:30"
+  },
+  {
+   "hash": "5207328",
+   "author": "Mahir Jain",
+   "date": "2026-11-05T22:09:06+05:30"
+  },
+  {
+   "hash": "2b13626",
+   "author": "Mahir Jain",
+   "date": "2026-11-05T22:09:06+05:30"
+  },
+  {
+   "hash": "e5232f1",
+   "author": "Mahir Jain",
+   "date": "2026-11-05T22:09:06+05:30"
+  },
+  {
+   "hash": "b88f880",
+   "author": "Mahir Jain",
+   "date": "2026-11-05T22:09:06+05:30"
+  },
+  {
+   "hash": "bc64cbd",
+   "author": "Mahir Jain",
+   "date": "2026-11-05T22:09:05+05:30"
+  },
+  {
+   "hash": "0c5e657",
+   "author": "Mahir Jain",
+   "date": "2026-11-05T22:02:54+05:30"
+  },
+  {
+   "hash": "ec263cc",
+   "author": "Mahir Jain",
+   "date": "2026-11-05T22:02:54+05:30"
+  },
+  {
+   "hash": "8c4a1e8",
+   "author": "Mahir Jain",
+   "date": "2026-11-05T22:02:53+05:30"
+  },
   {
    "hash": "70335e4",
    "author": "Mahir Jain",

@@ -1,5 +1,5 @@
 {
- "recordedAt": "2026-11-05T17:12:04.393Z",
+ "recordedAt": "2026-11-06T16:12:53.482Z",
  "issues": [
   {
    "key": "CS455-1",
@@ -2350,7 +2350,7 @@
    "type": "Subtask",
    "status": "Done",
    "priority": "Medium",
-   "assignee": null,
+   "assignee": "Prithviraj Ghosh",
    "reporter": "Prithviraj Ghosh",
    "created": "2026-10-14T18:10:27.875+0530",
    "resolved": "2026-10-28T21:46:23.850+0530",
@@ -2375,7 +2375,7 @@
    "type": "Subtask",
    "status": "Done",
    "priority": "Medium",
-   "assignee": null,
+   "assignee": "Prithviraj Ghosh",
    "reporter": "Prithviraj Ghosh",
    "created": "2026-10-14T18:10:54.011+0530",
    "resolved": "2026-10-28T21:46:27.545+0530",
@@ -2400,7 +2400,7 @@
    "type": "Subtask",
    "status": "Done",
    "priority": "Medium",
-   "assignee": null,
+   "assignee": "Prithviraj Ghosh",
    "reporter": "Prithviraj Ghosh",
    "created": "2026-10-14T18:11:13.621+0530",
    "resolved": "2026-10-28T21:46:32.396+0530",
@@ -2425,7 +2425,7 @@
    "type": "Subtask",
    "status": "Done",
    "priority": "Medium",
-   "assignee": null,
+   "assignee": "Prithviraj Ghosh",
    "reporter": "Prithviraj Ghosh",
    "created": "2026-10-14T18:11:28.757+0530",
    "resolved": "2026-10-28T21:46:34.353+0530",
@@ -2450,7 +2450,7 @@
    "type": "Subtask",
    "status": "Done",
    "priority": "Medium",
-   "assignee": null,
+   "assignee": "Prithviraj Ghosh",
    "reporter": "Prithviraj Ghosh",
    "created": "2026-10-14T18:11:43.068+0530",
    "resolved": "2026-10-28T21:46:37.382+0530",
@@ -2475,7 +2475,7 @@
    "type": "Subtask",
    "status": "Done",
    "priority": "Medium",
-   "assignee": null,
+   "assignee": "Prithviraj Ghosh",
    "reporter": "Prithviraj Ghosh",
    "created": "2026-10-14T18:11:56.775+0530",
    "resolved": "2026-10-28T21:47:00.314+0530",
@@ -2500,7 +2500,7 @@
    "type": "Subtask",
    "status": "Done",
    "priority": "Medium",
-   "assignee": null,
+   "assignee": "Prithviraj Ghosh",
    "reporter": "Prithviraj Ghosh",
    "created": "2026-10-14T18:12:12.402+0530",
    "resolved": "2026-10-28T21:47:02.182+0530",
@@ -2525,7 +2525,7 @@
    "type": "Subtask",
    "status": "Done",
    "priority": "Medium",
-   "assignee": null,
+   "assignee": "Prithviraj Ghosh",
    "reporter": "Prithviraj Ghosh",
    "created": "2026-10-14T18:12:27.077+0530",
    "resolved": "2026-10-28T21:47:05.879+0530",
@@ -2586,11 +2586,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -2611,11 +2611,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -2636,11 +2636,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -2661,11 +2661,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -2686,11 +2686,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -2711,11 +2711,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -2736,11 +2736,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -2761,11 +2761,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -2786,11 +2786,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -2811,11 +2811,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -2836,11 +2836,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -2861,11 +2861,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -2886,11 +2886,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -2911,11 +2911,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -2936,11 +2936,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -2961,11 +2961,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -2986,11 +2986,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -3011,11 +3011,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -3036,11 +3036,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -3061,11 +3061,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -3086,11 +3086,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -3111,11 +3111,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -3136,11 +3136,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -3161,11 +3161,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -3229,11 +3229,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -3734,11 +3734,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -3759,11 +3759,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -3784,11 +3784,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -3796,12 +3796,12 @@
    "key": "CS455-163",
    "summary": "Final Jira dashboard",
    "type": "Story",
-   "status": "To Do",
+   "status": "Done",
    "priority": "High",
    "assignee": "Khushi Ranawat",
    "reporter": "Mainak Sarkar",
    "created": "2026-11-05T22:13:13.044+0530",
-   "resolved": null,
+   "resolved": "2026-11-06T21:26:07.908+0530",
    "points": 5,
    "labels": [
     "d3",
@@ -3812,11 +3812,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -3824,12 +3824,12 @@
    "key": "CS455-164",
    "summary": "Final project report",
    "type": "Story",
-   "status": "In Progress",
+   "status": "Done",
    "priority": "High",
    "assignee": "Mainak Sarkar",
    "reporter": "Khushi Ranawat",
    "created": "2026-11-05T22:13:41.724+0530",
-   "resolved": null,
+   "resolved": "2026-11-06T21:28:22.326+0530",
    "points": 6,
    "labels": [
     "d3",
@@ -3840,11 +3840,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -3852,12 +3852,12 @@
    "key": "CS455-165",
    "summary": "Report skeleton and shared structure",
    "type": "Subtask",
-   "status": "In Progress",
+   "status": "Done",
    "priority": "Medium",
    "assignee": "Mainak Sarkar",
    "reporter": "Khushi Ranawat",
    "created": "2026-11-05T22:25:07.562+0530",
-   "resolved": null,
+   "resolved": "2026-11-05T22:51:51.441+0530",
    "points": null,
    "labels": [
     "d3",
@@ -3868,11 +3868,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -3880,12 +3880,12 @@
    "key": "CS455-166",
    "summary": "GitHub and Jira metrics",
    "type": "Subtask",
-   "status": "To Do",
+   "status": "Done",
    "priority": "Medium",
    "assignee": "Mainak Sarkar",
    "reporter": "Khushi Ranawat",
    "created": "2026-11-05T22:25:08.942+0530",
-   "resolved": null,
+   "resolved": "2026-11-05T22:51:52.401+0530",
    "points": null,
    "labels": [
     "d3",
@@ -3896,11 +3896,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -3908,12 +3908,12 @@
    "key": "CS455-167",
    "summary": "Overview and final scope section",
    "type": "Subtask",
-   "status": "To Do",
+   "status": "Done",
    "priority": "Medium",
    "assignee": "Mainak Sarkar",
    "reporter": "Khushi Ranawat",
    "created": "2026-11-05T22:25:10.254+0530",
-   "resolved": null,
+   "resolved": "2026-11-06T21:27:38.195+0530",
    "points": null,
    "labels": [
     "d3",
@@ -3924,11 +3924,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -3936,12 +3936,12 @@
    "key": "CS455-168",
    "summary": "Traceability chain and quality summary sections",
    "type": "Subtask",
-   "status": "To Do",
+   "status": "Done",
    "priority": "Medium",
    "assignee": "Mainak Sarkar",
    "reporter": "Khushi Ranawat",
    "created": "2026-11-05T22:25:11.532+0530",
-   "resolved": null,
+   "resolved": "2026-11-06T21:27:40.147+0530",
    "points": null,
    "labels": [
     "d3",
@@ -3952,11 +3952,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -3964,12 +3964,12 @@
    "key": "CS455-169",
    "summary": "Deployment, timeline and cost summary section",
    "type": "Subtask",
-   "status": "To Do",
+   "status": "Done",
    "priority": "Medium",
    "assignee": "Mainak Sarkar",
    "reporter": "Khushi Ranawat",
    "created": "2026-11-05T22:25:12.901+0530",
-   "resolved": null,
+   "resolved": "2026-11-06T21:27:43.683+0530",
    "points": null,
    "labels": [
     "d3",
@@ -3980,11 +3980,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -3992,12 +3992,12 @@
    "key": "CS455-170",
    "summary": "Individual contributions, gaps and lessons sections",
    "type": "Subtask",
-   "status": "To Do",
+   "status": "Done",
    "priority": "Medium",
    "assignee": "Mainak Sarkar",
    "reporter": "Khushi Ranawat",
    "created": "2026-11-05T22:25:14.521+0530",
-   "resolved": null,
+   "resolved": "2026-11-06T21:28:46.068+0530",
    "points": null,
    "labels": [
     "d3",
@@ -4008,11 +4008,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -4020,12 +4020,12 @@
    "key": "CS455-171",
    "summary": "Assembly, final PDF and D3 README",
    "type": "Subtask",
-   "status": "To Do",
+   "status": "Done",
    "priority": "Medium",
    "assignee": "Mainak Sarkar",
    "reporter": "Khushi Ranawat",
    "created": "2026-11-05T22:25:15.746+0530",
-   "resolved": null,
+   "resolved": "2026-11-06T21:28:50.018+0530",
    "points": null,
    "labels": [
     "d3",
@@ -4036,11 +4036,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -4048,12 +4048,12 @@
    "key": "CS455-172",
    "summary": "Build and share the project dashboard",
    "type": "Subtask",
-   "status": "To Do",
+   "status": "Done",
    "priority": "Medium",
    "assignee": "Khushi Ranawat",
    "reporter": "Mainak Sarkar",
    "created": "2026-11-05T22:25:17.197+0530",
-   "resolved": null,
+   "resolved": "2026-11-06T21:26:33.281+0530",
    "points": null,
    "labels": [
     "d3",
@@ -4064,11 +4064,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -4076,12 +4076,12 @@
    "key": "CS455-173",
    "summary": "Capture Jira evidence screenshots",
    "type": "Subtask",
-   "status": "To Do",
+   "status": "Done",
    "priority": "Medium",
    "assignee": "Khushi Ranawat",
    "reporter": "Mainak Sarkar",
    "created": "2026-11-05T22:25:18.783+0530",
-   "resolved": null,
+   "resolved": "2026-11-06T21:26:35.101+0530",
    "points": null,
    "labels": [
     "d3",
@@ -4092,11 +4092,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -4104,12 +4104,12 @@
    "key": "CS455-174",
    "summary": "Jira setup and dashboard section",
    "type": "Subtask",
-   "status": "To Do",
+   "status": "Done",
    "priority": "Medium",
    "assignee": "Khushi Ranawat",
    "reporter": "Mainak Sarkar",
    "created": "2026-11-05T22:25:20.477+0530",
-   "resolved": null,
+   "resolved": "2026-11-06T21:26:39.344+0530",
    "points": null,
    "labels": [
     "d3",
@@ -4120,11 +4120,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -4132,12 +4132,12 @@
    "key": "CS455-175",
    "summary": "Sprint execution section",
    "type": "Subtask",
-   "status": "To Do",
+   "status": "Done",
    "priority": "Medium",
    "assignee": "Khushi Ranawat",
    "reporter": "Mainak Sarkar",
    "created": "2026-11-05T22:25:21.772+0530",
-   "resolved": null,
+   "resolved": "2026-11-06T21:26:43.311+0530",
    "points": null,
    "labels": [
     "d3",
@@ -4148,11 +4148,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -4160,12 +4160,12 @@
    "key": "CS455-176",
    "summary": "Defect tracking section",
    "type": "Subtask",
-   "status": "To Do",
+   "status": "Done",
    "priority": "Medium",
    "assignee": "Khushi Ranawat",
    "reporter": "Mainak Sarkar",
    "created": "2026-11-05T22:25:23.247+0530",
-   "resolved": null,
+   "resolved": "2026-11-06T21:26:46.908+0530",
    "points": null,
    "labels": [
     "d3",
@@ -4176,11 +4176,11 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   },
@@ -4188,12 +4188,12 @@
    "key": "CS455-177",
    "summary": "Complete Sprint 3 (D3)",
    "type": "Subtask",
-   "status": "To Do",
+   "status": "Done",
    "priority": "Medium",
    "assignee": "Khushi Ranawat",
    "reporter": "Mainak Sarkar",
    "created": "2026-11-05T22:25:24.418+0530",
-   "resolved": null,
+   "resolved": "2026-11-06T21:27:26.716+0530",
    "points": null,
    "labels": [
     "d3",
@@ -4204,11 +4204,36 @@
     {
      "id": 37,
      "name": "Sprint 3 (D3)",
-     "state": "active",
+     "state": "closed",
      "goal": "Deliverable 3",
      "start": "2026-10-28T16:23:23.000Z",
      "end": "2026-11-06T18:30:00.000Z",
-     "completed": null
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-178",
+   "summary": "Costing Document",
+   "type": "Task",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Chaitanya Nitawe",
+   "reporter": "Chaitanya Nitawe",
+   "created": "2026-11-06T18:48:51.730+0530",
+   "resolved": "2026-11-06T21:26:16.293+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
     }
    ]
   }

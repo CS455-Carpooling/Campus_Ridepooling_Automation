@@ -38,20 +38,24 @@ Table~\ref{tab:cost} summarises it. Totals include 18\,\% GST.
 Setup & Web service & Database & Monthly cost \\
 \midrule
 Current demonstration & Render Free & Render Free, 1\,GB & INR 0 \\
-Pilot, about 1,000 students & Render Starter & Basic-256mb, 5\,GB & INR 2,640 (USD 28.08) \\
-Full scale, about 5,000 students & Render Standard & Basic-1gb, 20\,GB & INR 12,567 (USD 133.69) \\
+Pilot, about 1,000 students & Render Starter & Basic-256mb, 5\,GB & INR 2,917 (USD 31.03) \\
+Full scale, about 5,000 students & Render Standard & Basic-1gb, 20\,GB & INR 13,954 (USD 148.44) \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Model inference is the largest cost at both production sizes: INR 799 of the INR 2,237 pre-tax pilot cost,
-and INR 3,995 of INR 10,650 at full scale. That figure assumes 20,000 and 100,000 Gemini calls a month, at
-500 input and 200 output tokens per call. The token counts are not measured, so the costing report also
-gives the effect of doubling them. Salaries, monitoring tools and bandwidth above the included allowance are
-excluded.
+Model inference is the largest cost at both production sizes: INR 1,034 of the INR 2,472 pre-tax pilot cost,
+and INR 5,170 of INR 11,825 at full scale. That figure assumes 20,000 and 100,000 Gemini calls a month, at
+1,000 input and 200 output tokens per call. The input figure comes from the requests the code really builds;
+the output figure is not measured, so the costing report also gives the effect of doubling it. Salaries,
+monitoring tools and bandwidth above the included allowance are excluded.
 
-The current setup costs nothing and stays within its free limits. A single web service stays within Render's
-750 free hours a month, and the database expires after the presentation window. GitHub Actions ran 465
-workflows, about 1,030 elapsed minutes, at no charge, because standard runners are free for a public
-repository. Section 7 of the costing report compares estimated and actual usage and lists the production
-figures that were not collected.
+The current setup stays within its free limits. A single web service stays within Render's 750 free hours a
+month, a freshly migrated database is about 11\,MB of its 1\,GB limit, and the database expires after the
+presentation window. GitHub Actions ran 468 workflows, about 1,040 elapsed minutes, at no charge, because
+standard runners are free for a public repository. Section 7 of the costing report compares estimated and
+actual usage and lists the production figures that were not collected.
+
+Section 9 of the costing report gives an AI-assisted estimate of development time, made after the work: 181
+member-days from the size of what was built, against 61 member-days with a commit. Commit days undercount
+effort and no timesheets were kept, so the true figure lies somewhere between the two.
