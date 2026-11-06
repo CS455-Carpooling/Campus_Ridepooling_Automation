@@ -1,41 +1,97 @@
 \documentclass[10pt]{article}
-\usepackage[landscape,margin=0.45in]{geometry}
-\usepackage{longtable}
-\usepackage{array}
-\usepackage{xcolor}
-\usepackage{titlesec}
+\usepackage[landscape,margin=0.35in]{geometry}
+\usepackage{pgfgantt}
 \usepackage{lmodern}
-\titleformat{\section}{\large\bfseries}{}{0pt}{}
-\setlength{\parindent}{0pt}
-\renewcommand{\arraystretch}{1.2}
+\usepackage{xcolor}
+\usepackage{parskip}
+\usepackage{microtype}
+\pagestyle{empty}
 \begin{document}
 \begin{center}
-{\LARGE Campus Ridepooling Automation}\\[2pt]
-{\Large Project Timeline and Gantt Chart}\\[6pt]
-{\small August--November 2026}
+{\LARGE\bfseries Campus Ridepooling Automation}\\[-1pt]
+{\large Project Timeline and Gantt Chart}\\[4pt]
+{\small 29 August--13 November 2026}
 \end{center}
 
-\section*{Schedule}
-\begin{longtable}{>{\raggedright\arraybackslash}p{1in} >{\raggedright\arraybackslash}p{0.5in} >{\raggedright\arraybackslash}p{5in} >{\raggedright\arraybackslash}p{2.8in}}
-\textbf{Dates} & \textbf{Phase} & \textbf{Workstream and scope} & \textbf{Gantt bar}\\\hline
-29 Aug & D0 & Proposal and approval milestone. & \colorbox{blue!65}{\rule{0.12in}{0.16in}}\\
-23--26 Sep & D1 & Requirements, use cases, architecture, traceability, Jira setup, sprint plan and AI engineering log. & \colorbox{blue!65}{\rule{0.55in}{0.16in}}\\
-02 Oct & D2 & Product foundation: Next.js/TypeScript scaffold, navigation, landing page and authentication pages. & \colorbox{green!65}{\rule{0.12in}{0.16in}}\\
-03--04 Oct & D2 & Authentication integration and ride-creation inputs, rules, flow and fixes. & \colorbox{green!65}{\rule{0.28in}{0.16in}}\\
-05--06 Oct & D2 & Ride views, details, my rides, profile, history and routing. & \colorbox{green!65}{\rule{0.28in}{0.16in}}\\
-07--10 Oct & D2 & Search, completion, ratings, reviews and feedback. & \colorbox{green!65}{\rule{0.55in}{0.16in}}\\
-09--11 Oct & D2 & Pool chat and operations administration foundation. & \colorbox{green!65}{\rule{0.42in}{0.16in}}\\
-11--12 Oct & D2 & Configuration, complaints, enforcement, rider records, AI recommendations and hobby tags. & \colorbox{green!65}{\rule{0.28in}{0.16in}}\\
-12--13 Oct & D2 & Notifications, ride requests, trips, live controls and SOS. & \colorbox{green!65}{\rule{0.28in}{0.16in}}\\
-13--15 Oct & D2 & Hardening, bug fixes, UI and fare improvements, chatbot, and D2 completion. & \colorbox{green!65}{\rule{0.42in}{0.16in}}\\
-15 Oct & D2 & Implementation and sprint-execution deadline. & \colorbox{orange!75}{\rule{0.12in}{0.16in}}\\
-28--29 Oct & D3 & Real-Postgres integration, workflow tests, adversarial tests and reports. & \colorbox{red!65}{\rule{0.28in}{0.16in}}\\
-29--30 Oct & D3 & Performance testing and optimization. & \colorbox{red!65}{\rule{0.28in}{0.16in}}\\
-02--05 Nov & D3 & Unit tests, coverage and final requirements traceability. & \colorbox{red!65}{\rule{0.55in}{0.16in}}\\
-04 Nov & D3 & Security/threat-model and failure/recovery reports. & \colorbox{red!65}{\rule{0.12in}{0.16in}}\\
-04--05 Nov & D3 & System tests, defect history, concurrency experiment and seat-capacity guard. & \colorbox{red!65}{\rule{0.28in}{0.16in}}\\
-05 Nov & D3 & Deployment documentation and configuration. & \colorbox{red!65}{\rule{0.12in}{0.16in}}\\
-06 Nov & D3 & Testing, security, performance, cost, deployment and reliability deadline. & \colorbox{orange!75}{\rule{0.12in}{0.16in}}\\
-08--13 Nov & Final & Scenario-based presentation and demonstration window. & \colorbox{purple!65}{\rule{0.82in}{0.16in}}\\
-\end{longtable}
+\begin{ganttchart}[
+  time slot format=isodate,
+  x unit=0.235cm,
+  y unit chart=0.53cm,
+  y unit title=0.55cm,
+  bar height=0.58,
+  group height=0.58,
+  milestone height=0.52,
+  title height=1,
+  title label font=\scriptsize\bfseries,
+  bar label font=\scriptsize,
+  group label font=\scriptsize\bfseries,
+  milestone label font=\scriptsize,
+  bar/.append style={fill=teal!70!black, draw=teal!90!black},
+  group/.append style={fill=blue!65!black, draw=blue!85!black},
+  milestone/.append style={fill=orange!90!black, draw=orange!90!black},
+  bar label node/.append style={align=left,text width=6.4cm},
+  group label node/.append style={align=left,text width=6.4cm},
+  milestone label node/.append style={align=left,text width=6.4cm},
+  title label node/.append style={font=\scriptsize},
+  title/.append style={fill=blue!7},
+  vgrid={*{6}{draw=none}, dotted},
+  hgrid
+]{2026-08-29}{2026-11-13}
+\gantttitle{29 Aug}{7}
+\gantttitle{05 Sep}{7}
+\gantttitle{12 Sep}{7}
+\gantttitle{19 Sep}{7}
+\gantttitle{26 Sep}{7}
+\gantttitle{03 Oct}{7}
+\gantttitle{10 Oct}{7}
+\gantttitle{17 Oct}{7}
+\gantttitle{24 Oct}{7}
+\gantttitle{31 Oct}{7}
+\gantttitle{07 Nov}{7} \\
+
+\ganttgroup{D0--D1 requirements and architecture}{2026-08-29}{2026-09-26} \\
+\ganttmilestone{D0 proposal and approval}{2026-08-29} \\
+\ganttbar{D1 requirements, architecture, traceability, Jira setup and AI log}{2026-09-23}{2026-09-26} \\
+
+\ganttgroup{D2 implementation and sprint execution}{2026-10-02}{2026-10-15} \\
+\ganttbar{Product foundation: scaffold, shell, landing page, auth}{2026-10-02}{2026-10-02} \\
+\ganttbar{Authentication backend and create-ride flow}{2026-10-03}{2026-10-04} \\
+\ganttbar{Ride views, details, my rides, profile, routing}{2026-10-05}{2026-10-06} \\
+\ganttbar{Search, completion, ratings and reviews}{2026-10-07}{2026-10-10} \\
+\ganttbar{Pool chat and operations administration}{2026-10-09}{2026-10-11} \\
+\ganttbar{Configuration, complaints, enforcement, AI assistance}{2026-10-11}{2026-10-12} \\
+\ganttbar{Notifications, ride requests, trips and SOS}{2026-10-12}{2026-10-13} \\
+\ganttbar{Hardening, UI, fares, chatbot, feature completion}{2026-10-13}{2026-10-15} \\
+\ganttmilestone{D2 deadline}{2026-10-15} \\
+
+\ganttgroup{D3 testing, assurance and deployment}{2026-10-28}{2026-11-06} \\
+\ganttbar{Integration, workflow, adversarial tests and reports}{2026-10-28}{2026-10-29} \\
+\ganttbar{Performance testing and optimization}{2026-10-29}{2026-10-30} \\
+\ganttbar{Unit tests, coverage and final traceability}{2026-11-02}{2026-11-05} \\
+\ganttbar{Security/threat-model and failure/recovery reports}{2026-11-04}{2026-11-04} \\
+\ganttbar{System tests, defects and concurrency assurance}{2026-11-04}{2026-11-05} \\
+\ganttbar{Deployment documentation and configuration}{2026-11-05}{2026-11-05} \\
+\ganttmilestone{D3 deadline}{2026-11-06} \\
+
+\ganttgroup{Final assessment}{2026-11-08}{2026-11-13} \\
+\ganttbar{Scenario-based presentation and demonstration}{2026-11-08}{2026-11-13} \\
+\ganttmilestone{Presentation window starts}{2026-11-08} \\
+\ganttmilestone{Presentation window ends}{2026-11-13}
+\end{ganttchart}
+
+\vspace{5pt}
+\begin{center}
+\scriptsize
+\textbf{Legend:}\quad
+\textcolor{blue!65!black}{\rule{0.25cm}{0.18cm}}\ group/phase\quad
+\textcolor{teal!70!black}{\rule{0.25cm}{0.18cm}}\ workstream\quad
+\textcolor{orange!90!black}{\rule{0.18cm}{0.18cm}}\ milestone
+\end{center}
+
+\vspace{2pt}
+\scriptsize
+\textbf{Column headers:} each date (for example, ``29 Aug'') is the first day
+of a seven-day calendar column; the following six days continue to the right.
+Thus, ``05 Sep'' means the week beginning 5 September 2026, not a single-day
+deadline. Bars show their dated work windows, while diamonds mark milestones.
 \end{document}
