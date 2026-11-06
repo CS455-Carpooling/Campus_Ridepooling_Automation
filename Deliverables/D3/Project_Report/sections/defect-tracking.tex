@@ -1,3 +1,39 @@
-% CS455-176, Khushi. Please keep the label: other sections refer to it.
+% CS455-176, Khushi Ranawat.
 \section{Defect tracking}\label{sec:defects}
-\textit{To be written (CS455-176).}
+
+Defects found during development were tracked in Jira using the \emph{Bug}
+issue type. The bug records capture the observed failure, affected behaviour,
+related project work item and implementation evidence. They are linked to
+the broader bug-evidence tracking story \jira{CS455-121}.
+
+The two D3 defects recorded for this report are:
+\begin{itemize}
+  \item \jira{CS455-137}: realtime authentication could accept a session
+  after the seven-day inactivity period, even though HTTP authentication
+  rejected it.
+  \item \jira{CS455-141}: malformed percent-encoded cookies could cause an
+  exception during WebSocket authentication.
+\end{itemize}
+
+Both Jira Bug issues are marked Done. These records were created after the
+corresponding fixes had already been implemented. They are retrospective
+defect-history entries, not evidence that the fixes were first made in
+response to newly opened Jira tickets. The Jira records identify \pr{91} as
+the code-fix pull request for both defects. Pull request \pr{94} added the
+regression tests; it should not be described as the pull request that
+implemented the fixes.
+
+The regression coverage is in
+\href{\repourl/blob/master/apps/web/test/server-security.test.ts}
+{\nolinkurl{apps/web/test/server-security.test.ts}}. It checks rejection of
+sessions outside the inactivity window and malformed-cookie handling during
+WebSocket authentication.
+
+The detailed defect descriptions and evidence are maintained separately in
+the repository's
+\href{\repourl/tree/master/Deliverables/D3/Bug_Report}
+{D3 Bug Report}. This section summarises Jira tracking and the relationship
+between the issues and pull requests rather than duplicating the full bug
+report. The Jira descriptions, bug report and pull-request references should
+remain aligned: \pr{91} contains the fixes, and \pr{94} adds the
+corresponding regression tests.
