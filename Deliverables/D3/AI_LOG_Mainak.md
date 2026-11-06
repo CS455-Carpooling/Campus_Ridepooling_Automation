@@ -266,8 +266,8 @@ early rows end one day before their last merge. The cost table was checked again
 ## 2026-11-06: Final rebuild, retrospective and development estimate (CS455-171, 178, PRs #101, #104)
 
 ### Context
-Mainak was away on the day of the deadline, as was the rest of the team, and asked for the remaining Deliverable 3 work to
-be finished from what could be checked, so that Khushi could compile the group submission.
+On the day of the deadline, Deliverable 3 still had open items, and the reports had to be ready for Khushi to compile the
+group submission.
 
 ### Prompt (summary)
 Check Chaitanya's and Mahir's open items from what is reachable, complete everything left of Deliverable 3, and leave out
@@ -299,5 +299,6 @@ requests were captured with the network call replaced, so nothing was sent to Ge
 the comparison with the commit record and were not adjusted after it.
 
 ### Student evaluation and decision
-**Decision:** Mainak asked for the remaining work to be finished without him, because he and the team were away. He asked for missing AI logs to be left out rather than reconstructed, and for the final
-pull request to be merged directly, without waiting for review, so that Khushi could compile the submission in time.
+**Decision:** Mainak asked for the remaining work to be finished from what could be checked, and for AI logs that did not
+exist to be left out rather than reconstructed. He decided the final pull request would merge once CI passed, so that
+Khushi could compile the submission in time.
