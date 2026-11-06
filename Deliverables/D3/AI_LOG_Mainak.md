@@ -53,6 +53,8 @@ tests cover every refusal of the database guard. The new CI job runs the suite o
 ### Student evaluation and decision
 **Decision:** Mainak set the order of work: plan the whole story first, then build the harness alone as its own pull request. He sent the bugs from Khushi's review back to be fixed, including the weak database safety check, and merged #83 after those fixes.
 
+**Mainak's assessment:** Running the real route handlers in-process was the right choice.
+
 ## 2026-10-28: Workflow integration tests and the seat request defect (CS455-111, 112, PRs #84 to #86)
 
 ### Context
@@ -83,6 +85,8 @@ The suite passed locally and in CI, and the fix in #84 carries its own regressio
 ### Student evaluation and decision
 **Decision:** Mainak had the remaining pull requests built one after another, sent Khushi's review points back to be fixed, and merged them in the stated order. The defect the tests found was fixed in #84, and the test was not changed to pass.
 
+**Mainak's assessment:** I saw the fix in #84, and it was tested.
+
 ## 2026-10-28: Adversarial suite and test reports (CS455-113, 114, PRs #87 to #89)
 
 ### Context
@@ -111,6 +115,8 @@ test was added after Khushi's review, to check that the fix holds under a race.
 
 ### Student evaluation and decision
 **Decision:** Mainak merged the suite and both reports in the stated order, after the concurrent same-key test was added in response to Khushi's review.
+
+**Mainak's assessment:** The attack categories covered what I expected, and I read both reports.
 
 ## 2026-11-02: Requirements traceability matrix (PR #93)
 
@@ -145,6 +151,8 @@ The build fails if a manual link matches no recorded test, and each manual link 
 
 ### Student evaluation and decision
 **Decision:** Mainak set the matrix's scope: a requirement is listed when a passing automated test verifies it. He chose to take Khushi's minor review points in the rebuild commit rather than hold the review for them.
+
+**Mainak's assessment:** I checked the links by hand.
 
 ## 2026-10-29 to 2026-11-06: Reviews of teammates' pull requests
 
@@ -189,6 +197,8 @@ rendered. For #103, the rebuilt PDF was read as rendered.
 ### Student evaluation and decision
 **Decision:** Mainak decided what was posted: must-fix points only, with no overlap with other reviewers. A draft point questioned who should be named as the system test report's author, and he kept Khushi, because that part was assigned to her. He had #103's remaining points resolved with fix commits and approved it, and had #104 and Khushi's report sections corrected directly rather than sent back.
 
+**Mainak's assessment:** Everything was useful, and I cannot compare the review points.
+
 ## 2026-11-05: Final Jira cleanup and the report stories (CS455-163, 164)
 
 ### Context
@@ -218,6 +228,8 @@ presenting the resolution dates as a record of when work finished.
 
 ### Student evaluation and decision
 **Decision:** Mainak connected the team site and confirmed that the assistant could write to it before any change. He had the assistant fill in the two stories he had created by hand instead of creating duplicates.
+
+**Mainak's assessment:** I checked the result on the Jira board manually.
 
 ## 2026-11-05 to 2026-11-06: Final project report (CS455-164 to 170, PR #101)
 
@@ -263,6 +275,8 @@ early rows end one day before their last merge. The cost table was checked again
 ### Student evaluation and decision
 **Decision:** Mainak checked the contributions table against `git shortlog -sn`. When the difference turned out to be merge commits, he decided the table stays without them, because they do not reflect work done. He had Mahir's chart checked first, then used it in place of the Mermaid render once its fixes were merged. He decided the Lessons section should state the general lesson rather than a dated failure, and left #97's D1 edits as they are, because they are Khushi's and the difference is small. He accepted Khushi's review of the AI fallback sentence.
 
+**Mainak's assessment:** I checked the final report and asked for fixes.
+
 ## 2026-11-06: Final rebuild, retrospective and development estimate (CS455-171, 178, PRs #101, #104)
 
 ### Context
@@ -302,3 +316,5 @@ the comparison with the commit record and were not adjusted after it.
 **Decision:** Mainak asked for the remaining work to be finished from what could be checked, and for AI logs that did not
 exist to be left out rather than reconstructed. He decided the final pull request would be merged directly, so that
 Khushi could compile the submission in time.
+
+**Mainak's assessment:** I read the retrospective.
