@@ -16,9 +16,9 @@ CS455 handout.
 | 28 to 29 Oct | Workflow integration tests, and the seat request defect they found | CS455-111, 112 | #84, #85, #86 |
 | 28 to 29 Oct | Adversarial suite, the idempotency weakness it found, and both reports | CS455-113, 114 | #87, #88, #89 |
 | 2 to 5 Nov | Requirements traceability matrix | none | #93 |
-| 29 Oct to 5 Nov | Reviews of teammates' pull requests | see entry | #90 to #92, #95 to #100 |
+| 29 Oct to 6 Nov | Reviews of teammates' pull requests | see entry | #90 to #92, #95 to #100, #103, #104 |
 | 5 Nov | Final Jira cleanup and the report stories | CS455-163, 164 | none |
-| 5 Nov | Final project report | CS455-164 to 170 | #101 |
+| 5 to 6 Nov | Final project report | CS455-164 to 170 | #101 |
 
 ## 2026-10-28: Integration test harness (CS455-110, PR #83)
 
@@ -145,19 +145,24 @@ The build fails if a manual link matches no recorded test, and each manual link 
 ### Student evaluation and decision
 *To be completed by Mainak.*
 
-## 2026-10-29 to 2026-11-05: Reviews of teammates' pull requests
+## 2026-10-29 to 2026-11-06: Reviews of teammates' pull requests
 
 ### Context
 Mainak was a requested reviewer on the performance, defect fix, unit, system, concurrency, bug history,
-deployment and timeline pull requests.
+deployment and timeline pull requests, and reviewed the costing report at the end.
 
 ### Prompt (summary)
 Review each pull request against the handout and the code, check its claims rather than reading them on
 trust, and draft the review. Report must-fix points only where asked.
 
 ### Output and changes
-- Draft reviews for #90 to #92 and #95 to #100.
+- Draft reviews for #90 to #92, #95 to #100 and #103.
 - **Fixes in #95, on Mainak's instruction:** four system test specs, the report's D1 identifiers and its summary.
+- **Fixes in #103, on Mainak's instruction:** the Gantt chart's legend colours, removal of its LaTeX build files,
+  and a note in the D3 AI log.
+- **Fixes in #104, on Mainak's instruction:** prices checked against the published pages and corrected, the PDF
+  rebuilt to clear a parse error in its cost table, a comparison of estimated and actual usage added, and the D3
+  README row added.
 - **Checks by running the artifact:** for #99, rendering the Mermaid chart showed that 9 of its 15 task bars
   had zero width, and adding `inclusiveEndDates` fixed it. For #100, a diff confirmed the D1 files were restored
   exactly to their submitted text.
@@ -169,6 +174,16 @@ These errors were in the assistant's own drafts:
   13 of 16 when it was 14.
 - **#94 and #96:** the assistant advised citing #94 for two defects whose code fixes are in #91. This reached
   CS455-137, CS455-141 and the bug report, and its correction is tracked in CS455-176.
+- **#104, a token estimate:** the assistant first put the chatbot's Gemini prompt at about 1,400 tokens, a count
+  that included the response schema. The prompt builder alone is about 580 tokens, so the report keeps the
+  author's 500-token assumption, marks it as unmeasured and states the effect of doubling it.
+- **#104, a false build result:** the first PDF build script reported success while the old file was still in
+  place, because Edge returns before it writes the file. The unchanged file size showed this, and the script now
+  removes the old PDF and fails if no new one appears.
+
+### Verification performed
+For #104, a script recomputed every total from the unit prices, and each page of the rebuilt PDF was read as
+rendered. For #103, the rebuilt PDF was read as rendered.
 
 ### Student evaluation and decision
 *To be completed by Mainak.*
@@ -203,7 +218,7 @@ presenting the resolution dates as a record of when work finished.
 ### Student evaluation and decision
 *To be completed by Mainak.*
 
-## 2026-11-05: Final project report (CS455-164 to 170, PR #101)
+## 2026-11-05 to 2026-11-06: Final project report (CS455-164 to 170, PR #101)
 
 ### Context
 Deliverable 3 requires a final project report. The handout assesses GitHub and Jira activity together, so the
@@ -217,19 +232,25 @@ reports, and state the project's gaps plainly.
 ### Output and changes
 - `snapshot-github.mjs`, `import-jira.mjs` and `make-metrics.mjs`, which feed `generated/`. The snapshots store
   people by name only.
-- Sections on the overview, GitHub workflow, traceability, quality summary, deployment, timeline, contributions,
-  gaps and lessons.
-- The Gantt chart in the timeline section, rendered from the unchanged Mermaid source merged in #99.
+- Sections on the overview, GitHub workflow, traceability, quality summary, deployment, timeline, cost,
+  contributions, gaps and lessons.
+- The Gantt chart in the timeline section: first a render of the Mermaid source merged in #99, then replaced with
+  the PDF chart merged in #103.
 
 ### Errors identified
 - **Query size.** The first GitHub snapshot went over GitHub's query limit and was rewritten as a paginated query.
 - **Facts checked against the source reports.** The security report has six threats where the first draft said
   five, and the overview's wording on who can raise an SOS went beyond the source. Both were corrected.
+- **AI fallback too broad.** The overview said the application falls back to deterministic behaviour, and Khushi's
+  review pointed out that this does not hold for every AI feature. Checking her suggested wording against the code
+  showed the chatbot also interprets requests with deterministic rules before it links to manual search, so the
+  overview now states each feature's fallback as the code behaves.
 
 ### Verification performed
 The report builds without LaTeX errors, and its pages were read as rendered. The production health endpoint
 returned 200. For the worked traceability example, the implementation commit was checked to contain the rule
-that the requirement describes. In the rendered Gantt chart, all 15 task bars have width in Mermaid 10 and 11.
+that the requirement describes. The Gantt chart's work windows were compared with the pull request records; two
+early rows end one day before their last merge. The cost table was checked against the corrected costing report.
 
 ### Student evaluation and decision
 *To be completed by Mainak.*
