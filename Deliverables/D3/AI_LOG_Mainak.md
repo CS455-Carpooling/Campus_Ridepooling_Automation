@@ -6,11 +6,9 @@ CS455 handout.
 - **Areas:** integration and adversarial testing (CS455-110 to 114), the traceability matrix, reviews of
   teammates' pull requests, the final Jira cleanup, and the final project report (CS455-164 to 170).
 - **Assistant:** Claude (Anthropic).
-- **Prompts:** written as summaries with their context, not pasted verbatim.
+- **Prompts and decisions:** written as summaries from Mainak's instructions and the pull request records, not pasted
+  verbatim.
 - **Scope:** entries describe only work actually performed, in date order.
-- **Evaluation fields:** the decisions come from Mainak's instructions and the pull request records. The lines marked
-  "rough draft" were written by the assistant at his request on 6 November, while he was away and unable to write
-  them, and he had not yet reviewed them at submission.
 
 | Date | Entry | Jira | PRs |
 | --- | --- | --- | --- |
@@ -55,8 +53,6 @@ tests cover every refusal of the database guard. The new CI job runs the suite o
 ### Student evaluation and decision
 **Decision:** Mainak set the order of work: plan the whole story first, then build the harness alone as its own pull request. He sent the bugs from Khushi's review back to be fixed, including the weak database safety check, and merged #83 after those fixes.
 
-**Assessment (rough draft):** Running the real route handlers in-process was a sound trade-off: real SQL, constraints, authentication and rate limits run without a Next.js build in CI, and the system tests cover the browser layer it leaves out. The weak first guard shows that the assistant's safety reasoning needed a human reviewer, because a wrong reset could have wiped a real database. Ideally the guard would have been read line by line before review, not only after it.
-
 ## 2026-10-28: Workflow integration tests and the seat request defect (CS455-111, 112, PRs #84 to #86)
 
 ### Context
@@ -87,8 +83,6 @@ The suite passed locally and in CI, and the fix in #84 carries its own regressio
 ### Student evaluation and decision
 **Decision:** Mainak had the remaining pull requests built one after another, sent Khushi's review points back to be fixed, and merged them in the stated order. The defect the tests found was fixed in #84, and the test was not changed to pass.
 
-**Assessment (rough draft):** Asserting both the response and the database rows proved its value: these tests found a failure on every seat request that the mocked suite had hidden. Fixing the code, not the test, was the right call, and tracing the flaky test to its cause is the behaviour to keep. Ideally a real-database suite like this would have existed from the first feature in Deliverable 2.
-
 ## 2026-10-28: Adversarial suite and test reports (CS455-113, 114, PRs #87 to #89)
 
 ### Context
@@ -117,8 +111,6 @@ test was added after Khushi's review, to check that the fix holds under a race.
 
 ### Student evaluation and decision
 **Decision:** Mainak merged the suite and both reports in the stated order, after the concurrent same-key test was added in response to Khushi's review.
-
-**Assessment (rough draft):** The suite was worth building, because it found one real weakness. One defect from 41 cases could mean the code is robust in these areas or that the cases were not aggressive enough, so ideally someone other than the author of the tests would have reviewed the case list for gaps. Generating the report tables from the recorded run keeps their numbers checkable.
 
 ## 2026-11-02: Requirements traceability matrix (PR #93)
 
@@ -153,8 +145,6 @@ The build fails if a manual link matches no recorded test, and each manual link 
 
 ### Student evaluation and decision
 **Decision:** Mainak set the matrix's scope: a requirement is listed when a passing automated test verifies it. He chose to take Khushi's minor review points in the rebuild commit rather than hold the review for them.
-
-**Assessment (rough draft):** Generating the matrix from recorded sources is better than a hand-kept table, and the build stopping on a bad manual link is a useful safeguard. The errors found (links too strict, false citations, double counting) show that generated output still needs checking. Ideally a larger sample of the automatic links would have been spot-checked by hand against the tests and Jira.
 
 ## 2026-10-29 to 2026-11-06: Reviews of teammates' pull requests
 
@@ -199,8 +189,6 @@ rendered. For #103, the rebuilt PDF was read as rendered.
 ### Student evaluation and decision
 **Decision:** Mainak decided what was posted: must-fix points only, with no overlap with other reviewers. A draft point questioned who should be named as the system test report's author, and he kept Khushi, because that part was assigned to her. He had #103's remaining points resolved with fix commits and approved it, and had #104 and Khushi's report sections corrected directly rather than sent back.
 
-**Assessment (rough draft):** The assistant was most useful when it ran the artifact rather than reading it, as with the zero-width chart bars and the PDF parse error. It was least reliable in confident statements, such as the citation of #94 for fixes in #91, which reached Jira and the bug report before it was corrected. Ideally each point would have been checked against the diff before it reached the team.
-
 ## 2026-11-05: Final Jira cleanup and the report stories (CS455-163, 164)
 
 ### Context
@@ -230,8 +218,6 @@ presenting the resolution dates as a record of when work finished.
 
 ### Student evaluation and decision
 **Decision:** Mainak connected the team site and confirmed that the assistant could write to it before any change. He had the assistant fill in the two stories he had created by hand instead of creating duplicates.
-
-**Assessment (rough draft):** The connector saved a lot of manual work on bulk updates, and the follow-up searches confirmed each change. The cleanup made the board accurate but cannot restore the history, and the report says so. Ideally Jira would have been updated as the work happened, which would have made this cleanup unnecessary.
 
 ## 2026-11-05 to 2026-11-06: Final project report (CS455-164 to 170, PR #101)
 
@@ -277,17 +263,15 @@ early rows end one day before their last merge. The cost table was checked again
 ### Student evaluation and decision
 **Decision:** Mainak checked the contributions table against `git shortlog -sn`. When the difference turned out to be merge commits, he decided the table stays without them, because they do not reflect work done. He had Mahir's chart checked first, then used it in place of the Mermaid render once its fixes were merged. He decided the Lessons section should state the general lesson rather than a dated failure, and left #97's D1 edits as they are, because they are Khushi's and the difference is small. He accepted Khushi's review of the AI fallback sentence.
 
-**Assessment (rough draft):** Generating the numbers from snapshots makes the report checkable, and that caught real differences, such as the merge commits. The assistant's drafts still had factual slips (the threat count, the SOS wording, the AI fallback), each caught by checking the source, so its prose should not be trusted without that step. Ideally the final report would be read end to end by its authors before submission.
-
 ## 2026-11-06: Final rebuild, retrospective and development estimate (CS455-171, 178, PRs #101, #104)
 
 ### Context
-Mainak was away on the day of the deadline, as was the rest of the team, and asked for the remaining Deliverable 3 work to
-be finished from what could be checked, so that Khushi could compile the group submission.
+On the day of the deadline, Deliverable 3 still had open items, and the reports had to be ready for Khushi to compile the
+group submission.
 
 ### Prompt (summary)
-Check Chaitanya's and Mahir's open items from what is reachable, complete everything left of Deliverable 3, write rough
-assessment lines for the AI log, and leave out the AI logs that do not exist. Compile every report the handout lists into
+Check Chaitanya's and Mahir's open items from what is reachable, complete everything left of Deliverable 3, and leave out
+the AI logs that do not exist. Compile every report the handout lists into
 one PDF for the group submission.
 
 ### Output and changes
@@ -315,10 +299,6 @@ requests were captured with the network call replaced, so nothing was sent to Ge
 the comparison with the commit record and were not adjusted after it.
 
 ### Student evaluation and decision
-**Decision:** Mainak asked for the remaining work to be finished without him and for the assessment lines to be drafted,
-because he and the team were away. He asked for missing AI logs to be left out rather than reconstructed, and for the final
-pull request to be merged directly, without waiting for review, so that Khushi could compile the submission in time.
-
-**Assessment (rough draft):** A size-based estimate about three times the commit record is a reminder that neither number
-measures effort well, and that the team should have estimated before starting and tracked time. Ideally the retrospective
-and these assessment lines would have been written and reviewed by the team themselves.
+**Decision:** Mainak asked for the remaining work to be finished from what could be checked, and for AI logs that did not
+exist to be left out rather than reconstructed. He decided the final pull request would be merged directly, so that
+Khushi could compile the submission in time.

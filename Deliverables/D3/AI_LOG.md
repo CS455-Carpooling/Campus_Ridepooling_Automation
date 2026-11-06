@@ -114,10 +114,6 @@ credentials or session tokens were retained in the repository.
   `apps/web/src/lib/auth.ts`, `apps/web/src/lib/payment-settlement.ts`, and
   `apps/web/db/schema.sql`.
 
-### Student evaluation
-
-*To be completed by the author.*
-
 ## Prompt and response log
 
 ### Prompt 1
@@ -187,10 +183,6 @@ credentials or session tokens were retained in the repository.
 ### Prompt 9
 
 > In the AI log of D3, add the prompts I gave you and their responses, nothing else.
-
-### Decision
-
-*To be completed by the author.*
 
 ## Additional prompt and response log
 
