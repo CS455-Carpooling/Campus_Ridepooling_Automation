@@ -23,10 +23,14 @@ PostgreSQL database:
 - **Runtime:** Render Docker Web Service with the repository root as the build context
 - **Database:** Render Managed PostgreSQL using the `crp` database
 
-The deployment uses Render's Internal Database URL, GitHub-triggered automatic deployments,
-and a continuously running container to support the application's Socket.IO ride coordination,
-chat, and notification features. See the [D3 deployment documentation](Deliverables/D3/Deployment_Documentation.md)
+The deployment uses Render's Internal Database URL and GitHub-triggered automatic deployments.
+It runs a long-lived container, not serverless functions, because Socket.IO needs one for ride
+coordination, chat and notifications. See the [D3 deployment documentation](Deliverables/D3/Deployment_Documentation.md)
 for the complete configuration and verification procedure.
+
+Both services are on Render's Free tier. The web service sleeps after 15 minutes without traffic,
+so the first request after that can take up to a minute. The database has no backups and expires
+on 5 December 2026.
 
 ## Status
 
@@ -34,8 +38,9 @@ for the complete configuration and verification procedure.
 |---|---|---|
 | D0: Project proposal | 2026-08-29 | Submitted |
 | D1: Requirements, architecture, Jira setup | 2026-09-26 | Submitted |
-| D2: Implementation, agentic AI, sprint execution | 2026-10-15 | Implementation baseline complete; D2 records and source-only traceability are maintained |
-| D3: Testing, security, performance, cost, deployment | 2026-11-06 | Planned; see [`Phases.md`](Phases.md) |
+| D2: Implementation, agentic AI, sprint execution | 2026-10-15 | Complete |
+| D3: Testing, security, performance, cost, deployment | 2026-11-06 | Complete; all reports are compiled in [`CS455_D3_Final_Submission.pdf`](Deliverables/D3/Final_Submission/CS455_D3_Final_Submission.pdf) |
+| Final scenario-based demonstration | 2026-11-08 to 2026-11-13 | Upcoming |
 
 ## Project overview
 
@@ -63,9 +68,10 @@ collect or transfer money.
   changes are access-controlled and audited.
 - **AI assistance:** Gemini can rank eligible ride-search results and interpret natural-language
   chatbot requests. The chatbot uses server-side, allow-listed operations; preference changes are
-  proposals requiring explicit confirmation. Deterministic handling is used when Gemini is
-  unavailable or returns unusable output. Complaint analysis is advisory, and an administrator
-  makes enforcement decisions.
+  proposals requiring explicit confirmation. Complaint analysis is advisory, and an administrator
+  makes enforcement decisions. If Gemini is unavailable or returns unusable output, recommendations
+  rank rides by departure timing and fare, the chatbot uses deterministic rules and links to manual
+  search when it cannot answer, and complaints go to manual review.
 
 ### A typical ride journey
 
@@ -87,7 +93,7 @@ collect or transfer money.
 |---|---|
 | Public and account | `/`, `/login`, `/register`, `/forgot-password`, `/reset-password`, `/terms`, `/privacy` |
 | Student and ride owner | `/dashboard`, `/profile`, `/warnings`, `/rides`, `/rides/new`, `/rides/results`, `/rides/[id]`, `/rides/[id]/review`, `/rides/[id]/complaint`, `/complaints`, `/notifications`, `/chatbot` |
-| Operations admin | `/admin`, `/admin/incidents`, `/admin/complaints`, `/admin/ai-decisions`, `/admin/ai-recommendations`, `/admin/riders`, `/admin/rides/[id]`, `/admin/configuration` |
+| Operations admin | `/admin`, `/admin/incidents`, `/admin/complaints`, `/admin/ai-decisions`, `/admin/ai-recommendations`, `/admin/incidents/[id]`, `/admin/complaints/[id]`, `/admin/riders`, `/admin/riders/[id]`, `/admin/rides/[id]`, `/admin/configuration`, `/admin/configuration/hubs`, `/admin/configuration/fares`, `/admin/configuration/vehicle-types` |
 | System | `/api/health` readiness endpoint; authenticated JSON APIs under `/api/` |
 
 `/home` is retained as a legacy redirect to `/dashboard`. The dashboard is role-aware; `/admin`
@@ -103,14 +109,21 @@ implementation conventions, and the interface design system.
 | [`apps/web/src/lib/`](apps/web/src/lib/) | Server-side auth, authorization, domain rules, database access, AI, and realtime helpers |
 | [`apps/web/db/`](apps/web/db/) | PostgreSQL schema, constraints, indexes, triggers, and seed/configuration data |
 | [`apps/web/scripts/`](apps/web/scripts/) | Migration and administrator-role operations |
-| [`Deliverables/`](Deliverables/) | D0-D3 submissions, AI log, UI records, and D2 traceability |
-| [`.github/workflows/`](.github/workflows/) | Formatting, lint, type-check, test, build, and Docker CI |
+| [`apps/web/test/`](apps/web/test/) | Test setup, design-rule and contrast checks, shared seed data, and the integration and adversarial suites |
+| [`apps/web/e2e/`](apps/web/e2e/) | Playwright system tests |
+| [`performance/k6/`](performance/k6/) | k6 load test for authenticated ride search |
+| [`Deliverables/`](Deliverables/) | D0-D3 submissions, AI logs, UI records, test reports and traceability |
+| [`.github/workflows/`](.github/workflows/) | Formatting, lint, type-check, unit, integration and system tests, build, and Docker CI |
 
 ## Architecture
 
 This repository is an npm-workspaces monorepo. The running product is a Next.js App Router web
 application backed by PostgreSQL; a custom Node server also hosts Socket.IO for real-time ride
 chat and notifications.
+
+**Stack:** Next.js 16, React 19, TypeScript, Tailwind CSS 4, PostgreSQL 16, Socket.IO and the Gemini
+API (`gemini-3.1-flash-lite`), tested with Vitest, React Testing Library, Playwright and k6, and
+packaged with Docker.
 
 | Path | Responsibility |
 |---|---|
@@ -120,9 +133,12 @@ chat and notifications.
 | `apps/web/db/schema.sql` | Idempotent PostgreSQL schema and constraints |
 | `apps/web/scripts/` | Database migration and audited administrator-role management |
 | `apps/web/test/` and `*.test.ts(x)` | Automated unit, API, component, design-rule and contrast tests |
-| `Deliverables/` | Course deliverables and D2 AI/UI records |
+| `apps/web/test/integration/` | Integration and adversarial tests: real route handlers against PostgreSQL |
+| `apps/web/e2e/` | Playwright system tests through the browser, with no backend mocks |
+| `performance/k6/` | Load test used for the performance report |
+| `Deliverables/` | Course deliverables, reports, AI logs and UI records |
 | `docs/` and `Phases.md` | Course handout checklist and deliverable/sprint plan |
-| `.github/workflows/` | Pull-request and `master` CI, plus Docker Compose integration checks |
+| `.github/workflows/` | Pull-request and `master` CI with three jobs (checks, integration, system tests), plus Docker Compose checks |
 
 The browser calls Next.js pages and API routes. Server-side modules validate identity, role,
 ownership, state transitions and input before reading or changing PostgreSQL. Gemini credentials
@@ -174,9 +190,9 @@ npm run db:migrate --workspace @ridepool/web
 npm run dev
 ```
 
-Open <http://localhost:3000> after the development server starts. If the repository does not
-contain an environment example for the web workspace, create `apps/web/.env.local` manually using
-the example in [`apps/web/setup.md`](apps/web/setup.md). At minimum, set
+Open <http://localhost:3000> after the development server starts. Create `apps/web/.env.local`
+using the example in [`apps/web/setup.md`](apps/web/setup.md); [`apps/web/.env.example`](apps/web/.env.example)
+lists the optional Gemini and payment-reminder settings. At minimum, set
 `DATABASE_URL=postgres://crp:<your-password>@localhost:5433/crp` and
 `APP_URL=http://localhost:3000`. Gemini and email variables are optional for local development;
 without them, deterministic/manual fallback behavior is used and verification/reset links are
@@ -211,6 +227,40 @@ Prettier formatting; `npm run format:check` checks without changing files. Works
 commands, database scripts, and watch mode are documented in [`apps/web/README.md`](apps/web/README.md)
 and [`apps/web/setup.md`](apps/web/setup.md).
 
+### Run the other test suites
+
+```sh
+# Integration and adversarial tests against a real PostgreSQL database
+npm run test:integration -w @ridepool/web
+
+# Playwright system tests through the browser
+npm run test:e2e
+```
+
+The integration tests need the Compose database and two settings in `apps/web/.env.local`; see
+"Integration tests" in [`apps/web/setup.md`](apps/web/setup.md). They drop and recreate their own
+`crp_test` database, and refuse to touch any other. The system tests need their own setup; see
+section 6 of the [system test guide](Deliverables/D3/System_Test_Report/README.md).
+
+## Testing and quality
+
+Results from the final Deliverable 3 run on 6 November 2026, except where a report records its own
+run. Each report holds the method, evidence and steps to reproduce.
+
+| Area | Result | Report |
+|---|---|---|
+| Unit tests | 1,544 tests pass in 202 files | [Unit test report](Deliverables/D3/Unit_Test_Report.md) |
+| Code coverage | 87.67% statements, 80.91% branches, 88.79% functions and 89.98% lines; CI fails below 80% | [Coverage report](Deliverables/D3/Final_Submission/parts/code-coverage-report.md) |
+| Integration tests | 71 tests pass in 12 files against real PostgreSQL | [Integration report](Deliverables/D3/Integration_Test_Report/main.pdf) |
+| Adversarial tests | 41 cases pass in 4 files; the suite found one real weakness, since fixed | [Adversarial report](Deliverables/D3/Adversarial_Test_Report/main.pdf) |
+| System tests | 48 Playwright tests pass in 13 files with no backend mocks | [System test report](Deliverables/D3/System_Test_Report/main.pdf) |
+| Concurrency | 5,000 route-handler operations over 100 rounds with zero capacity violations | [Concurrency report](Deliverables/D3/Concurrency_Report/main.pdf) |
+| Performance | A SQL optimisation lowered p95 latency from 2.27 s to 1.76 s at 100 virtual users; the p95 and p99 targets were not met | [Performance report](Deliverables/D3/performance-load-test-report.md) |
+| Security | Six threats modelled with STRIDE, and seven security defects fixed | [Security report](Deliverables/D3/Security_and_Threat_Model_Report/main.pdf) |
+| Failure and recovery | Five failure domains covered, including LLM timeout and duplicate transactions | [Failure report](Deliverables/D3/Failure_and_Recovery_Report/main.pdf) |
+| Defects | 26 resolved defects, each with its Jira Bug and pull request | [Bug report](Deliverables/D3/Bug_Report/main.pdf) |
+| Traceability | 194 Deliverable 1 requirements traced through Jira and GitHub to passing tests | [Traceability matrix](Deliverables/D3/Traceability_Matrix/main.pdf) |
+
 ## Hosting locally with Docker
 
 The root [`.env.example`](.env.example) documents Compose settings. Email delivery is optional:
@@ -224,8 +274,9 @@ origin. Configure secrets in the deployment's secret manager; never commit `.env
 passwords, mail secrets, or Gemini API keys.
 
 The Docker workflow builds and starts the Compose stack in CI when relevant infrastructure files
-change. The main CI workflow runs formatting, lint, type-check, tests and a production build on
-pull requests and pushes to `master`.
+change. The main CI workflow runs on pull requests and pushes to `master`, with three jobs: formatting,
+lint, type-check, unit tests and a production build; integration tests against PostgreSQL; and
+Playwright system tests.
 
 ## Project documents
 
@@ -234,13 +285,20 @@ pull requests and pushes to `master`.
 | [`apps/web/README.md`](apps/web/README.md) | Web app route and feature details, security/authorization rules and UI design constraints |
 | [`apps/web/setup.md`](apps/web/setup.md) | Local PostgreSQL, environment, email, admin account and deployment setup |
 | [`Deliverables/README.md`](Deliverables/README.md) | Deliverable folders and submission checklist |
-| [`Deliverables/D2/AI_LOG.md`](Deliverables/D2/AI_LOG.md) | AI usage and development-session record |
+| [`Deliverables/D3/README.md`](Deliverables/D3/README.md) | Every Deliverable 3 report, with its owner and status |
+| [`Deliverables/D3/Final_Submission/CS455_D3_Final_Submission.pdf`](Deliverables/D3/Final_Submission/CS455_D3_Final_Submission.pdf) | All Deliverable 3 items compiled into one PDF |
+| [`Deliverables/D3/Project_Report/main.pdf`](Deliverables/D3/Project_Report/main.pdf) | Final project report: Jira, sprints, GitHub workflow, quality, cost, contributions and lessons |
+| [`Deliverables/D3/Costing_Documentation/project_costing_report.pdf`](Deliverables/D3/Costing_Documentation/project_costing_report.pdf) | Operating cost estimate, estimated against actual usage, and the development estimate |
+| [`Deliverables/D3/project-timeline-gantt.pdf`](Deliverables/D3/project-timeline-gantt.pdf) | Project timeline and Gantt chart |
+| [`Deliverables/D3/Engineering_Retrospective/main.pdf`](Deliverables/D3/Engineering_Retrospective/main.pdf) | Engineering retrospective |
+| [`Deliverables/D3/AI_LOG.md`](Deliverables/D3/AI_LOG.md) and [`AI_LOG_Mainak.md`](Deliverables/D3/AI_LOG_Mainak.md) | Deliverable 3 AI usage records |
+| [`Deliverables/D2/AI_LOG.md`](Deliverables/D2/AI_LOG.md) | Deliverable 2 AI usage and development-session record |
 | [`Deliverables/D2/UI/README.md`](Deliverables/D2/UI/README.md) | Captured UI screenshots and their routes |
 | [`Deliverables/D2/API_DOCUMENTATION.md`](Deliverables/D2/API_DOCUMENTATION.md) | Implemented HTTP API reference |
 | [`Deliverables/D2/CORE_WORKFLOW_DEMONSTRATION.md`](Deliverables/D2/CORE_WORKFLOW_DEMONSTRATION.md) | Reproducible ride-to-settlement workflow demonstration |
 | [`Deliverables/D2/README.md`](Deliverables/D2/README.md) | Consolidated D2 implementation, AI, setup, workflow, and evidence guide |
 | [`docs/BUILD_CHECKLIST.md`](docs/BUILD_CHECKLIST.md) | Course handout requirements by deliverable |
-| [`Phases.md`](Phases.md) | Delivery dates, sprint plan and project workstreams |
+| [`Phases.md`](Phases.md) | Delivery dates, the original sprint plan and project workstreams |
 | [`docs/project-management/CS455_Software_Engineering_Project.pdf`](docs/project-management/CS455_Software_Engineering_Project.pdf) | Governing course project handout; it takes precedence if project notes conflict |
 
 ## Marks
