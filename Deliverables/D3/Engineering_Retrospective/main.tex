@@ -1,0 +1,108 @@
+\documentclass[10pt]{article}
+\usepackage{../common/d3report}
+\hypersetup{pdftitle={CS455 Engineering Retrospective}}
+\input{../Project_Report/generated/metrics.tex}
+\newcommand{\repourl}{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation}
+\newcommand{\repolink}[2]{\href{\repourl/blob/master/#1}{#2}}
+\newcommand{\pr}[1]{\href{\repourl/pull/#1}{\##1}}
+
+\begin{document}
+
+\makereporttitle{Engineering Retrospective}
+  {Campus Ride-Pooling and Split-Fare System}
+  {Compiled from the project's records, handout section 19}
+
+\section{What went wrong during development?}
+\begin{itemize}
+  \item \textbf{Testing started late.} \texttt{master} has no commits for \CommitGapDays{} days between
+    \CommitGapFrom{} and \CommitGapTo{}, and Deliverable 3 testing started only at the end of that gap.
+  \item \textbf{Tests stopped at the mocks.} The unit suite cleared its 80\,\% coverage gate with the database
+    mocked, so defects that only appear on a real database stayed hidden until the integration suite ran.
+  \item \textbf{Deployment came last.} The platform was chosen and deployed on 5 November, the day before the
+    deadline, which left little time to run the system under real conditions.
+  \item \textbf{Jira lagged behind the work.} \JiraResolvedFinalDay{} issues were marked resolved on 5 November,
+    and \JiraDefectBugsFinalDay{} of the \JiraDefectBugs{} defect Bugs were recorded after their fixes.
+  \item \textbf{Review was not enforced.} \PullsNoReview{} of the \PullsMerged{} merged pull requests have no
+    recorded review from another member, because \texttt{master} has no branch protection.
+\end{itemize}
+
+\section{Which requirements changed and why?}
+The deployment platform changed from GCP (requirement NFR-RD-18) to Render.com on 5 November. Render builds the
+repository's Docker image directly from GitHub, provides managed PostgreSQL and runs the custom server that
+Socket.IO needs. The submitted requirement still says GCP, and section 7 of the
+\repolink{Deliverables/D3/Deployment_Documentation.md}{deployment documentation} records the change. The D1
+review also found ten product defects against the requirements (\pr{67}). Those changed the code to match the
+requirements, not the requirements themselves.
+
+\section{Which architecture or design decision would you change?}
+\begin{itemize}
+  \item \textbf{Build on the final platform from the start.} A walking skeleton on the real host during
+    Deliverable 2 would have tested the deployment choice while there was still time to change it.
+  \item \textbf{Design ride search against its latency target.} A SQL optimisation lowered p95 latency from
+    2.27\,s to 1.76\,s at 100 virtual users, but the 750\,ms target was not met. Treating the target as a design
+    input, not a test at the end, would have shaped the query earlier.
+  \item \textbf{Plan for more than one server process.} Socket.IO runs inside the single custom Node.js server,
+    so running a second instance would need a shared adapter that the design does not have.
+\end{itemize}
+
+\section{What did the LLM get wrong?}
+\begin{itemize}
+  \item \textbf{A weak safety check.} The first integration harness guarded its database reset by name alone,
+    which could still have wiped an existing database with a matching name. Khushi's review caught it (\pr{83}).
+  \item \textbf{A wrong citation that spread.} A review draft cited \pr{94} for two defects whose code fixes are in
+    \pr{91}. This reached Jira and the bug report before it was corrected.
+  \item \textbf{Errors in review drafts.} One defect's before and after behaviour was the wrong way round, a draft
+    named a route that does not exist, and a count was off by one. All were caught before the reviews were shared.
+  \item \textbf{A chart that looked right in source.} In the first Mermaid timeline, 9 of 15 task bars had zero
+    width. Only rendering it showed this (\pr{99}).
+  \item \textbf{Facts in report drafts.} A draft said five threats where the security report has six, and said
+    every AI feature falls back to deterministic behaviour, which is not true of all three.
+\end{itemize}
+
+\section{Where did AI substantially improve productivity?}
+\begin{itemize}
+  \item \textbf{Test suites.} The integration harness and over 100 integration and adversarial tests were written
+    across two days, 28 and 29 October, and they found real defects (\pr{84}, \pr{87}).
+  \item \textbf{Generated evidence.} The traceability matrix and the report's GitHub and Jira numbers are built by
+    scripts from recorded data, which would have been slow and error-prone by hand.
+  \item \textbf{Bulk project work.} The final Jira cleanup moved 42 issues and assigned 26 Bugs through a connector,
+    with each change checked by a follow-up search.
+  \item \textbf{Overall.} The size-based estimate in section 9 of the
+    \repolink{Deliverables/D3/Costing_Documentation/project_costing_report.pdf}{costing report} is about three times
+    the member-days with a commit. Commit days undercount effort, so this suggests a gain without measuring it.
+\end{itemize}
+
+\section{Where did AI introduce risk or additional work?}
+\begin{itemize}
+  \item \textbf{Confident errors.} Wrong statements read exactly like right ones, so every claim needed checking
+    against the source. The \pr{91} and \pr{94} error shows the cost when a check is missed.
+  \item \textbf{Volume outpacing review.} Generated code, tests and reports arrive faster than people can read them,
+    and the review record above shows that review did not keep up.
+  \item \textbf{Green checks that prove little.} Passing tests and high coverage from generated tests over mocks
+    looked like assurance, and the integration suite showed the limit of that.
+\end{itemize}
+
+\section{What was the most difficult bug or failure?}
+Every seat request and the payment reminder scheduler failed with a 500 on a real database. A JavaScript
+\texttt{Date} used in \texttt{\$n - interval} reached PostgreSQL untyped, and the mocked unit tests could not see
+it. The integration suite exposed it, and \pr{84} casts the parameter to \texttt{timestamptz}, with regression tests.
+A related test then failed intermittently, because seeded rows took their time from the database and the code from
+Node.js, about 1\,ms apart. The team traced that to its cause rather than retrying the test.
+
+\section{How did Jira and GitHub support the SDLC?}
+Jira gave the work a backlog, sprints and a Bug record, and GitHub gave it pull requests, reviews and three CI jobs on
+every pull request. Together they support the traceability matrix, which follows a requirement through its Jira issue
+and pull request to its test: \PullsWithJira{} of the \PullsMerged{} merged pull requests name a Jira key. They worked
+best where review actually happened, as in \pr{83}. They were weakest as a planning record: \JiraWithEstimate{} of
+\JiraIssues{} issues have an estimate and \JiraNoSprint{} are in no sprint.
+
+\section{What would you do differently in a real production project?}
+\begin{itemize}
+  \item Require review through branch protection from the first day, and update Jira as the work happens.
+  \item Deploy first, and run integration tests against a real database from the first feature.
+  \item Use a paid database with backups: the Free tier has none, and this one expires on 5 December 2026.
+  \item Add monitoring, alerting and secret scanning before launch, and meet latency targets before release.
+  \item Estimate before the work and track time, so that estimates can be compared with something better than commits.
+\end{itemize}
+
+\end{document}

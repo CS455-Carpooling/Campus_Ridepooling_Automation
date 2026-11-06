@@ -5263,5 +5263,948 @@
     "body": ""
    }
   ]
+ },
+ {
+  "baseRefName": "master",
+  "body": "D3 deliverable: final requirements-to-Jira-to-GitHub-to-testing traceability matrix (owner: Mainak).\n\n## What it adds\n\n`Deliverables/D3/Traceability_Matrix/`:\n\n| File | Contents |\n|---|---|\n| `main.pdf` (`main.tex`) | The matrix, how it is built, and a summary by area |\n| `traceability-matrix.csv` | One row per requirement: full D1 statement, every Jira issue, pull request and test file |\n| `traceability-links.csv` | One row per requirement-to-test link, with the test name and its result |\n| `make-matrix.mjs`, `snapshot-prs.mjs` | Generate everything above from recorded sources (see the folder's README) |\n| `data/` | The recorded unit run, unit coverage, merged pull request snapshot, and the links made by reading tests |\n\n**Result:**\n\n- **193 requirements** traced to **79 Jira issues**, **48 merged pull requests**, **186 test cases** and **116 test groups** in 115 test files.\n- **Every linked test passed** in the recorded runs on master: the unit suite (1544 tests) and the integration and adversarial suite (110 tests).\n\n## How the links are made\n\n- **Tests.** A test verifies a requirement when its own title cites the requirement ID, including ranges and lists such as `FR-RD-13.1 to 13.4` or `OA-FR-34, 36`.\n  - An ID in a `describe()` title links that block as one test group (passing when every test in it passed), not each test inside it.\n  - Tests whose names do not cite the ID are linked in `data/manual-links.json` after reading them. These are marked with a dagger in the PDF.\n  - The build stops if one of those links matches no recorded test.\n- **GitHub.** The pull requests that introduced the code under test, that cite the requirement, and that introduced its tests.\n  - A commit counts only for the first merged pull request that contains it, so stacked pull requests do not share each other's keys.\n- **Jira.** The CS455 keys of those pull requests: title, branch, own commits, and the PR template's Jira section. HTML comments in a body (template examples) are ignored.\n- **Coverage.** NFR-RD-17 is verified by the unit coverage (87.7 % statements) against the 80 % CI gate.\n\n## Also in this PR\n\n- **Exact requirement IDs in my integration test names (test names only).** This lets the matrix link them directly. Some earlier labels were wrong against the D1 numbering:\n  - offering a ride is FR-RO-03, not FR-RO-01 to 03;\n  - cancelling is FR-RO-04.4, not 04.2;\n  - locking is FR-RO-06.2/06.3, not FR-RO-07;\n  - leaving after lock is FR-RD-07.3, not 07.2.\n- **Recorded integration run re-recorded on current master.** `Deliverables/D3/test-run` was regenerated with the new names (109/109), and the integration and adversarial report PDFs were rebuilt from it.\n- **D3 README.** It now lists the matrix.\n\n## Update after #92 merged\n\n- The matrix is rebuilt on master: the unit run and the pull request snapshot are re-recorded, and the FR-RD-04.2 consent test is linked in `shared-interest-tags.test.ts`, where #92 moved it.\n- Small fixes to the unit test report from #92: the reproduction steps use master, the coverage zip now matches the report (CI run #242), and the report links to it.\n\n## After Khushi's review\n\n- IDs in `describe()` titles link the block as one test group, not every test inside it.\n- PR template examples (HTML comments) no longer count as requirement or Jira references.\n- My integration test titles: FR-RD-08.1 and FR-RO-09.4 moved onto the single tests that verify them.\n- Merged master (#94) and re-recorded both runs on it; the integration, adversarial and matrix PDFs are rebuilt.\n\n## Checks\n\n- `npm run test:integration` (master with #94): 15 files, 110/110.\n- Unit suite (master with #94): 202 files, 1544/1544; coverage 87.65 / 80.90 / 88.78 / 89.97.\n- Prettier and ESLint are clean on the changed tests.\n- All three PDFs build with no LaTeX warnings.\n\nJira: the key for this task will be added here.\n\n\n",
+  "headRefName": "mainak/d3-traceability-matrix",
+  "mergedAt": "2026-11-04T20:14:01Z",
+  "number": 93,
+  "title": "D3: Requirements traceability matrix (requirement, Jira, GitHub, tests)",
+  "url": "https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/93",
+  "files": [
+   "Deliverables/D3/Adversarial_Test_Report/main.pdf",
+   "Deliverables/D3/Integration_Test_Report/main.pdf",
+   "Deliverables/D3/README.md",
+   "Deliverables/D3/Traceability_Matrix/README.md",
+   "Deliverables/D3/Traceability_Matrix/data/manual-links.json",
+   "Deliverables/D3/Traceability_Matrix/data/prs.json",
+   "Deliverables/D3/Traceability_Matrix/data/unit-cases.json",
+   "Deliverables/D3/Traceability_Matrix/data/unit-coverage.json",
+   "Deliverables/D3/Traceability_Matrix/generated/matrix-rows.tex",
+   "Deliverables/D3/Traceability_Matrix/generated/section-summary.tex",
+   "Deliverables/D3/Traceability_Matrix/generated/summary.tex",
+   "Deliverables/D3/Traceability_Matrix/main.pdf",
+   "Deliverables/D3/Traceability_Matrix/main.tex",
+   "Deliverables/D3/Traceability_Matrix/make-matrix.mjs",
+   "Deliverables/D3/Traceability_Matrix/snapshot-prs.mjs",
+   "Deliverables/D3/Traceability_Matrix/traceability-links.csv",
+   "Deliverables/D3/Traceability_Matrix/traceability-matrix.csv",
+   "Deliverables/D3/Unit_Test_Report.md",
+   "Deliverables/D3/test-run/generated/adversarial-cases.tex",
+   "Deliverables/D3/test-run/generated/adversarial-files.tex",
+   "Deliverables/D3/test-run/generated/coverage.tex",
+   "Deliverables/D3/test-run/generated/integration-cases.tex",
+   "Deliverables/D3/test-run/generated/integration-files.tex",
+   "Deliverables/D3/test-run/generated/summary.tex",
+   "Deliverables/D3/test-run/integration-coverage-summary.json",
+   "Deliverables/D3/test-run/integration-results.json",
+   "Deliverables/D3/unit-coverage-report.zip",
+   "apps/web/test/integration/admin/complaints-and-enforcement.int.test.ts",
+   "apps/web/test/integration/adversarial/input.int.test.ts",
+   "apps/web/test/integration/adversarial/races.int.test.ts",
+   "apps/web/test/integration/adversarial/replays-and-state.int.test.ts",
+   "apps/web/test/integration/adversarial/time-boundaries.int.test.ts",
+   "apps/web/test/integration/bugs/idempotency-key-reuse.int.test.ts",
+   "apps/web/test/integration/bugs/timestamp-parameters.int.test.ts",
+   "apps/web/test/integration/rides/join-requests.int.test.ts",
+   "apps/web/test/integration/rides/manage-ride.int.test.ts",
+   "apps/web/test/integration/rides/offer-and-search.int.test.ts",
+   "apps/web/test/integration/rides/seats-and-lock.int.test.ts",
+   "apps/web/test/integration/trip/sos.int.test.ts",
+   "apps/web/test/integration/trip/trip-flow.int.test.ts"
+  ],
+  "commits": [
+   {
+    "oid": "014b9da6c263de881ab97381c75951d5e232e6ae",
+    "headline": "Cite the exact requirement IDs in the integration test names",
+    "body": "Each integration and adversarial test now names the Deliverable 1 requirements it checks, so the\ntraceability matrix can link tests to requirements from the names alone. Test names only; no test\nlogic changed.\n\nCorrections to the earlier labels, checked against the D1 statements:\n- offering a ride: FR-RO-03 (FR-RO-01 and 02 are sign-in and profile);\n- cancelling a ride: FR-RO-04.4 (FR-RO-04.2 is the notice for a saved edit);\n- locking the ride: FR-RO-06.2 and 06.3 (FR-RO-07 is the fare display);\n- leaving after lock: FR-RD-07.3 (FR-RD-07.2 is leaving before lock);\n- the last seat: no longer NFR-RD-05, the 50-request experiment of the concurrency report.\n\nThe recorded integration run (Deliverables/D3/test-run) is re-recorded on current master with the\nnew names, and the integration and adversarial report PDFs are rebuilt from it: 109/109 pass."
+   },
+   {
+    "oid": "508da1663537971e1533f550b80d894764eb4b68",
+    "headline": "D3: Add the requirements traceability matrix",
+    "body": "Requirement (Deliverable 1) -> Jira issue -> GitHub pull request -> automated test -> result, in\nDeliverables/D3/Traceability_Matrix: a LaTeX report with its PDF, one CSV row per requirement and\none per requirement-to-test link.\n\n193 requirements are traced to 79 Jira issues, 49 merged pull requests and 653 test cases in 114\ntest files; every linked test passed in the recorded runs on master (unit suite 1530 tests,\nintegration and adversarial suite 109 tests).\n\nEvery cell is generated (make-matrix.mjs) from recorded sources:\n- the D1 requirement documents;\n- the recorded unit run and the D3 integration run; a test links to a requirement when its name\n  cites the ID, or through data/manual-links.json, where each link was made by reading the test\n  and the build stops if one matches no recorded test;\n- a snapshot of the merged pull requests with files and commits (snapshot-prs.mjs); a commit counts\n  only for the first merged pull request that contains it, so stacked pull requests do not share\n  each other's keys;\n- NFR-RD-17 from the unit coverage (87.4 % statements against the 80 % CI gate)."
+   },
+   {
+    "oid": "65661d6bda97d3100085d5957db98d7f7e18ade4",
+    "headline": "Merge remote-tracking branch 'origin/master' into mainak/d3-traceabil…",
+    "body": "…ity-matrix"
+   },
+   {
+    "oid": "97be0374f8df58d38180357ce3314041fe2d94ad",
+    "headline": "D3: Rebuild the traceability matrix on master after #92",
+    "body": "- Re-recorded the unit run on master (201 files, 1,535 tests; coverage\n  87.57 / 80.73 / 88.71 / 89.92) and the merged pull request snapshot (#92).\n- FR-RD-04.2: the consent test moved to shared-interest-tags.test.ts in #92;\n  the new enrichSharedInterests consent test is linked as well.\n- Unit test report: reproduction steps now use master (the PR branch is\n  merged), the coverage zip is refreshed from CI run #242 so it matches the\n  report, the report links to it, and the header uses no em dashes."
+   },
+   {
+    "oid": "204381bba202e5ab8c7032754eecd83f9ae83b3e",
+    "headline": "Merge remote-tracking branch 'origin/master' into mainak/d3-traceabil…",
+    "body": "…ity-matrix\n\n# Conflicts:\n#\tDeliverables/D3/README.md"
+   },
+   {
+    "oid": "a36d285694b2e7ab12ed748aa708caacef891de3",
+    "headline": "D3: Link describe() IDs as test groups and ignore PR template examples",
+    "body": "Review fixes for the traceability matrix (Khushi):\n- An ID in a test's own title links that test. An ID in a describe() title\n  now links the block as one test group (passing when every test in it\n  passed), not every test inside it. The CSV marks how each link was made.\n- HTML comments in pull request bodies (the template's examples) are removed\n  before looking for requirement IDs and Jira keys, so #75 and others no\n  longer cite FR-RD-06.3 from the template.\n- Integration test titles: FR-RD-08.1 moves to the one search test that\n  checks the share, FR-RO-09.4 to the completion test, and the warnings\n  group drops its redundant OA-FR range (each test cites its own IDs).\n\nRe-recorded on master with #94: unit 202 files / 1,544 tests (coverage\n87.65 / 80.90 / 88.78 / 89.97); integration and adversarial 15 files /\n110 tests. The integration, adversarial and matrix PDFs are rebuilt."
+   }
+  ]
+ },
+ {
+  "baseRefName": "master",
+  "body": "## Jira issue\n\nCS455-<!-- number --> · <!-- link to the Jira issue -->\n\n## What and why\n\n<!-- One or two sentences: what this PR changes and why. -->\n\n## Requirements addressed\n\n<!-- Requirement IDs, e.g. FR-RD-06.3, UR-RO-05, OA-FR-21. Mark Critical ones. -->\n\n## How it was tested\n\n- [ ] Unit tests added or updated\n- [ ] Integration tests added or updated (where the change touches the API or database)\n- [ ] Checked manually: <!-- steps -->\n\n## Checklist\n\n- [ ] Branch name and commits carry the Jira key (`CS455-<n>`)\n- [ ] CI passes\n- [ ] UI changes follow the design rules in `apps/web/README.md`\n- [ ] No secrets, API keys or personal data committed\n- [ ] Traceability matrix and docs updated if a requirement's status changed\n- [ ] Any AI assistance for this change is recorded in the AI Engineering Log\n",
+  "headRefName": "prithviraj/test-report",
+  "mergedAt": "2026-11-04T15:45:32Z",
+  "number": 94,
+  "title": "Prithviraj/test report",
+  "url": "https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/94",
+  "files": [
+   "Deliverables/D3/AI_LOG.md",
+   "Deliverables/D3/Failure_and_Recovery_Report/main.tex",
+   "Deliverables/D3/README.md",
+   "Deliverables/D3/Security_and_Threat_Model_Report/main.tex",
+   "Deliverables/D3/failure-and-recovery-test-report.md",
+   "Deliverables/D3/security-and-threat-model-report.md",
+   "apps/web/server.mjs",
+   "apps/web/src/app/api/auth/reset/route.test.ts",
+   "apps/web/src/app/api/chatbot/route.test.ts",
+   "apps/web/src/lib/ai/chatbot-gemini.test.ts",
+   "apps/web/src/lib/ai/chatbot.test.ts",
+   "apps/web/src/lib/ai/recommendation-pipeline.test.ts",
+   "apps/web/test/integration/auth/reset-failure.int.test.ts",
+   "apps/web/test/integration/bugs/idempotency-key-reuse.int.test.ts",
+   "apps/web/test/server-security.test.ts"
+  ],
+  "commits": [
+   {
+    "oid": "b1ac24d39a189307c1f8be7a51a74ef46023bc3e",
+    "headline": "CS455-D3: add Failure and Recovery Test Report LaTeX source",
+    "body": ""
+   },
+   {
+    "oid": "531a2af82af6da83ae2458bde554b09df1ba1323",
+    "headline": "CS455-D3: add Failure and Recovery Test Report Markdown document",
+    "body": ""
+   },
+   {
+    "oid": "853ff9aa933b21474c08b44dd1bd95064ea7284e",
+    "headline": "CS455-D3: update D3 README and AI log for failure recovery report",
+    "body": ""
+   },
+   {
+    "oid": "3d5c289c71dc923e2b80a89396d21fa7ab6a46fc",
+    "headline": "CS455-D3: add Security and Threat-Model Report LaTeX source",
+    "body": ""
+   },
+   {
+    "oid": "21cc431ea03fbe1b0440cf1e5c3e79e0791c06ca",
+    "headline": "CS455-D3: add Security and Threat-Model Report Markdown document",
+    "body": ""
+   },
+   {
+    "oid": "0a7df787a3bfa8def0d1d882e5a30aa0bd02d4c9",
+    "headline": "CS455-D3: update D3 README and AI log for security report",
+    "body": ""
+   },
+   {
+    "oid": "4aadf891006bd54306f9d2b3e4bccb89ba6d82c5",
+    "headline": "test: cover chatbot timeout and prompt fallback",
+    "body": "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+   },
+   {
+    "oid": "56640b744115be0b122a889a563fd5e5df663332",
+    "headline": "test: verify password reset rollback on database failure",
+    "body": "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+   },
+   {
+    "oid": "9280984c5e80e79722d19be59ccfe1920319f250",
+    "headline": "fix: validate Socket.IO handshake origins",
+    "body": "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+   },
+   {
+    "oid": "3d2e1c411b507ad66389a321eb7ea0bf8a655184",
+    "headline": "test: measure idempotency replay latency",
+    "body": "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+   },
+   {
+    "oid": "68c52d6b509fb987475be60708992c04c9b42852",
+    "headline": "docs: align D3 reports with verified test evidence",
+    "body": "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+   },
+   {
+    "oid": "a7bd34ad5b56303a0c184c009e34c5ae7278da52",
+    "headline": "test: align integration queries and format test suites",
+    "body": ""
+   },
+   {
+    "oid": "1dac8c8d898b7a6b4b1098f8e24458988227653c",
+    "headline": "docs: record verified PostgreSQL integration test outcomes and idempo…",
+    "body": "…tency benchmarks"
+   }
+  ]
+ },
+ {
+  "baseRefName": "master",
+  "body": "## Jira issue\n\nCS455-130 · Campus Ride-Pooling System Testing Implementation & Deliverable 3 Report\n\n## What and why\n\nThis PR implements comprehensive, browser-based End-to-End (E2E) System Testing for the Campus Ride-Pooling and Split-Fare application using **Playwright Test** and **TypeScript** for **Deliverable 3**.\n\n### Motivation\nWhile the existing unit test suite (>1,500 tests) covers isolated functions with mocks, and the route integration test suite exercises isolated API handlers, browser-level system testing validates the **complete, vertically-integrated stack as authentic campus users interact with it**:\n- Chromium browser rendering real Next.js 16 client and server components\n- Real HTTP/WebSocket application server (`server.mjs`) handling request pipelines\n- Live bi-directional real-time communication via Socket.IO\n- Dedicated PostgreSQL 16 test database (`crp_test`) executing real transactions, constraints, triggers, and immutability checks\n- Real session cookie injection, role authorization, and multi-user context isolation\n- **Zero mocking** of backend route handlers, database operations, or real-time events.\n\nIn addition, this PR provides the **Deliverable 3 System Test Report** and a complete **Requirement Traceability Matrix (RTM)** linking all Deliverable 1 functional and non-functional requirements to automated test cases.\n\n---\n\n## Requirements addressed\n\nAll tests validate requirements defined in Deliverable 1 specifications:\n\n### 1. Rider Requirements (RD)\n- **`FR-RD-01.1`** (**Critical**): Strict login constraint to institute domain (`@iitk.ac.in`)\n- **`FR-RD-01.5`**: Suspended rider prohibited from offering or joining pools\n- **`FR-RD-02.1`**: Profile campus pickup location defaults and interest tag selection\n- **`FR-RD-03.1..7`** (**Critical** `FR-RD-03.5`): Ride discovery filters (direction, hub, campus place, date range, capacity)\n- **`FR-RD-04.1..8`** (**Critical** `FR-RD-04.3`): Seat availability display and two-rider concurrency contention\n- **`FR-RD-05.1..7`**: AI conversational travel assistant, preference proposals, and transactional action guardrails\n- **`FR-RD-06.1..11`** (**Critical** `FR-RD-06.3`): Seat join request lifecycle (submit, accept, reject, withdraw, leave, idempotency key deduplication)\n- **`FR-RD-07.1..6`**: Departure drift detection ($\\ge$15 min shift triggers `needs_reconfirmation`), reconfirmation acceptance, and post-lock immutability\n- **`FR-RD-08.1..6`** (**Critical** `FR-RD-08.1`): Table T-2 whole-rupee split-fare algorithm (remainder allocated to earliest occupants) and UPI payment verification\n- **`FR-RD-09.1..7`** (**Critical** `FR-RD-09.1`): Real-time Socket.IO pool chat between confirmed occupants and cross-ride room isolation\n- **`FR-RD-11.1..6`**: Real-time notification center delivery and mark-as-read state persistence\n- **`FR-RD-12.1..4`**: Mutual post-trip star rating and feedback submission\n- **`FR-RD-13.1..6`**: Member complaint filing against ride occupants and admin queue ingestion\n- **`FR-RD-15.1..5`** (**Critical** `FR-RD-15.1`): In-transit SOS emergency trigger, tracking reference generation, and strict member privacy isolation (`FR-RD-15.4`)\n\n### 2. Ride Owner Requirements (RO)\n- **`FR-RO-01..04`** (**Critical** `FR-RO-01.1`): Ride offer form (direction, hub, campus place, vehicle types: Car, Auto, Vikram, fare snapshot)\n- **`FR-RO-05..06`** (**Critical** `FR-RO-05.1`): Owner review and decision (accept/reject) for pending join requests\n- **`FR-RO-07..09`** (**Critical** `FR-RO-07.1`, `FR-RO-08.1`, `FR-RO-09.2`): Complete trip progress management (Lock Ride -> Start Pickup -> Mark Passenger Arrived -> Mark No-Show -> Start Transit -> Complete Ride)\n- **`FR-RO-10..11`** (**Critical** `FR-RO-10.1`): Verification and confirmation of received external UPI payments\n- **`FR-RO-12..13`** (**Critical** `FR-RO-13.2`): Post-trip rating state activation and incident desk closure with safety note\n\n### 3. AI Assistant & Decision Requirements (AI)\n- **`AI-RD-01`**: Recommendation ranking of matching rides\n- **`AI-RD-02`**: 8-second deterministic fallback ranking on LLM timeout\n- **`AI-RD-04`**: Conversational preference learning requiring explicit confirmation before updating profile\n- **`AI-RD-05`**: Refusal of transactional operations (booking, cancelling, payments) with manual guidance links\n\n### 4. Operations Admin Requirements (OA)\n- **`OA-FR-01..07`**: Vehicle type CRUD, capacity limits, transport hubs, and campus pickup points configuration\n- **`OA-FR-16..20`**: Centralized complaint moderation queue, under review progression, and resolution outcomes\n- **`OA-FR-21..28`**: Account disciplinary action (suspension with reason category/duration) and reactivation\n\n### 5. System Non-Functional & Safety Constraints (SYS-NFR)\n- **`SYS-NFR-04`**: Optimistic concurrency control for configuration and ride mutations\n- **`SYS-NFR-07`**: Same-origin CSRF verification, rate limiting, and session isolation\n- **`SYS-FR-14` / Table T-1**: Strict rejection of seat overfilling under simultaneous acceptance races (HTTP 409 `ride_full`)\n- **`SYS-FR-17`**: 10-minute free cancellation grace period from acceptance\n- **`SYS-FR-18`**: Post-lock late cancellation liability penalty\n\n---\n\n## How it was tested\n\n- [x] **System Tests (Playwright E2E):** 45 automated browser tests implemented across 13 test suites. **100% pass rate (45/45)** in ~1.4 minutes runtime against Chromium:\n  1. `smoke.spec.ts` (4 tests) — Base URL, login, registration, static legal pages\n  2. `auth-and-roles.spec.ts` (4 tests) — Auth redirect, domain rules, admin page barriers, multi-context session isolation\n  3. `ride-creation-and-discovery.spec.ts` (6 tests) — Creation validation, details view, multi-attribute ride search, empty states\n  4. `join-request-lifecycle.spec.ts` (6 tests) — Submit, accept, reject, withdraw, leave, self-join prevention, idempotency deduplication\n  5. `ride-management-trip-flow.spec.ts` (5 tests) — Lock ride, pickup start, boarding check-off, no-show marking, transit, completion\n  6. `fare-and-settlement.spec.ts` (3 tests) — Table T-2 whole-rupee splitting, UPI settlement confirmation, no-show ₹0 liability\n  7. `pool-chat-and-notifications.spec.ts` (3 tests) — Multi-context Socket.IO chat, cross-ride room isolation, notifications centre\n  8. `itinerary-drift.spec.ts` (3 tests) — $\\ge$15 min departure drift, reconfirmation acceptance, post-lock change refusal\n  9. `concurrency-seats.spec.ts` (2 tests) — Final seat contention, parallel API race rejection (HTTP 409)\n  10. `time-boundaries.spec.ts` (3 tests) — Post-lock join refusal, 10-min free grace period, late cancellation locked share penalty\n  11. `recommendations-and-chatbot.spec.ts` (3 tests) — AI ranking with 8s fallback, transactional action guardrails, preference proposals\n  12. `sos-and-safety.spec.ts` (3 tests) — In-transit SOS, strict member privacy isolation (`FR-RD-15.4`), admin incident acknowledgment & closure\n  13. `admin-workflows.spec.ts` (3 tests) — Vehicle type configuration, complaint resolution lifecycle, account suspension & enforcement\n- [x] **Unit & Regression Tests:** Full Vitest test suite (`npm run test`) verified — over 1,500 tests passing with zero regressions.\n- [x] **Lint & Style Validation:** `npm run lint` and `npm run format:check` pass cleanly with zero warnings.\n- [x] **CI Pipeline Integration:** Added `system-testing` job to `.github/workflows/ci.yml` that provisions PostgreSQL 16 on port 5433, initializes `crp_test`, installs Playwright Chromium, executes the E2E suite, and publishes test artifacts on failure.\n\n---\n\n## Deliverables & Documentation Included\n\n- **Playwright Suite Infrastructure:**\n  - Config: `apps/web/playwright.config.ts`\n  - Documentation: `apps/web/e2e/README.md`\n  - Fixtures: `auth.fixture.ts`, `database.fixture.ts`, `users.fixture.ts`\n  - Page Helpers: `ride.helper.ts`, `request.helper.ts`, `notification.helper.ts`\n- **Deliverable 3 System Test Report:**\n  - Full Report & Traceability Matrix (Markdown): `Deliverables/D3/System_Test_Report/README.md`\n  - Report Source (LaTeX): `Deliverables/D3/System_Test_Report/main.tex`\n  - Master D3 Deliverables Index: `Deliverables/D3/README.md`\n\n---\n\n## Checklist\n\n- [x] Branch name and commits carry the Jira key (`CS455-130`)\n- [x] CI passes (`system-testing` job configured in `.github/workflows/ci.yml`)\n- [x] UI interactions follow the design rules in `apps/web/README.md`\n- [x] No secrets, API keys, or personal data committed\n- [x] Traceability matrix and Deliverable 3 documentation updated\n- [x] No modifications to existing production code (`apps/web/src/**`, `apps/web/server.mjs`, `apps/web/db/schema.sql`)",
+  "headRefName": "chaitanya/CS455-130-system-testing",
+  "mergedAt": "2026-11-04T18:25:31Z",
+  "number": 95,
+  "title": "[CS455-130] System Testing End-To-End",
+  "url": "https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/95",
+  "files": [
+   ".github/workflows/ci.yml",
+   "Deliverables/D3/README.md",
+   "Deliverables/D3/System_Test_Report/README.md",
+   "Deliverables/D3/System_Test_Report/main.tex",
+   "apps/web/e2e/README.md",
+   "apps/web/e2e/fixtures/auth.fixture.ts",
+   "apps/web/e2e/fixtures/database.fixture.ts",
+   "apps/web/e2e/fixtures/users.fixture.ts",
+   "apps/web/e2e/helpers/notification.helper.ts",
+   "apps/web/e2e/helpers/request.helper.ts",
+   "apps/web/e2e/helpers/ride.helper.ts",
+   "apps/web/e2e/tests/admin/admin-workflows.spec.ts",
+   "apps/web/e2e/tests/ai/recommendations-and-chatbot.spec.ts",
+   "apps/web/e2e/tests/authentication/auth-and-roles.spec.ts",
+   "apps/web/e2e/tests/cross-role/concurrency-seats.spec.ts",
+   "apps/web/e2e/tests/cross-role/fare-and-settlement.spec.ts",
+   "apps/web/e2e/tests/cross-role/itinerary-drift.spec.ts",
+   "apps/web/e2e/tests/cross-role/sos-and-safety.spec.ts",
+   "apps/web/e2e/tests/cross-role/time-boundaries.spec.ts",
+   "apps/web/e2e/tests/owner/ride-management-trip-flow.spec.ts",
+   "apps/web/e2e/tests/realtime/pool-chat-and-notifications.spec.ts",
+   "apps/web/e2e/tests/rider/join-request-lifecycle.spec.ts",
+   "apps/web/e2e/tests/rider/ride-creation-and-discovery.spec.ts",
+   "apps/web/e2e/tests/smoke.spec.ts",
+   "apps/web/package.json",
+   "apps/web/playwright.config.ts",
+   "package-lock.json",
+   "package.json"
+  ],
+  "commits": [
+   {
+    "oid": "1dfab00eb4545a0eb961cf38f23d026f72cef056",
+    "headline": "test(e2e): document system testing architecture",
+    "body": ""
+   },
+   {
+    "oid": "9f79b28ece0bcbb109b702f302c9979d38b98677",
+    "headline": "test(e2e): add Playwright configuration",
+    "body": ""
+   },
+   {
+    "oid": "aaa2bafb4b7bfca428a5e39d644760aa5cc4a906",
+    "headline": "test(e2e): add application startup and smoke tests",
+    "body": ""
+   },
+   {
+    "oid": "da402310f82bbfd2562c71e08a1572bf1cf266ec",
+    "headline": "test(e2e): add deterministic test data fixtures",
+    "body": ""
+   },
+   {
+    "oid": "1a6c904ca5e0ee8625cd0591f9b5c70f932594a5",
+    "headline": "test(e2e): add role-based authentication fixtures",
+    "body": ""
+   },
+   {
+    "oid": "ce28391a12aed2dff22d104774e9da91328ef8a3",
+    "headline": "test(e2e): cover ride creation and ride discovery",
+    "body": ""
+   },
+   {
+    "oid": "f05a98a5e33c2e8ab875f2e82044493e45174293",
+    "headline": "test(e2e): cover rider join request lifecycle",
+    "body": ""
+   },
+   {
+    "oid": "89d557a2735c81f58f4ea94b04a6a9487da6ea59",
+    "headline": "test(e2e): cover ride management and trip progress",
+    "body": ""
+   },
+   {
+    "oid": "e317eee00ec76995dd63054ce819f323c9648f8e",
+    "headline": "test(e2e): cover fare calculation and settlement",
+    "body": ""
+   },
+   {
+    "oid": "a30bbed548913c87f32eeb3b95ddf412964fb1c0",
+    "headline": "test(e2e): cover realtime notifications and chat",
+    "body": ""
+   },
+   {
+    "oid": "b2f4a232c641d2234a878253a06a81bf8b9c0aa6",
+    "headline": "test(e2e): cover itinerary changes and reconfirmation",
+    "body": ""
+   },
+   {
+    "oid": "972c337311157a2600ec099aefa9578bbea2ade6",
+    "headline": "test(e2e): cover concurrency and seat contention",
+    "body": ""
+   },
+   {
+    "oid": "7f229bd37741ddecee4e7772748be895804ea155",
+    "headline": "test(e2e): cover time boundaries and cancellation",
+    "body": ""
+   },
+   {
+    "oid": "137c523b38e98516b47b2a3383e8a111c97710e8",
+    "headline": "test(e2e): cover AI recommendations and fallback",
+    "body": ""
+   },
+   {
+    "oid": "4eb2a211d37c44d408b6008e0302381cb3890495",
+    "headline": "test(e2e): cover SOS and incident management",
+    "body": ""
+   },
+   {
+    "oid": "1ec93c1982ff5db606b79d421c204df7cdfa2a8b",
+    "headline": "test(e2e): cover admin workflows and suspension",
+    "body": ""
+   },
+   {
+    "oid": "91d395f4c6f9c9dfc2e9284bedceb869ac09945f",
+    "headline": "test(e2e): integrate system tests into CI",
+    "body": ""
+   },
+   {
+    "oid": "433eb801b1438454c9f19be8882bba48cdc32f4d",
+    "headline": "docs(test): add system test report and traceability matrix",
+    "body": ""
+   },
+   {
+    "oid": "2df16b42259acf180891b0e6e511fb1e883b40f6",
+    "headline": "style: normalize line endings and format Deliverable 3 reports",
+    "body": ""
+   },
+   {
+    "oid": "118fc515b011103d062760257bb697811c87ec3f",
+    "headline": "fix(e2e): prove session isolation in authentication spec",
+    "body": ""
+   },
+   {
+    "oid": "c76206722de389401764463ec154349ef94ab61c",
+    "headline": "fix(e2e): surface browser context cleanup errors in auth fixture",
+    "body": ""
+   },
+   {
+    "oid": "c0c3992e918949391c1be31a6527c3fc937bd2ae",
+    "headline": "fix(e2e): manage and close PostgreSQL pool during fixture teardown",
+    "body": ""
+   },
+   {
+    "oid": "ce6d496dd086985ab78fb9be4e16c461e2a60263",
+    "headline": "test(e2e): add deterministic AI fault injection and fallback recovery…",
+    "body": "… tests"
+   },
+   {
+    "oid": "d7edcc453552b92b893c555053b57ca838ae675e",
+    "headline": "docs(e2e): align D1 requirement IDs and link to central traceability …",
+    "body": "…matrix"
+   },
+   {
+    "oid": "2d38ab1827745e4b334343a99cd764e48ec2d3d6",
+    "headline": "test(e2e): exercise real application endpoints for idempotency, settl…",
+    "body": "…ement, arrival, and drift"
+   },
+   {
+    "oid": "b3f6dc187b6bd55772f8a7eeda92c4c0a0cbb424",
+    "headline": "docs(e2e): update suite descriptions to 48 tests and wire transaction…",
+    "body": "…al data cleanup"
+   },
+   {
+    "oid": "44fe658a1ad918c748186fbd6cdc3be25b84db55",
+    "headline": "docs(e2e): document complete database setup and test server port conf…",
+    "body": "…iguration"
+   },
+   {
+    "oid": "7d472e70433de1c69a399486bca1336953d67c5d",
+    "headline": "fix(e2e): make the reworked system tests pass in CI",
+    "body": "CS455-130. Five tests failed in CI after the last review round, and one was\nflaky:\n- Fare split, no-show share and both drift tests called fetch('/api/...')\n  from the owner's page before it had opened anything, so the relative URL\n  could not be resolved. The owner now opens the ride page first.\n- The idempotency test read body.request.request.id; the API answers\n  body.request.requestId.\n- The SOS admin test reloaded as soon as the Acknowledge button disappeared,\n  but the button is hidden while the request is still in flight (\"Saving…\"),\n  so the reload could cancel it. It now waits for the PATCH answer before\n  reloading, and does the same for closing.\n\nThe four spec files pass locally (14/14), and the SOS file 9/9 over three\nrepeats."
+   },
+   {
+    "oid": "8df3a3cc8aa95df50027b6128cf52a9c8875be36",
+    "headline": "docs(e2e): correct requirement IDs and harness claims in the system t…",
+    "body": "…est report\n\nCS455-130. Follow-up to the review:\n- Suite list: IDs that mean something else in D1 now name the requirement\n  each test verifies (for example withdrawing is FR-RD-07.1, leaving before\n  lock FR-RD-07.2, marking paid and confirming FR-RD-11.2/11.3, the\n  notification centre FR-RD-14.2, the incident reaching admins FR-RD-15.2).\n  The SOS admin test title cites FR-RD-15.2 instead of FR-RO-13.2.\n- The fixture checks the _test name, a local host and the opt-in, but not a\n  marker comment; the README and main.tex no longer claim it does.\n- main.tex: the trip suite does not mark a no-show or check ratings (the\n  no-show is in time-boundaries.spec.ts), and the rupee sign stopped the\n  report building; it now builds (3 pages)."
+   }
+  ]
+ },
+ {
+  "baseRefName": "master",
+  "body": "## Jira\n\n[CS455-135](https://cs455project.atlassian.net/browse/CS455-135)\n\n## Summary\n- Adds the D3 Bug and Defect History report in LaTeX.\n- Documents **26 distinct resolved product/application defects**: 16 from the D3 security, reliability and database audit, plus 10 product defects from the D1 requirements review recorded in [PR #67](https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/67).\n- Corrects evidence references: WebSocket handshake, stale-session and malformed-cookie tests point to [PR #94](https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/94) and `apps/web/test/server-security.test.ts`.\n- Removes unsupported automated-test claims for legacy-schema migration, realtime activity/throttle, realtime eligibility gates, missing production `APP_URL`, realtime cookie-name rejection, and cursor-index migration. Each now states the manual review evidence and explicitly notes that no automated test exists.\n- Gives every defect an individual Jira Bug issue and links those bugs to the relevant tracking story.\n- Updates the D3 README to reflect the expanded report scope and issue traceability.\n\n## Traceability\n- D3 audit defects 1–14: individual Bugs [CS455-136–CS455-149](https://cs455project.atlassian.net/issues/?jql=project%20%3D%20CS455%20AND%20labels%20%3D%20cs455-121%20AND%20labels%20%3D%20defect-history), related to [CS455-121](https://cs455project.atlassian.net/browse/CS455-121).\n- PostgreSQL timestamp parameter defect 15: [CS455-133](https://cs455project.atlassian.net/browse/CS455-133), fixed in [PR #84](https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/84).\n- Idempotency-key defect 16: [CS455-134](https://cs455project.atlassian.net/browse/CS455-134), fixed in [PR #87](https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/87).\n- D1 product-review defects 17–26: individual Bugs [CS455-150–CS455-159](https://cs455project.atlassian.net/issues/?jql=project%20%3D%20CS455%20AND%20labels%20%3D%20cs455-86%20AND%20labels%20%3D%20defect-history), related to [CS455-86](https://cs455project.atlassian.net/browse/CS455-86).\n- Report preparation: [CS455-135](https://cs455project.atlassian.net/browse/CS455-135).\n\n**Jira hierarchy note:** the project exposes Bug as a standard issue type and only Subtask as a child issue type. Jira rejected using CS455-121 as the parent of a Bug, so the individual Bugs retain their Bug type and are explicitly related to CS455-121 / CS455-86 instead of being mis-typed as subtasks.\n\n## Report coverage\nAuthentication and realtime authorization, PostgreSQL TLS and migration compatibility, rate-limit identity handling, password-reset integrity, cursor indexes, timestamp parameter typing, idempotency behavior, ride matching, suspension enforcement, complaint retention and eligibility, admin action protections, ratings/history, account deletion, and trip lifecycle rules.\n\n[CS455-135]: https://cs455project.atlassian.net/browse/CS455-135\n\n[CS455-121]: https://cs455project.atlassian.net/browse/CS455-121?atlOrigin=eyJpIjoiNWRkNTljNzYxNjVmNDY3MDlhMDU5Y2ZhYzA5YTRkZjUiLCJwIjoiZ2l0aHViLWNvbS1KU1cifQ",
+  "headRefName": "khushi/CS455-135-bug-defect-history-report",
+  "mergedAt": "2026-11-04T20:26:51Z",
+  "number": 96,
+  "title": "[CS455-135] Add D3 Bug and Defect History report",
+  "url": "https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/96",
+  "files": [
+   "Deliverables/D3/Bug_Report/main.tex",
+   "Deliverables/D3/README.md"
+  ],
+  "commits": [
+   {
+    "oid": "8547b8c555584969e5969986fb18a8c2b16e3443",
+    "headline": "CS455-135: Add D3 bug and defect history report source",
+    "body": ""
+   },
+   {
+    "oid": "b34b5a5a0ce1953ea6981cff95657e18dbae5fc0",
+    "headline": "CS455-135: Correct LaTeX source escaping",
+    "body": ""
+   },
+   {
+    "oid": "b19837f27b3e025691228d78060895a49e0fcb5e",
+    "headline": "CS455-135: Link D3 bug and defect history report",
+    "body": ""
+   },
+   {
+    "oid": "c3e556e4b023ddb100e24495405d85c0fcda5f07",
+    "headline": "CS455-135: Link D3 bug report source",
+    "body": ""
+   },
+   {
+    "oid": "c468b004c014303a61ab386da7d4eeb53d5f6b21",
+    "headline": "CS455-135: Format D3 bug report index entry",
+    "body": ""
+   },
+   {
+    "oid": "a3802af073fb8b2b8cdaf2fc09dc262077e83d8f",
+    "headline": "CS455-135: Keep defect entries together across page breaks",
+    "body": ""
+   },
+   {
+    "oid": "2ad31ce9ce88aa593806af6037656cf13eeec683",
+    "headline": "[CS455-135] Correct defect evidence and add D1 product defects",
+    "body": ""
+   },
+   {
+    "oid": "34ce9aae5c021b1741be08e268e5ae60288424b6",
+    "headline": "[CS455-135] Update D3 defect scope and Jira traceability",
+    "body": ""
+   },
+   {
+    "oid": "b68d5f1ec89bc9329b59763bbb4df4fe626c12d6",
+    "headline": "[CS455-135] Describe WebSocket Origin handshake validation accurately",
+    "body": ""
+   },
+   {
+    "oid": "490b9e029a1966fde79e644ffbaf548aea61af6a",
+    "headline": "Merge remote-tracking branch 'origin/master' into pr96-merge",
+    "body": "# Conflicts:\n#\tDeliverables/D3/README.md"
+   },
+   {
+    "oid": "5dfc096c86037500a5719bf51695cd29cd630880",
+    "headline": "Merge remote-tracking branch 'origin/master' into pr96-merge",
+    "body": "# Conflicts:\n#\tDeliverables/D3/README.md"
+   }
+  ]
+ },
+ {
+  "baseRefName": "master",
+  "body": "## Summary\n\n- Add PostgreSQL triggers that serialize active-seat inserts/reactivations on the parent ride row and reject writes that exceed `capacity_snapshot`.\n- Reject capacity reductions below the current active occupant count.\n- Add the NFR-RD-05 integration experiment: 49 acceptance attempts plus one leave operation launched together, repeated for 100 rounds, with exactly one seat available at the start of each round.\n- Read the actual owner-facing `getRideView()` after every completed operation and assert that the reported `seatsLeft` equals `capacity - view.occupants.length`.\n- Check seat-capacity behavior and exercise concurrent direct SQL writers against the final seat.\n- Add the D3 concurrency report with measured local execution results.\n- Record the implementation refinement in the D1 architecture decision record, update the sequence diagram, and clarify C9/C10 in the build checklist.\n\n## Validation\n\n**Local PostgreSQL integration run (4 November 2026, before the review follow-up):**\n- Full suite: **16 test files, 112 tests passed**, zero failures, 53.27 seconds.\n- NFR-RD-05: 100 rounds × 50 concurrent route-handler operations = 5,000 operations.\n- 4,900 acceptance attempts and 100 leave operations.\n- Maximum observed occupancy: 3 for capacity 3.\n- Capacity invariant violations: **0**.\n- Direct SQL writer race: exactly one competing insert succeeded; over-capacity insert and capacity reduction were rejected.\n\nThe number of successful acceptances and serial cleanup leaves varies with lock acquisition order (170 and 70 in the recorded full-suite run). The test launches 50 application-level route-handler operations, not 50 simultaneous database sessions; the application pool is capped at 10.\n\nThe follow-up now checks the app's returned `seatsLeft` field rather than calculating an equivalent value inside the test. CI for the updated branch is pending.",
+  "headRefName": "khushi/concurrency-report-nfr-rd-05",
+  "mergedAt": "2026-11-04T20:21:13Z",
+  "number": 97,
+  "title": "Add NFR-RD-05 concurrency experiment and seat-capacity guard",
+  "url": "https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/97",
+  "files": [
+   "Deliverables/D1/Architecture Alternatives and Rejected Decisions/Architecture Alternatives and Rejected Decisions.md",
+   "Deliverables/D1/architecture/4.puml",
+   "Deliverables/D3/Concurrency_Report/main.tex",
+   "Deliverables/D3/README.md",
+   "apps/web/db/schema.sql",
+   "apps/web/test/integration/concurrency/last-seat.int.test.ts",
+   "docs/BUILD_CHECKLIST.md"
+  ],
+  "commits": [
+   {
+    "oid": "c8441c504b2e962fd97f33e8e88fa911c42f7e4d",
+    "headline": "test: add NFR-RD-05 last-seat concurrency experiment",
+    "body": ""
+   },
+   {
+    "oid": "ca80449237b49dcbf5106c32dc9cbba764f800b0",
+    "headline": "test: tighten concurrency assertions and direct-write race",
+    "body": ""
+   },
+   {
+    "oid": "b8cef98ee41474272ea4d3acda700546640212da",
+    "headline": "fix(db): enforce ride capacity under concurrent seat writes",
+    "body": ""
+   },
+   {
+    "oid": "bda552e88f9834fa29512a8cd0209a0216a4aa0f",
+    "headline": "fix(db): use explicit function delimiters for capacity triggers",
+    "body": ""
+   },
+   {
+    "oid": "2eef96a786c2e664887890be8d08ce8011d255c8",
+    "headline": "docs: add concurrency and seat-allocation report source",
+    "body": ""
+   },
+   {
+    "oid": "9fa9b87ad95926807388f07867fd8356b5b6ca21",
+    "headline": "docs: correct shared report style path",
+    "body": ""
+   },
+   {
+    "oid": "2bc5a51e15455ae9291a897e858b45e9a4b3cfda",
+    "headline": "docs: clarify database enforcement of cross-row capacity",
+    "body": ""
+   },
+   {
+    "oid": "b1b59bb4dcccb59db9ea2689f6cf01cb8b7292f4",
+    "headline": "docs: link concurrency report and record execution status",
+    "body": ""
+   },
+   {
+    "oid": "88e141f129f43d389b5b4511ce47d6e79431b77e",
+    "headline": "test: cover capacity reduction database guard",
+    "body": ""
+   },
+   {
+    "oid": "de135ffb19fb1f7cb238c16918343b6f6af2ff38",
+    "headline": "docs: clarify concurrency observation limits and CI coverage",
+    "body": ""
+   },
+   {
+    "oid": "3d7fc91707992c99dba956ec58461f35ad207e58",
+    "headline": "docs: align concurrency checklist with implemented ride lock",
+    "body": ""
+   },
+   {
+    "oid": "89c83d593bd21b398ee0047cde16aa91fbb4787f",
+    "headline": "docs: record D3 seat-capacity implementation refinement",
+    "body": ""
+   },
+   {
+    "oid": "4f41dcad7920d2c3f0713dc87042bf3cd1956b16",
+    "headline": "docs: place concurrency implementation note in correct section",
+    "body": ""
+   },
+   {
+    "oid": "9fdc7b487c71e8ac90f56ec8468133fb64249a9f",
+    "headline": "docs: align concurrency diagram with implemented lock and trigger",
+    "body": ""
+   },
+   {
+    "oid": "cbd0acc72f5f05a70e8f82a1183d14d78d28b3ff",
+    "headline": "Format concurrency integration test",
+    "body": ""
+   },
+   {
+    "oid": "47e2f70ccf8277deee6a5cd76e2d4c8a17f24823",
+    "headline": "Record NFR-RD-05 concurrency experiment results",
+    "body": ""
+   },
+   {
+    "oid": "8d3de3e8cf7d1515ad960779d138dde89a48f5aa",
+    "headline": "Update D3 concurrency report status",
+    "body": ""
+   },
+   {
+    "oid": "8ded1e35d99d67a025a576fcf879b4eab85b8dc5",
+    "headline": "Simplify concurrency test bookkeeping and satisfy formatting",
+    "body": ""
+   },
+   {
+    "oid": "938c36d3ec93e676bf9b971d7a1a16bbbb6ad19d",
+    "headline": "Temporarily diagnose Prettier output for concurrency test",
+    "body": ""
+   },
+   {
+    "oid": "a43254d31bb0140e427389fddc1dccf345a13c30",
+    "headline": "Remove temporary Prettier diagnostic workflow",
+    "body": ""
+   },
+   {
+    "oid": "77cbfac9c841760d29959a66b5ff2f7d1c428c57",
+    "headline": "Apply exact Prettier formatting to concurrency integration test",
+    "body": ""
+   },
+   {
+    "oid": "9ecfa621ac7c6f8de8916974c3746ad317b8f37c",
+    "headline": "Align concurrency documentation with completed test evidence",
+    "body": ""
+   },
+   {
+    "oid": "b3834a23fd80230a7c19e37857a380abd9072196",
+    "headline": "Align concurrency documentation with completed test evidence",
+    "body": ""
+   },
+   {
+    "oid": "7035b3bf5290dd3ba3d094ecd11a56b443624137",
+    "headline": "Assert the ride view's actual seatsLeft during concurrency test",
+    "body": ""
+   },
+   {
+    "oid": "99641db16e92a36ea5fb7193a80e8713cc85b9c8",
+    "headline": "Check the ride view's reported seatsLeft against visible occupants",
+    "body": ""
+   },
+   {
+    "oid": "1426017350ef492bb0d4daacc45231a719458e2b",
+    "headline": "Remove redundant occupant/request assertion from ride-view check",
+    "body": ""
+   },
+   {
+    "oid": "bfd50222c1e40e8b06b465e7f02098dc01f9667c",
+    "headline": "Document the application-view seatsLeft assertion",
+    "body": ""
+   },
+   {
+    "oid": "5a44b97c3f48607ee4bc95796055de2984f341e8",
+    "headline": "Temporarily capture Prettier output for revised concurrency test",
+    "body": ""
+   },
+   {
+    "oid": "f91d426c79bab4fd22eba8d5aa7c5fa3a004d2ff",
+    "headline": "Format revised last-seat concurrency test with Prettier",
+    "body": ""
+   },
+   {
+    "oid": "e33a48f5bc3bd0fb295c39f037d48cdff9db4722",
+    "headline": "Remove temporary Prettier diagnostic workflow",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "baseRefName": "master",
+  "body": "## Jira issue\r\n\r\n[CS455-160](https://cs455project.atlassian.net/browse/CS455-160?atlOrigin=eyJpIjoiZDg3MjlmY2Y3OTllNGI1ZGJkMDRhMTEwMzU1NjAzNjIiLCJwIjoiaiJ9)\r\n\r\n## What and why\r\n\r\nDeployed the application to Render.com using Docker and a managed PostgreSQL database, with production configuration documented for reproducibility. Added Deployment_Documentation.md and updated D3 AI logs to record deployment and Gemini configuration decisions.\r\n\r\n## Requirements addressed\r\n\r\nDeployment and production environment configuration\r\nDocker-based monorepo deployment\r\nPostgreSQL database provisioning and migration\r\nCI/CD integration through GitHub and Render\r\nWebSocket support for real-time ride coordination and chat\r\nD3 deployment documentation and reproducibility evidence\r\n\r\n\r\n## How it was tested\r\n\r\n- [x] Unit tests added or updated\r\n- [x] Integration tests added or updated (where the change touches the API or database)\r\n- [x] Checked manually: <!-- steps -->\r\n\r\n## Checklist\r\n\r\n- [x] Branch name and commits carry the Jira key (`CS455-<n>`)\r\n- [x] CI passes\r\n- [x] UI changes follow the design rules in `apps/web/README.md`\r\n- [x] No secrets, API keys or personal data committed\r\n- [x] Traceability matrix and docs updated if a requirement's status changed\r\n- [x] Any AI assistance for this change is recorded in the AI Engineering Log\r\n\r\n\r\n[CS455-160]: https://cs455project.atlassian.net/browse/CS455-160?atlOrigin=eyJpIjoiNWRkNTljNzYxNjVmNDY3MDlhMDU5Y2ZhYzA5YTRkZjUiLCJwIjoiZ2l0aHViLWNvbS1KU1cifQ",
+  "headRefName": "CS455-160-Deployment",
+  "mergedAt": "2026-11-05T08:23:33Z",
+  "number": 98,
+  "title": "Cs455 160 deployment",
+  "url": "https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/98",
+  "files": [
+   "Deliverables/D1/Requirements Engineering/users/rider/03_non_functional_requirements.md",
+   "Deliverables/D1/Requirements Engineering/users/rider/07_traceability_matrix.md",
+   "Deliverables/D1/Requirements Engineering/users/rider/jira/rider_backlog_import.csv",
+   "Deliverables/D3/AI_LOG.md",
+   "Deliverables/D3/Deployment_Documentation.md",
+   "Deliverables/D3/Traceability_Matrix/README.md",
+   "README.md",
+   "apps/web/.env.example",
+   "apps/web/setup.md",
+   "apps/web/src/lib/ai/chatbot-gemini.ts",
+   "apps/web/src/lib/ai/gemini-config.ts",
+   "apps/web/src/lib/ai/gemini-ranking.ts",
+   "apps/web/src/lib/complaint-ai.test.ts",
+   "apps/web/src/lib/complaint-ai.ts",
+   "apps/web/test.mjs",
+   "docs/BUILD_CHECKLIST.md"
+  ],
+  "commits": [
+   {
+    "oid": "90c8010bf4872ed1f68c7c601a64c9758eaa6b33",
+    "headline": "Add shared Gemini model configuration",
+    "body": ""
+   },
+   {
+    "oid": "3da255688bb1d6e16e76d248eb8a9e8837db907c",
+    "headline": "Use shared Gemini model for chatbot",
+    "body": ""
+   },
+   {
+    "oid": "a165d2f423e6b7bdb740edaaed0de18bb7337579",
+    "headline": "Use shared Gemini model for recommendations",
+    "body": ""
+   },
+   {
+    "oid": "d953ac94a1e1bf5cbd425ea18f94b165ab0c47b1",
+    "headline": "Use shared Gemini model for complaint analysis",
+    "body": ""
+   },
+   {
+    "oid": "7ddf03785291f90205ff12f79acb6e8dece3c879",
+    "headline": "Update complaint AI model test",
+    "body": ""
+   },
+   {
+    "oid": "b9b70a53afc365567bcd88008cdc4f0e3835180d",
+    "headline": "Use configured Gemini model in smoke test",
+    "body": ""
+   },
+   {
+    "oid": "47b12f7418bb9d242b825821ab1f845187d024d0",
+    "headline": "Update Gemini environment template",
+    "body": ""
+   },
+   {
+    "oid": "ea6493fd02556248d187e886c9b605115ddadb4d",
+    "headline": "Document unified Gemini configuration",
+    "body": ""
+   },
+   {
+    "oid": "8252b7c75a649dae7c31827c5233bec3978025eb",
+    "headline": "Document Render deployment configuration",
+    "body": ""
+   },
+   {
+    "oid": "494aba9e440b932ebe64ef5006478c1214c470cd",
+    "headline": "Record deployment and Gemini review",
+    "body": ""
+   },
+   {
+    "oid": "68677e16ac038ed5f01b4285565768e946adb6cc",
+    "headline": "Document Render deployment requirement",
+    "body": ""
+   },
+   {
+    "oid": "c17d3376e8e0a78621e6b8dfabcffe8f60a43457",
+    "headline": "Record Render deployment traceability",
+    "body": ""
+   },
+   {
+    "oid": "e509ab9cb97a3be8467f1e4c7189a74bf936346a",
+    "headline": "Add Render deployment details to project docs",
+    "body": ""
+   },
+   {
+    "oid": "70335e4cd12e59adc149bc1d78b0e6c6a945e0d8",
+    "headline": "CS455-160: update deployment configuration documentation",
+    "body": "Remove temporary statements about pending admin and scheduler configuration."
+   }
+  ]
+ },
+ {
+  "baseRefName": "master",
+  "body": "## Jira issue\r\n\r\n[CS455-162 ](https://cs455project.atlassian.net/browse/CS455-162?atlOrigin=eyJpIjoiYmIyMDQxN2EyZGY4NGQxZmJlYTc3MDUzNzk5YjQ2MDgiLCJwIjoiaiJ9)\r\n\r\n## What and why\r\nTimeline and gannt chart added",
+  "headRefName": "CS455-162-Timeline",
+  "mergedAt": "2026-11-05T18:12:24Z",
+  "number": 99,
+  "title": "Cs455 162 timeline",
+  "url": "https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/99",
+  "files": [
+   "Deliverables/D3/AI_LOG.md",
+   "Deliverables/D3/README.md",
+   "Deliverables/D3/project-timeline-gantt.csv",
+   "Deliverables/D3/project-timeline-gantt.md",
+   "Deliverables/D3/project-timeline-gantt.pdf",
+   "Deliverables/D3/project-timeline-gantt.tex"
+  ],
+  "commits": [
+   {
+    "oid": "8c4a1e8753a0cd480ccf1c30ece06d480fac9051",
+    "headline": "docs: add project Gantt chart",
+    "body": "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+   },
+   {
+    "oid": "ec263ccb47ca80fba813c3177c24d49647e410d8",
+    "headline": "docs: add project timeline data",
+    "body": "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+   },
+   {
+    "oid": "0c5e6576ff5a4e32c22f447e7972811aa2126df7",
+    "headline": "docs: record latest D3 AI interaction",
+    "body": "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+   },
+   {
+    "oid": "93a344c4dd061b9f057844fae0e8e515a0deb9f0",
+    "headline": "Merge branch 'master' of https://github.com/CS455-Carpooling/Campus_R…",
+    "body": "…idepooling_Automation into CS455-162-Timeline"
+   },
+   {
+    "oid": "c30005c324e7d29b69c4e161fb0e932aefc8cf40",
+    "headline": "docs: update D3 AI log",
+    "body": ""
+   },
+   {
+    "oid": "e03b7964330a66858132013599bdc1b2a836cef8",
+    "headline": "docs: add timeline to D3 README",
+    "body": ""
+   },
+   {
+    "oid": "2d9067446cb6c082002b5502d6469e23e81a1632",
+    "headline": "docs: update timeline source",
+    "body": ""
+   },
+   {
+    "oid": "4f86d3757bce29eb19176b36ed41214eadccf324",
+    "headline": "docs: update timeline data",
+    "body": ""
+   },
+   {
+    "oid": "cc1c6d132902dec33a47ee2d24334b02d0ae3b05",
+    "headline": "docs: add timeline PDF source",
+    "body": ""
+   },
+   {
+    "oid": "3253f3ac263d384414442db1470556208d53feac",
+    "headline": "docs: add rendered timeline PDF",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "baseRefName": "master",
+  "body": "## Jira issue\n\n[CS455-160](https://cs455project.atlassian.net/browse/CS455-160?atlOrigin=eyJpIjoiNWUwMDNjNjBkOGJiNGY5ODkwZGZlOTdjMmQ1MjAzZWYiLCJwIjoiaiJ9)\n\n## What and why\n\nUpdated the rider non-functional requirements, traceability matrix, Jira backlog, D3 documentation indexes, and build checklist to keep project requirements, deliverables, and validation status consistent. These documentation updates improve traceability and ensure the final D3 submission checklist accurately reflects completed reports and project artifacts.\n\n\n[CS455-160]: https://cs455project.atlassian.net/browse/CS455-160?atlOrigin=eyJpIjoiNWRkNTljNzYxNjVmNDY3MDlhMDU5Y2ZhYzA5YTRkZjUiLCJwIjoiZ2l0aHViLWNvbS1KU1cifQ",
+  "headRefName": "CS455-160-Deployment",
+  "mergedAt": "2026-11-05T17:43:01Z",
+  "number": 100,
+  "title": "Cs455 160 deployment",
+  "url": "https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/100",
+  "files": [
+   "Deliverables/D1/Requirements Engineering/users/rider/03_non_functional_requirements.md",
+   "Deliverables/D1/Requirements Engineering/users/rider/07_traceability_matrix.md",
+   "Deliverables/D1/Requirements Engineering/users/rider/jira/rider_backlog_import.csv",
+   "Deliverables/D3/README.md",
+   "Deliverables/D3/Traceability_Matrix/README.md",
+   "docs/BUILD_CHECKLIST.md"
+  ],
+  "commits": [
+   {
+    "oid": "bc64cbdebcf7a2751524decfabf0170d082592da",
+    "headline": "docs: update rider non-functional requirements",
+    "body": ""
+   },
+   {
+    "oid": "b88f8808e5459a3a7fee6dcb44ef5d7bb5c651be",
+    "headline": "docs: update rider traceability matrix",
+    "body": ""
+   },
+   {
+    "oid": "e5232f121d4f6f6e252046a32c071e49e35aff7d",
+    "headline": "docs: update rider Jira backlog",
+    "body": ""
+   },
+   {
+    "oid": "2b13626188ab015782fa4d9cb1404867a133e217",
+    "headline": "docs: update D3 README",
+    "body": ""
+   },
+   {
+    "oid": "5207328dcd3d917776093117a94abea3d1adf495",
+    "headline": "docs: update D3 traceability README",
+    "body": ""
+   },
+   {
+    "oid": "d5720805bee6301e7259a0640a2a025af8d198b1",
+    "headline": "docs: update build checklist",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "baseRefName": "master",
+  "body": "",
+  "headRefName": "CS455-162-Timeline",
+  "mergedAt": "2026-11-06T04:25:45Z",
+  "number": 102,
+  "title": "some formatting fixes",
+  "url": "https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/102",
+  "files": [
+   "Deliverables/D3/project-timeline-gantt.fdb_latexmk",
+   "Deliverables/D3/project-timeline-gantt.fls",
+   "Deliverables/D3/project-timeline-gantt.pdf",
+   "Deliverables/D3/project-timeline-gantt.tex"
+  ],
+  "commits": [
+   {
+    "oid": "6ff5c8632b5789e7dfd6dc0353dabab3c6313636",
+    "headline": "some formatting fixes",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "baseRefName": "master",
+  "body": "## Jira issue\n\n[CS455-162 ](https://cs455project.atlassian.net/browse/CS455-162?atlOrigin=eyJpIjoiM2ZmZjc3N2YyMGNkNDc4YWI3MDZiNmVjMWVlOThlMjEiLCJwIjoiaiJ9)\n\n## What and why\n\nGannt chart's visual representation was updated to make it easy to read . Apart from that sample admin user's addition to the render deployment was logged into the deployment documentation .",
+  "headRefName": "CS455-162-Timeline",
+  "mergedAt": "2026-11-06T08:31:59Z",
+  "number": 103,
+  "title": "ui fixes to timeline and deployment doc updation",
+  "url": "https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/103",
+  "files": [
+   "Deliverables/D3/.gitignore",
+   "Deliverables/D3/AI_LOG.md",
+   "Deliverables/D3/Deployment_Documentation.md",
+   "Deliverables/D3/project-timeline-gantt.fdb_latexmk",
+   "Deliverables/D3/project-timeline-gantt.fls",
+   "Deliverables/D3/project-timeline-gantt.md",
+   "Deliverables/D3/project-timeline-gantt.pdf",
+   "Deliverables/D3/project-timeline-gantt.tex"
+  ],
+  "commits": [
+   {
+    "oid": "68f87824f099b4d3c5526435cfe02b6a34ca2627",
+    "headline": "ui fixes to timeline and deployment doc updation",
+    "body": ""
+   },
+   {
+    "oid": "4f794c8fa53da57a7a406e9581844990f62e759e",
+    "headline": "ai log updated",
+    "body": ""
+   },
+   {
+    "oid": "96c30e11b9c2e712559a2228228b4ed7e32e4165",
+    "headline": "final files",
+    "body": ""
+   },
+   {
+    "oid": "076fbbed75a9ef19824bf98f181a79b60eae58a1",
+    "headline": "CS455-162: Fix the Gantt chart legend colours",
+    "body": "Use the same colours as the bars and draw the swatches with textcolor, so they no longer render as black squares. Rebuild the PDF."
+   },
+   {
+    "oid": "35cccbb355144282ff8f2f9d081c9b41fae11940",
+    "headline": "CS455-162: Remove the LaTeX build files of the Gantt chart",
+    "body": "These two files were added by #102 and show local paths. Ignore both file types in Deliverables/D3."
+   },
+   {
+    "oid": "c0e4f0ff10a90dfb9664ddfa77cfa11cabda244b",
+    "headline": "CS455-162: Record the new Gantt chart in the D3 AI log",
+    "body": ""
+   }
+  ]
+ },
+ {
+  "baseRefName": "master",
+  "body": "",
+  "headRefName": "chaitanya/CS455-178-costing-report",
+  "mergedAt": "2026-11-06T16:16:18Z",
+  "number": 104,
+  "title": "[CS455-178] Project Costing documentation ",
+  "url": "https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/104",
+  "files": [
+   "Deliverables/D3/Costing_Documentation/project_costing_report.md",
+   "Deliverables/D3/Costing_Documentation/project_costing_report.pdf",
+   "Deliverables/D3/README.md"
+  ],
+  "commits": [
+   {
+    "oid": "f58366d4a406ed5699dee8b9955a8a33361e2895",
+    "headline": "CS455-178 doc : Project Costing documentation with current vs pilot v…",
+    "body": "…s scale costing estimates"
+   },
+   {
+    "oid": "3d00bcd081dd0247c8b013f557e02c44a52f7108",
+    "headline": "project report updated",
+    "body": ""
+   },
+   {
+    "oid": "543cbe9f050dc3242979e7d2b91a77c901d1255b",
+    "headline": "Added PDF file for submission",
+    "body": ""
+   },
+   {
+    "oid": "0b6762276c758ad0b0477c5f7a1813039021383d",
+    "headline": "Merge master into CS455-178-costing-report",
+    "body": ""
+   },
+   {
+    "oid": "af8e7d4fb440eb0c9c48dd5c98b9e620fefbbad0",
+    "headline": "CS455-178: Correct the costing report's prices and rebuild the PDF",
+    "body": "The old PDF showed a KaTeX parse error and garbled prices in the cost table, because currency signs were read as math.\n\nCorrected against the published prices:\n- Render Postgres: $6 is Basic-256mb, and the $20 Standard plan is a legacy type not offered to new databases, so full scale uses Basic-1gb at $19.\n- Render web tiers, backup retention and uptime wording.\n- Resend Pro is $20, not $15.\n- Gemini: remove unsourced rate limits and the unused 2.5 model. The free and paid tiers are separate, so there is no free quota to subtract.\n- GitHub Actions is free for a public repository, not limited to 2,000 minutes.\n\nThe full-scale total moves from 12,123 to 12,567 rupees a month. The pilot total is unchanged.\n\nAdd the comparison of estimated and actual usage that the handout asks for, and a dated list of price sources."
+   },
+   {
+    "oid": "010e9fc5e5c80f7b6dff4fa9320439701379945f",
+    "headline": "CS455-178: Add the costing report to the D3 README",
+    "body": ""
+   },
+   {
+    "oid": "d98241dc0ad888b77cb8f0dacf503071fe0cb98e",
+    "headline": "CS455-178: Use measured Gemini request sizes, and add actual usage an…",
+    "body": "…d the development estimate\n\nThe 500 input tokens assumed per call was low. Capturing the requests the code really builds gives about 930 tokens for a chatbot query, 900 to 1,370 for ranking 5 to 10 rides and 330 for a complaint, so the model now uses 1,000. The pilot total moves from 2,640 to 2,917 rupees a month, and full scale from 12,567 to 13,954.\n\nAdd the actual usage that could be checked: an upper bound on web service hours, a measured cold start, and the size of a migrated database. Add the development time estimate the handout asks for, labelled as retrospective and compared with the commit record."
+   }
+  ]
  }
 ]

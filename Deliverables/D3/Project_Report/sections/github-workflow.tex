@@ -1,0 +1,39 @@
+% CS455-166
+\section{GitHub workflow}
+
+All development is in the team repository,
+\href{\repourl}{\nolinkurl{CS455-Carpooling/Campus_Ridepooling_Automation}}, with each member working
+from their own account. Work is meant to follow one path: a branch named with its Jira key, commits
+carrying that key, and a pull request into \texttt{master} using the template in
+\repofile{.github/PULL_REQUEST_TEMPLATE.md}, which asks for the Jira issue, the requirements addressed
+and how the change was tested.
+
+GitHub Actions runs three jobs on every pull request: format, lint, type-check, unit tests with the
+80\,\% coverage gate and a production build; integration tests against PostgreSQL; and Playwright system
+tests.
+
+Table~\ref{tab:github} shows how closely the team followed this path, from a snapshot of \texttt{master}
+at \texttt{\GithubSnapshotHead} on \GithubSnapshotDate. Of \PullsMerged{} merged pull requests,
+\PullsReviewed{} have a recorded review from another member and \PullsWithJira{} name a Jira key in their
+title, branch, commits or Jira section. Members submitted \ReviewsSubmitted{} reviews in total, of which
+\ReviewsChangesRequested{} requested changes. Reviews were expected but not enforced, because
+\texttt{master} has no branch protection, and many pull requests were merged without one
+(Section~\ref{sec:gaps}).
+
+\begin{table}[h]
+\centering\small
+\caption{Merged pull requests by deliverable, using the merge date in IST.}
+\label{tab:github}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Phase & Merged & Reviewed by another member & Approved & Names a Jira key \\
+\midrule
+\tabinput{generated/github-phases.tex}
+\midrule
+\textbf{Total} & \textbf{\PullsMerged} & \textbf{\PullsReviewed} & \textbf{\PullsApproved} & \textbf{\PullsWithJira} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A review here means a submitted GitHub review. Comments left on a pull request outside a review are not
+counted, so the table can understate informal review.
