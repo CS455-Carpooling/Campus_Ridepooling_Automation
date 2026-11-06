@@ -133,7 +133,7 @@ Where:
 
 * Exchange rate fixed at 1 USD = ₹94.00 INR.
 * Statutory Goods and Services Tax (GST) rate calculated at 18% on all cloud hosting and API services.
-* Gemini API token rates based on the `gemini-3.1-flash-lite` standard pay-as-you-go pricing model ($0.25/1M input tokens, $1.50/1M output tokens).
+* Gemini API token rates based on the `gemini-3.1-flash-lite` standard pay-as-you-go pricing model ( \$0.25/1M , \$1.50/1M output tokens).
 * Average Gemini request payload modeled at 500 input tokens and 200 output tokens per transaction.
 * Current course evaluation setup assumes total web service uptime remains within Render's 750 free monthly instance hours limit.
 * Developer salaries, software engineering labor, and UI/UX design costs excluded.
