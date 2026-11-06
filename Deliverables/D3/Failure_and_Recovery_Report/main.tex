@@ -54,7 +54,7 @@ The application employs a defense-in-depth architecture combining Next.js App Ro
 \begin{itemize}
   \item \textbf{Idempotency Key Tracking (\file{apps/web/src/lib/join-requests.ts}):} When a join request arrives with an idempotency key, the server queries \file{ride_join_request_keys}. If the key already exists:
     \begin{itemize}
-      \item If the payload matches the original request, the server safely replays the existing request row (HTTP 200 \texttt{\{kind: "existing"\}), creating no additional rows.
+      \item If the payload matches the original request, the server safely replays the existing request row (HTTP 200 \texttt{\{kind: "existing"\}}), creating no additional rows.
       \item If the key is reused for a \emph{different} ride or altered pickup point, the server rejects the request with HTTP 409 \texttt{"idempotency\_key\_reused"} (resolving Defect 18 / PR \#87).
     \end{itemize}
   \item \textbf{Race Condition Serialization:} Even when multiple concurrent requests with the same key hit the server simultaneously, the rider's record is locked using \texttt{FOR UPDATE}, and the PostgreSQL primary key constraint on \file{(rider_id, idempotency_key)} acts as an unbypassable barrier. Exactly one request creates the record (HTTP 201); the other is rejected or replayed.
