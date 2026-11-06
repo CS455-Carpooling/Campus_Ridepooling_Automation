@@ -42,9 +42,12 @@ Gemini is used in three places, and in each one a person or a validated rule kee
   \item \textbf{Complaint analysis} gives an administrator advisory input. The administrator makes any
     enforcement decision.
 \end{itemize}
-If Gemini is unavailable or returns unusable output, the application falls back to deterministic
-behaviour. The \repolink{Deliverables/D3/Failure_and_Recovery_Report/main.pdf}{failure and recovery report}
-covers this case.
+Each feature has its own fallback if Gemini is unavailable or returns unusable output. Ride recommendations
+rank the eligible rides by departure timing and fare. The chatbot interprets the request with deterministic
+rules where it can, and links the rider to manual search when it cannot answer. Complaint analysis records
+that no AI result is available, and the administrator reviews the complaint manually. The
+\repolink{Deliverables/D3/Failure_and_Recovery_Report/main.pdf}{failure and recovery report} covers the
+recommendation and chatbot cases.
 
 \subsection{Technology}
 The application is written in TypeScript with Next.js 16. A custom Node.js server hosts Socket.IO for live
