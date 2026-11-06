@@ -106,3 +106,7 @@ The workspace's `test` script is `vitest run --coverage`; do not append another 
 - Coverage artifact: [Download unit coverage HTML and JSON output](https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/actions/runs/41710059405/artifacts/13266899431)
 
 The CI coverage artifact contains the HTML report and machine-readable `coverage-summary.json` used for the aggregate and area calculations above. GitHub keeps the artifact for 14 days only, so the same files are also included in this deliverable as [`unit-coverage-report.zip`](./unit-coverage-report.zip) (open `coverage/index.html`).
+
+## 7. Final run on master
+
+Tests were added after the tested commit above, so the suite was run again on the final code on 6 November 2026. All 202 test files and all 1,544 tests passed, with 87.67% statements, 80.91% branches, 88.79% functions and 89.98% lines, each above the 80% threshold. The Code Coverage Report gives the breakdown of this run, and the traceability matrix uses it.

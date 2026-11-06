@@ -324,6 +324,7 @@
 "FR-RO-14.2","apps/web/src/lib/join-requests.test.ts","actOnJoinRequest rejects a waiting request and notifies its rider","passed","reading the test"
 "FR-RO-14.2","apps/web/test/integration/rides/manage-ride.int.test.ts","cancelling a ride (FR-RO-04.4) cancels every request and seat claim and tells each rider they owe nothing (FR-RD-06.7, FR-RD-06.11)","passed","reading the test"
 "FR-RO-14.2","apps/web/test/integration/rides/manage-ride.int.test.ts","editing a ride (FR-RO-04.1) asks the owner to confirm a change that affects accepted riders, then tells them (FR-RO-04.2, FR-RO-04.3)","passed","reading the test"
+"NFR-RD-05","apps/web/test/integration/concurrency/last-seat.int.test.ts","NFR-RD-05: repeated last-seat concurrency experiment [describe() block of 2 tests]","passed","ID in describe() title"
 "NFR-RD-08","apps/web/test/integration/rides/join-requests.int.test.ts","requesting a seat (FR-RD-06) records a pending request with its snapshot, history and idempotency key, and tells the owner (FR-RD-06.1, FR-RO-05.5)","passed","reading the test"
 "NFR-RD-08","apps/web/test/integration/rides/join-requests.int.test.ts","the rider changing their mind (FR-RD-06.10, FR-RD-07) withdraws a waiting request once, and the owner is told (FR-RD-07.1)","passed","reading the test"
 "NFR-RD-08","apps/web/test/integration/rides/offer-and-search.int.test.ts","searching for a ride (FR-RD-03) shows an open ride with its seats and the share a new rider would pay (FR-RD-03.1, FR-RD-03.3, FR-RD-08.1)","passed","reading the test"
