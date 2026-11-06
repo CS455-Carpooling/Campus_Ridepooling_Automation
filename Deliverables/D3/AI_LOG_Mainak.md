@@ -300,5 +300,5 @@ the comparison with the commit record and were not adjusted after it.
 
 ### Student evaluation and decision
 **Decision:** Mainak asked for the remaining work to be finished from what could be checked, and for AI logs that did not
-exist to be left out rather than reconstructed. He decided the final pull request would merge once CI passed, so that
+exist to be left out rather than reconstructed. He decided the final pull request would be merged directly, so that
 Khushi could compile the submission in time.
