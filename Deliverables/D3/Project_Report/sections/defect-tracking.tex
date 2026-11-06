@@ -2,11 +2,22 @@
 \section{Defect tracking}\label{sec:defects}
 
 Defects found during development were tracked in Jira using the \emph{Bug}
-issue type. The bug records capture the observed failure, affected behaviour,
-related project work item and implementation evidence. They are linked to
-the broader bug-evidence tracking story \jira{CS455-121}.
+issue type. \JiraDefectBugs{} Bug issues carry the \texttt{d3} label: 16 from
+the Deliverable 3 security, reliability and database audit, under the
+bug-evidence tracking story \jira{CS455-121}, and 10 product defects from the
+review of Deliverable 1, under \jira{CS455-86}. The bug records capture the
+observed failure, affected behaviour, related project work item and
+implementation evidence. The other three Bug issues (\jira{CS455-4},
+\jira{CS455-5} and \jira{CS455-6}) are Deliverable 1 documents that were filed
+as Bugs.
 
-The two D3 defects recorded for this report are:
+All of these issues are marked Done. The \JiraDefectBugs{} defect records were
+created after the corresponding fixes had already been implemented. They are
+retrospective defect-history entries, not evidence that the fixes were first
+made in response to newly opened Jira tickets.
+
+Two of the defects show how a fix and its evidence can sit in separate pull
+requests:
 \begin{itemize}
   \item \jira{CS455-137}: realtime authentication could accept a session
   after the seven-day inactivity period, even though HTTP authentication
@@ -15,15 +26,8 @@ The two D3 defects recorded for this report are:
   exception during WebSocket authentication.
 \end{itemize}
 
-Both Jira Bug issues are marked Done. These records were created after the
-corresponding fixes had already been implemented. They are retrospective
-defect-history entries, not evidence that the fixes were first made in
-response to newly opened Jira tickets. The Jira records identify \pr{91} as
-the code-fix pull request for both defects. Pull request \pr{94} added the
-regression tests; it should not be described as the pull request that
-implemented the fixes.
-
-The regression coverage is in
+For both defects, \pr{91} contains the code fix and \pr{94} added the
+regression tests. The regression coverage is in
 \href{\repourl/blob/master/apps/web/test/server-security.test.ts}
 {\nolinkurl{apps/web/test/server-security.test.ts}}. It checks rejection of
 sessions outside the inactivity window and malformed-cookie handling during
@@ -34,6 +38,4 @@ the repository's
 \href{\repourl/tree/master/Deliverables/D3/Bug_Report}
 {D3 Bug Report}. This section summarises Jira tracking and the relationship
 between the issues and pull requests rather than duplicating the full bug
-report. The Jira descriptions, bug report and pull-request references should
-remain aligned: \pr{91} contains the fixes, and \pr{94} adds the
-corresponding regression tests.
+report.
