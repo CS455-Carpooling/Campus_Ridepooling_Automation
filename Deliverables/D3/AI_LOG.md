@@ -324,3 +324,32 @@ to explicitly cover the security/threat-model and failure/recovery reports,
 and updated the table and CSV consistently. These changes were accepted
 because they directly resolve the review findings while preserving the
 project scope and the requested treatment of late D0/D1 file additions.
+
+### Prompt 16
+
+> Clearly state what the column headers mean in the chart and update the D3 AI
+> log for the three changed timeline files.
+
+### Response 16
+
+> Clarified the chart's date-column meaning in the Markdown source and rendered
+> PDF, rebuilt the PDF, and recorded the change in this AI log. The three
+> timeline files changed were `project-timeline-gantt.md`,
+> `project-timeline-gantt.tex`, and `project-timeline-gantt.pdf`.
+
+### Evaluation and errors found
+
+- The rendered chart displayed weekly date headers without explicitly stating
+  that each header begins a seven-day calendar column.
+- The source documentation did not explain that a label such as `05 Sep`
+  represents the week beginning on 5 September 2026 rather than only that date.
+
+### Changes made and acceptance rationale
+
+Added a column-header explanation to the Markdown timeline and to the LaTeX
+source used to generate the PDF. The explanation identifies weekly column
+labels, workstream bars, phase groups, and milestone diamonds. Rebuilt the
+PDF and verified that the explanation appears in the rendered output; `git
+diff --check` also passed. The update was accepted because it removes the
+remaining ambiguity without changing any schedule dates, workstreams, or
+milestones.
