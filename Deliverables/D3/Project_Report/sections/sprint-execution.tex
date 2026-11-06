@@ -1,16 +1,67 @@
-% CS455-175, Khushi. The sprint numbers are ready to include, and they refresh with the final snapshot.
-% "Done by close" counts issues resolved by the day the sprint closed; for the active sprint, Done so far.
-%
-% \begin{table}[h]
-% \centering\small
-% \caption{Sprints in Jira, from the snapshot of \JiraSnapshotDate.}
-% \begin{tabular}{@{}lccrrr@{}}
-% \toprule
-% Sprint & Started & Planned end & Closed & Issues & Done by close \\
-% \midrule
-% \tabinput{generated/sprints.tex}
-% \bottomrule
-% \end{tabular}
-% \end{table}
+% CS455-175, Khushi Ranawat.
 \section{Sprint execution}
-\textit{To be written (CS455-175).}
+
+The team used Jira sprints to group a portion of the project work into
+time-bounded iterations. The four sprints represented in Jira are
+\emph{Deliverable 0}, \emph{Sprint 3 (D2)}, \emph{Sprint 3 (D2) 2} and
+\emph{Sprint 3 (D3)}. Their recorded start and planned end dates, issue
+counts and completion-by-close counts are summarised in
+Table\ref{tab:jira-sprints}. Done by close means that an issue's Jira
+resolution date is on or before the sprint's close date; it is not simply the
+issue's current status. For the active sprint, the generated table reports
+work completed so far.
+
+\begin{table}[ht]
+\centering\small
+\caption{Sprints recorded in Jira.}
+\label{tab:jira-sprints}
+\begin{tabular}{@{}lccrrr@{}}
+\toprule
+Sprint & Started & Planned end & Closed & Issues & Done by close \\
+\midrule
+\tabinput{generated/sprints.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Deliverable 0.}
+The recorded goal was to prepare the one-page project proposal. It covered
+the project description and user roles, the core transactional workflow,
+the shared resource and concurrency challenge, the intended use of AI agents
+and their tools, the proposed technology stack, initial risks and technical
+uncertainties, and the initial Jira/GitHub development strategy.
+
+\paragraph{Sprint 3 (D2).}
+This sprint was associated with Deliverable 2 implementation work. The Jira
+sprint record does not contain a written sprint goal, so its scope is best
+understood from the issues assigned to it and the work recorded against
+those issues. The table gives the issue and completion counts from Jira; it
+is not a complete measure of all D2 work, since some work was not assigned
+to a sprint.
+
+\paragraph{Sprint 3 (D2) 2.}
+The second D2 sprint record also has no written goal in its Jira goal field.
+It contains further D2 implementation and refinement work. Assigned issues
+and their recorded resolution dates provide the basis for the completion
+figures. This second sprint record is retained separately, as it appears
+in Jira.
+
+\paragraph{Sprint 3 (D3).}
+The recorded goal is \emph{Deliverable 3}. Its issues cover final deliverable
+work, including the report and supporting project evidence. At the time
+represented by the Jira data, this sprint was active; its completion figure
+is therefore a progress figure rather than a final sprint-close result.
+
+\paragraph{Planning and review limitations.}
+Sprint planning was not applied consistently across the entire project.
+Some issues were left without a sprint assignment, so work performed outside
+the four recorded sprints is not reflected in the sprint table. Story-point
+estimates were also incomplete: only some issues had estimates, and the team
+cannot use the Jira records to make a reliable effort-based velocity
+comparison. Issue counts are not proxies for equal effort.
+
+The Jira sprint records do not provide a consistent written record of sprint
+reviews or retrospectives for every iteration. Accordingly, this section
+does not claim that a review or retrospective took place where there is no
+recorded evidence. The table and descriptions are limited to sprint metadata
+and issue history available in Jira.
