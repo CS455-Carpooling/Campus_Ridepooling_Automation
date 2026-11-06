@@ -233,3 +233,134 @@ credentials or session tokens were retained in the repository.
 ### Response 14
 
 > Analyzed the application's security architecture across trust boundaries, verifying Role-Based Access Control (M64, Rider vs Admin with `requireAdminApi` and database triggers), input validation with UUID regex and 100% parameterized SQL (M65), cryptographic secret and cookie lifecycle management (M66), and a STRIDE threat model covering 6 threats (BOLA/IDOR, replay forgery, prompt injection, admin privilege escalation, secret leakage, and realtime eavesdropping) with concrete automated test scenarios (M68). Documented the post-mortems of seven remediated security defects (Defects 1, 2 & 13, 3, 5 & 14, 10, 11 & 12, 18). Authored the LaTeX report (`Deliverables/D3/Security_and_Threat_Model_Report/main.tex`) adhering to `common/d3report.sty` and the Markdown report (`Deliverables/D3/security-and-threat-model-report.md`), and updated `Deliverables/D3/README.md`. Committed in atomic steps on branch `prithviraj/test-report`.
+
+## 2026-11-05 — Render deployment and Gemini configuration
+
+### User request
+
+Deploy the application to Render.com, prepare D3 deployment documentation, verify
+the environment configuration and Gemini model selection, standardize runtime
+Gemini usage, and update the D3 records and repository README.
+
+### Repository inspection and AI assistance
+
+The assistant reviewed the Docker Compose stack, npm workspace Dockerfile, Render
+deployment settings supplied by the user, environment templates, all runtime Gemini
+entry points, the payment-reminder route, and the D3 documentation structure.
+The assistant produced and revised
+`Deliverables/D3/Deployment_Documentation.md`, updated the README and traceability
+references, and recorded deployment limitations without recording credentials.
+
+### Findings and decisions
+
+- The deployment uses Render.com Free tier with a Docker Web Service and Render
+  Managed PostgreSQL database `crp`.
+- The original D1 planning baseline named GCP. The platform deviation was recorded
+  in the D3 deployment document instead of rewriting the submitted D1 baseline.
+- Runtime Gemini features previously had different model defaults. A shared
+  `apps/web/src/lib/ai/gemini-config.ts` now selects
+  `GEMINI_MODEL=gemini-3.1-flash-lite` for recommendations, chatbot interpretation,
+  complaint analysis, and the smoke test.
+- `GEMINI_API_KEY` remains server-side only. Payment reminders require a separate
+  bearer secret.
+- The Render environment uses mail, Gemini, and payment-reminder variables.
+
+### Validation and review response
+
+- Focused AI regression suite: **3 test files passed, 11 tests passed**.
+- Full application Vitest suite: **202 test files passed, 1,544 tests passed**.
+- `git diff --check`: passed.
+- A GitHub PR review verified the deployed health endpoint, public pages,
+  authentication refusal, origin checks, WebSocket refusal without a session,
+  security headers, and CI status. Its genuine documentation findings were
+  addressed by separating this entry from the prior performance log, documenting
+  Render Free-tier limits and dates, recording the platform deviation, adding the
+  deployment report to the D3 index, and preserving the submitted D1 requirement
+  baseline.
+
+Fallback behavior remains intentional: it is used only for missing configuration,
+provider failure, timeout, invalid provider content, or failed output validation.
+No secret values were copied into the AI log or deployment documentation.
+
+## Additional prompt and response log
+
+### Prompt 15
+
+> Review the timeline/Gantt chart on CS455-162-Timeline. Fix Mermaid bars that
+> do not render, replace opening-date claims with opened-to-merged ranges,
+> expand the additional test row to name the security/threat-model and
+> failure/recovery reports, move the timeline into Deliverables/D3, add a
+> rendered PNG or PDF, and update the D3 AI log with the timeline work.
+
+### Response 15
+
+> Reviewed the timeline and accepted the substantive findings. The chart used
+> same-day start/end values without `inclusiveEndDates`, which made same-day
+> bars invisible and shortened multi-day bars. Several rows also described
+> opening dates as completion dates, D1 was represented only as a deadline
+> milestone, and the security and failure/recovery reports were hidden under
+> “Additional test report.”
+
+### Evaluation and errors found
+
+- The Mermaid syntax required `inclusiveEndDates` immediately after
+  `dateFormat` so same-day tasks render with visible width.
+- The timeline dates needed to represent opened-to-merged ranges rather than
+  only the first recorded activity date.
+- D1 had a real 23–26 September work window and should be a bar, not only a
+  deadline marker.
+- The TEST-04 label omitted two required D3 reports.
+- Keeping the timeline under `docs/project-management/` did not make it part
+  of the D3 deliverable, and Mermaid source alone was not a suitable upload
+  artifact.
+
+### Changes made and acceptance rationale
+
+Moved the Markdown and CSV timeline files into `Deliverables/D3/`, added a
+standalone PDF export, and linked both files from the D3 README. Added the
+Mermaid inclusive-end setting, changed D1 to 23–26 September, corrected the
+implementation and testing ranges through their merge dates, renamed TEST-04
+to explicitly cover the security/threat-model and failure/recovery reports,
+and updated the table and CSV consistently. These changes were accepted
+because they directly resolve the review findings while preserving the
+project scope and the requested treatment of late D0/D1 file additions.
+
+### Prompt 16
+
+> Clearly state what the column headers mean in the chart and update the D3 AI
+> log for the three changed timeline files.
+
+### Response 16
+
+> Clarified the chart's date-column meaning in the Markdown source and rendered
+> PDF, rebuilt the PDF, and recorded the change in this AI log. The three
+> timeline files changed were `project-timeline-gantt.md`,
+> `project-timeline-gantt.tex`, and `project-timeline-gantt.pdf`.
+
+### Evaluation and errors found
+
+- The rendered chart displayed weekly date headers without explicitly stating
+  that each header begins a seven-day calendar column.
+- The source documentation did not explain that a label such as `05 Sep`
+  represents the week beginning on 5 September 2026 rather than only that date.
+
+### Changes made and acceptance rationale
+
+Added a column-header explanation to the Markdown timeline and to the LaTeX
+source used to generate the PDF. The explanation identifies weekly column
+labels, workstream bars, phase groups, and milestone diamonds. Rebuilt the
+PDF and verified that the explanation appears in the rendered output; `git
+diff --check` also passed. The update was accepted because it removes the
+remaining ambiguity without changing any schedule dates, workstreams, or
+milestones.
+
+### Related changes in the same pull request
+
+Pull request #103 also replaces the earlier table-style PDF with a `pgfgantt`
+Gantt chart generated from `project-timeline-gantt.tex`. The chart uses the
+same dates as the Markdown timeline and the CSV. Review then corrected the
+weekly gridlines, which did not line up with the week columns, and the legend,
+whose swatches rendered as black squares and showed green for teal bars. The
+LaTeX build files `project-timeline-gantt.fls` and
+`project-timeline-gantt.fdb_latexmk` were removed from the repository and added
+to `Deliverables/D3/.gitignore`.

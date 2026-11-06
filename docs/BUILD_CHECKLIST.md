@@ -157,9 +157,9 @@ keep riders informed — **without ever taking a consequential action unilateral
 
 ### 4.3 Concurrency — the contended-resource guarantee
 
-- [ ] **C9** [MANDATE+PRODUCT] Seat allocation under `SELECT … FOR UPDATE` with **revalidation
-      inside the transaction**
-- [ ] **C10** [MANDATE+PRODUCT] Capacity enforced by a **database check constraint**
+- [ ] **C9** [MANDATE+PRODUCT] Seat allocation under a ride-row lock (`FOR NO KEY UPDATE`
+      in the current implementation) with **revalidation inside the transaction**
+- [ ] **C10** [MANDATE+PRODUCT] Active seat count never exceeds ride capacity; enforced by a **database trigger serialized on the parent ride row** (the invariant spans rows and cannot be expressed as a PostgreSQL `CHECK` constraint)
 - [ ] **C10b** [MANDATE+PRODUCT] **No vehicle double-booking**, enforced by a PostgreSQL
       `EXCLUDE USING gist` constraint over `(vehicle_id, assigned_window)` — a unit cannot be
       allocated twice even under concurrent writers
@@ -299,8 +299,8 @@ keep riders informed — **without ever taking a consequential action unilateral
 - [ ] **M79** **Gantt chart / timeline**
 - [ ] **M80** **Deployed on AWS or GCP.** Plan: **GCP — Cloud Run (backend, scale-to-zero) + Cloud SQL
       Postgres w/ PostGIS + Cloud Storage/Firebase Hosting (frontend) + Cloud Scheduler (matcher
-      trigger) + Cloud Logging (observability)**. AWS equivalent: App Runner/ECS + RDS + S3/CloudFront
-      + EventBridge Scheduler + CloudWatch
+      trigger) + Cloud Logging (observability)**. The actual deployment decision and deviation are
+      recorded in `Deliverables/D3/Deployment_Documentation.md`.
 - [ ] **M81** **Free-tier limits not exhausted** — billing alerts configured
 - [ ] **M82** Estimated vs actual cost/resource comparison
 
@@ -336,7 +336,7 @@ keep riders informed — **without ever taking a consequential action unilateral
 | **D0 → D1** | M0.1–M0.10 ticked; **proposal approved by instructor** |
 | **D1 → D2** | M23–M32, M38–M50 ticked; requirements + architecture docs complete; use-case, component, sequence diagrams delivered; initial traceability matrix; Jira backlog + first sprint planned; AI Engineering Log for requirements & architecture |
 | **D2 → D3** | M1–M5, C1–C23, M10–M16, M33–M37, M51–M53 ticked; agent governance implemented and audited; core transactional workflow demonstrable; Jira↔GitHub traceability live; peer reviews evidenced; README + API docs |
-| **D3 → Demo** | M17, M54–M82 ticked; ≥80% coverage; ≥5 defects fixed with regression tests; threat model + security tests; load test with before/after optimization; ≥3 failure scenarios; deployed on GCP/AWS; cost doc; Gantt; final traceability matrix |
+| **D3 → Demo** | M17, M54–M82 ticked; ≥80% coverage; ≥5 defects fixed with regression tests; threat model + security tests; load test with before/after optimization; ≥3 failure scenarios; deployed on a documented cloud platform; cost doc; Gantt; final traceability matrix |
 | **Demo → done** | M85–M90; retrospective submitted; all deliverables mirrored in `Deliverables/` |
 
 ---

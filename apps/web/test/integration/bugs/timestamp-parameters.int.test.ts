@@ -58,7 +58,7 @@ describe('timestamp parameters compared with an interval', () => {
     expect(requested.body.request).toMatchObject({ kind: 'created', state: 'pending' });
   });
 
-  it('still refuses a rider whose share has been due for more than seven days', async () => {
+  it('still refuses a rider whose share has been due for more than seven days (FR-RD-11.5)', async () => {
     const rider = await signedInStudent();
     await unpaidShare(rider.id, 8);
     const ride = await offerRide(await signedInStudent());
@@ -68,7 +68,7 @@ describe('timestamp parameters compared with an interval', () => {
     expect(refused.body.code).toBe('payment_overdue');
   });
 
-  it('allows a share that has been due for less than seven days', async () => {
+  it('allows a share that has been due for less than seven days (FR-RD-11.5)', async () => {
     const rider = await signedInStudent();
     await unpaidShare(rider.id, 6);
     const ride = await offerRide(await signedInStudent());
@@ -76,7 +76,7 @@ describe('timestamp parameters compared with an interval', () => {
     expect((await ask(rider, ride.id)).status).toBe(201);
   });
 
-  it('sends each payment reminder once, 24 hours and then 72 hours after completion', async () => {
+  it('sends each payment reminder once, 24 hours and then 72 hours after completion (FR-RD-11.4)', async () => {
     const rider = await signedInStudent();
     const rideId = await unpaidShare(rider.id, 2);
 

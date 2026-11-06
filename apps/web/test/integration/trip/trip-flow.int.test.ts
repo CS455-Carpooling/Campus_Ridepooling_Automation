@@ -31,7 +31,7 @@ async function finalShares(rideId: string) {
 
 // Core workflow phases 6 to 8 (CS455-112): pickup, the trip, completion (FR-RO-09, FR-RD-10).
 describe('starting pickup', () => {
-  it('waits for the lock, and only the owner can start it', async () => {
+  it('waits for the lock, and only the owner can start it (FR-RO-09.1, NFR-RO-SEC-01)', async () => {
     const { owner, ride, riders } = await pooledRide({ riders: 1 });
 
     const early = await tripStep(owner, ride.id, 'pickup_in_progress');
@@ -57,7 +57,7 @@ describe('starting pickup', () => {
     expect(notices).toHaveLength(1);
   });
 
-  it('cannot skip pickup, and cannot start once the departure window is over', async () => {
+  it('cannot skip pickup, and cannot start once the departure window is over (FR-RO-09.1)', async () => {
     const { owner, ride } = await pooledRide({ riders: 1, startsIn: 30 });
     const skip = await tripStep(owner, ride.id, 'in_transit');
     expect([skip.status, skip.body.code]).toEqual([409, 'invalid_transition']);
@@ -77,7 +77,7 @@ describe('starting pickup', () => {
 });
 
 describe('during pickup', () => {
-  it('lets a rider check in and the owner mark them arrived or undo it', async () => {
+  it('lets a rider check in and the owner mark them arrived or undo it (FR-RD-10.4, FR-RO-09.3)', async () => {
     const { owner, ride, riders } = await pooledRide({ riders: 1, startsIn: 30 });
     const outsider = await signedInStudent();
 
@@ -102,7 +102,7 @@ describe('during pickup', () => {
     expect([unknownSeat.status, unknownSeat.body.code]).toEqual([404, 'seat_not_found']);
   });
 
-  it('refuses a no-show until five minutes after the rider’s pickup time (P-19)', async () => {
+  it('refuses a no-show until five minutes after the rider’s pickup time (FR-RO-10.1, P-19)', async () => {
     const { owner, ride } = await pooledRide({ riders: 1, startsIn: 30 });
     expect((await tripStep(owner, ride.id, 'pickup_in_progress')).status).toBe(200);
     const [, seat] = await seatsOf(ride.id);
@@ -113,7 +113,7 @@ describe('during pickup', () => {
     expect((await seatsOf(ride.id))[1].no_show_at).toBeNull();
   });
 
-  it('records a no-show after the grace period: off the ride, owes nothing, told how to dispute', async () => {
+  it('records a no-show after the grace period: off the ride, owes nothing, told how to dispute (FR-RO-10.2, FR-RO-10.3, FR-RD-10.3)', async () => {
     const { owner, ride, riders, requestIds } = await pooledRide({ riders: 2, startsIn: -20 });
     expect((await tripStep(owner, ride.id, 'pickup_in_progress')).status).toBe(200);
     const [, missing] = await seatsOf(ride.id);
@@ -135,8 +135,8 @@ describe('during pickup', () => {
   });
 });
 
-describe('the trip and completion (FR-RO-09.4)', () => {
-  it('stores the final pool and shares: the no-show’s share is spread over the others', async () => {
+describe('the trip and completion', () => {
+  it('stores the final pool and shares: the no-show’s share is spread over the others (FR-RO-09.4)', async () => {
     const { owner, ride, riders } = await pooledRide({ riders: 2, fare: 900, startsIn: -20 });
     expect((await tripStep(owner, ride.id, 'pickup_in_progress')).status).toBe(200);
     const [, missing] = await seatsOf(ride.id);
@@ -189,7 +189,7 @@ describe('the trip and completion (FR-RO-09.4)', () => {
     ]);
   });
 
-  it('answers the live trip stamp to people on the ride only', async () => {
+  it('answers the live trip stamp to people on the ride only (FR-RD-10.1)', async () => {
     const { owner, ride, riders } = await pooledRide({ riders: 1, startsIn: 30 });
     const outsider = await signedInStudent();
     const before = await callRoute(tripStamp, { params: { id: ride.id }, as: riders[0] });

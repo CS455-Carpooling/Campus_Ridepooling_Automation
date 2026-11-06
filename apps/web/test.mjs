@@ -5,10 +5,11 @@ if (!key) throw new Error('GEMINI_API_KEY is missing');
 
 // Initialize the SDK client
 const ai = new GoogleGenAI({ apiKey: key });
+const model = process.env.GEMINI_MODEL?.trim() || 'gemini-3.1-flash-lite';
 
 try {
   const response = await ai.models.generateContent({
-    model: 'gemini-3.8-flash',
+    model,
     contents: 'Reply with exactly GEMINI_OK',
   });
 

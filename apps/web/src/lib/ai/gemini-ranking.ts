@@ -1,8 +1,8 @@
 import 'server-only';
 import type { RecommendationRequest } from './types';
+import { getGeminiModel } from './gemini-config';
 
-const DEFAULT_MODEL = 'gemini-3.5-flash-lite';
-export const GEMINI_MODEL_VERSION = process.env.GEMINI_MODEL?.trim() || DEFAULT_MODEL;
+export const GEMINI_MODEL_VERSION = getGeminiModel();
 export const GEMINI_PROMPT_VERSION = 'ride-ranking-v1';
 export const REQUEST_TIMEOUT_MS = 8_000;
 export const RECOMMENDATION_DEADLINE_MS = 9_000;
