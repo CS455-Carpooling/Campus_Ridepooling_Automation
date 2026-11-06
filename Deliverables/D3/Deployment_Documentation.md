@@ -283,6 +283,8 @@ The deployment should be checked by:
 - Checking Render logs for successful database migration and server startup.
 - Testing registration, email verification, login, ride creation, ride joining,
   chat, and notifications as appropriate for the deployed configuration.
+- A sample operations-admin account has been created for the demonstration
+  environment. Credentials are intentionally not recorded in this document.
 
 ## 7. Requirement change and deployment limitations
 

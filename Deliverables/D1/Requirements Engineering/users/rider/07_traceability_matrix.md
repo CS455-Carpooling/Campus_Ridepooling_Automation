@@ -169,7 +169,7 @@ Initial traceability for the Rider section: every requirement mapped to its use 
 | NFR-RD-15 | Should |  | All | — | pending | Inspection | — | — | — |
 | NFR-RD-16 | Should |  | All | — | pending | Test | — | — | — |
 | NFR-RD-17 | Must |  | All | — | pending | Analysis | — | — | — |
-| NFR-RD-18 | Must |  | All | — | verified | Inspection | Render deployment documentation and `/api/health` verification | — | — |
+| NFR-RD-18 | Must |  | All | — | pending | Inspection | — | — | — |
 | NFR-RD-19 | Must |  | UC-RD-02, UC-RD-16 | — | pending | Inspection | — | — | — |
 | NFR-RD-20 | Must |  | UC-RD-04, UC-RD-05 | — | pending | Inspection | — | — | — |
 | NFR-RD-21 | Must |  | UC-RD-15 | — | pending | Inspection | — | — | — |

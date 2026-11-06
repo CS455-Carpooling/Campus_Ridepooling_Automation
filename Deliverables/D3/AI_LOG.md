@@ -281,3 +281,86 @@ references, and recorded deployment limitations without recording credentials.
 Fallback behavior remains intentional: it is used only for missing configuration,
 provider failure, timeout, invalid provider content, or failed output validation.
 No secret values were copied into the AI log or deployment documentation.
+
+## Additional prompt and response log
+
+### Prompt 15
+
+> Review the timeline/Gantt chart on CS455-162-Timeline. Fix Mermaid bars that
+> do not render, replace opening-date claims with opened-to-merged ranges,
+> expand the additional test row to name the security/threat-model and
+> failure/recovery reports, move the timeline into Deliverables/D3, add a
+> rendered PNG or PDF, and update the D3 AI log with the timeline work.
+
+### Response 15
+
+> Reviewed the timeline and accepted the substantive findings. The chart used
+> same-day start/end values without `inclusiveEndDates`, which made same-day
+> bars invisible and shortened multi-day bars. Several rows also described
+> opening dates as completion dates, D1 was represented only as a deadline
+> milestone, and the security and failure/recovery reports were hidden under
+> “Additional test report.”
+
+### Evaluation and errors found
+
+- The Mermaid syntax required `inclusiveEndDates` immediately after
+  `dateFormat` so same-day tasks render with visible width.
+- The timeline dates needed to represent opened-to-merged ranges rather than
+  only the first recorded activity date.
+- D1 had a real 23–26 September work window and should be a bar, not only a
+  deadline marker.
+- The TEST-04 label omitted two required D3 reports.
+- Keeping the timeline under `docs/project-management/` did not make it part
+  of the D3 deliverable, and Mermaid source alone was not a suitable upload
+  artifact.
+
+### Changes made and acceptance rationale
+
+Moved the Markdown and CSV timeline files into `Deliverables/D3/`, added a
+standalone PDF export, and linked both files from the D3 README. Added the
+Mermaid inclusive-end setting, changed D1 to 23–26 September, corrected the
+implementation and testing ranges through their merge dates, renamed TEST-04
+to explicitly cover the security/threat-model and failure/recovery reports,
+and updated the table and CSV consistently. These changes were accepted
+because they directly resolve the review findings while preserving the
+project scope and the requested treatment of late D0/D1 file additions.
+
+### Prompt 16
+
+> Clearly state what the column headers mean in the chart and update the D3 AI
+> log for the three changed timeline files.
+
+### Response 16
+
+> Clarified the chart's date-column meaning in the Markdown source and rendered
+> PDF, rebuilt the PDF, and recorded the change in this AI log. The three
+> timeline files changed were `project-timeline-gantt.md`,
+> `project-timeline-gantt.tex`, and `project-timeline-gantt.pdf`.
+
+### Evaluation and errors found
+
+- The rendered chart displayed weekly date headers without explicitly stating
+  that each header begins a seven-day calendar column.
+- The source documentation did not explain that a label such as `05 Sep`
+  represents the week beginning on 5 September 2026 rather than only that date.
+
+### Changes made and acceptance rationale
+
+Added a column-header explanation to the Markdown timeline and to the LaTeX
+source used to generate the PDF. The explanation identifies weekly column
+labels, workstream bars, phase groups, and milestone diamonds. Rebuilt the
+PDF and verified that the explanation appears in the rendered output; `git
+diff --check` also passed. The update was accepted because it removes the
+remaining ambiguity without changing any schedule dates, workstreams, or
+milestones.
+
+### Related changes in the same pull request
+
+Pull request #103 also replaces the earlier table-style PDF with a `pgfgantt`
+Gantt chart generated from `project-timeline-gantt.tex`. The chart uses the
+same dates as the Markdown timeline and the CSV. Review then corrected the
+weekly gridlines, which did not line up with the week columns, and the legend,
+whose swatches rendered as black squares and showed green for teal bars. The
+LaTeX build files `project-timeline-gantt.fls` and
+`project-timeline-gantt.fdb_latexmk` were removed from the repository and added
+to `Deliverables/D3/.gitignore`.
