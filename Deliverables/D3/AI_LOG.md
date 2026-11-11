@@ -114,10 +114,6 @@ credentials or session tokens were retained in the repository.
   `apps/web/src/lib/auth.ts`, `apps/web/src/lib/payment-settlement.ts`, and
   `apps/web/db/schema.sql`.
 
-### Student evaluation
-
-*To be completed by the author.*
-
 ## Prompt and response log
 
 ### Prompt 1
@@ -187,10 +183,6 @@ credentials or session tokens were retained in the repository.
 ### Prompt 9
 
 > In the AI log of D3, add the prompts I gave you and their responses, nothing else.
-
-### Decision
-
-*To be completed by the author.*
 
 ## Additional prompt and response log
 
@@ -353,6 +345,17 @@ PDF and verified that the explanation appears in the rendered output; `git
 diff --check` also passed. The update was accepted because it removes the
 remaining ambiguity without changing any schedule dates, workstreams, or
 milestones.
+
+### Related changes in the same pull request
+
+Pull request #103 also replaces the earlier table-style PDF with a `pgfgantt`
+Gantt chart generated from `project-timeline-gantt.tex`. The chart uses the
+same dates as the Markdown timeline and the CSV. Review then corrected the
+weekly gridlines, which did not line up with the week columns, and the legend,
+whose swatches rendered as black squares and showed green for teal bars. The
+LaTeX build files `project-timeline-gantt.fls` and
+`project-timeline-gantt.fdb_latexmk` were removed from the repository and added
+to `Deliverables/D3/.gitignore`.
 
 ## 2026-11-11 — Suspension enforcement and notification navigation
 

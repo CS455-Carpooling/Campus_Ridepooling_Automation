@@ -1,0 +1,48 @@
+% CS455-174, Khushi Ranawat.
+\section{Jira setup and dashboard}
+
+The team used Jira to organise the Campus Ride-Pooling and Split-Fare System
+under the project key \texttt{CS455} (project name: \emph{CS 455 Car-pooling
+Project}). The project is a Jira software project. Work was organised as a
+hierarchy of larger deliverables and user stories, with smaller implementation
+tasks tracked separately. The issue types used in the project include Epics,
+Stories, Tasks, Bugs and Subtasks. Subtasks break larger pieces of work into
+smaller, assignable units; defects are recorded as Bug issues.
+
+The board provides the team's shared view of the backlog and sprint work.
+Issues move through the working statuses \emph{To Do}, \emph{In Progress},
+\emph{In Review} and \emph{Done}. Issues can be assigned to a team member,
+prioritised and associated with a sprint. Sprint records also hold the sprint
+goal and dates where these were configured.
+
+The four named iterations represented in Jira are \emph{Deliverable 0},
+\emph{Sprint 3 (D2)}, \emph{Sprint 3 (D2) 2} and \emph{Sprint 3 (D3)}.
+Not all project work was consistently assigned to a sprint.
+
+Jira was used alongside GitHub. Issues can be associated with implementation
+evidence in the repository, including branches, commits and pull requests.
+This provides a path from a tracked task to the code change and its review.
+The defect records in Section~\ref{sec:defects}, for example, link back to the
+bug-evidence tracking story and identify the pull requests responsible for
+the fix and its tests.
+
+The project dashboard provides a consolidated view of progress from Jira
+issues and the board. It supports a summary-level review of work distribution
+and backlog state, while the board and individual issues provide the
+assignment, sprint and development-link details behind that summary.
+
+\begin{table}[ht]
+\centering\small
+\caption{Jira issues by type and status, from the Jira snapshot of \JiraSnapshotDate{}.}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+Type & Total & Done & In Progress & In Review & To Do \\
+\midrule
+\tabinput{generated/jira-types.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+The counts are generated from the Jira data used by the report rather than
+typed into this section. They describe the snapshot date in the table's
+caption and are not live counts after that date.

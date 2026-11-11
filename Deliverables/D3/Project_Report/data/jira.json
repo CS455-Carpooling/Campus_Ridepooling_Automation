@@ -1,0 +1,4241 @@
+{
+ "recordedAt": "2026-11-06T16:12:53.482Z",
+ "issues": [
+  {
+   "key": "CS455-1",
+   "summary": "Write-up one page proposal",
+   "type": "Task",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": null,
+   "reporter": "Khushi Ranawat",
+   "created": "2026-08-26T16:40:09.866+0530",
+   "resolved": "2026-09-25T15:24:23.546+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 2,
+     "name": "Deliverable 0",
+     "state": "closed",
+     "goal": "One-page proposal containing:\n• Project title and a short description of three to five lines.\n• The user roles and what each role can do.\n• The core transactional workflow.\n• The shared/contended resource and the concurrency challenge.\n• Where you intend to place AI agents, what tools they may use, and why.\n• The proposed technology stack.\n• Initial project risks and major technical uncertainties.\n• Initial Jira/GitHub development strategy and the links. Also add the instructor and the TAs to both Jira Github project.",
+     "start": "2026-08-26T11:11:12.803Z",
+     "end": "2026-08-29T18:00:00.000Z",
+     "completed": "2026-10-01T01:50:43.577Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-2",
+   "summary": "User story and requirements Engineering for Deliverable 1",
+   "type": "Task",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-09-23T21:25:46.780+0530",
+   "resolved": "2026-09-25T16:42:48.809+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 2,
+     "name": "Deliverable 0",
+     "state": "closed",
+     "goal": "One-page proposal containing:\n• Project title and a short description of three to five lines.\n• The user roles and what each role can do.\n• The core transactional workflow.\n• The shared/contended resource and the concurrency challenge.\n• Where you intend to place AI agents, what tools they may use, and why.\n• The proposed technology stack.\n• Initial project risks and major technical uncertainties.\n• Initial Jira/GitHub development strategy and the links. Also add the instructor and the TAs to both Jira Github project.",
+     "start": "2026-08-26T11:11:12.803Z",
+     "end": "2026-08-29T18:00:00.000Z",
+     "completed": "2026-10-01T01:50:43.577Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-3",
+   "summary": "Deliverable 1 : Ride Owner - User Story and Requirements Engineering",
+   "type": "Task",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Chaitanya Nitawe",
+   "reporter": "Chaitanya Nitawe",
+   "created": "2026-09-25T15:32:32.850+0530",
+   "resolved": "2026-09-25T16:42:45.455+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 2,
+     "name": "Deliverable 0",
+     "state": "closed",
+     "goal": "One-page proposal containing:\n• Project title and a short description of three to five lines.\n• The user roles and what each role can do.\n• The core transactional workflow.\n• The shared/contended resource and the concurrency challenge.\n• Where you intend to place AI agents, what tools they may use, and why.\n• The proposed technology stack.\n• Initial project risks and major technical uncertainties.\n• Initial Jira/GitHub development strategy and the links. Also add the instructor and the TAs to both Jira Github project.",
+     "start": "2026-08-26T11:11:12.803Z",
+     "end": "2026-08-29T18:00:00.000Z",
+     "completed": "2026-10-01T01:50:43.577Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-4",
+   "summary": "Class and Sequence Diagrams for Deliverable 1",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-09-26T01:03:59.992+0530",
+   "resolved": "2026-09-26T01:17:24.421+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 2,
+     "name": "Deliverable 0",
+     "state": "closed",
+     "goal": "One-page proposal containing:\n• Project title and a short description of three to five lines.\n• The user roles and what each role can do.\n• The core transactional workflow.\n• The shared/contended resource and the concurrency challenge.\n• Where you intend to place AI agents, what tools they may use, and why.\n• The proposed technology stack.\n• Initial project risks and major technical uncertainties.\n• Initial Jira/GitHub development strategy and the links. Also add the instructor and the TAs to both Jira Github project.",
+     "start": "2026-08-26T11:11:12.803Z",
+     "end": "2026-08-29T18:00:00.000Z",
+     "completed": "2026-10-01T01:50:43.577Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-5",
+   "summary": "Architectural Patterns for Deliverable 1",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-09-26T14:49:13.523+0530",
+   "resolved": "2026-09-26T15:05:32.722+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 2,
+     "name": "Deliverable 0",
+     "state": "closed",
+     "goal": "One-page proposal containing:\n• Project title and a short description of three to five lines.\n• The user roles and what each role can do.\n• The core transactional workflow.\n• The shared/contended resource and the concurrency challenge.\n• Where you intend to place AI agents, what tools they may use, and why.\n• The proposed technology stack.\n• Initial project risks and major technical uncertainties.\n• Initial Jira/GitHub development strategy and the links. Also add the instructor and the TAs to both Jira Github project.",
+     "start": "2026-08-26T11:11:12.803Z",
+     "end": "2026-08-29T18:00:00.000Z",
+     "completed": "2026-10-01T01:50:43.577Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-6",
+   "summary": "Design Pattern Mapping for deliverable 1",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": null,
+   "reporter": "Mahir Jain",
+   "created": "2026-09-26T22:51:04.327+0530",
+   "resolved": "2026-09-26T22:56:43.604+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 2,
+     "name": "Deliverable 0",
+     "state": "closed",
+     "goal": "One-page proposal containing:\n• Project title and a short description of three to five lines.\n• The user roles and what each role can do.\n• The core transactional workflow.\n• The shared/contended resource and the concurrency challenge.\n• Where you intend to place AI agents, what tools they may use, and why.\n• The proposed technology stack.\n• Initial project risks and major technical uncertainties.\n• Initial Jira/GitHub development strategy and the links. Also add the instructor and the TAs to both Jira Github project.",
+     "start": "2026-08-26T11:11:12.803Z",
+     "end": "2026-08-29T18:00:00.000Z",
+     "completed": "2026-10-01T01:50:43.577Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-11",
+   "summary": "D2: Implementation, Agentic AI and Sprint Execution",
+   "type": "Epic",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": null,
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-02T22:27:24.454+0530",
+   "resolved": "2026-10-05T00:07:42.527+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": []
+  },
+  {
+   "key": "CS455-12",
+   "summary": "Authentication and web pages",
+   "type": "Task",
+   "status": "Done",
+   "priority": "Highest",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-02T22:30:13.317+0530",
+   "resolved": "2026-10-03T02:29:46.760+0530",
+   "points": 8,
+   "labels": [
+    "authentication",
+    "frontend"
+   ],
+   "parent": "CS455-11",
+   "sprints": [
+    {
+     "id": 35,
+     "name": "Sprint 3 (D2)",
+     "state": "closed",
+     "goal": "Web app scaffolded and sign-in/registration working end to end",
+     "start": "2026-10-02T17:13:50.295Z",
+     "end": "2026-10-08T18:00:00.000Z",
+     "completed": "2026-10-04T12:50:40.399Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-14",
+   "summary": "Scaffold web app (Next.js, TypeScript)",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-02T22:38:49.079+0530",
+   "resolved": "2026-10-02T23:48:48.755+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-12",
+   "sprints": [
+    {
+     "id": 35,
+     "name": "Sprint 3 (D2)",
+     "state": "closed",
+     "goal": "Web app scaffolded and sign-in/registration working end to end",
+     "start": "2026-10-02T17:13:50.295Z",
+     "end": "2026-10-08T18:00:00.000Z",
+     "completed": "2026-10-04T12:50:40.399Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-15",
+   "summary": "Homepage: role-aware home screen and navigation shell",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-02T22:39:10.465+0530",
+   "resolved": "2026-10-03T00:29:26.034+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-12",
+   "sprints": [
+    {
+     "id": 35,
+     "name": "Sprint 3 (D2)",
+     "state": "closed",
+     "goal": "Web app scaffolded and sign-in/registration working end to end",
+     "start": "2026-10-02T17:13:50.295Z",
+     "end": "2026-10-08T18:00:00.000Z",
+     "completed": "2026-10-04T12:50:40.399Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-16",
+   "summary": "Landing page",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-02T22:39:31.723+0530",
+   "resolved": "2026-10-03T01:37:56.249+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-12",
+   "sprints": [
+    {
+     "id": 35,
+     "name": "Sprint 3 (D2)",
+     "state": "closed",
+     "goal": "Web app scaffolded and sign-in/registration working end to end",
+     "start": "2026-10-02T17:13:50.295Z",
+     "end": "2026-10-08T18:00:00.000Z",
+     "completed": "2026-10-04T12:50:40.399Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-17",
+   "summary": "Login page",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Prithviraj Ghosh",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-02T22:39:47.141+0530",
+   "resolved": "2026-10-03T02:29:14.329+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-12",
+   "sprints": [
+    {
+     "id": 35,
+     "name": "Sprint 3 (D2)",
+     "state": "closed",
+     "goal": "Web app scaffolded and sign-in/registration working end to end",
+     "start": "2026-10-02T17:13:50.295Z",
+     "end": "2026-10-08T18:00:00.000Z",
+     "completed": "2026-10-04T12:50:40.399Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-18",
+   "summary": "Registration page ",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Prithviraj Ghosh",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-02T22:40:00.330+0530",
+   "resolved": "2026-10-03T02:29:16.280+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-12",
+   "sprints": [
+    {
+     "id": 35,
+     "name": "Sprint 3 (D2)",
+     "state": "closed",
+     "goal": "Web app scaffolded and sign-in/registration working end to end",
+     "start": "2026-10-02T17:13:50.295Z",
+     "end": "2026-10-08T18:00:00.000Z",
+     "completed": "2026-10-04T12:50:40.399Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-19",
+   "summary": "Authentication backend and integration with frontend with fixes in UI",
+   "type": "Task",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-03T22:29:56.775+0530",
+   "resolved": "2026-10-03T23:05:09.028+0530",
+   "points": null,
+   "labels": [
+    "authentication"
+   ],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 35,
+     "name": "Sprint 3 (D2)",
+     "state": "closed",
+     "goal": "Web app scaffolded and sign-in/registration working end to end",
+     "start": "2026-10-02T17:13:50.295Z",
+     "end": "2026-10-08T18:00:00.000Z",
+     "completed": "2026-10-04T12:50:40.399Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-20",
+   "summary": "Core ride features: create, search, dashboard, profile",
+   "type": "Epic",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Khushi Ranawat",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-03T23:28:38.230+0530",
+   "resolved": "2026-11-05T22:18:18.354+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": []
+  },
+  {
+   "key": "CS455-21",
+   "summary": "\tCreate a ride",
+   "type": "Story",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Khushi Ranawat",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-03T23:29:48.166+0530",
+   "resolved": "2026-10-05T02:15:40.066+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-20",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-22",
+   "summary": "Ride database: rides table, migration, seed the fixed hubs and pickup points",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Khushi Ranawat",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-03T23:32:57.789+0530",
+   "resolved": "2026-10-05T00:05:56.795+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-21",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-23",
+   "summary": "Create-ride API: POST /api/rides with all validation",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Khushi Ranawat",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-03T23:33:25.488+0530",
+   "resolved": "2026-10-05T00:05:58.745+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-21",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-24",
+   "summary": "Create-ride page /rides/new: form, errors, skeleton, success screen",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-03T23:33:55.793+0530",
+   "resolved": "2026-10-04T17:25:17.566+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-21",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-25",
+   "summary": "Fixed source and destination pickers (hubs from SYS-FR-09)",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-03T23:34:17.123+0530",
+   "resolved": "2026-10-04T17:25:20.089+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-21",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-26",
+   "summary": "Fix the invalid time bug and link the create page",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-10-05T00:06:31.925+0530",
+   "resolved": "2026-10-05T02:15:13.385+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-21",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-27",
+   "summary": "View Ride",
+   "type": "Story",
+   "status": "Done",
+   "priority": "High",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-05T21:01:06.004+0530",
+   "resolved": "2026-10-05T23:37:03.642+0530",
+   "points": null,
+   "labels": [
+    "backend",
+    "database",
+    "frontend",
+    "view-rides"
+   ],
+   "parent": "CS455-20",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-28",
+   "summary": "Ride view data and access rule",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-05T21:52:16.476+0530",
+   "resolved": "2026-10-05T23:36:53.748+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-27",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-29",
+   "summary": "Ride details page /rides/[id]",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-05T21:54:52.666+0530",
+   "resolved": "2026-10-05T23:36:55.986+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-27",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-30",
+   "summary": "My rides on the home page",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-05T21:55:14.117+0530",
+   "resolved": "2026-10-05T23:36:59.542+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-27",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-31",
+   "summary": "User Profile Page , Ride History and Routing fixes",
+   "type": "Story",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-06T12:23:42.447+0530",
+   "resolved": "2026-10-07T16:25:36.654+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-20",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-32",
+   "summary": "Search Ride ",
+   "type": "Story",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Chaitanya Nitawe",
+   "reporter": "Chaitanya Nitawe",
+   "created": "2026-10-07T04:35:35.417+0530",
+   "resolved": "2026-10-12T21:18:04.173+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-20",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-33",
+   "summary": "Implement Search Form UI ",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Chaitanya Nitawe",
+   "reporter": "Chaitanya Nitawe",
+   "created": "2026-10-07T04:36:56.917+0530",
+   "resolved": "2026-10-12T15:04:07.342+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-32",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-34",
+   "summary": "Implement Search GET API ",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Chaitanya Nitawe",
+   "reporter": "Chaitanya Nitawe",
+   "created": "2026-10-07T04:37:07.558+0530",
+   "resolved": "2026-10-28T21:45:38.171+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-32",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-35",
+   "summary": "Implement Search Query ",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Chaitanya Nitawe",
+   "reporter": "Chaitanya Nitawe",
+   "created": "2026-10-07T04:37:13.800+0530",
+   "resolved": "2026-10-12T15:04:27.644+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-32",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-36",
+   "summary": "Implement Search Results UI ",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Chaitanya Nitawe",
+   "reporter": "Chaitanya Nitawe",
+   "created": "2026-10-07T04:37:29.005+0530",
+   "resolved": "2026-10-12T15:04:30.098+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-32",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-37",
+   "summary": "Implement AI suggestions Backend ",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Khushi Ranawat",
+   "reporter": "Chaitanya Nitawe",
+   "created": "2026-10-07T04:37:42.952+0530",
+   "resolved": "2026-10-28T21:45:43.158+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-32",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-38",
+   "summary": "Implement AI suggestion UI ",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Khushi Ranawat",
+   "reporter": "Chaitanya Nitawe",
+   "created": "2026-10-07T04:38:04.096+0530",
+   "resolved": "2026-10-28T21:45:45.675+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-32",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-39",
+   "summary": "Review page: rate the people on a completed ride",
+   "type": "Story",
+   "status": "Done",
+   "priority": "High",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-07T22:50:29.505+0530",
+   "resolved": "2026-10-09T01:42:36.494+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-20",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-40",
+   "summary": "Ratings foundation",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-07T23:12:11.706+0530",
+   "resolved": "2026-10-08T17:50:48.111+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-39",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-41",
+   "summary": "Mark a ride completed",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-07T23:12:30.726+0530",
+   "resolved": "2026-10-08T17:50:50.110+0530",
+   "points": null,
+   "labels": [
+    "database",
+    "frontend"
+   ],
+   "parent": "CS455-39",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-42",
+   "summary": "Ratings API",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-07T23:12:45.037+0530",
+   "resolved": "2026-10-08T17:50:53.303+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-39",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-43",
+   "summary": "Review page UI",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-07T23:12:52.018+0530",
+   "resolved": "2026-10-09T01:42:30.751+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-39",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-44",
+   "summary": "Show ratings",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-07T23:13:00.742+0530",
+   "resolved": "2026-10-09T01:42:34.018+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-39",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-45",
+   "summary": "Chat System Implementation",
+   "type": "Story",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-09T22:25:55.453+0530",
+   "resolved": "2026-10-10T14:33:26.240+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-20",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-46",
+   "summary": "Admin and AI integration",
+   "type": "Story",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-11T03:34:13.649+0530",
+   "resolved": "2026-10-12T03:21:40.481+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-20",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-47",
+   "summary": "\tAdmin data foundation (schema)",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-11T03:41:11.161+0530",
+   "resolved": "2026-10-11T15:51:58.392+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-46",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-48",
+   "summary": "Admin access, audit and atomic actions",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-11T03:48:47.168+0530",
+   "resolved": "2026-10-11T15:52:01.133+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-46",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-49",
+   "summary": "\tAdmin shell and home",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-11T03:49:02.162+0530",
+   "resolved": "2026-10-11T15:52:05.604+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-46",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-50",
+   "summary": "Configuration APIs: vehicle types, hubs, fares",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-11T03:49:14.866+0530",
+   "resolved": "2026-10-11T17:42:38.329+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-46",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-51",
+   "summary": "Configuration pages",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-11T03:49:32.707+0530",
+   "resolved": "2026-10-12T01:18:20.483+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-46",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-52",
+   "summary": "\tComplaints and enforcement logic",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-11T03:49:48.040+0530",
+   "resolved": "2026-10-11T17:42:40.538+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-46",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-53",
+   "summary": "Complaint form, complaint queue, rider record pages",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-11T03:50:12.947+0530",
+   "resolved": "2026-10-12T01:18:25.562+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-46",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-54",
+   "summary": "\tWarning, suspension and reactivation UI",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-11T03:51:21.019+0530",
+   "resolved": "2026-10-12T03:21:18.491+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-46",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-55",
+   "summary": "Complaint Management AI pipeline",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-11T03:51:56.583+0530",
+   "resolved": "2026-10-12T03:21:19.983+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-46",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-56",
+   "summary": "AI recommendation decisions",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-11T03:52:14.261+0530",
+   "resolved": "2026-10-12T03:21:23.607+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-46",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-57",
+   "summary": "AI review panel",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-11T03:52:21.597+0530",
+   "resolved": "2026-10-12T03:21:25.813+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-46",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-58",
+   "summary": "Add real hobby tags",
+   "type": "Story",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Khushi Ranawat",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-10-12T15:17:51.657+0530",
+   "resolved": "2026-10-12T21:07:41.853+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-20",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-59",
+   "summary": "Notification Centre",
+   "type": "Story",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Khushi Ranawat",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-10-12T21:14:39.998+0530",
+   "resolved": "2026-10-15T19:54:52.579+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-20",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-60",
+   "summary": "In-trip ride states and SOS incidents",
+   "type": "Story",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-12T21:19:58.624+0530",
+   "resolved": "2026-10-13T01:14:15.276+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-20",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-61",
+   "summary": "Trip and incident data foundation",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-12T21:20:31.440+0530",
+   "resolved": "2026-10-13T01:14:02.453+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-60",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-62",
+   "summary": "Trip state, arrival and no-show APIs",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-12T21:20:40.630+0530",
+   "resolved": "2026-10-13T01:14:04.368+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-60",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-63",
+   "summary": "Trip controls and live trip view",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-12T21:20:47.858+0530",
+   "resolved": "2026-10-13T01:14:08.030+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-60",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-64",
+   "summary": "SOS for riders and ride owners",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-12T21:20:53.607+0530",
+   "resolved": "2026-10-13T01:14:10.627+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-60",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-65",
+   "summary": "Admin SOS incidents and live alert\t",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-12T21:21:04.525+0530",
+   "resolved": "2026-10-13T01:14:13.260+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-60",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-66",
+   "summary": "Request Ride",
+   "type": "Story",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Chaitanya Nitawe",
+   "reporter": "Chaitanya Nitawe",
+   "created": "2026-10-12T21:22:29.437+0530",
+   "resolved": "2026-10-13T23:20:46.832+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-20",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-67",
+   "summary": "Audit and implement notification backend APIs",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Khushi Ranawat",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-10-12T21:25:41.289+0530",
+   "resolved": "2026-10-12T22:44:28.221+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-59",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-68",
+   "summary": "Implement Notification Centre UI",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Khushi Ranawat",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-10-12T21:25:53.247+0530",
+   "resolved": "2026-10-13T19:34:28.192+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-59",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-69",
+   "summary": "Implement real-time notification delivery",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Khushi Ranawat",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-10-12T21:26:02.040+0530",
+   "resolved": "2026-10-13T19:34:44.077+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-59",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-70",
+   "summary": "Integrate notification events and add end-to-end tests",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Khushi Ranawat",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-10-12T21:26:10.466+0530",
+   "resolved": "2026-10-15T19:54:24.878+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-59",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-71",
+   "summary": "Create Database Schema for Ride Join Requests",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Chaitanya Nitawe",
+   "reporter": "Chaitanya Nitawe",
+   "created": "2026-10-12T21:26:32.932+0530",
+   "resolved": "2026-10-13T23:19:52.797+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-66",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-72",
+   "summary": "Implement Join Request Validation Rules",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Chaitanya Nitawe",
+   "reporter": "Chaitanya Nitawe",
+   "created": "2026-10-12T21:26:50.386+0530",
+   "resolved": "2026-10-13T23:19:55.022+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-66",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-73",
+   "summary": "Implement Join Request Submission API",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Chaitanya Nitawe",
+   "reporter": "Chaitanya Nitawe",
+   "created": "2026-10-12T21:26:56.097+0530",
+   "resolved": "2026-10-13T23:19:58.471+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-66",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-74",
+   "summary": "Build Ride Search and Request Submission UI",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Chaitanya Nitawe",
+   "reporter": "Chaitanya Nitawe",
+   "created": "2026-10-12T21:27:06.356+0530",
+   "resolved": "2026-10-13T23:20:01.193+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-66",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-75",
+   "summary": "Implement complete ride  lifecycle",
+   "type": "Story",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Prithviraj Ghosh",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-12T22:25:07.503+0530",
+   "resolved": "2026-10-14T00:57:15.484+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-20",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-76",
+   "summary": "Implement overall functionality covering requirements",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-12T22:26:09.376+0530",
+   "resolved": "2026-10-12T22:36:50.387+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-75",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-77",
+   "summary": "Integrate with other independent components",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Chaitanya Nitawe",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-12T22:26:28.260+0530",
+   "resolved": "2026-10-14T00:57:04.977+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-75",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-78",
+   "summary": "Notify Ride Owner of New Join Requests",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Chaitanya Nitawe",
+   "reporter": "Chaitanya Nitawe",
+   "created": "2026-10-12T23:27:34.486+0530",
+   "resolved": "2026-10-13T23:20:05.631+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-66",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-79",
+   "summary": "Implement Rider Request Status and History",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Chaitanya Nitawe",
+   "reporter": "Chaitanya Nitawe",
+   "created": "2026-10-12T23:27:58.725+0530",
+   "resolved": "2026-10-13T23:20:08.309+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-66",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-80",
+   "summary": "Implement Request Withdrawal and Reconfirmation",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Chaitanya Nitawe",
+   "reporter": "Chaitanya Nitawe",
+   "created": "2026-10-12T23:28:05.641+0530",
+   "resolved": "2026-10-13T23:20:11.018+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-66",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-81",
+   "summary": "Implement Rider Request Notifications",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Chaitanya Nitawe",
+   "reporter": "Chaitanya Nitawe",
+   "created": "2026-10-12T23:29:15.607+0530",
+   "resolved": "2026-10-13T23:20:13.249+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-66",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-82",
+   "summary": "Handle Request Expiration and Ride Cancellation",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Chaitanya Nitawe",
+   "reporter": "Chaitanya Nitawe",
+   "created": "2026-10-12T23:29:24.969+0530",
+   "resolved": "2026-10-13T23:20:15.946+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-66",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-83",
+   "summary": "Test Rider Ride Request Workflows",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Chaitanya Nitawe",
+   "reporter": "Chaitanya Nitawe",
+   "created": "2026-10-12T23:29:31.937+0530",
+   "resolved": "2026-10-13T23:20:19.065+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-66",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-84",
+   "summary": "Pool Chat fixes",
+   "type": "Task",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-13T01:43:32.143+0530",
+   "resolved": "2026-10-13T01:48:01.376+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-85",
+   "summary": "Complete in-trip ride management and SOS safeguard fixes",
+   "type": "Task",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-13T10:38:02.152+0530",
+   "resolved": "2026-10-13T10:42:06.870+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-86",
+   "summary": "Debug: fix D1 bugs and loopholes",
+   "type": "Task",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-13T20:59:21.342+0530",
+   "resolved": "2026-10-13T20:59:52.065+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-20",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-87",
+   "summary": "Resolve ride owner cancellation conflict with d1 requirements",
+   "type": "Task",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-13T22:09:17.715+0530",
+   "resolved": "2026-10-13T22:56:57.848+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-88",
+   "summary": "Ride recommendation chatbot",
+   "type": "Story",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Prithviraj Ghosh",
+   "reporter": "Chaitanya Nitawe",
+   "created": "2026-10-14T00:58:26.272+0530",
+   "resolved": "2026-10-28T21:46:03.116+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-89",
+   "summary": "Close verified account, settlement, safety, and oversight gaps",
+   "type": "Story",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-14T11:10:23.142+0530",
+   "resolved": "2026-10-14T16:04:13.791+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-90",
+   "summary": " Account access, profile setup, and warning acknowledgment",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-14T11:14:54.379+0530",
+   "resolved": "2026-10-28T21:47:23.751+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-89",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-91",
+   "summary": "Outside-app fare settlement",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-14T11:15:09.499+0530",
+   "resolved": "2026-10-28T21:47:25.435+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-89",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-92",
+   "summary": "Recommendation-AI oversight and rider reports",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-14T11:15:15.936+0530",
+   "resolved": "2026-10-28T21:47:29.626+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-89",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-93",
+   "summary": "Fix the legacy ride-request endpoint",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-14T11:15:24.427+0530",
+   "resolved": "2026-10-28T21:47:31.735+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-89",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-94",
+   "summary": "Deduplicate pool chat message notifications",
+   "type": "Story",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-14T11:36:57.701+0530",
+   "resolved": "2026-10-14T16:04:20.856+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-95",
+   "summary": "Harden ride-timezone and AI override validation",
+   "type": "Story",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-14T11:43:18.537+0530",
+   "resolved": "2026-10-14T16:04:25.901+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-96",
+   "summary": "Enforce UTC−12:00 to UTC+14:00 timezone limits",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-14T11:43:49.863+0530",
+   "resolved": "2026-10-28T21:46:12.794+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-95",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-97",
+   "summary": "Reject AI overrides that repeat the recommended action",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-14T11:43:59.207+0530",
+   "resolved": "2026-10-28T21:46:14.563+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-95",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-98",
+   "summary": "UI Improvements and Responsiveness fixes",
+   "type": "Story",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-14T16:05:02.773+0530",
+   "resolved": "2026-10-14T16:11:58.416+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-99",
+   "summary": "Align intra-IITK fares with equal whole-ride fare splitting",
+   "type": "Story",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-14T16:55:10.802+0530",
+   "resolved": "2026-10-14T17:02:22.852+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-100",
+   "summary": "Database Schema & Migration Foundation",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Prithviraj Ghosh",
+   "reporter": "Prithviraj Ghosh",
+   "created": "2026-10-14T18:10:27.875+0530",
+   "resolved": "2026-10-28T21:46:23.850+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-88",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-101",
+   "summary": "Server-Side Tool Allowlist & Security Guardrails",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Prithviraj Ghosh",
+   "reporter": "Prithviraj Ghosh",
+   "created": "2026-10-14T18:10:54.011+0530",
+   "resolved": "2026-10-28T21:46:27.545+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-88",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-102",
+   "summary": "Preference Proposal Lifecycle & 10-Minute Expiry",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Prithviraj Ghosh",
+   "reporter": "Prithviraj Ghosh",
+   "created": "2026-10-14T18:11:13.621+0530",
+   "resolved": "2026-10-28T21:46:32.396+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-88",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-103",
+   "summary": "Natural-Language Processing & Intent Routing Engine",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Prithviraj Ghosh",
+   "reporter": "Prithviraj Ghosh",
+   "created": "2026-10-14T18:11:28.757+0530",
+   "resolved": "2026-10-28T21:46:34.353+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-88",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-104",
+   "summary": "Privacy-Preserving Audit Logging",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Prithviraj Ghosh",
+   "reporter": "Prithviraj Ghosh",
+   "created": "2026-10-14T18:11:43.068+0530",
+   "resolved": "2026-10-28T21:46:37.382+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-88",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-105",
+   "summary": "Backend API Endpoints & Route Guards",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Prithviraj Ghosh",
+   "reporter": "Prithviraj Ghosh",
+   "created": "2026-10-14T18:11:56.775+0530",
+   "resolved": "2026-10-28T21:47:00.314+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-88",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-106",
+   "summary": "Navigation & Routing Integration",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Prithviraj Ghosh",
+   "reporter": "Prithviraj Ghosh",
+   "created": "2026-10-14T18:12:12.402+0530",
+   "resolved": "2026-10-28T21:47:02.182+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-88",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-107",
+   "summary": "Frontend Chatbot UI & Tab-Local Session Privacy",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Prithviraj Ghosh",
+   "reporter": "Prithviraj Ghosh",
+   "created": "2026-10-14T18:12:27.077+0530",
+   "resolved": "2026-10-28T21:47:05.879+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-88",
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-108",
+   "summary": "AI Chatbot",
+   "type": "Story",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-15T13:12:15.313+0530",
+   "resolved": "2026-10-15T13:33:12.642+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 36,
+     "name": "Sprint 3 (D2) 2",
+     "state": "closed",
+     "goal": "",
+     "start": "2026-10-04T12:51:25.682Z",
+     "end": "2026-10-10T13:38:23.000Z",
+     "completed": "2026-10-28T16:17:37.566Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-109",
+   "summary": "Integration and adversarial testing",
+   "type": "Story",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-10-28T21:52:23.572+0530",
+   "resolved": "2026-10-29T15:45:04.966+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-110",
+   "summary": "Integration test harness with real Postgres in CI",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-28T21:53:54.574+0530",
+   "resolved": "2026-10-29T15:44:51.613+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-109",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-111",
+   "summary": "Integration tests: core ride workflow",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-28T21:54:06.743+0530",
+   "resolved": "2026-10-29T15:44:53.919+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-109",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-112",
+   "summary": " Integration tests: trip, SOS, complaints, ratings, admin",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-28T21:54:34.461+0530",
+   "resolved": "2026-10-29T15:44:57.514+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-109",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-113",
+   "summary": "Adversarial test suite",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-28T21:54:58.702+0530",
+   "resolved": "2026-10-29T15:45:00.688+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-109",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-114",
+   "summary": "Integration and adversarial test reports",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-10-28T21:55:13.506+0530",
+   "resolved": "2026-10-29T15:45:02.840+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-109",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-115",
+   "summary": "Performance Testing and Optimization",
+   "type": "Story",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-29T11:55:08.204+0530",
+   "resolved": "2026-11-05T10:56:35.617+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-116",
+   "summary": "Optimize ride-search query",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-29T11:55:34.893+0530",
+   "resolved": "2026-11-05T22:15:34.482+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-115",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-117",
+   "summary": "Optimize session and payment workflows",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-29T11:55:41.664+0530",
+   "resolved": "2026-11-05T22:15:35.467+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-115",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-118",
+   "summary": "Create k6 load-test script",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-29T11:55:47.362+0530",
+   "resolved": "2026-11-05T22:15:36.686+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-115",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-119",
+   "summary": "Run performance experiments",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-29T11:55:53.729+0530",
+   "resolved": "2026-11-05T22:15:37.646+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-115",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-120",
+   "summary": "Complete D3 documentation",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-29T11:55:59.942+0530",
+   "resolved": "2026-11-05T22:15:38.696+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-115",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-121",
+   "summary": "Bug evidence and fixes",
+   "type": "Story",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-29T15:26:18.260+0530",
+   "resolved": "2026-11-05T10:56:42.078+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-122",
+   "summary": "Audit authentication and authorization",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-29T15:27:39.076+0530",
+   "resolved": "2026-11-05T22:15:40.175+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-121",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-123",
+   "summary": "Secure realtime Socket.IO workflows",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-29T15:27:46.562+0530",
+   "resolved": "2026-11-05T22:15:41.332+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-121",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-124",
+   "summary": " Secure database connectivity",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-29T15:27:52.898+0530",
+   "resolved": "2026-11-05T22:15:42.507+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-121",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-125",
+   "summary": "Fix database migration compatibility",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-29T15:28:00.093+0530",
+   "resolved": "2026-11-05T22:15:43.489+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-121",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-126",
+   "summary": " Make password reset atomic",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-29T15:28:06.013+0530",
+   "resolved": "2026-11-05T22:15:44.354+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-121",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-127",
+   "summary": "Harden rate limiting and malformed input handling",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-29T15:28:12.669+0530",
+   "resolved": "2026-11-05T22:18:11.297+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-121",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-128",
+   "summary": " Stabilize automated testing",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-29T15:28:20.103+0530",
+   "resolved": "2026-11-05T22:18:12.585+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-121",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-129",
+   "summary": "Update Deliverable 3 documentation",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-10-29T15:28:26.898+0530",
+   "resolved": "2026-11-05T22:18:13.556+0530",
+   "points": null,
+   "labels": [],
+   "parent": "CS455-121",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-130",
+   "summary": "System Testing End-to-End",
+   "type": "Task",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Chaitanya Nitawe",
+   "reporter": "Chaitanya Nitawe",
+   "created": "2026-11-04T03:41:37.580+0530",
+   "resolved": "2026-11-05T22:18:14.439+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-131",
+   "summary": "Failure/Bug Report Testing",
+   "type": "Story",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Prithviraj Ghosh",
+   "reporter": "Chaitanya Nitawe",
+   "created": "2026-11-04T03:41:50.303+0530",
+   "resolved": "2026-11-05T22:18:15.355+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-132",
+   "summary": "Security/Threat Report Testing",
+   "type": "Story",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Prithviraj Ghosh",
+   "reporter": "Chaitanya Nitawe",
+   "created": "2026-11-04T03:42:16.979+0530",
+   "resolved": "2026-11-05T22:18:16.256+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-133",
+   "summary": "PostgreSQL timestamp parameter type mismatch causes query failures",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-04T20:36:17.242+0530",
+   "resolved": "2026-11-04T20:36:43.060+0530",
+   "points": null,
+   "labels": [
+    "bug",
+    "d3",
+    "integration-testing"
+   ],
+   "parent": null,
+   "sprints": []
+  },
+  {
+   "key": "CS455-134",
+   "summary": "Idempotency key reuse with different ride details silently returns the original request",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "High",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-04T20:36:21.110+0530",
+   "resolved": "2026-11-04T20:36:46.976+0530",
+   "points": null,
+   "labels": [
+    "bug",
+    "d3",
+    "idempotency",
+    "integration-testing"
+   ],
+   "parent": null,
+   "sprints": []
+  },
+  {
+   "key": "CS455-135",
+   "summary": "Prepare D3 Bug/Defect History Report",
+   "type": "Task",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Khushi Ranawat",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-04T20:42:27.472+0530",
+   "resolved": "2026-11-05T22:18:17.397+0530",
+   "points": null,
+   "labels": [
+    "bug-report",
+    "d3",
+    "documentation"
+   ],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-136",
+   "summary": "[D3] Credentialed cross-origin Socket.IO handshake accepted an untrusted Origin",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Chaitanya Nitawe",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T01:23:39.489+0530",
+   "resolved": "2026-11-05T22:15:05.662+0530",
+   "points": null,
+   "labels": [
+    "bug",
+    "cs455-121",
+    "d3",
+    "defect-history"
+   ],
+   "parent": null,
+   "sprints": []
+  },
+  {
+   "key": "CS455-137",
+   "summary": "[D3] Realtime authentication ignored the seven-day inactivity expiry",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T01:23:44.248+0530",
+   "resolved": "2026-11-05T22:15:07.501+0530",
+   "points": null,
+   "labels": [
+    "bug",
+    "cs455-121",
+    "d3",
+    "defect-history"
+   ],
+   "parent": null,
+   "sprints": []
+  },
+  {
+   "key": "CS455-138",
+   "summary": "[D3] PostgreSQL TLS connections did not verify server certificates",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T01:23:48.500+0530",
+   "resolved": "2026-11-05T22:15:08.814+0530",
+   "points": null,
+   "labels": [
+    "bug",
+    "cs455-121",
+    "d3",
+    "defect-history"
+   ],
+   "parent": null,
+   "sprints": []
+  },
+  {
+   "key": "CS455-139",
+   "summary": "[D3] Legacy rides migration referenced locked_at before adding the column",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T01:23:52.262+0530",
+   "resolved": "2026-11-05T22:15:10.263+0530",
+   "points": null,
+   "labels": [
+    "bug",
+    "cs455-121",
+    "d3",
+    "defect-history"
+   ],
+   "parent": null,
+   "sprints": []
+  },
+  {
+   "key": "CS455-140",
+   "summary": "[D3] Client-controlled forwarding headers could bypass IP rate limits",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T01:23:56.854+0530",
+   "resolved": "2026-11-05T22:15:11.460+0530",
+   "points": null,
+   "labels": [
+    "bug",
+    "cs455-121",
+    "d3",
+    "defect-history"
+   ],
+   "parent": null,
+   "sprints": []
+  },
+  {
+   "key": "CS455-141",
+   "summary": "[D3] Malformed cookies could disrupt WebSocket authentication",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T01:24:01.278+0530",
+   "resolved": "2026-11-05T22:15:12.640+0530",
+   "points": null,
+   "labels": [
+    "bug",
+    "cs455-121",
+    "d3",
+    "defect-history"
+   ],
+   "parent": null,
+   "sprints": []
+  },
+  {
+   "key": "CS455-142",
+   "summary": "[D3] Legacy ride_join_requests migration could reference missing updated_at",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T01:24:05.706+0530",
+   "resolved": "2026-11-05T22:15:13.817+0530",
+   "points": null,
+   "labels": [
+    "bug",
+    "cs455-121",
+    "d3",
+    "defect-history"
+   ],
+   "parent": null,
+   "sprints": []
+  },
+  {
+   "key": "CS455-143",
+   "summary": "[D3] Password-reset token consumption and credential changes were not atomic",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T01:24:10.433+0530",
+   "resolved": "2026-11-05T22:15:15.118+0530",
+   "points": null,
+   "labels": [
+    "bug",
+    "cs455-121",
+    "d3",
+    "defect-history"
+   ],
+   "parent": null,
+   "sprints": []
+  },
+  {
+   "key": "CS455-144",
+   "summary": "[D3] Realtime activity did not refresh session activity",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T01:24:14.601+0530",
+   "resolved": "2026-11-05T22:15:16.078+0530",
+   "points": null,
+   "labels": [
+    "bug",
+    "cs455-121",
+    "d3",
+    "defect-history"
+   ],
+   "parent": null,
+   "sprints": []
+  },
+  {
+   "key": "CS455-145",
+   "summary": "[D3] Realtime authentication bypassed profile and warning eligibility gates",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T01:24:18.884+0530",
+   "resolved": "2026-11-05T22:15:17.554+0530",
+   "points": null,
+   "labels": [
+    "bug",
+    "cs455-121",
+    "d3",
+    "defect-history"
+   ],
+   "parent": null,
+   "sprints": []
+  },
+  {
+   "key": "CS455-146",
+   "summary": "[D3] Production server did not fail fast when APP_URL was missing",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T01:24:23.185+0530",
+   "resolved": "2026-11-05T22:15:18.738+0530",
+   "points": null,
+   "labels": [
+    "bug",
+    "cs455-121",
+    "d3",
+    "defect-history"
+   ],
+   "parent": null,
+   "sprints": []
+  },
+  {
+   "key": "CS455-147",
+   "summary": "[D3] Production realtime accepted the development session-cookie name",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T01:24:27.105+0530",
+   "resolved": "2026-11-05T22:15:19.885+0530",
+   "points": null,
+   "labels": [
+    "bug",
+    "cs455-121",
+    "d3",
+    "defect-history"
+   ],
+   "parent": null,
+   "sprints": []
+  },
+  {
+   "key": "CS455-148",
+   "summary": "[D3] HTTP authentication could revive an inactivity-expired session",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T01:24:31.842+0530",
+   "resolved": "2026-11-05T22:15:21.082+0530",
+   "points": null,
+   "labels": [
+    "bug",
+    "cs455-121",
+    "d3",
+    "defect-history"
+   ],
+   "parent": null,
+   "sprints": []
+  },
+  {
+   "key": "CS455-149",
+   "summary": "[D3] Existing cursor indexes were not upgraded by IF NOT EXISTS",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T01:24:36.191+0530",
+   "resolved": "2026-11-05T22:15:22.398+0530",
+   "points": null,
+   "labels": [
+    "bug",
+    "cs455-121",
+    "d3",
+    "defect-history"
+   ],
+   "parent": null,
+   "sprints": []
+  },
+  {
+   "key": "CS455-150",
+   "summary": "[D3] One person could hold overlapping seats or offer an overlapping ride (P-08)",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T01:24:40.588+0530",
+   "resolved": "2026-11-05T22:15:23.672+0530",
+   "points": null,
+   "labels": [
+    "bug",
+    "cs455-86",
+    "d3",
+    "defect-history"
+   ],
+   "parent": null,
+   "sprints": []
+  },
+  {
+   "key": "CS455-151",
+   "summary": "[D3] A suspended rider could continue posting in pool chats",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T01:24:45.100+0530",
+   "resolved": "2026-11-05T22:15:24.926+0530",
+   "points": null,
+   "labels": [
+    "bug",
+    "cs455-86",
+    "d3",
+    "defect-history"
+   ],
+   "parent": null,
+   "sprints": []
+  },
+  {
+   "key": "CS455-152",
+   "summary": "[D3] Pool chat deletion could remove messages cited by an unresolved complaint",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T01:24:49.649+0530",
+   "resolved": "2026-11-05T22:15:26.243+0530",
+   "points": null,
+   "labels": [
+    "bug",
+    "cs455-86",
+    "d3",
+    "defect-history"
+   ],
+   "parent": null,
+   "sprints": []
+  },
+  {
+   "key": "CS455-153",
+   "summary": "[D3] Admin chat-report resolution lacked audit and request protections",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T01:24:54.252+0530",
+   "resolved": "2026-11-05T22:15:27.394+0530",
+   "points": null,
+   "labels": [
+    "bug",
+    "cs455-86",
+    "d3",
+    "defect-history"
+   ],
+   "parent": null,
+   "sprints": []
+  },
+  {
+   "key": "CS455-154",
+   "summary": "[D3] A rider who left before the trip could still file trip complaints",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T01:24:59.325+0530",
+   "resolved": "2026-11-05T22:15:28.407+0530",
+   "points": null,
+   "labels": [
+    "bug",
+    "cs455-86",
+    "d3",
+    "defect-history"
+   ],
+   "parent": null,
+   "sprints": []
+  },
+  {
+   "key": "CS455-155",
+   "summary": "[D3] Completed-trip counts and rating eligibility included no-shows or leavers",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T01:25:03.739+0530",
+   "resolved": "2026-11-05T22:15:29.268+0530",
+   "points": null,
+   "labels": [
+    "bug",
+    "cs455-86",
+    "d3",
+    "defect-history"
+   ],
+   "parent": null,
+   "sprints": []
+  },
+  {
+   "key": "CS455-156",
+   "summary": "[D3] Editing a ride did not enforce the three-hour maximum departure window",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T01:25:22.396+0530",
+   "resolved": "2026-11-05T22:15:30.142+0530",
+   "points": null,
+   "labels": [
+    "bug",
+    "cs455-86",
+    "d3",
+    "defect-history"
+   ],
+   "parent": null,
+   "sprints": []
+  },
+  {
+   "key": "CS455-157",
+   "summary": "[D3] Account deletion could orphan active seats or waiting requests",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T01:25:26.613+0530",
+   "resolved": "2026-11-05T22:15:31.033+0530",
+   "points": null,
+   "labels": [
+    "bug",
+    "cs455-86",
+    "d3",
+    "defect-history"
+   ],
+   "parent": null,
+   "sprints": []
+  },
+  {
+   "key": "CS455-158",
+   "summary": "[D3] Itinerary reconfirmation silently returned a request to Pending",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T01:25:30.816+0530",
+   "resolved": "2026-11-05T22:15:32.082+0530",
+   "points": null,
+   "labels": [
+    "bug",
+    "cs455-86",
+    "d3",
+    "defect-history"
+   ],
+   "parent": null,
+   "sprints": []
+  },
+  {
+   "key": "CS455-159",
+   "summary": "[D3] Scheduled rides could not be cancelled or started consistently at the departure-window end",
+   "type": "Bug",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T01:25:35.192+0530",
+   "resolved": "2026-11-05T22:15:32.995+0530",
+   "points": null,
+   "labels": [
+    "bug",
+    "cs455-86",
+    "d3",
+    "defect-history"
+   ],
+   "parent": null,
+   "sprints": []
+  },
+  {
+   "key": "CS455-160",
+   "summary": "Deployment and deployment documentaion",
+   "type": "Story",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-11-05T10:57:01.332+0530",
+   "resolved": "2026-11-05T22:11:51.666+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-161",
+   "summary": "Final requirements-to-Jira-to-GitHub-to-testing traceability matrix",
+   "type": "Task",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-11-05T21:41:18.271+0530",
+   "resolved": "2026-11-05T21:41:22.566+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-162",
+   "summary": "Timeline and gannt chart",
+   "type": "Story",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mahir Jain",
+   "reporter": "Mahir Jain",
+   "created": "2026-11-05T22:00:16.157+0530",
+   "resolved": "2026-11-05T22:09:53.525+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-163",
+   "summary": "Final Jira dashboard",
+   "type": "Story",
+   "status": "Done",
+   "priority": "High",
+   "assignee": "Khushi Ranawat",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-11-05T22:13:13.044+0530",
+   "resolved": "2026-11-06T21:26:07.908+0530",
+   "points": 5,
+   "labels": [
+    "d3",
+    "jira-dashboard"
+   ],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-164",
+   "summary": "Final project report",
+   "type": "Story",
+   "status": "Done",
+   "priority": "High",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T22:13:41.724+0530",
+   "resolved": "2026-11-06T21:28:22.326+0530",
+   "points": 6,
+   "labels": [
+    "d3",
+    "project-report"
+   ],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-165",
+   "summary": "Report skeleton and shared structure",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T22:25:07.562+0530",
+   "resolved": "2026-11-05T22:51:51.441+0530",
+   "points": null,
+   "labels": [
+    "d3",
+    "project-report"
+   ],
+   "parent": "CS455-164",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-166",
+   "summary": "GitHub and Jira metrics",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T22:25:08.942+0530",
+   "resolved": "2026-11-05T22:51:52.401+0530",
+   "points": null,
+   "labels": [
+    "d3",
+    "project-report"
+   ],
+   "parent": "CS455-164",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-167",
+   "summary": "Overview and final scope section",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T22:25:10.254+0530",
+   "resolved": "2026-11-06T21:27:38.195+0530",
+   "points": null,
+   "labels": [
+    "d3",
+    "project-report"
+   ],
+   "parent": "CS455-164",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-168",
+   "summary": "Traceability chain and quality summary sections",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T22:25:11.532+0530",
+   "resolved": "2026-11-06T21:27:40.147+0530",
+   "points": null,
+   "labels": [
+    "d3",
+    "project-report"
+   ],
+   "parent": "CS455-164",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-169",
+   "summary": "Deployment, timeline and cost summary section",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T22:25:12.901+0530",
+   "resolved": "2026-11-06T21:27:43.683+0530",
+   "points": null,
+   "labels": [
+    "d3",
+    "project-report"
+   ],
+   "parent": "CS455-164",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-170",
+   "summary": "Individual contributions, gaps and lessons sections",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T22:25:14.521+0530",
+   "resolved": "2026-11-06T21:28:46.068+0530",
+   "points": null,
+   "labels": [
+    "d3",
+    "project-report"
+   ],
+   "parent": "CS455-164",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-171",
+   "summary": "Assembly, final PDF and D3 README",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Mainak Sarkar",
+   "reporter": "Khushi Ranawat",
+   "created": "2026-11-05T22:25:15.746+0530",
+   "resolved": "2026-11-06T21:28:50.018+0530",
+   "points": null,
+   "labels": [
+    "d3",
+    "project-report"
+   ],
+   "parent": "CS455-164",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-172",
+   "summary": "Build and share the project dashboard",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Khushi Ranawat",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-11-05T22:25:17.197+0530",
+   "resolved": "2026-11-06T21:26:33.281+0530",
+   "points": null,
+   "labels": [
+    "d3",
+    "jira-dashboard"
+   ],
+   "parent": "CS455-163",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-173",
+   "summary": "Capture Jira evidence screenshots",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Khushi Ranawat",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-11-05T22:25:18.783+0530",
+   "resolved": "2026-11-06T21:26:35.101+0530",
+   "points": null,
+   "labels": [
+    "d3",
+    "jira-dashboard"
+   ],
+   "parent": "CS455-163",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-174",
+   "summary": "Jira setup and dashboard section",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Khushi Ranawat",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-11-05T22:25:20.477+0530",
+   "resolved": "2026-11-06T21:26:39.344+0530",
+   "points": null,
+   "labels": [
+    "d3",
+    "jira-dashboard"
+   ],
+   "parent": "CS455-163",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-175",
+   "summary": "Sprint execution section",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Khushi Ranawat",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-11-05T22:25:21.772+0530",
+   "resolved": "2026-11-06T21:26:43.311+0530",
+   "points": null,
+   "labels": [
+    "d3",
+    "jira-dashboard"
+   ],
+   "parent": "CS455-163",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-176",
+   "summary": "Defect tracking section",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Khushi Ranawat",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-11-05T22:25:23.247+0530",
+   "resolved": "2026-11-06T21:26:46.908+0530",
+   "points": null,
+   "labels": [
+    "d3",
+    "jira-dashboard"
+   ],
+   "parent": "CS455-163",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-177",
+   "summary": "Complete Sprint 3 (D3)",
+   "type": "Subtask",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Khushi Ranawat",
+   "reporter": "Mainak Sarkar",
+   "created": "2026-11-05T22:25:24.418+0530",
+   "resolved": "2026-11-06T21:27:26.716+0530",
+   "points": null,
+   "labels": [
+    "d3",
+    "jira-dashboard"
+   ],
+   "parent": "CS455-163",
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  },
+  {
+   "key": "CS455-178",
+   "summary": "Costing Document",
+   "type": "Task",
+   "status": "Done",
+   "priority": "Medium",
+   "assignee": "Chaitanya Nitawe",
+   "reporter": "Chaitanya Nitawe",
+   "created": "2026-11-06T18:48:51.730+0530",
+   "resolved": "2026-11-06T21:26:16.293+0530",
+   "points": null,
+   "labels": [],
+   "parent": null,
+   "sprints": [
+    {
+     "id": 37,
+     "name": "Sprint 3 (D3)",
+     "state": "closed",
+     "goal": "Deliverable 3",
+     "start": "2026-10-28T16:23:23.000Z",
+     "end": "2026-11-06T18:30:00.000Z",
+     "completed": "2026-11-06T15:59:48.381Z"
+    }
+   ]
+  }
+ ]
+}

@@ -23,6 +23,8 @@
 \file{timestamp-parameters} & timestamp parameters compared with an interval: still refuses a rider whose share has been due for more than seven days (FR-RD-11.5) & Pass \\
 \file{timestamp-parameters} & timestamp parameters compared with an interval: allows a share that has been due for less than seven days (FR-RD-11.5) & Pass \\
 \file{timestamp-parameters} & timestamp parameters compared with an interval: sends each payment reminder once, 24 hours and then 72 hours after completion (FR-RD-11.4) & Pass \\
+\file{last-seat} & NFR-RD-05: repeated last-seat concurrency experiment: preserves capacity across 100 rounds of 49 acceptances racing with one leave & Pass \\
+\file{last-seat} & NFR-RD-05: repeated last-seat concurrency experiment: serializes direct database writers and rejects an over-capacity insert & Pass \\
 \file{join-requests} & requesting a seat (FR-RD-06): records a pending request with its snapshot, history and idempotency key, and tells the owner (FR-RD-06.1, FR-RO-05.5) & Pass \\
 \file{join-requests} & requesting a seat (FR-RD-06): answers a retried request with the same idempotency key once, without a second request (FR-RD-06.9) & Pass \\
 \file{join-requests} & requesting a seat (FR-RD-06): refuses the owner, an unknown pickup point and a fourth waiting request (FR-RD-06.2) & Pass \\

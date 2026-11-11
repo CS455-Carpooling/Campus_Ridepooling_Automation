@@ -72,7 +72,7 @@ The system defines two primary user roles with strictly segregated operational p
   \item \textbf{Residual Risk:} Low. Verified by integration tests \file{manage-ride.int.test.ts} and \file{join-requests.int.test.ts}.
 \end{itemize}
 
-\subsection{Threat 2: Webhook, Replay, & Idempotency Key Hijacking}
+\subsection{Threat 2: Webhook, Replay, \& Idempotency Key Hijacking}
 \begin{itemize}
   \item \textbf{Threat Category:} Repudiation / Tampering.
   \item \textbf{Attack Vector:} Network attackers replay seat booking requests or submit an idempotency key previously used for Ride A to claim a seat on Ride B or alter the agreed pickup point without authorization.
@@ -97,7 +97,7 @@ The system defines two primary user roles with strictly segregated operational p
   \item \textbf{Residual Risk:} Negligible.
 \end{itemize}
 
-\subsection{Threat 5: Secret & Credential Leakage via Network & Bundles}
+\subsection{Threat 5: Secret \& Credential Leakage via Network \& Bundles}
 \begin{itemize}
   \item \textbf{Threat Category:} Information Disclosure.
   \item \textbf{Attack Vector:} Eavesdropping on database traffic across shared cloud networks or recovering private API keys from compiled JavaScript bundles.
@@ -105,7 +105,7 @@ The system defines two primary user roles with strictly segregated operational p
   \item \textbf{Residual Risk:} Negligible.
 \end{itemize}
 
-\subsection{Threat 6: Realtime WebSocket Eavesdropping & IP Throttling Bypass}
+\subsection{Threat 6: Realtime WebSocket Eavesdropping \& IP Throttling Bypass}
 \begin{itemize}
   \item \textbf{Threat Category:} Information Disclosure / Denial of Service.
   \item \textbf{Attack Vector:} Malicious third-party websites establishing credentialed Socket.IO connections via browser origin reflection, or attackers spoofing \texttt{X-Forwarded-For} prefixes to evade rate limits.

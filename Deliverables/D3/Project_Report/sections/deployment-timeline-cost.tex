@@ -1,0 +1,61 @@
+% CS455-169
+\section{Deployment, timeline and cost}\label{sec:deployment}
+
+\subsection{Deployment}
+The application runs on Render.com's Free tier, as a Docker web service with a Render managed PostgreSQL
+database. Pushes to \texttt{master} deploy automatically, and migrations run when the container starts.
+The health endpoint is \url{https://campus-ridepooling-automation.onrender.com/api/health}. The steps,
+configuration and verification are in the
+\repolink{Deliverables/D3/Deployment_Documentation.md}{deployment documentation}.
+
+Deliverable 1 planned GCP (requirement NFR-RD-18). The team chose Render on 5 November because it builds
+the repository's Docker image directly from GitHub, provides managed PostgreSQL and runs the custom server
+that Socket.IO needs. The submitted requirement still says GCP, and the change is recorded in section 7 of
+the deployment documentation rather than by rewriting Deliverable 1.
+
+The Free tier has limits that matter for the demonstration. The service sleeps after 15 minutes without
+traffic and takes about a minute to wake. The database expires on 5 December 2026 and has no backups.
+
+\subsection{Timeline}
+The \repolink{Deliverables/D3/project-timeline-gantt.md}{timeline and Gantt chart} (\jira{CS455-162}) covers
+the project from the proposal to the final demonstration, and Figure~\ref{fig:gantt} on the last page shows it. Each work bar
+runs from the day the pull requests for that work opened to the day they merged. Deliverable 1 work ran from
+23 to 26 September, implementation from 2 to 15 October, and Deliverable 3 testing, reporting and deployment
+from 28 October to 5 November.
+
+\subsection{Cost}
+The \repolink{Deliverables/D3/Costing_Documentation/project_costing_report.pdf}{costing report}
+(\jira{CS455-178}) estimates the monthly operating cost of the current setup and of two production sizes,
+from prices checked on 6 November 2026 at a rate of 94 rupees to the dollar.
+Table~\ref{tab:cost} summarises it. Totals include 18\,\% GST.
+
+\begin{table}[h]
+\centering\small
+\caption{Estimated monthly operating cost.}
+\label{tab:cost}
+\begin{tabular}{@{}lllr@{}}
+\toprule
+Setup & Web service & Database & Monthly cost \\
+\midrule
+Current demonstration & Render Free & Render Free, 1\,GB & INR 0 \\
+Pilot, about 1,000 students & Render Starter & Basic-256mb, 5\,GB & INR 2,917 (USD 31.03) \\
+Full scale, about 5,000 students & Render Standard & Basic-1gb, 20\,GB & INR 13,954 (USD 148.44) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Model inference is the largest cost at both production sizes: INR 1,034 of the INR 2,472 pre-tax pilot cost,
+and INR 5,170 of INR 11,825 at full scale. That figure assumes 20,000 and 100,000 Gemini calls a month, at
+1,000 input and 200 output tokens per call. The input figure comes from the requests the code really builds;
+the output figure is not measured, so the costing report also gives the effect of doubling it. Salaries,
+monitoring tools and bandwidth above the included allowance are excluded.
+
+The current setup stays within its free limits. A single web service stays within Render's 750 free hours a
+month, a freshly migrated database is about 11\,MB of its 1\,GB limit, and the database expires after the
+presentation window. GitHub Actions ran 468 workflows, about 1,040 elapsed minutes, at no charge, because
+standard runners are free for a public repository. Section 7 of the costing report compares estimated and
+actual usage and lists the production figures that were not collected.
+
+Section 9 of the costing report gives an AI-assisted estimate of development time, made after the work: 181
+member-days from the size of what was built, against 61 member-days with a commit. Commit days undercount
+effort and no timesheets were kept, so the true figure lies somewhere between the two.

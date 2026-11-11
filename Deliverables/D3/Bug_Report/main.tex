@@ -8,7 +8,7 @@
   {Prepared by Khushi Ranawat \quad Jira CS455-135}
 \keybox{\textbf{Executive summary.} This report records 26 distinct, resolved application defects: 16 from the D3 security, reliability, and database audit, and 10 product defects found during the D1 code review recorded in CS455-86. Overlapping observations are consolidated so the same underlying issue is not counted twice. Each entry summarizes system impact, cause, correction, and the available regression, pull-request, and Jira evidence.}
 \section{Scope and evidence}
-The report covers defects with a concrete failure mode and a corresponding code fix. It includes authentication and authorization, realtime workflows, database reliability, request integrity, production configuration, and product-rule defects found by review of the D1 requirements. The first 16 entries cover the D3 audit; entries 17--26 cover the ten product defects fixed in PR #67 and tracked by CS455-86. Duplicate observations are consolidated into one defect; supporting test details are retained as evidence rather than counted as separate bugs.
+The report covers defects with a concrete failure mode and a corresponding code fix. It includes authentication and authorization, realtime workflows, database reliability, request integrity, production configuration, and product-rule defects found by review of the D1 requirements. The first 16 entries cover the D3 audit; entries 17--26 cover the ten product defects fixed in PR \#67 and tracked by CS455-86. Duplicate observations are consolidated into one defect; supporting test details are retained as evidence rather than counted as separate bugs.
 \section{Defect summary}
 \small
 \begin{longtable}{@{}p{0.055\linewidth}p{0.28\linewidth}p{0.57\linewidth}@{}}
@@ -54,7 +54,7 @@ The report covers defects with a concrete failure mode and a corresponding code 
 \textbf{Impact.} A remembered session inactive beyond the seven-day policy could be rejected by HTTP routes but still authenticate a Socket.IO connection.
 \textbf{Cause.} Realtime session lookup checked absolute expiry but omitted the inactivity predicate applied by HTTP authentication.
 \textbf{Fix.} Realtime authentication and revalidation now enforce the same seven-day inactivity bound as HTTP session validation.
-\textbf{Evidence.} \file{apps/web/test/server-security.test.ts} verifies that a Socket.IO connection is rejected for a session outside the seven-day inactivity window. PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/94}{\#94}; Jira \href{https://cs455project.atlassian.net/browse/CS455-137}{CS455-137}.
+\textbf{Evidence.} \file{apps/web/test/server-security.test.ts} verifies that a Socket.IO connection is rejected for a session outside the seven-day inactivity window. Code fix in PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/91}{\#91}; regression test in PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/94}{\#94}; Jira \href{https://cs455project.atlassian.net/browse/CS455-137}{CS455-137}.
 \subsection{PostgreSQL TLS certificate verification was disabled}
 \textbf{Impact.} External PostgreSQL connections were encrypted but did not verify the server certificate, allowing an intercepted connection to use an untrusted certificate.
 \textbf{Cause.} Render-style connection configuration set \texttt{rejectUnauthorized: false}.
@@ -74,7 +74,7 @@ The report covers defects with a concrete failure mode and a corresponding code 
 \textbf{Impact.} A malformed percent-encoded cookie could throw during websocket authentication instead of following the normal unauthenticated rejection path.
 \textbf{Cause.} Cookie decoding did not handle malformed percent-encoding.
 \textbf{Fix.} Decoding is wrapped in a narrow error handler. The malformed cookie is treated as empty and authentication fails closed without an uncaught parser exception.
-\textbf{Evidence.} \file{apps/web/test/server-security.test.ts} supplies a malformed percent-encoded cookie, verifies authentication rejection, and confirms that a subsequent valid connection still succeeds. PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/94}{\#94}; Jira \href{https://cs455project.atlassian.net/browse/CS455-141}{CS455-141}.
+\textbf{Evidence.} \file{apps/web/test/server-security.test.ts} supplies a malformed percent-encoded cookie, verifies authentication rejection, and confirms that a subsequent valid connection still succeeds. Code fix in PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/91}{\#91}; regression test in PR \href{https://github.com/CS455-Carpooling/Campus_Ridepooling_Automation/pull/94}{\#94}; Jira \href{https://cs455project.atlassian.net/browse/CS455-141}{CS455-141}.
 \Needspace{9\baselineskip}
 \subsection{Existing request tables could lack \texttt{updated\_at}}
 \textbf{Impact.} An older \texttt{ride\_join\_requests} table without \texttt{updated\_at} could fail when the schema bootstrap referenced the missing column.
