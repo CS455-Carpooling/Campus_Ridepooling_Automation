@@ -7,9 +7,8 @@ import {
   type ComplaintAiAnalysis,
   type ComplaintAiFallback,
 } from './complaint-ai-rules';
-import { getGeminiModel } from './ai/gemini-config';
+import { GEMINI_REQUEST_TIMEOUT_MS, getGeminiModel } from './ai/gemini-config';
 
-const MODEL_TIMEOUT_MS = 8_000;
 const MODEL_OUTPUT_TOKENS = 512;
 const PROMPT_VERSION = 'complaint-analysis-v1';
 const redactPersonalInfo = (text: string) =>
@@ -137,7 +136,7 @@ async function requestGemini(context: ComplaintContext): Promise<{
             maxOutputTokens: MODEL_OUTPUT_TOKENS,
           },
         }),
-        signal: AbortSignal.timeout(MODEL_TIMEOUT_MS),
+        signal: AbortSignal.timeout(GEMINI_REQUEST_TIMEOUT_MS),
       },
     );
   } catch (error) {

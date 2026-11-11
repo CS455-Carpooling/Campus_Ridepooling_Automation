@@ -50,7 +50,7 @@ test.describe('AI Recommendations & Conversational Assistant (FR-RD-05, AI-RD-01
     await expect(riderContext.page.locator('body')).toContainText(/Kanpur Central|AI ranking/i);
   });
 
-  test('fault injection: Gemini timeout triggers deterministic fallback within 8s elapsed bound (AI-RD-02)', async ({
+  test('fault injection: mocked timeout fallback renders within the client UI bound (AI-RD-02)', async ({
     db,
     ownerContext,
     riderContext,
@@ -80,11 +80,11 @@ test.describe('AI Recommendations & Conversational Assistant (FR-RD-05, AI-RD-01
     });
     await riderContext.page.goto(`/rides/results?${params.toString()}`);
 
-    // Intercept /api/rides/recommendations to simulate upstream Gemini timeout
+    // Stub the recommendation API response with its deterministic timeout fallback.
     let intercepted = false;
     await riderContext.page.route('**/api/rides/recommendations', async (route) => {
       intercepted = true;
-      // Simulate network delay bounded well under 8s timeout
+      // Keep the mocked response delay short so this only measures client rendering.
       await new Promise((resolve) => setTimeout(resolve, 300));
       await route.fulfill({
         status: 200,

@@ -65,7 +65,7 @@ describe('Gemini chatbot intent interpreter', () => {
     expect(url).toContain('/models/gemini-');
     expect(request?.headers).toMatchObject({ 'x-goog-api-key': 'test-key' });
     expect(request?.signal).toBeInstanceOf(AbortSignal);
-    expect(CHATBOT_GEMINI_TIMEOUT_MS).toBe(15000);
+    expect(CHATBOT_GEMINI_TIMEOUT_MS).toBe(20_000);
 
     const body = JSON.parse(String(request?.body));
     const prompt = body.contents[0].parts[0].text;

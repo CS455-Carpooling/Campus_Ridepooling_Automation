@@ -99,7 +99,7 @@ Configurable values referenced by the requirements. Defaults are proposed values
 | P-09 | Drift threshold — time | 10 minutes |
 | P-10 | Drift threshold — fare share | 20 % |
 | P-11 | Maximum AI suggestions | 5 |
-| P-12 | AI response timeout | 8 seconds |
+| P-12 | AI response timeout | 20 seconds |
 | P-13 | Real-time update target | 2 seconds |
 | P-14 | Pool chat message limits | 500 characters; 20 messages per minute per member |
 | P-15 | Pool chat retention | read-only 24 hours after completion; deleted 30 days after completion |

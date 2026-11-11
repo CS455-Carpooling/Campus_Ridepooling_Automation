@@ -5,6 +5,7 @@ import {
   rankWithGemini,
   GEMINI_MODEL_VERSION,
   GEMINI_PROMPT_VERSION,
+  REQUEST_TIMEOUT_MS,
   RECOMMENDATION_DEADLINE_MS,
 } from './gemini-ranking';
 import { rankRideRecommendations } from './recommendation-pipeline';
@@ -46,7 +47,7 @@ export async function getRideRecommendations(
         async (request) => {
           modelCallAttempted = true;
           try {
-            const raw = await withDeadline(rankWithGemini(request), 8_000);
+            const raw = await withDeadline(rankWithGemini(request), REQUEST_TIMEOUT_MS);
             if (raw && typeof raw === 'object' && '__usageMetadata' in raw) {
               const usage = (
                 raw as { __usageMetadata?: { inputTokens?: unknown; outputTokens?: unknown } }

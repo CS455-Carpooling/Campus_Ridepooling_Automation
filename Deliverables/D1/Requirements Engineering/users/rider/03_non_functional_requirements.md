@@ -16,7 +16,7 @@ holiday weekend). Performance targets apply at this load.
 | NFR-RD-01 | Ride search shall respond quickly at design load. | p95 ≤ 1.5 s, p99 ≤ 3 s, server-side, at 20 concurrent riders | Must | Test | UC-RD-03 | — |
 | NFR-RD-02 | Submitting, withdrawing or reconfirming a join request shall respond quickly at design load. | p95 ≤ 1 s at 20 concurrent riders | Must | Test | UC-RD-06, UC-RD-07, UC-RD-17 | — |
 | NFR-RD-03 | Changes to seats, times, request states and chat messages shall reach connected riders promptly. | Seat, time and state changes delivered p95 ≤ 2 s (P-13); chat messages p95 ≤ 1 s | Must | Test | UC-RD-03, UC-RD-06, UC-RD-09, UC-RD-14 | — |
-| NFR-RD-04 | AI features shall respond within a bounded time. | AI suggestions and chatbot replies p95 ≤ 8 s (P-12); fallback shown ≤ 1 s after timeout | Must | Test | UC-RD-04, UC-RD-05 | — |
+| NFR-RD-04 | AI features shall respond within a bounded time. | AI suggestions and chatbot replies p95 ≤ 8 s; each provider request times out within 20 s (P-12); fallback shown ≤ 1 s after timeout | Must | Test | UC-RD-04, UC-RD-05 | — |
 
 ### Dependability
 

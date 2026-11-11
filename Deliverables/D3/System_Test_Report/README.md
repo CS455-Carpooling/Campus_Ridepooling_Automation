@@ -140,7 +140,7 @@ flowchart TD
 
 ### Suite 11: AI Recommendations & Conversational Assistant (`recommendations-and-chatbot.spec.ts`)
 - **TC-AI-01:** "Ask AI to Suggest" normal-path discovery ranks eligible rides (`AI-RD-01`).
-- **TC-AI-02:** Fault injection (Gemini timeout): deterministic route interception asserts that upstream AI timeouts trigger the deterministic fallback status banner and eligible candidate rides within a verified $<8$-second elapsed bound (`AI-RD-02`).
+- **TC-AI-02:** Browser-level fault injection stubs the recommendation API with a deterministic timeout fallback and verifies that the status banner and eligible candidate rides render within a verified $<8$-second client UI bound (`AI-RD-02`). This does not measure the provider timeout.
 - **TC-AI-03:** Fault injection (503 Service Unavailable): asserts that upstream AI service outages render an accessible alert banner (`div[role="alert"]`) and allow graceful retry recovery via "Try again".
 - **TC-AI-04:** Fault injection (Invalid schema / 500 error): asserts that malformed upstream responses are handled gracefully without client runtime crashes.
 - **TC-AI-05:** Chatbot strictly refuses transactional actions (booking/cancellation/payment) and returns direct manual navigation links (`AI-RD-05`, `FR-RD-05.4`).

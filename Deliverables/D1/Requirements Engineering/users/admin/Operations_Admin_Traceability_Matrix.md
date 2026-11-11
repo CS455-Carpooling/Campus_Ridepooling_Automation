@@ -165,7 +165,7 @@ These are dependencies on the broader ride/pricing workflows, not missing Admin 
 screens or Admin authorization paths.
 
 The complaint pipeline persists the source complaint before invoking AI and falls back to manual
-review, but the model call is awaited inline (with an eight-second timeout) rather than queued
+review, but the model call is awaited inline (with a 20-second timeout) rather than queued
 asynchronously as shown in Architecture 3. The implementation records model, prompt version,
 latency, token counts, and outcome with each analysis, but does not yet provide Architecture 6's
 shared AI gateway, per-rider rate limiter, explicit input-token budget, or separate 90-day trace

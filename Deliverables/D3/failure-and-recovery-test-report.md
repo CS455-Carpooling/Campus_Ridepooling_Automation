@@ -44,7 +44,7 @@ flowchart TD
     Idemp -->|New / Valid Request| TimeBudget
     Idemp -->|Conflicting Reused Key| Browser
     TimeBudget -->|Invoke Model| Gemini
-    Gemini --x|Provider timeout > 15s| Fallback
+    Gemini --x|Provider timeout > 20s| Fallback
     Fallback -->|Deterministic Heuristic| Browser
     TimeBudget -->|Transactional Writes| Postgres
     Postgres --x|Mid-Tx Crash| Postgres
@@ -60,10 +60,10 @@ flowchart TD
 
 ### Scenario A: External LLM Service Failure, Outage, and Timeout (M62.a)
 
-* **Component Under Test**: Chatbot Interface (`apps/web/src/app/api/chatbot/route.ts`, `apps/web/src/lib/ai/chatbot.ts`) and AI Recommendation Engine (`apps/web/src/lib/ai/recommendation-pipeline.ts`, `apps/web/src/lib/ai/recommendations.ts`).
+* **Component Under Test**: Chatbot Interface (`apps/web/src/app/api/chatbot/route.ts`, `apps/web/src/lib/ai/chatbot.ts`), AI Recommendation Engine (`apps/web/src/lib/ai/recommendation-pipeline.ts`, `apps/web/src/lib/ai/recommendations.ts`), and complaint analysis (`apps/web/src/lib/complaint-ai.ts`).
 * **Injected Failure Mode**:
   1. The Google Gemini API experiences complete network unreachable status or returns HTTP 500/503.
-  2. The Gemini request exceeds its configured 15-second provider timeout (`CHATBOT_GEMINI_TIMEOUT_MS = 15000ms`), or chatbot processing exceeds the 31-second route deadline (`CHATBOT_TIMEOUT_MS = 31000ms`).
+  2. A Gemini provider request exceeds the shared 20-second timeout, ride recommendation processing exceeds its 21-second deadline, or chatbot processing exceeds its 41-second route deadline.
   3. The rider exceeds the maximum query rate limit of 20 AI requests per hour (`AI-RD-09`).
 
 ```mermaid
@@ -76,31 +76,32 @@ sequenceDiagram
     participant Audit as Audit Logger (PostgreSQL)
 
     Rider->>API: POST /api/chatbot { message: "Find cab to station" }
-    API->>API: Start 31000ms Route Deadline (Promise.race)
+    API->>API: Start 41000ms Route Deadline (Promise.race)
     API->>Model: generateContent(prompt)
-    alt Gemini Responds within 15s
+    alt Gemini Responds within 20s
         Model-->>API: 200 OK (Structured Intent)
         API->>Rider: 200 OK (AI Results)
-    else Gemini timeout at 15s or provider error
+    else Gemini timeout at 20s or provider error
         API->>API: AbortSignal.timeout fires
         API->>Fallback: Deterministic parser / ride search
         Fallback-->>API: Search results with fallback metadata
         API-->>Rider: 200 OK (fallback results)
-    else Overall route deadline exceeds 31s
+    else Overall route deadline exceeds 41s
         API->>Audit: logChatbotAudit(outcome: "timeout", fallback_used: true)
         API-->>Rider: 504 Gateway Timeout (with Manual Search Link)
     end
 ```
 
 * **Observed Recovery Behavior**:
-  * **Gemini Provider Timeout**: `AbortSignal.timeout(15000)` aborts the external request. The chatbot catches the timeout as a model failure, marks fallback as used, and continues with deterministic parsing and the ordinary ride search flow where possible. The provider timeout alone does not force an HTTP 504.
-  * **Route Deadline**: If the overall chatbot processing promise exceeds `CHATBOT_TIMEOUT_MS = 31000`, the route logs an audit row with `outcome = 'timeout'` and returns HTTP 504 with a direct fallback link to `/rides` (`Manual Ride Search`).
+  * **Gemini Provider Timeout**: `AbortSignal.timeout(20000)` aborts an external model request. The chatbot catches the timeout as a model failure, marks fallback as used, and continues with deterministic parsing and the ordinary ride search flow where possible. The provider timeout alone does not force an HTTP 504. Ride recommendations use the same provider timeout with a 21-second overall processing deadline.
+  * **Complaint Analysis Timeout**: The same 20-second provider timeout routes the complaint to the existing manual-review fallback; the source complaint remains available to the administrator.
+  * **Route Deadline**: If the overall chatbot processing promise exceeds `CHATBOT_TIMEOUT_MS = 41000`, the route logs an audit row with `outcome = 'timeout'` and returns HTTP 504 with a direct fallback link to `/rides` (`Manual Ride Search`). The route budget allows two provider attempts and fallback/orchestration overhead.
   * **Ride Recommendation Pipeline**: When model ranking fails, `rankFallbackRides` automatically activates. It executes a secondary trusted SQL search and sorts rides by:
     1. Minimal temporal distance between rider and ride departure windows (overlapping windows receive distance 0).
     2. Lowest estimated fare share per rider.
     3. Deterministic ride ID tie-breaker.
     The response is delivered with `source: "fallback"`. The measured fallback latency and its mocked-test limitations are documented in Section 4.
-  * **Verification**: `apps/web/src/lib/ai/chatbot-gemini.test.ts` (aborted provider request), `apps/web/src/lib/ai/chatbot.test.ts` (fallback after a timeout error), `apps/web/src/app/api/chatbot/route.test.ts` (31-second route deadline and 504/audit), and `apps/web/src/lib/ai/recommendation-pipeline.test.ts` (model failure fallback).
+  * **Verification**: `apps/web/src/lib/ai/chatbot-gemini.test.ts`, `apps/web/src/lib/ai/gemini-ranking.test.ts`, and `apps/web/src/lib/complaint-ai.test.ts` verify the 20-second abort signal; `apps/web/src/lib/ai/chatbot.test.ts` verifies fallback after a provider failure; `apps/web/src/app/api/chatbot/route.test.ts` verifies the 41-second route deadline and 504/audit; recommendation pipeline tests verify deterministic fallback.
 
 ---
 
@@ -223,7 +224,7 @@ sequenceDiagram
 
 | Domain | Injected Fault / Trigger | Expected System Recovery | Verification Test File | Status |
 |---|---|---|---|:---:|
-| **AI Timeout** | Gemini provider request exceeds 15 s; overall route exceeds 31 s | Provider timeout falls back deterministically; route deadline returns HTTP 504 with `/rides` link and audit | `apps/web/src/lib/ai/chatbot-gemini.test.ts`, `apps/web/src/lib/ai/chatbot.test.ts`, `apps/web/src/app/api/chatbot/route.test.ts` | **PASS** |
+| **AI Timeout** | Gemini provider request exceeds 20 s; recommendation processing exceeds 21 s; chatbot route exceeds 41 s | Provider timeout falls back deterministically; route deadline returns HTTP 504 with `/rides` link and audit; complaint analysis remains in manual review | `apps/web/src/lib/ai/chatbot-gemini.test.ts`, `apps/web/src/lib/ai/gemini-ranking.test.ts`, `apps/web/src/lib/complaint-ai.test.ts`, `apps/web/src/app/api/chatbot/route.test.ts` | **PASS** |
 | **AI Outage** | Gemini returns HTTP 500/503 | Graceful HTTP 503; fallback link to `/rides`; audit logged | `apps/web/src/lib/ai/chatbot.test.ts` | **PASS** |
 | **Model Output** | AI returns invalid / hallucinated hub IDs | Output discarded; heuristic departure ranking used | `apps/web/src/lib/ai/recommendation-pipeline.test.ts` | **PASS** |
 | **AI Rate Limit** | Rider exceeds 20 requests/hour | HTTP 429 `rateLimited: true`; manual search fallback | `apps/web/src/app/api/chatbot/route.test.ts` | **PASS** |
@@ -242,8 +243,9 @@ sequenceDiagram
 
 | Metric | Target SLA | Measured / Observed | Compliance Status |
 |---|---|---|:---:|
-| **Gemini Provider Timeout** | $\le 15.0\,$s | 15.0 s configured; abort-signal propagation and fallback verified; elapsed duration not measured | **Behavior verified; duration not measured** |
-| **Chatbot Route Deadline** | $\le 31.0\,$s | 31.0 s configured; fake-timer test verifies HTTP 504 and audit | **Verified by unit test** |
+| **Gemini Provider Timeout** | $\le 20.0\,$s | 20.0 s shared configuration; abort-signal propagation verified; elapsed duration not measured | **Behavior verified; duration not measured** |
+| **Ride Recommendation Deadline** | $\le 21.0\,$s | 20.0 s provider timeout plus 1.0 s orchestration allowance | **Configured; provider abort verified** |
+| **Chatbot Route Deadline** | $\le 41.0\,$s | 41.0 s configured; fake-timer test verifies HTTP 504 and audit | **Verified by unit test** |
 | **Deterministic Fallback Latency** | $\le 250\,$ms | 0.10 ms mean across 20 in-process runs with model/database dependencies mocked; prior report recorded 14.2 ms without retaining its run artifact | **Target passed in mocked test; not end-to-end** |
 | **Data Loss on Transaction Failure (RPO)** | $0$ records | 0 dropped transactions. Both unit transaction simulation and live PostgreSQL trigger failure injection (`reset-failure.int.test.ts`) verify that tokens, password hashes, and active sessions remain unmodified on error | **PASS** |
 | **Idempotency Collision Detection Latency**| $\le 100\,$ms | 8.66 ms mean across 10 sequential same-key replays against live PostgreSQL (`idempotency-key-reuse.int.test.ts`), safely within the 100 ms target SLA | **PASS** |
