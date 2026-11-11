@@ -101,7 +101,9 @@ describe('NotificationsCentre', () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(listResponse(notifications));
     render(<NotificationsCentre compact />);
 
-    expect(await screen.findByRole('heading', { name: 'Recent notifications' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Recent notifications' }),
+    ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'View all notifications' })).toHaveAttribute(
       'href',
       '/notifications',

@@ -381,13 +381,10 @@ export function NotificationsCentre({ compact = false }: { compact?: boolean }) 
           })}
         </ul>
       ) : null}
-      {!loading && items.length === 100 && (
-        !compact && (
-          <p className="mt-4 text-sm text-ink-muted">
-            Showing the latest 100 notifications. Older notifications are not shown on this page
-            yet.
-          </p>
-        )
+      {!loading && items.length === 100 && !compact && (
+        <p className="mt-4 text-sm text-ink-muted">
+          Showing the latest 100 notifications. Older notifications are not shown on this page yet.
+        </p>
       )}
     </DesignSystem>
   );
