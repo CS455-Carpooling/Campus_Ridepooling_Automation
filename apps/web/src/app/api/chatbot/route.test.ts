@@ -129,7 +129,7 @@ describe('POST /api/chatbot (Backend API Route & Guardrails)', () => {
       const response = await request;
       const body = await response.json();
 
-      expect(CHATBOT_TIMEOUT_MS).toBe(31_000);
+      expect(CHATBOT_TIMEOUT_MS).toBe(41_000);
       expect(response.status).toBe(504);
       expect(body.kind).toBe('service_unavailable');
       expect(body.fallbackLink.href).toBe('/rides');

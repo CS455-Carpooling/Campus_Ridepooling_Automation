@@ -32,6 +32,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.restoreAllMocks();
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
 });
@@ -59,6 +60,7 @@ describe('analyzeComplaint (SYS-FR-30 to 33, 46, 47)', () => {
   });
 
   it('sends bounded complaint context to Gemini and persists validated JSON only', async () => {
+    const timeout = vi.spyOn(AbortSignal, 'timeout');
     const analysis = {
       summary: 'The report describes unsafe driving.',
       severity: 'high',
@@ -79,6 +81,7 @@ describe('analyzeComplaint (SYS-FR-30 to 33, 46, 47)', () => {
     await analyzeComplaint(COMPLAINT);
 
     expect(fetch).toHaveBeenCalledOnce();
+    expect(timeout).toHaveBeenCalledWith(20_000);
     const [url, options] = fetch.mock.calls[0] as [string, RequestInit];
     expect(url).toContain('/v1beta/models/gemini-3.1-flash-lite:generateContent');
     expect(new Headers(options.headers).get('x-goog-api-key')).toBe('test-key');

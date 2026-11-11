@@ -1,10 +1,10 @@
 import 'server-only';
 import type { RideFormOptions } from '../ride-options';
-import { getGeminiModel } from './gemini-config';
+import { GEMINI_REQUEST_TIMEOUT_MS, getGeminiModel } from './gemini-config';
 
 export const CHATBOT_GEMINI_MODEL_VERSION = getGeminiModel();
 export const CHATBOT_GEMINI_PROMPT_VERSION = 'campus-chatbot-v1';
-export const CHATBOT_GEMINI_TIMEOUT_MS = 15_000;
+export const CHATBOT_GEMINI_TIMEOUT_MS = GEMINI_REQUEST_TIMEOUT_MS;
 
 export type ChatbotIntent = {
   intent:

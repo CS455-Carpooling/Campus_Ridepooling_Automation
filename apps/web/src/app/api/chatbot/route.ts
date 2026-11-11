@@ -72,7 +72,7 @@ export async function POST(req: Request) {
     );
   }
 
-  // 3. Execution with 8-second timeout budget (AI-RD-09)
+  // 3. Execute within the bounded Gemini and route deadlines (AI-RD-09)
   try {
     const aiMetadataRef: { current: ChatbotAgentMetadata | null } = { current: null };
     let timeoutTimer: NodeJS.Timeout | null = null;

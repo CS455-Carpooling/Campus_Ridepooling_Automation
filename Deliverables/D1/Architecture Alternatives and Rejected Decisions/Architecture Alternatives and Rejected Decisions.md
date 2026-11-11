@@ -180,7 +180,7 @@ must be privacy-minimizing, while Admin AI handles sensitive complaints but may
 only advise a human decision-maker.
 
 For the rider flow, the concrete safety envelope is: at most five tool calls,
-8,000 tokens, eight seconds per request, 20 requests per rider per hour, a
+8,000 tokens, 20 seconds per request, 20 requests per rider per hour, a
 server-side tool allowlist, data-delimited input, consent filtering, schema and
 fact validation, and fallback ranking/manual search. For the Admin flow, the
 concrete safety envelope is: no warning or suspension without an explicit

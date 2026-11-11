@@ -52,6 +52,7 @@ const navigation: Record<Role, NavItem[]> = {
   // Recommendations are decided on their complaint; the separate page preserves decision history.
   admin: [
     { href: routes.home, label: 'Home' },
+    { href: routes.notifications, label: 'Notifications' },
     { href: routes.adminIncidents, label: 'SOS incidents' },
     { href: routes.adminComplaints, label: 'Complaints' },
     { href: routes.adminAiDecisions, label: 'AI decisions' },

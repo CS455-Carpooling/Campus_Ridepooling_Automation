@@ -13,6 +13,7 @@ vi.mock('./gemini-ranking', () => ({
   rankWithGemini: h.rankWithGemini,
   GEMINI_MODEL_VERSION: 'model-test-v2',
   GEMINI_PROMPT_VERSION: 'prompt-test-v3',
+  REQUEST_TIMEOUT_MS: 1000,
   RECOMMENDATION_DEADLINE_MS: 1000,
 }));
 vi.mock('./recommendation-pipeline', () => ({

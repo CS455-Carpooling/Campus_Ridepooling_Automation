@@ -4,7 +4,7 @@ import { NavLinks } from '@/components/shell/NavLinks';
 import { DesignSystem } from '@/components/ui/DesignSystem';
 import { LogoutButton } from '@/components/ui/LogoutButton';
 import { cx } from '@/lib/cx';
-import { navigationFor } from '@/lib/routes';
+import { navigationFor, routes } from '@/lib/routes';
 import { IncidentAlert } from './incidents/IncidentAlert';
 
 export type AdminPageShellProps = {
@@ -32,11 +32,13 @@ export function AdminPageShell({
   actions,
   children,
 }: AdminPageShellProps) {
+  const adminNav = navigationFor('admin').filter((item) => item.href !== routes.notifications);
+
   return (
     <DesignSystem className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-b border-line pb-4">
         <nav aria-label="Operations admin">
-          <NavLinks items={navigationFor('admin')} />
+          <NavLinks items={adminNav} />
         </nav>
         <LogoutButton />
       </div>

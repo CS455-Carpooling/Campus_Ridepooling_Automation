@@ -17,6 +17,7 @@ describe('navigationFor', () => {
   it('gives operations admins their queues, riders and configuration (CS455-49)', () => {
     expect(navigationFor('admin').map((item) => item.label)).toEqual([
       'Home',
+      'Notifications',
       'SOS incidents',
       'Complaints',
       'AI decisions',
@@ -58,6 +59,7 @@ describe('the complaint and admin pages', () => {
     expect(currentHref(routes.adminComplaint('c1'), items)).toBe('/admin/complaints');
     expect(currentHref(routes.adminRider('u1'), items)).toBe('/admin/riders');
     expect(currentHref('/admin/configuration/fares', items)).toBe('/admin/configuration');
+    expect(currentHref(routes.notifications, items)).toBe(routes.notifications);
   });
 });
 

@@ -78,7 +78,7 @@ function rideDestination(id: string | null): string | null {
   return id && isUuid(id) ? routes.ride(id) : null;
 }
 
-export function NotificationsCentre() {
+export function NotificationsCentre({ compact = false }: { compact?: boolean }) {
   const [items, setItems] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -259,6 +259,7 @@ export function NotificationsCentre() {
   }
 
   const unreadCount = items.filter((item) => !item.readAt).length;
+  const visibleItems = compact ? items.slice(0, 5) : items;
 
   return (
     <DesignSystem className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
@@ -267,15 +268,23 @@ export function NotificationsCentre() {
           <p className="text-sm font-semibold uppercase tracking-wide text-accent-text">
             Your account
           </p>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Notifications</h1>
+          {compact ? (
+            <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">
+              Recent notifications
+            </h2>
+          ) : (
+            <h1 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">
+              Notifications
+            </h1>
+          )}
           <p className="mt-2 text-ink-muted">
             {error && items.length === 0
               ? 'Unread count unavailable'
               : `${unreadCount} unread ${unreadCount === 1 ? 'notification' : 'notifications'}`}
           </p>
         </div>
-        <ButtonLink href={routes.home} variant="secondary">
-          Back to home
+        <ButtonLink href={compact ? routes.notifications : routes.home} variant="secondary">
+          {compact ? 'View all notifications' : 'Back to home'}
         </ButtonLink>
       </header>
 
@@ -315,12 +324,12 @@ export function NotificationsCentre() {
           </h2>
           <p className="mt-2 text-ink-muted">New notifications will appear here.</p>
         </section>
-      ) : items.length > 0 ? (
+      ) : visibleItems.length > 0 ? (
         <ul
           aria-label="Your notifications"
           className="ds-list mt-8 divide-y divide-line border-y border-line"
         >
-          {items.map((item) => {
+          {visibleItems.map((item) => {
             const destination = rideDestination(item.relatedRideId);
             const unread = !item.readAt;
             return (
@@ -372,7 +381,7 @@ export function NotificationsCentre() {
           })}
         </ul>
       ) : null}
-      {!loading && items.length === 100 && (
+      {!loading && items.length === 100 && !compact && (
         <p className="mt-4 text-sm text-ink-muted">
           Showing the latest 100 notifications. Older notifications are not shown on this page yet.
         </p>

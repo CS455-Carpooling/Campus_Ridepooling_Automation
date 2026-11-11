@@ -1,11 +1,11 @@
 import 'server-only';
 import type { RecommendationRequest } from './types';
-import { getGeminiModel } from './gemini-config';
+import { GEMINI_REQUEST_TIMEOUT_MS, getGeminiModel } from './gemini-config';
 
 export const GEMINI_MODEL_VERSION = getGeminiModel();
 export const GEMINI_PROMPT_VERSION = 'ride-ranking-v1';
-export const REQUEST_TIMEOUT_MS = 8_000;
-export const RECOMMENDATION_DEADLINE_MS = 9_000;
+export const REQUEST_TIMEOUT_MS = GEMINI_REQUEST_TIMEOUT_MS;
+export const RECOMMENDATION_DEADLINE_MS = REQUEST_TIMEOUT_MS + 1_000;
 
 const RANKING_SCHEMA = {
   type: 'OBJECT',

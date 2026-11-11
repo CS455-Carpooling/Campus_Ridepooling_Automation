@@ -356,3 +356,91 @@ whose swatches rendered as black squares and showed green for teal bars. The
 LaTeX build files `project-timeline-gantt.fls` and
 `project-timeline-gantt.fdb_latexmk` were removed from the repository and added
 to `Deliverables/D3/.gitignore`.
+
+## 2026-11-11 — Suspension enforcement and notification navigation
+
+### User request
+
+Review the suspension activation/reactivation logic for defects and make
+notifications accessible from the signed-in homepage. Follow-up requests
+clarified that the user wanted navigation to the notification centre, not a
+recent-notifications panel on the homepage. The user also asked about AI
+recommendation timeouts and requested that the local application be rebuilt
+with the final changes.
+
+### Repository inspection and findings
+
+- The shared active-suspension query evaluates `lifted_at IS NULL`,
+  `starts_at <= now`, and `ends_at IS NULL OR ends_at > now`. Temporary
+  suspensions therefore expire by time without a scheduled job; indefinite
+  suspensions remain active until lifted, and reactivation retains history.
+- The pool-chat refusal helper exempted ride owners from suspension checks,
+  contrary to FR-RD-01.5, which blocks suspended riders from posting messages.
+- Notifications were available at `/notifications`, but the student
+  dashboard had a separate header that did not include that link. The
+  operations-admin navigation also lacked a Notifications entry.
+- Complaint-analysis Gemini requests use an 8-second timeout. Ride
+  recommendation ranking uses an 8-second model-request timeout and a
+  9-second overall deadline. No timeout values were changed.
+- The browser was served by the Docker Compose web container, not the
+  development server; rebuilding the web image was required for source
+  changes to appear.
+
+### Changes made
+
+- Removed the ride-owner exception from the shared pool-chat suspension
+  check and added regression coverage for suspended owners in both the
+  shared refusal helper and persisted chat-message path.
+- Added a Notifications link to the student dashboard header and to the
+  operations-admin navigation. Both links target `/notifications`.
+- Removed the temporary recent-notifications homepage panel at the user's
+  request; the dashboard now exposes navigation without embedding the
+  notification list.
+- Rebuilt only the Docker Compose web service. The PostgreSQL service and
+  database volume were left intact. No credentials were recorded in the
+  repository or this log.
+
+### Validation
+
+- Suspension, chat, notification, dashboard, and navigation regression
+  tests passed; the final focused suite passed **25 tests**.
+- ESLint passed for the changed implementation and test files.
+- The Docker production build, including its TypeScript check, passed.
+- Docker Compose reported the web service healthy, and `/api/health`
+  returned HTTP 200 with `{"status":"ok"}`.
+- After reloading the authenticated dashboard, the Notifications link was
+  visible and the recent-notifications panel was absent.
+
+## 2026-11-11 — 20-second Gemini request timeouts
+
+### User request
+
+Increase the timeout for all AI integrations to 20 seconds and update this
+log.
+
+### Changes made
+
+- Added one shared `GEMINI_REQUEST_TIMEOUT_MS = 20_000` configuration and
+  applied it to complaint analysis, ride recommendation ranking, and chatbot
+  intent interpretation.
+- Set the recommendation processing deadline to 21 seconds so its 20-second
+  provider request is not cut short. The chatbot route deadline is 41 seconds
+  to allow for its possible second model attempt and orchestration.
+- Updated P-12 and current architecture, traceability, system-test, and
+  failure/recovery documentation. The separate 8-second client UI rendering
+  bound and 8-second p95 performance target remain performance measures, not
+  provider timeouts.
+
+### Validation
+
+- From `apps/web`, `npx vitest run src\lib\complaint-ai.test.ts
+  src\lib\ai\chatbot-gemini.test.ts src\lib\ai\chatbot.test.ts
+  src\lib\ai\gemini-ranking.test.ts src\lib\ai\recommendations.test.ts
+  src\app\api\chatbot\route.test.ts` passed: **6 test files, 52 tests**.
+- ESLint and Prettier checks passed for the changed code and documentation.
+- `npm run typecheck -w @ridepool/web` passed. The initial attempt was blocked
+  by the already-declared `@playwright/test` package missing from installed
+  dependencies; it was restored without changing manifests before rerunning.
+- `git diff --check` passed.
+- `docker compose up -d --build web` passed; PostgreSQL remained healthy and
+  `http://localhost:3000/api/health` returned HTTP 200 with `{"status":"ok"}`.

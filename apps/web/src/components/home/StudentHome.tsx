@@ -32,6 +32,9 @@ export function StudentHome({ data }: { data: StudentHomeData }) {
         </h1>
 
         <div className="flex flex-wrap gap-3">
+          <ButtonLink href={routes.notifications} variant="secondary">
+            Notifications
+          </ButtonLink>
           <ButtonLink href={routes.myComplaints} variant="secondary">
             Your complaints
           </ButtonLink>
