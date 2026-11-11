@@ -201,7 +201,7 @@ async function createChatMessageForSocket(rideId, senderId, rawMessage, now = ne
     return { ok: false, code: 'FORBIDDEN', error: 'Only current pool members may post here.' };
   }
 
-  const refusal = await chatSendRefusal(pool, ride, senderId, now);
+  const refusal = await chatSendRefusal(pool, senderId, now);
   if (refusal) return refusal;
 
   if (!rideChatAvailable(ride, now)) {

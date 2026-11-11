@@ -11,7 +11,6 @@ import {
 describe('chatSendRefusal: who may post (FR-RD-01.5)', () => {
   const owner = '6f1c2a5e-2222-4000-8000-000000000001';
   const rider = '6f1c2a5e-2222-4000-8000-000000000002';
-  const ride = { owner_id: owner };
   const now = new Date('2026-10-13T12:00:00.000Z');
   const suspended = () => {
     const calls: Array<[string, unknown[]]> = [];
@@ -28,7 +27,7 @@ describe('chatSendRefusal: who may post (FR-RD-01.5)', () => {
 
   it('refuses a suspended rider, saying until when and why', async () => {
     const { db, calls } = suspended();
-    const refusal = await chatSendRefusal(db, ride, rider, now);
+    const refusal = await chatSendRefusal(db, rider, now);
     expect(refusal).toMatchObject({ ok: false, code: 'SUSPENDED' });
     expect(refusal?.error).toMatch(
       /^Your account is suspended until .* \(IST\) \(reason: Harassment\), so you cannot post in pool chats\./,
@@ -37,15 +36,35 @@ describe('chatSendRefusal: who may post (FR-RD-01.5)', () => {
     expect(calls[0][1]).toEqual([rider, now]);
   });
 
-  it("lets the ride's owner post even when suspended: their ride keeps running", async () => {
+  it('refuses the ride owner when suspended, too', async () => {
     const { db, calls } = suspended();
-    await expect(chatSendRefusal(db, ride, owner, now)).resolves.toBeNull();
-    expect(calls).toHaveLength(0);
+    await expect(chatSendRefusal(db, owner, now)).resolves.toMatchObject({
+      ok: false,
+      code: 'SUSPENDED',
+    });
+    expect(calls[0][1]).toEqual([owner, now]);
   });
 
-  it('lets anyone without a suspension in force post', async () => {
+  it('lets an owner without a suspension in force post', async () => {
+    const calls: unknown[][] = [];
     await expect(
-      chatSendRefusal({ query: async () => ({ rows: [] }) }, ride, rider, now),
+      chatSendRefusal(
+        {
+          query: async (_sql: string, values: unknown[]) => {
+            calls.push(values);
+            return { rows: [] };
+          },
+        },
+        owner,
+        now,
+      ),
+    ).resolves.toBeNull();
+    expect(calls).toEqual([[owner, now]]);
+  });
+
+  it('lets any other member without a suspension in force post', async () => {
+    await expect(
+      chatSendRefusal({ query: async () => ({ rows: [] }) }, rider, now),
     ).resolves.toBeNull();
   });
 });

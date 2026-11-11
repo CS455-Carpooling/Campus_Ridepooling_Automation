@@ -38,4 +38,17 @@ describe('NavLinks', () => {
       expect(link).not.toHaveAttribute('aria-current');
     }
   });
+
+  it('shows the notifications link in operations admin navigation', () => {
+    usePathname.mockReturnValue('/notifications');
+    render(<NavLinks items={navigationFor('admin')} />);
+    expect(screen.getByRole('link', { name: 'Notifications' })).toHaveAttribute(
+      'href',
+      '/notifications',
+    );
+    expect(screen.getByRole('link', { name: 'Notifications' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+  });
 });

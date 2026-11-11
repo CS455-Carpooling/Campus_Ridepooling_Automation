@@ -25,14 +25,12 @@ export const CHAT_KEPT_FOR_COMPLAINT_SQL = `(
 
 /**
  * Why `senderId` may not post in this ride's pool chat at `now`, as the refusal to send back, or
- * null. A suspended rider's messages are refused (FR-RD-01.5), with until when and why. The
- * ride's owner is not refused: their existing ride keeps running, like its trip actions, and its
- * riders rely on the chat to coordinate pickup. Both send paths use this (server.mjs, ride-chat.ts).
+ * null. A suspended rider's messages are refused (FR-RD-01.5), with until when and why. Both send
+ * paths use this (server.mjs, ride-chat.ts).
  *
  * @returns {Promise<{ ok: false, code: 'SUSPENDED', error: string } | null>}
  */
-export async function chatSendRefusal(db, ride, senderId, now) {
-  if (senderId === ride.owner_id) return null;
+export async function chatSendRefusal(db, senderId, now) {
   const suspension = await activeSuspension(db, senderId, now);
   if (!suspension) return null;
   return {

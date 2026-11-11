@@ -91,6 +91,26 @@ describe('NotificationsCentre', () => {
     expect(screen.getByText(/12 Oct, 15:30/)).toBeInTheDocument();
   });
 
+  it('shows the five most recent notifications on the dashboard with a full-list link', async () => {
+    const notifications = Array.from({ length: 6 }, (_, index) => ({
+      ...notification,
+      id: `n${index + 1}`,
+      title: `Notification ${index + 1}`,
+      createdAt: `2026-10-12T10:0${index}:00.000Z`,
+    }));
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(listResponse(notifications));
+    render(<NotificationsCentre compact />);
+
+    expect(await screen.findByRole('heading', { name: 'Recent notifications' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'View all notifications' })).toHaveAttribute(
+      'href',
+      '/notifications',
+    );
+    expect(screen.getByRole('heading', { name: 'Notification 6' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Notification 2' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Notification 1' })).not.toBeInTheDocument();
+  });
+
   it('marks a notification read only after the API confirms and reflects persisted state', async () => {
     const fetch = vi
       .spyOn(globalThis, 'fetch')

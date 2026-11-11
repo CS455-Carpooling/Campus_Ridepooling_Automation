@@ -351,6 +351,48 @@ describe('ride-chat domain helpers', () => {
     ).toBe(false);
   });
 
+  it('refuses a suspended ride owner from posting a message (FR-RD-01.5)', async () => {
+    const rideId = '0b9a7c1e-1111-4000-8000-000000000001';
+    const ownerId = '6f1c2a5e-1111-4000-8000-000000000001';
+    const now = new Date('2026-10-10T01:00:00+05:30');
+    query.mockImplementation((sql: string) => {
+      const statement = String(sql).toLowerCase();
+      if (statement.includes('count(*)')) return Promise.resolve({ rows: [{ count: 0 }] });
+      if (statement.includes('select owner_id as user_id')) {
+        return Promise.resolve({ rows: [{ user_id: ownerId }] });
+      }
+      if (statement.includes('from rides where id')) {
+        return Promise.resolve({
+          rows: [
+            {
+              id: rideId,
+              owner_id: ownerId,
+              state: 'in_transit',
+              departure_start: new Date('2026-10-10T00:30:00+05:30'),
+              locked_at: new Date('2026-10-09T23:30:00+05:30'),
+              completed_at: null,
+              cancelled_at: null,
+            },
+          ],
+        });
+      }
+      if (statement.includes('from rider_suspensions')) {
+        return Promise.resolve({
+          rows: [{ reason_category: 'harassment', ends_at: new Date('2026-10-12T12:00:00Z') }],
+        });
+      }
+      return Promise.resolve({ rows: [] });
+    });
+
+    await expect(createChatMessage(rideId, ownerId, 'Hello', now)).resolves.toMatchObject({
+      ok: false,
+      code: 'SUSPENDED',
+    });
+    expect(
+      query.mock.calls.some(([sql]) => String(sql).includes('INSERT INTO ride_chat_messages')),
+    ).toBe(false);
+  });
+
   it('reports a message by reference and refuses it if the sender is the reporter', async () => {
     const rideId = '0b9a7c1e-1111-4000-8000-000000000001';
     const reporterId = '8c57f0d3-2222-4000-8000-000000000002';

@@ -25,6 +25,10 @@ describe('StudentHome', () => {
     );
 
     expect(screen.getByRole('link', { name: 'Profile' })).toHaveAttribute('href', '/profile');
+    expect(screen.getByRole('link', { name: 'Notifications' })).toHaveAttribute(
+      'href',
+      '/notifications',
+    );
 
     expect(screen.getByRole('link', { name: 'Your complaints' })).toHaveAttribute(
       'href',
